@@ -3,6 +3,7 @@ module = {
     Name = "Windows",
     Setup_Workspace = function()
         filter{ "platforms:Win64" }
+            toolset( "clang" )
             cppdialect( "c++20" ) -- Add something like Maximum Cpp version/dialect?
             defines( { "QW_TARGET_WIN64", "QW_CPP20" } )
             buildoptions { "/Zc:preprocessor" }

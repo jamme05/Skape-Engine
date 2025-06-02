@@ -103,6 +103,14 @@ function Get_Module_Links()
     return links;
 end
 
+function Get_Module_Includes()
+    local links = {}
+    ForeachModule( function( mod )
+        table.insert( links, "Modules/" .. mod.Dir .. "/src" )
+    end )
+    return links;
+end
+
 function CreateModules()
     ForeachModule( function( mod ) mod.Module_Project( mod.Dir ) end )
 end

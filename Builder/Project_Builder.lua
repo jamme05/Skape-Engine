@@ -32,7 +32,7 @@ local root_build_dir = "./Build/Project/"
 
 workspace "QWarp Playground"
     configurations { "Debug", "Release", "Final" }
-    platforms { Get_Supported_Platforms() } -- Could allow me to use platforms as settings?
+    platforms { Get_Supported_Platforms() }
     startproject "Startup"
 
     defines {
@@ -77,7 +77,7 @@ project "Framework"
 
     links { "Engine" }
     
-    includedirs { "src/engine", "src/framework", "external/fastgltf/include", "src/base" }
+    includedirs { "src/engine", "src/framework", "external/fastgltf/include", Get_Module_Includes() }
 
 project "Startup"
     kind "WindowedApp"
@@ -89,7 +89,7 @@ project "Startup"
 
     files { "src/startup/main.cpp" }
 
-    includedirs { "src/engine", "src/framework", "external/fastgltf/include", "external/lodepng" }
+    includedirs { "src/engine", "src/framework", "external/fastgltf/include", "external/lodepng", Get_Module_Includes() }
 
 group "QWarp"
 
@@ -103,7 +103,7 @@ project "Engine"
 
     files { "src/engine/**.hpp", "src/engine/**.cpp", "src/engine/**.h" }
 
-    includedirs { "src/engine", "external/fastgltf/include", "external/lodepng" }
+    includedirs { "src/engine", "external/fastgltf/include", "external/lodepng", Get_Module_Includes() }
 
 group "Modules"
 

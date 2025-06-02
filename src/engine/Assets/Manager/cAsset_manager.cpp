@@ -8,7 +8,7 @@
 
 #include "fastgltf/tools.hpp"
 
-#include "Assets/cMesh.h"
+#include <Assets/cMesh.h>
 #include "Assets/cTexture.h"
 #include "Graphics/cRenderer.h"
 #include "Platform/cPlatform.h"
