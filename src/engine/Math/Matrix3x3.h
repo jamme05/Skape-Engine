@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "cMatrix.h"
-#include "cVector3.h"
+#include "Matrix.h"
+#include "Vector3.h"
 
 
 namespace qw

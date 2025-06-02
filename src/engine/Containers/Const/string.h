@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "Containers/Const/array.h"
+#include "Containers/Const/Array.h"
 
 // TODO: Make a template specialization for array< char, Size >.
 

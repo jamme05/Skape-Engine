@@ -6,10 +6,11 @@
 
 #pragma once
 
-#include "cCameraManager.h"
+#include "CameraManager.h"
 
 #include "Graphics/cRender_context.h"
-#include "Misc/cSingleton.h"
+#include "Math/Matrix4x4.h"
+#include "Misc/Singleton.h"
 #include "Misc/Smart_ptrs.h"
 
 namespace qw

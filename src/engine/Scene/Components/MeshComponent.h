@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include "iComponent.h"
-#include "Assets/Manager/cAsset_manager.h"
+#include "Component.h"
+#include "Assets/Manager/Asset_manager.h"
 #include "Graphics/cRender_context.h"
-#include "Math/cMatrix4x4.h"
+#include "Math/Matrix4x4.h"
 #include "Types/graphics_types.h"
 #include "Assets/cMesh.h"
 

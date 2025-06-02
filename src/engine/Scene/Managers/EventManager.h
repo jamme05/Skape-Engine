@@ -12,7 +12,7 @@
 #include "Containers/vector.h"
 
 #include <Misc/Hashing.h>
-#include "Misc/cSingleton.h"
+#include "Misc/Singleton.h"
 #include "Misc/print.h"
 #include "Misc/Smart_ptrs.h"
 

@@ -8,7 +8,7 @@
 
 #include <algorithm>
 
-#include "cVector.h"
+#include "Vector.h"
 
 #include "VectorSwizzle.h"
 

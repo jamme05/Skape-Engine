@@ -5,7 +5,7 @@
  */
 
 
-#include "cEventManager.h"
+#include "EventManager.h"
 
 namespace qw
 {

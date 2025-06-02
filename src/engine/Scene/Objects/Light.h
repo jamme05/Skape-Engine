@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Scene/cObject.h>
+#include <Scene/Object.h>
 
 namespace qw::Object
 {

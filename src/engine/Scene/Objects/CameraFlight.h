@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "cCamera.h"
-#include "Input/cInput.h"
+#include "Camera.h"
+#include "Input/Input.h"
 
 namespace qw::Object
 {

@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "Assets/iAsset.h"
 #include "Misc/Smart_ptrs.h"
 
 #include "fastgltf/core.hpp"
@@ -15,6 +14,7 @@
 
 namespace qw
 {
+	class iAsset;
 	class cAssetManager;
 } // qw::
 

@@ -7,7 +7,7 @@
 #pragma once
 
 #include "Memory/Memory.h"
-#include "Misc/cSingleton.h"
+#include "Misc/Singleton.h"
 
 #include <unordered_set>
 #include <mutex>
@@ -26,8 +26,9 @@ namespace qw::Memory
 		};
 
 		// Can track source usage
-		extern void* alloc( size_t _size, const std::source_location& _location = std::source_location::current() );
-		extern void  free ( void* _block );
+		extern void* alloc  ( size_t _size, const std::source_location& _location = std::source_location::current() );
+		extern void* realloc( void* _ptr, size_t _size, const std::source_location& _location = std::source_location::current() );
+		extern void  free   ( void* _block );
 		extern size_t max_heap_size( void );
 
 	} // Tracker::

@@ -6,7 +6,7 @@
 
 // TODO: Move this file to a better place
 
-#include "Memory/Tracker/cTracker.h"
+#include "Memory/Tracker/Tracker.h"
 
 void* lodepng_malloc(size_t size)
 {

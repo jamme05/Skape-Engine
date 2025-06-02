@@ -4,12 +4,12 @@
  *
  */
 
-#include "cMeshComponent.h"
+#include "MeshComponent.h"
 
-#include "cCameraComponent.h"
-#include "Assets/cTexture.h"
+#include "CameraComponent.h"
+#include "Assets/Texture.h"
 #include "Graphics/cRenderer.h"
-#include "Scene/Managers/cSceneManager.h"
+#include "Scene/Managers/SceneManager.h"
 
 namespace qw::Object::Components
 {

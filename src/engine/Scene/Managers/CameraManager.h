@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "Misc/cSingleton.h"
+#include "Misc/Singleton.h"
 #include "Misc/Smart_ptrs.h"
-#include "Scene/cObject.h"
+#include "Scene/Object.h"
 
 namespace qw::Graphics
 {

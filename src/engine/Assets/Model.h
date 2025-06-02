@@ -9,8 +9,8 @@
 
 #include <fastgltf/types.hpp>
 
-#include "Assets/iAsset.h"
-#include "Math/cVector4.h"
+#include "Assets/Asset.h"
+#include "Math/Vector4.h"
 
 
 namespace qw::Assets

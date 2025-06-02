@@ -8,12 +8,12 @@
 
 #include <string>
 
-#include "Math/cMatrix4x4.h"
-#include "Math/cTransform.h"
-#include "Reflection/cRuntimeClass.h"
+#include "Math/Matrix4x4.h"
+#include "Math/Transform.h"
+#include "Reflection/RuntimeClass.h"
 #include "Misc/Hashing.h"
 #include "Misc/Smart_ptrs.h"
-#include "Scene/Managers/cEventManager.h"
+#include "Scene/Managers/EventManager.h"
 
 namespace qw::Object
 {

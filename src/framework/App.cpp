@@ -1,11 +1,13 @@
-#include "cApp.h"
 
-#include "Assets/cMaterial.h"
+
+#include "App.h"
+
+#include "Assets/Material.h"
 #include "Assets/cMesh.h"
-#include "Assets/cShader.h"
-#include "Assets/iAsset.h"
-#include "Assets/cTexture.h"
-#include "Assets/Manager/cAsset_manager.h"
+#include "Assets/Shader.h"
+#include "Assets/Asset.h"
+#include "Assets/Texture.h"
+#include "Assets/Manager/Asset_manager.h"
 
 #include "Embedded/Shaders.h"
 
@@ -13,13 +15,13 @@
 #include "Graphics/cRender_context.h"
 
 #include "Math/Types.h"
-#include "Memory/Tracker/cTracker.h"
+#include "Memory/Tracker/Tracker.h"
 #include "Platform/cPlatform.h"
 
-#include "Scene/cScene.h"
-#include "Scene/Components/cMeshComponent.h"
-#include "Scene/Managers/cSceneManager.h"
-#include "Scene/Objects/cCameraFlight.h"
+#include "Scene/Scene.h"
+#include "Scene/Components/MeshComponent.h"
+#include "Scene/Managers/SceneManager.h"
+#include "Scene/Objects/CameraFlight.h"
 
 #include "Graphics/cDepth_target.h"
 #include "Graphics/cRender_target.h"
@@ -29,8 +31,8 @@
 #include "Containers/allocator.h"
 #include "Containers/Const/string.h"
 
-#include "Reflection/cRuntimeClass.h"
-#include "Reflection/cRuntimeStruct.h"
+#include "Reflection/RuntimeClass.h"
+#include "Reflection/RuntimeStruct.h"
 
 cApp::cApp( void )
 : iListener( qw::Input::eType::kAll, 10, true )

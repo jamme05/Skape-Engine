@@ -12,8 +12,9 @@
 #include "Containers/vector.h"
 #include "Containers/map.h"
 
-#include "Components/iComponent.h"
-#include "Components/cTransformComponent.h"
+#include "Components/Component.h"
+#include "Components/TransformComponent.h"
+#include <Reflection/RuntimeClass.h>
 
 namespace qw
 {

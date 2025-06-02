@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "Scene/cObject.h"
-#include "Scene/Components/cCameraComponent.h"
+#include "Scene/Object.h"
+#include "Scene/Components/CameraComponent.h"
 
 namespace qw::Object
 {

@@ -8,10 +8,10 @@
 
 #include <pmmintrin.h>
 
-#include "cMatrix.h"
+#include "Matrix.h"
 
-#include "cVector3.h"
-#include "cVector4.h"
+#include "Vector3.h"
+#include "Vector4.h"
 
 #include "Matrix_helper.h"
 

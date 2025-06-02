@@ -4,13 +4,13 @@
  *
  */
 
-#include "cApp.h"
+#include "App.h"
 
-#include <Types/types.h>
-#include <Memory/Tracker/cTracker.h>
+#include <Memory/Tracker/Tracker.h>
 
 namespace qw
 {
+	// NOTE: This will always fail in editor, but SHOULD be valid when compiling.
 	static_assert( registry::type_registry< 0 >::valid, "No types registered." );
 	constexpr static auto types = registry::type_registry< unique_id() - 1 >::registered;
 	const unordered_map< type_hash, const sType_Info* > type_map = { types.begin(), types.end() };

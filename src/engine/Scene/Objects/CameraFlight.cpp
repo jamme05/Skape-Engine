@@ -4,7 +4,7 @@
  *
  */
 
-#include "cCameraFlight.h"
+#include "CameraFlight.h"
 
 #include "Platform/time.h"
 

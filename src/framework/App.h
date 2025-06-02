@@ -1,13 +1,13 @@
 #pragma once
 
-#include <Misc/cSingleton.h>
+#include <Misc/Singleton.h>
 
 #include "Assets/cMesh.h"
-#include "Assets/cShader.h"
-#include "Scene/cScene.h"
-#include "Input/cInput.h"
+#include "Assets/Shader.h"
+#include "Scene/Scene.h"
+#include "Input/Input.h"
 
-#include <Runtime/cRuntimeStruct.h>
+#include <Reflection/RuntimeStruct.h>
 
 namespace qw::Assets {
 	class cShader;

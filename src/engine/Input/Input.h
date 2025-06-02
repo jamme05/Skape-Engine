@@ -8,7 +8,7 @@
 
 #include <queue>
 
-#include "Math/cVector2.h"
+#include "Math/Vector2.h"
 #include "Math/Math.h"
 
 namespace qw::Platform

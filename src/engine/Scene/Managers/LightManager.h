@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "Misc/cSingleton.h"
+#include "Misc/Singleton.h"
 
 namespace qw
 {

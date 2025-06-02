@@ -6,9 +6,8 @@
 
 #pragma once
 
-#include "cObject.h"
-#include "Assets/iAsset.h"
-
+#include "Object.h"
+#include "Assets/Asset.h"
 
 namespace qw
 {

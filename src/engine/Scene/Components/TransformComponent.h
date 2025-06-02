@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "iComponent.h"
+#include "Component.h"
 
 namespace qw::Object::Components
 {

@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "iComponent.h"
-#include "Math/cMatrix4x4.h"
+#include "Component.h"
+#include "Math/Matrix4x4.h"
 
 namespace qw::Scene
 {

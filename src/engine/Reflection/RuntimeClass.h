@@ -26,6 +26,7 @@ namespace qw
 		, m_line( _line )
 		{
 		} // iClass
+		virtual ~iRuntimeClass() = default;
 
 		constexpr auto& getType    ( void ) const { return m_hash; }
 		constexpr auto  getRawName ( void ) const { return m_raw_name; }

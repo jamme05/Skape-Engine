@@ -5,13 +5,13 @@
  */
 
 
-#include "cSceneManager.h"
+#include "SceneManager.h"
 
 #include "Graphics/cRenderer.h"
-#include "Scene/cScene.h"
-#include "cCameraManager.h"
-#include "cEventManager.h"
-#include "Scene/Components/cCameraComponent.h"
+#include "Scene/Scene.h"
+#include "CameraManager.h"
+#include "EventManager.h"
+#include "Scene/Components/CameraComponent.h"
 
 namespace qw
 {

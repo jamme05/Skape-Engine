@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include "cVector.h"
-#include "cVector2.h"
+#include "Vector.h"
+#include "Vector2.h"
 
 namespace qw
 {

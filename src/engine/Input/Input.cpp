@@ -4,11 +4,11 @@
  *
  */
 
-#include "Input/cInput.h"
+#include "Input/Input.h"
 
 #include <mutex>
 
-#include "Memory/Tracker/cTracker.h"
+#include "Memory/Tracker/Tracker.h"
 
 namespace qw
 {

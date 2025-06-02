@@ -4,11 +4,11 @@
  *
  */
 
-#include "cCamera.h"
-#include "Scene/Components/cCameraComponent.h"
+#include "Camera.h"
+#include "Scene/Components/CameraComponent.h"
 
 #include "Graphics/cRenderer.h"
-#include "Scene/Managers/cCameraManager.h"
+#include "Scene/Managers/CameraManager.h"
 
 namespace qw::Object
 {

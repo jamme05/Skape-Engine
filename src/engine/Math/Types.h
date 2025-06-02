@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "cVector2.h"
-#include "cVector3.h"
-#include "cVector4.h"
+#include "Vector2.h"
+#include "Vector3.h"
+#include "Vector4.h"
 
 // TODO: Requires checks if it's numeric
 template <typename T, typename T2> qw::cVector2<T> operator*(T2 _i, qw::cVector2<T> _v)

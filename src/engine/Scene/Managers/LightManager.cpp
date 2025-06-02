@@ -4,5 +4,5 @@
  *
  */
 
-#include "cLightManager.h"
+#include "LightManager.h"
 

@@ -9,10 +9,10 @@
 #include <unordered_map>
 #include <filesystem>
 
-#include "Memory/Tracker/cTracker.h"
-#include "Reflection/cRuntimeClass.h"
+#include "Memory/Tracker/Tracker.h"
+#include "Reflection/RuntimeClass.h"
 #include "Misc/Hashing.h"
-#include "Misc/Smart_ptrs.h"
+#include "Misc/Smart_Ptrs.h"
 
 namespace qw
 {
