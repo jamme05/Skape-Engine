@@ -6,6 +6,8 @@
 
 #include "Asset_List.h"
 
+#include "Assets/Asset.h"
+
 namespace qw::Assets
 {
 	cAsset_List::~cAsset_List( void )

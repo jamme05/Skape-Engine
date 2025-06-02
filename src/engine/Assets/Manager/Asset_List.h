@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "Misc/Smart_ptrs.h"
-
+#include "Reflection/Type_Hash.h"
+#include "Misc/Smart_Ptrs.h"
 #include "fastgltf/core.hpp"
 
 #include "map"
@@ -83,8 +83,8 @@ namespace qw::Assets
 		} // Get_Asset_Of_Type
 
 		template< class Ty >
-		enable_if_asset_t< Ty, std::vector< cShared_ptr< Ty > > >
-		Get_Assets_Of_Type( const int32_t _max_count = 0 )
+		requires std::is_base_of_v< iAsset, Ty >
+		std::vector< cShared_ptr< Ty > > Get_Assets_Of_Type( const int32_t _max_count = 0 )
 		{
 			auto range = m_assets.equal_range( Ty::getStaticClassType() );
 			std::vector< cShared_ptr< Ty > > assets;

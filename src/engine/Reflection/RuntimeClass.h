@@ -8,9 +8,9 @@
 
 #include "Misc/Hashing.h"
 
-#include "Macros/manipulation.h"
+#include "Macros/Manipulation.h"
 
-#include "types.h"
+#include "Types.h"
 
 namespace qw
 {

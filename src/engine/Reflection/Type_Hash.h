@@ -36,5 +36,4 @@ namespace qw
     };
 
     typedef hash< void > type_hash;
-
-}
+} // qw

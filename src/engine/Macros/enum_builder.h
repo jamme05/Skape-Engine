@@ -8,10 +8,10 @@
 
 #include <cstdint>
 
-#include "for_each.h"
-#include "manipulation.h"
+#include "For_Each.h"
+#include "Manipulation.h"
 
-#include <Containers/Const/const_map.h>
+#include <Containers/Const/Const_Map.h>
 
 #define TYPE_ENUM_2( Name, Type ) internal_ ## Name : Type
 #define TYPE_ENUM_1( Name ) internal_ ## Name : uint8_t

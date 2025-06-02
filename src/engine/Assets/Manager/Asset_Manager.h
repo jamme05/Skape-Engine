@@ -7,28 +7,35 @@
 
 #pragma once
 
-#include <unordered_map>
+#include "Assets/Asset.h"
 
-#include "cAsset_List.h"
-#include "Assets/iAsset.h"
-#include "Misc/cSingleton.h"
-#include "Misc/Smart_ptrs.h"
+#include "Containers/Map.h"
+
+#include "Misc/Singleton.h"
+#include "Misc/Smart_Ptrs.h"
 
 #include "fastgltf/core.hpp"
 
 namespace qw
 {
+	namespace Assets
+	{
+		class cAsset_List;
+	}
+
+	class iAsset;
+
 	class cAssetManager : public cSingleton< cAssetManager >
 	{
 	public:
 		 cAssetManager( void );
 		~cAssetManager( void );
 
-		auto getAsset( const Asset_id_t _id ) -> cShared_ptr< Asset_t >;
+		auto getAsset( const uint64_t _id ) -> cShared_ptr< iAsset >;
 
 		template< class Ty >
 		requires std::is_base_of_v< iAsset, Ty >
-		auto getAssetAs( const Asset_id_t _id ) -> cShared_ptr< Ty >
+		auto getAssetAs( const uint64_t _id ) -> cShared_ptr< Ty >
 		{
 			if( auto asset = getAsset( _id ); asset && asset->getClass().isDerivedFrom( Ty::GetStaticClass() ) )
 				return asset.cast< Ty >();
@@ -48,12 +55,12 @@ namespace qw
 		} // createAsset
 
 		// Gets the first asset by name.
-		auto getAssetByName ( const str_hash& _name_hash ) -> cShared_ptr< Asset_t >;
+		auto getAssetByName ( const str_hash& _name_hash ) -> cShared_ptr< iAsset >;
 		// Gets all assets by name.
 		auto getAssetsByName( const str_hash& _name_hash ) -> Assets::cAsset_List;
 
 		// Gets the first asset by path.
-		auto getAssetByPath ( const str_hash& _path_hash ) -> cShared_ptr< Asset_t >;
+		auto getAssetByPath ( const str_hash& _path_hash ) -> cShared_ptr< iAsset >;
 		// Gets all assets made from the same file. ( Multiple in the case of packs )
 		auto getAssetsByPath( const str_hash& _path_hash ) -> Assets::cAsset_List;
 
@@ -63,7 +70,7 @@ namespace qw
 		  * @param _reload Tells the asset manager if it should replace the previous version of the asset with this.
 		  * @return The asset ID of said asset.
 		  */
-		Asset_id_t registerAsset( const cShared_ptr< Asset_t >& _asset, const bool _reload = false );
+		uint64_t registerAsset( const cShared_ptr< iAsset >& _asset, const bool _reload = false );
 
 		 /**
 		  * 
@@ -80,16 +87,16 @@ namespace qw
 
 	private:
 		typedef Assets::cAsset_List( *load_file_func_t )( const std::filesystem::path& );
-		typedef std::unordered_map< hash< Asset_id_t >, cShared_ptr< Asset_t > > id_to_asset_map_t;
-		typedef std::multimap< str_hash, cShared_ptr< Asset_t > >     name_to_asset_map_t;
-		typedef std::unordered_map< str_hash, load_file_func_t >      extension_loader_map_t;
+		typedef unordered_map< hash< uint64_t >, cShared_ptr< iAsset > > id_to_asset_map_t;
+		typedef multimap< str_hash, cShared_ptr< iAsset > >     name_to_asset_map_t;
+		typedef unordered_map< str_hash, load_file_func_t >      extension_loader_map_t;
 		typedef extension_loader_map_t::value_type extension_map_entry_t;
 
 #define EXTENSION_ENTRY( Ext, Func ) extension_map_entry_t{ str_hash( Ext ), Func },
 
 		static auto  loadGltfFile     ( const std::filesystem::path& _path ) -> Assets::cAsset_List;
-		static auto  handleGltfMesh   ( const fastgltf::Asset& _asset, fastgltf::Mesh&    _mesh    ) -> cShared_ptr< Asset_t >;
-		static auto  handleGltfTexture( const fastgltf::Asset& _asset, fastgltf::Texture& _texture ) -> cShared_ptr< Asset_t >;
+		static auto  handleGltfMesh   ( const fastgltf::Asset& _asset, fastgltf::Mesh&    _mesh    ) -> cShared_ptr< iAsset >;
+		static auto  handleGltfTexture( const fastgltf::Asset& _asset, fastgltf::Texture& _texture ) -> cShared_ptr< iAsset >;
 
 		static auto  loadPngFile      ( const std::filesystem::path& _path ) -> Assets::cAsset_List;
 

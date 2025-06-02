@@ -4,12 +4,14 @@
  *
  */
 
-#include "cAsset_manager.h"
+#include "Asset_manager.h"
 
 #include "fastgltf/tools.hpp"
 
-#include <Assets/cMesh.h>
-#include "Assets/cTexture.h"
+#include <Assets/Mesh.h>
+
+#include "Asset_List.h"
+#include "Assets/Texture.h"
 #include "Graphics/cRenderer.h"
 #include "Platform/cPlatform.h"
 
@@ -25,7 +27,7 @@ namespace qw
 		m_assets.clear();
 	} // ~cAssetManager
 
-	auto cAssetManager::getAsset( const Asset_id_t _id ) -> cShared_ptr< Asset_t >
+	auto cAssetManager::getAsset( const uint64_t _id ) -> cShared_ptr< iAsset >
 	{
 		if( const auto asset_itr = m_assets.find( _id ); asset_itr != m_assets.end() )
 			return asset_itr->second;
@@ -33,7 +35,7 @@ namespace qw
 		return nullptr;
 	} // getAsset
 
-	auto cAssetManager::getAssetByName( const str_hash& _name_hash ) -> cShared_ptr< Asset_t >
+	auto cAssetManager::getAssetByName( const str_hash& _name_hash ) -> cShared_ptr< iAsset >
 	{
 		if( const auto itr = m_asset_name_map.find( _name_hash ); itr != m_asset_name_map.end() )
 			return itr->second;
@@ -50,7 +52,7 @@ namespace qw
 		return assets;
 	} // getAssetsByName
 
-	auto cAssetManager::getAssetByPath( const str_hash& _path_hash ) -> cShared_ptr< Asset_t >
+	auto cAssetManager::getAssetByPath( const str_hash& _path_hash ) -> cShared_ptr< iAsset >
 	{
 		if( const auto itr = m_asset_path_map.find( _path_hash ); itr != m_asset_path_map.end() )
 			return itr->second;
@@ -68,12 +70,12 @@ namespace qw
 		return assets;
 	} // getAssetsByPath
 
-	Asset_id_t cAssetManager::registerAsset( const cShared_ptr< Asset_t >& _asset, const bool _reload )
+	uint64_t cAssetManager::registerAsset( const cShared_ptr< iAsset >& _asset, const bool _reload )
 	{
 		// TODO: Add check if asset already exists.
 
 		// TODO: Maybe make a new way to generate ids.
-		const Asset_id_t id  = m_assets.size();
+		const uint64_t id  = m_assets.size();
 		m_assets[ id ]       = _asset;
 		_asset->m_id         = id;
 		m_asset_name_map.insert( { _asset->getNameHash(), _asset } );
@@ -129,7 +131,7 @@ namespace qw
 
 	auto cAssetManager::getAbsolutePath( const std::filesystem::path& _path ) -> std::filesystem::path
 	{
-		return std::filesystem::path( OS_ROOT ) /= _path;
+		return std::filesystem::path( QW_GAME_DIR ) /= _path;
 	} // getAbsolutePath
 
 	void cAssetManager::makeAbsolutePath( std::filesystem::path& _path )
@@ -309,7 +311,7 @@ namespace qw
 		return mesh_asset;
 	} // handleGltfMesh
 
-	auto cAssetManager::handleGltfTexture( const fastgltf::Asset& _asset, fastgltf::Texture& _texture ) -> cShared_ptr<Asset_t>
+	auto cAssetManager::handleGltfTexture( const fastgltf::Asset& _asset, fastgltf::Texture& _texture ) -> cShared_ptr< iAsset >
 	{
 		if( !_texture.imageIndex.has_value() )
 			return nullptr;

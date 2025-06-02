@@ -6,15 +6,15 @@
 
 #pragma once
 
+#include "Containers/Const/String.h"
+#include "Containers/Const/Array.h"
+#include <Containers/Map.h>
+
 #include "Misc/Hashing.h"
-#include "Containers/Const/string.h"
-#include "Containers/Const/array.h"
+#include "Macros/Enum_Builder.h"
+#include <Macros/Manipulation.h>
 
-#include <Macros/manipulation.h>
-
-#include <Containers/map.h>
-
-#include "Macros/enum_builder.h"
+#include "Type_Hash.h"
 
 namespace qw
 {

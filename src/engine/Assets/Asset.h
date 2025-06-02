@@ -19,9 +19,7 @@ namespace qw
 	class cAssetManager;
 
 	// Remember to update macro if changing this.
-	typedef uint64_t Asset_id_t;
-	typedef uint32_t hash_t;
-	constexpr auto kInvalid_Asset_Id = std::numeric_limits< Asset_id_t >::max();
+	constexpr auto kInvalid_Asset_Id = std::numeric_limits< uint64_t >::max();
 
 	// Base Asset interface
 	GENERATE_ALL_CLASS( iAsset )
@@ -39,7 +37,7 @@ namespace qw
 		virtual void Save( void ) = 0;
 
 	private:
-		Asset_id_t m_id = kInvalid_Asset_Id;
+		uint64_t m_id = kInvalid_Asset_Id;
 
 		void set_path( const std::filesystem::path& _path ){ m_path = _path; m_path_hash = m_path; }
 
@@ -73,8 +71,6 @@ namespace qw
 
 	friend Ty;
 	};
-
-	typedef iAsset Asset_t;
 
 	template< class In, class Out >
 	using enable_if_asset_t = std::enable_if_t< std::is_base_of_v< iAsset, In >, Out >;
