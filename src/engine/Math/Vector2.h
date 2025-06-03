@@ -10,7 +10,7 @@
 
 #include "VectorSwizzle.h"
 
-namespace qw
+namespace qw::Math
 {
 	template< typename T >
 	using cVector2 = cVector< 2, T >;

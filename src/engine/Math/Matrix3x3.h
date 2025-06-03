@@ -10,7 +10,7 @@
 #include "Vector3.h"
 
 
-namespace qw
+namespace qw::Math
 {
 	template < typename T > using cMatrix3x3 = cMatrix<3, 3, T>;
 

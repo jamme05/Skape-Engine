@@ -15,7 +15,7 @@
 
 #include "Matrix_helper.h"
 
-namespace qw
+namespace qw::Math
 {
 	template <typename T>
 	class cMatrix<4, 4, T>

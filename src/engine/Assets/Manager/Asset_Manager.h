@@ -18,12 +18,19 @@
 
 namespace qw
 {
+	class iAsset;
+
 	namespace Assets
 	{
 		class cAsset_List;
-	}
 
-	class iAsset;
+		enum class eGltfFilter
+		{
+			kScene,
+			kModel,
+			kTexture,
+		};
+	}  // Assets
 
 	class cAssetManager : public cSingleton< cAssetManager >
 	{
@@ -95,7 +102,7 @@ namespace qw
 #define EXTENSION_ENTRY( Ext, Func ) extension_map_entry_t{ str_hash( Ext ), Func },
 
 		static auto  loadGltfFile     ( const std::filesystem::path& _path ) -> Assets::cAsset_List;
-		static auto  handleGltfMesh   ( const fastgltf::Asset& _asset, fastgltf::Mesh&    _mesh    ) -> cShared_ptr< iAsset >;
+		static auto  handleGltfModel  ( const fastgltf::Asset& _asset, fastgltf::Mesh&    _mesh    ) -> Assets::cAsset_List;
 		static auto  handleGltfTexture( const fastgltf::Asset& _asset, fastgltf::Texture& _texture ) -> cShared_ptr< iAsset >;
 
 		static auto  loadPngFile      ( const std::filesystem::path& _path ) -> Assets::cAsset_List;

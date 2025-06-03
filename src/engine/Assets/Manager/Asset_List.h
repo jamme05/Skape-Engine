@@ -6,11 +6,13 @@
 
 #pragma once
 
-#include "Reflection/Type_Hash.h"
-#include "Misc/Smart_Ptrs.h"
-#include "fastgltf/core.hpp"
+#include "Containers/map.h"
 
-#include "map"
+#include "Reflection/Type_Hash.h"
+
+#include "Misc/Smart_Ptrs.h"
+
+#include "fastgltf/core.hpp"
 
 namespace qw
 {
@@ -23,8 +25,8 @@ namespace qw::Assets
 	// A container for the newly imported assets.
 	class cAsset_List
 	{
-		typedef std::multimap< type_hash, cShared_ptr< iAsset > > asset_map_t;
-		typedef std::map< type_hash, size_t >                     asset_counter_map_t;
+		typedef multimap< type_hash, cShared_ptr< iAsset > > asset_map_t;
+		typedef map< type_hash, size_t >                     asset_counter_map_t;
 
 		class asset_iterator
 		{
@@ -60,6 +62,8 @@ namespace qw::Assets
 		requires std::is_base_of_v< iAsset, Ty >
 		cShared_ptr< Ty > Get_Asset_Of_Type( void )
 		{
+			std::lock_guard lock( m_mtx );
+
 			auto  range   = m_assets.equal_range( Ty::getStaticClassType() );
 
 			if( range.first == m_assets.end() )
@@ -86,6 +90,8 @@ namespace qw::Assets
 		requires std::is_base_of_v< iAsset, Ty >
 		std::vector< cShared_ptr< Ty > > Get_Assets_Of_Type( const int32_t _max_count = 0 )
 		{
+			std::lock_guard lock( m_mtx );
+
 			auto range = m_assets.equal_range( Ty::getStaticClassType() );
 			std::vector< cShared_ptr< Ty > > assets;
 
@@ -117,6 +123,7 @@ namespace qw::Assets
 	private:
 		friend class qw::cAssetManager;
 
+		std::mutex          m_mtx;
 		asset_map_t         m_assets;
 		asset_counter_map_t m_counters;
 	};

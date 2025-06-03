@@ -12,7 +12,7 @@
 
 #include "VectorSwizzle.h"
 
-namespace qw
+namespace qw::Math
 {
 	template <typename T> using cVector4 = cVector<4, T>;
 

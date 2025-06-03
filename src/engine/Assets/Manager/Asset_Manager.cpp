@@ -11,9 +11,12 @@
 #include <Assets/Mesh.h>
 
 #include "Asset_List.h"
+#include "Assets/Model.h"
 #include "Assets/Texture.h"
 #include "Graphics/cRenderer.h"
+#include "Helpers/Mesh_Helper.h"
 #include "Platform/cPlatform.h"
+#include "Scene/Managers/CameraManager.h"
 
 namespace qw
 {
@@ -162,153 +165,31 @@ namespace qw
 		}
 		for( auto& mesh : asset.meshes )
 		{
-			if( auto mesh_asset = handleGltfMesh( asset, mesh ) )
-				assets.add_asset( mesh_asset );
+			auto mesh_assets = handleGltfModel( asset, mesh );
+			assets += mesh_assets;
 		}
 
 		return assets;
 	} // loadGltfFile
 
-	auto cAssetManager::handleGltfMesh( const fastgltf::Asset& _asset, fastgltf::Mesh& _mesh ) -> cShared_ptr< Asset_t >
+	auto cAssetManager::handleGltfModel( const fastgltf::Asset& _asset, fastgltf::Mesh& _mesh ) -> Assets::cAsset_List
 	{
-		auto mesh_asset = Assets::cMesh::create_shared( std::string( _mesh.name ) );
-		// TODO: Model asset where each primitive is a mesh asset
+		Assets::cAsset_List assets;
+		auto model_asset = Assets::cModel::create_shared();
 		for( auto& primitive : _mesh.primitives )
 		{
 			// Check if primitive has indices, go to next if it doesn't.
 			if( !primitive.indicesAccessor.has_value() )
 				continue;
 
-			auto& index_accessor = _asset.accessors[ primitive.indicesAccessor.value() ];
-
-			mesh_asset->loadIndicesFromAccessor( _asset, index_accessor );
-
-			for( const auto& attribute : primitive.attributes )
+			auto mesh_asset = Assets::cMesh::create_shared( std::string( _mesh.name ) );
+			if( Graphics::Helpers::cMesh_Helper::ParseGltfPrimitiveMesh( mesh_asset, _asset, primitive ) )
 			{
-				auto  name_hash = str_hash( attribute.name );
-				auto& buffers   = mesh_asset->m_buffers;
-
-				auto& accessor  = _asset.accessors[ attribute.accessorIndex ];
-
-				const size_t size = getElementByteSize( accessor.type, accessor.componentType ) * accessor.count;
-
-				auto& buffer = buffers.m_buffers[ name_hash ];
-				buffer.resize( size );
-
-				//constexpr fastgltf::DefaultBufferDataAdapter adapter = {};
-
-				// Copy raw?
-				//auto src_bytes = adapter( _asset, *accessor.bufferViewIndex ).subspan( accessor.byteOffset );
-				// TODO: Support more types
-
-				// TODO: Replace this, check loadGltfTexture for reference on how to access data.
-
-				switch( accessor.type )
-				{
-				case fastgltf::AccessorType::Scalar:
-					switch( accessor.componentType )
-					{
-					case fastgltf::ComponentType::Byte:          fastgltf::copyFromAccessor< int8_t   >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::UnsignedByte:  fastgltf::copyFromAccessor< uint8_t  >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::Short:         fastgltf::copyFromAccessor< int16_t  >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::UnsignedShort: fastgltf::copyFromAccessor< uint16_t >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::Int:           fastgltf::copyFromAccessor< int32_t  >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::UnsignedInt:   fastgltf::copyFromAccessor< uint32_t >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::Float:         fastgltf::copyFromAccessor< float    >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::Double:        fastgltf::copyFromAccessor< double   >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::Invalid: break;
-					}
-				break;
-				case fastgltf::AccessorType::Vec2:
-					switch( accessor.componentType )
-					{
-					case fastgltf::ComponentType::Byte:          fastgltf::copyFromAccessor< fastgltf::math::vec< int8_t,   2 > >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::UnsignedByte:  fastgltf::copyFromAccessor< fastgltf::math::vec< uint8_t,  2 > >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::Short:         fastgltf::copyFromAccessor< fastgltf::math::vec< int16_t,  2 > >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::UnsignedShort: fastgltf::copyFromAccessor< fastgltf::math::vec< uint16_t, 2 > >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::Int:           fastgltf::copyFromAccessor< fastgltf::math::vec< int32_t,  2 > >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::UnsignedInt:   fastgltf::copyFromAccessor< fastgltf::math::vec< uint32_t, 2 > >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::Float:         fastgltf::copyFromAccessor< fastgltf::math::vec< float,    2 > >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::Double:        fastgltf::copyFromAccessor< fastgltf::math::vec< double,   2 > >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::Invalid: break;
-					}
-				break;
-				case fastgltf::AccessorType::Vec3:
-					switch( accessor.componentType )
-					{
-					case fastgltf::ComponentType::Byte:          fastgltf::copyFromAccessor< fastgltf::math::vec< int8_t,   3 > >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::UnsignedByte:  fastgltf::copyFromAccessor< fastgltf::math::vec< uint8_t,  3 > >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::Short:         fastgltf::copyFromAccessor< fastgltf::math::vec< int16_t,  3 > >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::UnsignedShort: fastgltf::copyFromAccessor< fastgltf::math::vec< uint16_t, 3 > >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::Int:           fastgltf::copyFromAccessor< fastgltf::math::vec< int32_t,  3 > >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::UnsignedInt:   fastgltf::copyFromAccessor< fastgltf::math::vec< uint32_t, 3 > >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::Float:         fastgltf::copyFromAccessor< fastgltf::math::vec< float,    3 > >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::Double:        fastgltf::copyFromAccessor< fastgltf::math::vec< double,   3 > >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::Invalid: break;
-					}
-				break;
-				case fastgltf::AccessorType::Vec4:
-					switch( accessor.componentType )
-					{
-					case fastgltf::ComponentType::Byte:          fastgltf::copyFromAccessor< fastgltf::math::vec< int8_t,   4 > >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::UnsignedByte:  fastgltf::copyFromAccessor< fastgltf::math::vec< uint8_t,  4 > >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::Short:         fastgltf::copyFromAccessor< fastgltf::math::vec< int16_t,  4 > >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::UnsignedShort: fastgltf::copyFromAccessor< fastgltf::math::vec< uint16_t, 4 > >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::Int:           fastgltf::copyFromAccessor< fastgltf::math::vec< int32_t,  4 > >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::UnsignedInt:   fastgltf::copyFromAccessor< fastgltf::math::vec< uint32_t, 4 > >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::Float:         fastgltf::copyFromAccessor< fastgltf::math::vec< float,    4 > >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::Double:        fastgltf::copyFromAccessor< fastgltf::math::vec< double,   4 > >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::Invalid: break;
-					}
-				break;
-				case fastgltf::AccessorType::Mat2:
-					switch( accessor.componentType )
-					{
-					case fastgltf::ComponentType::Float:         fastgltf::copyFromAccessor< fastgltf::math::mat< float, 2, 2 > >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::Byte:
-					case fastgltf::ComponentType::UnsignedByte:
-					case fastgltf::ComponentType::Short:
-					case fastgltf::ComponentType::UnsignedShort:
-					case fastgltf::ComponentType::Int:
-					case fastgltf::ComponentType::UnsignedInt:
-					case fastgltf::ComponentType::Double:
-					case fastgltf::ComponentType::Invalid: break;
-					}
-					break;
-				case fastgltf::AccessorType::Mat3:
-					switch( accessor.componentType )
-					{
-					case fastgltf::ComponentType::Float:         fastgltf::copyFromAccessor< fastgltf::math::mat< float, 3, 3 > >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::Byte:
-					case fastgltf::ComponentType::UnsignedByte:
-					case fastgltf::ComponentType::Short:
-					case fastgltf::ComponentType::UnsignedShort:
-					case fastgltf::ComponentType::Int:
-					case fastgltf::ComponentType::UnsignedInt:
-					case fastgltf::ComponentType::Double:
-					case fastgltf::ComponentType::Invalid: break;
-					}
-					break;
-				case fastgltf::AccessorType::Mat4:
-					switch( accessor.componentType )
-					{
-					case fastgltf::ComponentType::Float:         fastgltf::copyFromAccessor< fastgltf::math::mat< float, 4, 4 > >( _asset, accessor, buffer.data() ); break;
-					case fastgltf::ComponentType::Byte:
-					case fastgltf::ComponentType::UnsignedByte:
-					case fastgltf::ComponentType::Short:
-					case fastgltf::ComponentType::UnsignedShort:
-					case fastgltf::ComponentType::Int:
-					case fastgltf::ComponentType::UnsignedInt:
-					case fastgltf::ComponentType::Double:
-					case fastgltf::ComponentType::Invalid: break;
-					}
-				break;
-				case fastgltf::AccessorType::Invalid: break;
-				}
-			} // const auto& attribute : primitive.attributes
+				
+			}
 		} // auto& primitive : _mesh.primitives
 
-		return mesh_asset;
+		return assets;
 	} // handleGltfMesh
 
 	auto cAssetManager::handleGltfTexture( const fastgltf::Asset& _asset, fastgltf::Texture& _texture ) -> cShared_ptr< iAsset >

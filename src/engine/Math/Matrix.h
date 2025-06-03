@@ -10,7 +10,7 @@
 #include "Vector.h"
 #include "Vector2.h"
 
-namespace qw
+namespace qw::Math
 {
 	template < size_t W, size_t H, typename T > class cMatrix
 	{

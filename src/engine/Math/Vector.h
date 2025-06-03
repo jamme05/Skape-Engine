@@ -8,7 +8,7 @@
 
 #include "Math.h"
 
-namespace qw
+namespace qw::Math
 {
 	/// <summary>
 	/// Just don't do this...

@@ -13,6 +13,6 @@ namespace qw::Assets
     QW_ASSET_CLASS( Mesh )
     {
     public:
-        
+        virtual void Update( void );
     };
 } // qw::Assets
