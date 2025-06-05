@@ -40,6 +40,7 @@ namespace qw::str
     requires is_valid_string< arr::type< Str > >
     struct substr_internal
     {
+        // TODO: Only use range
         constexpr static size_t offset = get_range( Str.size(), Start, End ).first;
         constexpr static size_t size   = get_range( Str.size(), Start, End ).second;
         constexpr substr_internal( void )

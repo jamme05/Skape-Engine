@@ -18,6 +18,11 @@ namespace qw
         typedef Ty ( & arr_type )[ Size ];
         constexpr static auto array_size = Size;
 
+        constexpr array( const Ty* _ptr )
+        {
+            std::copy_n( _ptr, Size, value );
+        } // array
+
         constexpr array( const Ty ( &_arr )[ Size ] )
         {
             std::copy_n( _arr, Size, value );
@@ -51,14 +56,17 @@ namespace qw
         constexpr const Ty* end  ( void ) const { return get() + Size; }
         constexpr       Ty* end  ( void )       { return get() + Size; }
 
-        constexpr const Ty* get  ( void ) const { return value; }
-        constexpr       Ty* get  ( void )       { return value; }
+        constexpr const Ty* get  ( void ) const { return value + offset; }
+        constexpr       Ty* get  ( void )       { return value + offset; }
 
-        constexpr const Ty& operator[]( const size_t _index ) const { return value[ _index ]; }
-        constexpr       Ty& operator[]( const size_t _index )       { return value[ _index ]; }
+        constexpr const Ty& operator[]( const size_t _index ) const { return get()[ _index ]; }
+        constexpr       Ty& operator[]( const size_t _index )       { return get()[ _index ]; }
 
-        constexpr size_t size( void ) const { return array_size; }
+        constexpr size_t size( void ) const { return array_size - offset; }
 
+        // Really cheaty way of doing it.
+        // TODO: If a better way exists. Replace this
+        size_t offset = 0;
         Ty value[ Size ];
     };
 
@@ -92,6 +100,7 @@ namespace qw
     class array_ref
     {
     public:
+        array_ref( void );
         /**
          *
          * @attention Requires _array to be static.
@@ -101,6 +110,9 @@ namespace qw
          */
         template< size_t Size >
         constexpr array_ref( const array< Ty, Size >& _array );
+
+        constexpr auto& operator=( const array_ref& _other );
+        constexpr auto& operator=( array_ref&& _other ) noexcept;
 
         constexpr const Ty* begin( void ) const { return get(); }
         constexpr const Ty* end  ( void ) const { return get() + size(); }
@@ -117,6 +129,13 @@ namespace qw
     };
 
     template< class Ty >
+    array_ref< Ty >::array_ref( void )
+    : m_size( 0 )
+    , m_data( nullptr )
+    {
+    } // array_ref
+
+    template< class Ty >
     template< size_t Size >
     constexpr array_ref< Ty >::array_ref( const array< Ty, Size >& _array )
     : m_size( _array.size() )
@@ -124,8 +143,29 @@ namespace qw
     {
     } // array_ref
 
+    template< class Ty >
+    constexpr auto& array_ref< Ty >::operator=( const array_ref& _other )
+    {
+        m_size = _other.m_size;
+        m_data = _other.m_data;
+        return *this;
+    } // operator= ( Copy )
+
+    template< class Ty >
+    constexpr auto& array_ref< Ty >::operator=( array_ref&& _other ) noexcept
+    {
+        m_size = _other.m_size;
+        m_data = _other.m_data;
+        _other.m_size = 0;
+        _other.m_data = nullptr;
+        return *this;
+    } // operator= ( Move )
+
     namespace arr
     {
+        template< array Array >
+        using type = typename decltype( Array )::value_type;
+
         template< array First, array Second >
         requires std::is_same_v< typename decltype( First )::value_type, typename decltype( Second )::value_type >
         struct concat
@@ -133,8 +173,13 @@ namespace qw
             constexpr static auto kValue = First + Second;
             constexpr static auto kSize  = First.size() + Second.size();
         };
-        template< array Array >
-        using type = typename decltype( Array )::value_type;
+
+        template< array Arr >
+        struct remove_offset
+        {
+            typedef type< Arr > type;
+            constexpr static auto kValue = array< type, Arr.size() >{ Arr.get() };
+        };
     } // arr::
     template< class Ty, class... Ty2 >
     requires std::conjunction_v< std::is_same< Ty, Ty2 >... >
@@ -142,6 +187,7 @@ namespace qw
     template< class Ty, size_t Size >
     array( const Ty ( & )[ Size ] ) -> array< Ty, Size >;
 
+    typedef char str_type;
     template< size_t Size >
-    using string = array< char, Size >;
+    using string = array< str_type, Size >;
 } // qw::
