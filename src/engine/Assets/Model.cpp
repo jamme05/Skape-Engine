@@ -6,11 +6,11 @@
 
 #include "Model.h"
 
-namespace qw::Assets
+namespace sk::Assets
 {
     cModel::cModel( const std::string& _name )
     : cAsset( _name )
     {
     } // cModel
     
-} // qw::Assets
+} // sk::Assets

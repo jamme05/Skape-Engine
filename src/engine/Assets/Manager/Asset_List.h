@@ -14,13 +14,13 @@
 
 #include "fastgltf/core.hpp"
 
-namespace qw
+namespace sk
 {
 	class iAsset;
 	class cAssetManager;
-} // qw::
+} // sk::
 
-namespace qw::Assets
+namespace sk::Assets
 {
 	// A container for the newly imported assets.
 	class cAsset_List
@@ -121,11 +121,11 @@ namespace qw::Assets
 		void remove_asset( const cShared_ptr< iAsset >& _asset );
 
 	private:
-		friend class qw::cAssetManager;
+		friend class sk::cAssetManager;
 
 		std::mutex          m_mtx;
 		asset_map_t         m_assets;
 		asset_counter_map_t m_counters;
 	};
 
-} // qw::Assets::
+} // sk::Assets::

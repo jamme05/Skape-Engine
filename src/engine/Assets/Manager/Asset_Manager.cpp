@@ -18,7 +18,7 @@
 #include "Platform/cPlatform.h"
 #include "Scene/Managers/CameraManager.h"
 
-namespace qw
+namespace sk
 {
 	cAssetManager::cAssetManager( void )
 	{
@@ -262,4 +262,4 @@ namespace qw
 	} // loadEmbedded
 
 
-} // qw::
+} // sk::

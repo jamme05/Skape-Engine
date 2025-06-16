@@ -9,8 +9,8 @@
 #include <cstdint>
 
 #include "For_Each.h"
-#include "Manipulation.h"
 
+#include "Containers/Const/String.h"
 #include <Containers/Const/Const_Map.h>
 
 #define TYPE_ENUM_2( Name, Type ) internal_ ## Name : Type
@@ -58,7 +58,7 @@
 #define CREATE_VALUE_METADATA_TYPE( Type ) \
 struct sValueInfo \
 { Type Value; \
-qw::str_hash name_hash; \
+sk::str_hash name_hash; \
 const char*  Name; \
 const char*  DisplayName; \
 };
@@ -140,7 +140,7 @@ constexpr int get_safe_enum_value( const int _value ){ return _value; };
 	{ typedef NAME ## Type enum_t; typedef SAFE_TYPE ## Type value_t; \
 	CREATE_VALUE_METADATA_TYPE( enum_t ) \
 	FOR_EACH_W_ARG( FAKE_ENUM_MEMBER, Type, __VA_ARGS__ ) \
-	static constexpr qw::const_map kValues{ qw::array{ FOR_EACH_FORWARD_W_ARG( ENUM_VALUE_METADATA, Type, __VA_ARGS__ ) } }; \
+	static constexpr sk::const_map kValues{ sk::array{ FOR_EACH_FORWARD_W_ARG( ENUM_VALUE_METADATA, Type, __VA_ARGS__ ) } }; \
 	BUILD_ENUM_OPERATORS( RAW ## Type ) \
 	/* BUILD_INFO_GETTER( Type, __VA_ARGS__ ) */ \
 	} // Removed semicolon to give the c++ feel ehe
@@ -162,52 +162,51 @@ constexpr int get_safe_enum_value( const int _value ){ return _value; };
 	BUILD_ENUM_BODY( Type, __VA_ARGS__ );  \
 	BUILD_ENUM_METADATA( Type, __VA_ARGS__ )
 
-#define REGISTER_ENUM( Type ) \
-
-/**
- *
- * @param Type ENUM/ENUMCLASS ( Name, [ Size ] )
- * @param ...  Value/E( Name, [ value ], [ Display Name ] )
- *
-**/
-#define MAKE_ENUM( Type, ... ) \
-	MAKE_UNREFLECTED_ENUM( Type, __VA_ARGS__ )
-	REGISTER_ENUM( Type )
-
+template< class Ty, class ETy >
+constexpr Ty enum_value_builder( ETy _value, const char* _name, const char* _display_name = nullptr )
+{
+	if( _display_name == nullptr )
+	{
+		_display_name = _name;
+		if( *_display_name == 'k' )
+			++_display_name;
+	}
+	return { _value, _name, _name, _display_name };
+}
 template< class ETy, class Ty, class... Args >
 constexpr Ty enum_value_creator( ETy _value, const char* _name, const char* _display_name, Args... )
 {
-	return { _value, _name, _name, _display_name };
+	return enum_value_builder< Ty >( _value, _name, _display_name );
 } // enum_value_creator
 
 template< class ETy, class Ty, class... Args >
 constexpr Ty enum_value_creator( ETy _value, const char* _name, const size_t, const char* _display_name, Args... )
 {
-	return { _value, _name, _name, _display_name }; // Forward in case of future changes.
+	return enum_value_builder< Ty >( _value, _name, _display_name ); // Forward in case of future changes.
 } // enum_value_creator
 
 template< class ETy, class Ty, class... Args >
 constexpr Ty enum_value_creator( ETy _value, const char* _name, const int, const char* _display_name, Args... )
 {
-	return { _value, _name, _name, _display_name }; // Forward in case of future changes.
+	return enum_value_builder< Ty >( _value, _name, _display_name ); // Forward in case of future changes.
 } // enum_value_creator
 
 template< class ETy, class Ty >
 constexpr Ty enum_value_creator( ETy _value, const char* _name )
 {
-	return { _value, _name, _name, _name };
+	return enum_value_builder< Ty >( _value, _name );
 } // enum_value_creator
 
 template< class ETy, class Ty >
 constexpr Ty enum_value_creator( ETy _value, const char* _name, const size_t )
 {
-	return { _value, _name, _name, _name }; // Forward in case of future changes.
+	return enum_value_builder< Ty >( _value, _name ); // Forward in case of future changes.
 } // enum_value_creator
 
 template< class ETy, class Ty >
 constexpr Ty enum_value_creator( ETy _value, const char* _name, const int )
 {
-	return { _value, _name, _name, _name }; // Forward in case of future changes.
+	return enum_value_builder< Ty >( _value, _name ); // Forward in case of future changes.
 } // enum_value_creator
 
 MAKE_UNREFLECTED_ENUM( ENUM( eExample1 ),

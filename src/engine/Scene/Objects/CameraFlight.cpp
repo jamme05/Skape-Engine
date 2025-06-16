@@ -8,7 +8,7 @@
 
 #include "Platform/time.h"
 
-namespace qw::Object
+namespace sk::Object
 {
 	cCameraFlight::cCameraFlight( const std::string& _name, const float _movement_speed, const float _rotation_speed )
 	: cCamera( _name )
@@ -81,5 +81,5 @@ namespace qw::Object
 			}
 		}
 	}
-} // qw::Object::
+} // sk::Object::
 

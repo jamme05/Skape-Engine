@@ -8,7 +8,7 @@
 
 #include <Containers/Const/Array.h>
 
-namespace qw
+namespace sk
 {
     template< typename Ty >
     class cLinked_Iterator
@@ -151,10 +151,10 @@ namespace qw
     cLinked_Array( Ty ) -> cLinked_Array< Ty, true >;
     template< typename Ty >
     cLinked_Array( Ty, cLinked_Array< Ty, true > ) -> cLinked_Array< Ty, true >;
-} // qw::
+} // sk::
 
 inline void tmp()
 {
-    constexpr qw::cLinked_Array arr1{ 10 };
-    constexpr qw::cLinked_Array arr2{ 10, arr1 };
+    constexpr sk::cLinked_Array arr1{ 10 };
+    constexpr sk::cLinked_Array arr2{ 10, arr1 };
 }

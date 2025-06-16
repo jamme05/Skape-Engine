@@ -8,7 +8,7 @@
 
 #include "Component.h"
 
-namespace qw::Object::Components
+namespace sk::Object::Components
 {
 	QW_COMPONENT_CLASS( TransformComponent )
 	{
@@ -16,4 +16,4 @@ namespace qw::Object::Components
 		 cTransformComponent( void ) = default;
 		~cTransformComponent( void ) = default;
 	};
-} // qw::Object::Components
+} // sk::Object::Components

@@ -11,7 +11,7 @@
 #include "Graphics/cRenderer.h"
 #include "Scene/Managers/SceneManager.h"
 
-namespace qw::Object::Components
+namespace sk::Object::Components
 {
 	cMeshComponent::cMeshComponent( const cShared_ptr<Assets::cMesh>& _mesh )
 	: m_mesh( _mesh )
@@ -29,5 +29,5 @@ namespace qw::Object::Components
 
 		m_mesh->renderMesh( &back );
 	}
-} // qw::Object::Components
+} // sk::Object::Components
 

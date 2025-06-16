@@ -8,11 +8,11 @@
 
 #include <Scene/Object.h>
 
-namespace qw::Object
+namespace sk::Object
 {
 	QW_OBJECT_CLASS( Light )
 	{
 	public:
 		cLight();
 	};
-} // qw::Object
+} // sk::Object

@@ -13,16 +13,16 @@
 #include "Types/graphics_types.h"
 #include "Assets/cMesh.h"
 
-namespace qw::Assets {
+namespace sk::Assets {
 	class cTexture;
 }
 
-namespace qw::Scene
+namespace sk::Scene
 {
 	class cCameraManager;
-} // qw::Scene
+} // sk::Scene
 
-namespace qw::Object::Components
+namespace sk::Object::Components
 {
 	QW_COMPONENT_CLASS( MeshComponent )
 	{
@@ -38,4 +38,4 @@ namespace qw::Object::Components
 		// TODO: Move to materal
 		cShared_ptr< Assets::cTexture > m_texture;
 	};
-} // qw::Object::Components
+} // sk::Object::Components

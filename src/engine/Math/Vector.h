@@ -8,7 +8,7 @@
 
 #include "Math.h"
 
-namespace qw::Math
+namespace sk::Math
 {
 	/// <summary>
 	/// Just don't do this...
@@ -28,4 +28,4 @@ namespace qw::Math
 
 	}; // cVector
 
-} // qw::
+} // sk::

@@ -11,12 +11,12 @@
 #include "Math/Vector2.h"
 #include "Math/Math.h"
 
-namespace qw::Platform
+namespace sk::Platform
 {
 	class cPad;
-} // qw::Platform::
+} // sk::Platform::
 
-namespace qw::Input
+namespace sk::Input
 {
 	class iListener;
 
@@ -100,4 +100,4 @@ namespace qw::Input
 
 	}; // iListener
 
-} // qw::Input::
+} // sk::Input::

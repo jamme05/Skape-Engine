@@ -10,7 +10,7 @@
 
 #define GUARD std::lock_guard lock( m_mtx );
 
-namespace qw::Assets
+namespace sk::Assets
 {
 	cAsset_List::~cAsset_List( void )
 	{
@@ -77,6 +77,6 @@ namespace qw::Assets
 		}
 	} // remove_asset
 
-} // qw::Assets::
+} // sk::Assets::
 
 #undef GUARD

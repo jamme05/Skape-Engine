@@ -12,7 +12,7 @@
 
 #include "VectorSwizzle.h"
 
-namespace qw::Math
+namespace sk::Math
 {
 	template <typename T> using cVector4 = cVector<4, T>;
 
@@ -200,7 +200,7 @@ namespace qw::Math
 
 	} // Color::
 
-} // qw::
+} // sk::
 
 template< typename Ty >
-qw::cVector4< Ty > operator*( const Ty& _l, const qw::cVector4< Ty >& _r ){ return qw::cVector4< Ty >{ _r.x * _l, _r.y * _l, _r.z * _l, _r.w * _l }; }
+sk::cVector4< Ty > operator*( const Ty& _l, const sk::cVector4< Ty >& _r ){ return sk::cVector4< Ty >{ _r.x * _l, _r.y * _l, _r.z * _l, _r.w * _l }; }

@@ -8,7 +8,7 @@
 
 #include "Matrix4x4.h"
 
-namespace qw
+namespace sk
 {
 	class cTransform
 	{
@@ -72,5 +72,5 @@ namespace qw
 
 		const cTransform* m_parent = nullptr;
 	};
-} // qw::
+} // sk::
 

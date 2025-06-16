@@ -6,15 +6,10 @@
     "BuildFile"   : "Build.lua",
     "Type"        : "Platform",
     "Supports"    : {
-        "Engine" : "QWarp-0.0.1",
+        "Engine" : "0.0.1",
         "Platforms" : [
             "Win64"
         ]
     },
-    "Dependencies" : [
-        {
-            "Type"     : "Graphics",
-            "Id"       : ""
-        }
-    ]
+    "Dependencies" : []
 }

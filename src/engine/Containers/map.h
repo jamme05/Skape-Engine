@@ -11,7 +11,7 @@
 
 #include "Allocator.h"
 
-namespace qw
+namespace sk
 {
 	template< class Key, class Value, class Compare = std::less< Key > >
 	using map = std::map< Key, Value, Compare, allocator< std::pair< const Key, Value > > >;
@@ -24,4 +24,4 @@ namespace qw
 
 	template< class Key, class Value, class Hasher = std::hash< Key >, class KeyEq = std::equal_to< Key > >
 	using unordered_multimap = std::unordered_multimap< Key, Value, Hasher, KeyEq, allocator< std::pair< const Key, Value > > >;
-} // qw::
+} // sk::

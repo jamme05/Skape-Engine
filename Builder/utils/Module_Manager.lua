@@ -25,6 +25,22 @@ function Default_Module_Setup( module_name )
     end
 end
 
+function Module_Setup( module_name, library_dirs, includes )
+    return function( module_dir )
+    project( module_name )
+        kind "StaticLib"
+        location( "Build/Module/" .. module_name )
+        language "C++"
+        targetdir( "bin/Module/" .. module_name )
+    
+        files { DefaultModuleFiles( "Modules/" .. module_dir .. "/src/**", { ".hpp", ".h", ".cpp" } ) }
+        
+        includedirs { "src/engine", includes( module_dir ) }
+        libdirs { library_dirs( module_dir ) }
+    end
+end
+
+
 function Load_Module( partial_module )
     local module_dir       = modules_dir .. partial_module.Dir
     local module_file      = io.readfile( module_dir .. "/module.json" )

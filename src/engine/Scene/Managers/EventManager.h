@@ -16,7 +16,7 @@
 #include "Misc/print.h"
 #include "Misc/Smart_ptrs.h"
 
-namespace qw
+namespace sk
 {
 	class cScene;
 
@@ -394,18 +394,18 @@ namespace qw
 	template< class... Args >
 	size_t Register_Event_Helper( const hash< Object::eEvents >& _event, void( *_function )( Args... ), void* )
 	{
-		return qw::cEventManager::get().registerLister( _event, _function ).second;
+		return sk::cEventManager::get().registerLister( _event, _function ).second;
 	} // Register_Event_Helper
 
-} // qw::
+} // sk::
 
-#define EVENT_HASH( Event ) constexpr qw::hash< qw::Object::eEvents > Hash( Event )
+#define EVENT_HASH( Event ) constexpr sk::hash< sk::Object::eEvents > Hash( Event )
 
 #define POST_EVENT( Event ) { \
 EVENT_HASH( Event ); \
-qw::cEventManager::get().postEvent( Hash ); }
+sk::cEventManager::get().postEvent( Hash ); }
 
 // Has to be called inside a class
 #define REGISTER_LISTENER( Event, Function ) { \
 EVENT_HASH( Event ); \
-qw::Register_Event_Helper( Hash, Function, this ); }
+sk::Register_Event_Helper( Hash, Function, this ); }

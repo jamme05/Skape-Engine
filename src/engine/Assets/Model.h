@@ -16,12 +16,12 @@
 #include "Math/Vector4.h"
 
 
-namespace qw::Assets
+namespace sk::Assets
 {
 	class cMesh;
-} // qw::Assets
+} // sk::Assets
 
-namespace qw::Assets
+namespace sk::Assets
 {
 	QW_ASSET_CLASS( Model )
 	{
@@ -41,4 +41,4 @@ namespace qw::Assets
 
 		cTransform m_transform;
 	};
-} // qw::Assets::
+} // sk::Assets::

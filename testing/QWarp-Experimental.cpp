@@ -29,16 +29,16 @@ MAKE_STRUCT( Testing2,
 
 static void print_types( void )
 {
-    for( const auto& val : qw::type_map | std::views::values )
+    for( const auto& val : sk::type_map | std::views::values )
     {
         switch( val->type )
         {
-        case qw::sType_Info::eType::kStandard:
+        case sk::sType_Info::eType::kStandard:
         {
             printf( "Type: %s Name: %s Size: %llu \n", val->raw_name, val->name, TO_LLU( val->size ) );
         }
         break;
-        case qw::sType_Info::eType::kStruct:
+        case sk::sType_Info::eType::kStruct:
         {
             printf( "Struct: %s Name: %s Size: %llu \n", val->raw_name, val->name, TO_LLU( val->size ) );
             for( const auto struct_info = val->as_struct_info(); const auto& member : struct_info->members | std::views::values )
@@ -54,19 +54,19 @@ static void print_types( void )
     }
 }
 
-namespace qw
+namespace sk
 {
     static_assert( registry::type_registry< 0 >::valid, "No types registered." );
     
     constexpr static auto& types = registry::type_registry< unique_id() - 1 >::registered;
     const unordered_map< type_hash, const sType_Info* > type_map = { types.begin(), types.end() };
-} // qw::
+} // sk::
 
-constexpr static size_t requirements_display_name( qw::array_ref< char > _to_parse )
+constexpr static size_t requirements_display_name( sk::array_ref< char > _to_parse )
 {
     return 5;
 }
-constexpr static void handle_display_name( qw::array_ref< char > _to_parse, char* _out )
+constexpr static void handle_display_name( sk::array_ref< char > _to_parse, char* _out )
 {
     
 }
@@ -83,29 +83,29 @@ struct parser_data
 {
     uint8_t requires_arg : 1;
     uint8_t type : 7;
-    size_t( *requirements_func )( qw::array_ref< char > );
-    void( *parser_func )( qw::array_ref< char >, char* );
+    size_t( *requirements_func )( sk::array_ref< char > );
+    void( *parser_func )( sk::array_ref< char >, char* );
 };
 
-constexpr static qw::const_map parser_map{ qw::array{
-    std::pair< qw::str_hash, parser_data >{ "DisplayName", parser_data{ .requires_arg = 1, .type = kString, .requirements_func = &requirements_display_name, .parser_func = &handle_display_name } },
+constexpr static sk::const_map parser_map{ sk::array{
+    std::pair< sk::str_hash, parser_data >{ "DisplayName", parser_data{ .requires_arg = 1, .type = kString, .requirements_func = &requirements_display_name, .parser_func = &handle_display_name } },
 } };
 
 template< size_t Index, class Ty, const Ty& Strings >
 static consteval auto get_requirements( void )
 {
     constexpr auto val = std::get< Index >( Strings );
-    typedef qw::str::find< val, "=" > search;
+    typedef sk::str::find< val, "=" > search;
     // Make sure it hashes the correct part
-    constexpr qw::str_hash hash = qw::str_hash( val.get(), search::kIndex );
+    constexpr sk::str_hash hash = sk::str_hash( val.get(), search::kIndex );
 
     if constexpr( constexpr auto p_index = parser_map.find( hash ); p_index != -1 )
     {
         const auto& parser = parser_map.get( p_index ).second;
         auto req = parser.requirements_func( val );
-        return qw::array{ std::pair< size_t, size_t >{ Index, req } };
+        return sk::array{ std::pair< size_t, size_t >{ Index, req } };
     }
-    return qw::array{ std::pair< size_t, size_t >{ Index, 0 } };
+    return sk::array{ std::pair< size_t, size_t >{ Index, 0 } };
 }
 
 template< size_t Index, size_t Count, class Ty, const Ty& AsTuple >
@@ -114,7 +114,7 @@ struct iterate;
 template< bool Valid, class Instance >
 struct fetcher
 {
-    static constexpr auto requirements = qw::array< std::pair< size_t, size_t >, 0 >{};
+    static constexpr auto requirements = sk::array< std::pair< size_t, size_t >, 0 >{};
 };
 template< class Instance >
 struct fetcher< true, Instance >
@@ -141,7 +141,7 @@ struct iterate
     static constexpr auto requirements = fetcher_t::requirements;
 };
 
-template< qw::array... Arrays >
+template< sk::array... Arrays >
 struct test_str
 {
     constexpr static auto size         = sizeof...( Arrays );
@@ -163,11 +163,11 @@ int main()
     typedef test_str< "DisplayName=\"Test\"", "Hidden=true", "ReadOnly" >::iterate_t::package_t save_t;
     constexpr static auto t1 = get_requirements< save_t::kIndex, save_t::tuple_t, save_t::kTuple >();
     constexpr static auto t = std::get< 0 >( save_t::kTuple );
-    typedef qw::str::find< t, "=" > search;
-    constexpr qw::str_hash h1{ t.get(), search::kIndex };
+    typedef sk::str::find< t, "=" > search;
+    constexpr sk::str_hash h1{ t.get(), search::kIndex };
     constexpr auto r1 = parser_map.find( h1 );
-    constexpr qw::str_hash h2{ "DisplayName" };
-    constexpr qw::str_hash h3{ "DisplayName=\"Test\"", search::kIndex };
+    constexpr sk::str_hash h2{ "DisplayName" };
+    constexpr sk::str_hash h3{ "DisplayName=\"Test\"", search::kIndex };
     constexpr bool b1 = h1 == h2;
     
     test_str< "DisplayName=\"Test\"", "Hidden=true", "ReadOnly" >::iterate_t::fetcher_t::next_t::fetcher_t::next_t::fetcher_t::requirements;

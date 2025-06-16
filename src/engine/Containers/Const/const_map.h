@@ -7,10 +7,10 @@
 #pragma once
 
 // TODO: Use forward declare instead?
-#include "Containers/Const/Array.h"
-#include "Misc/Hashing.h"
+#include <Containers/Const/Array.h>
+#include <Misc/Hashing.h>
 
-namespace qw
+namespace sk
 {
     template< class Ty >
     struct is_valid_hash
@@ -185,4 +185,4 @@ namespace qw
     , m_data( _map.begin() )
     {
     } // map_ref
-} // qw::
+} // sk::

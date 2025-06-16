@@ -13,7 +13,7 @@
 #include "EventManager.h"
 #include "Scene/Components/CameraComponent.h"
 
-namespace qw
+namespace sk
 {
 	Graphics::cRender_context*    cSceneManager::m_active_context = nullptr;
 	cSceneManager::sObjectBuffer* cSceneManager::m_out_buffer = nullptr;
@@ -66,4 +66,4 @@ namespace qw
 
 		_context.end( _swap );
 	} // render_with
-} // qw::
+} // sk::

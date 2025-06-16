@@ -9,7 +9,7 @@
 #include "Camera.h"
 #include "Input/Input.h"
 
-namespace qw::Object
+namespace sk::Object
 {
 	QW_OBJECT_CLASS( CameraFlight, cCamera ), public Input::iListener
 	{
@@ -28,4 +28,4 @@ namespace qw::Object
 		cVector2f m_rotation = kZero;
 		cVector2f m_speeds;
 	};
-} // qw::Object
+} // sk::Object

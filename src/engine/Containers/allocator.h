@@ -9,7 +9,7 @@
 #include <memory>
 #include "Memory/Tracker/Tracker.h"
 
-namespace qw
+namespace sk
 {
 	template< class Ty >
 	class allocator
@@ -67,9 +67,9 @@ namespace qw
 		} // max_size
 
 	};
-} // qw::
+} // sk::
 
 template<class T, class U>
-bool operator==(const qw::allocator<T>&, const qw::allocator <U>&) { return true; }
+bool operator==(const sk::allocator<T>&, const sk::allocator <U>&) { return true; }
 template<class T, class U>
-bool operator!=(const qw::allocator <T>&, const qw::allocator <U>&) { return false; }
+bool operator!=(const sk::allocator <T>&, const sk::allocator <U>&) { return false; }

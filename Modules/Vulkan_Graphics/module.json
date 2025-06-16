@@ -5,7 +5,7 @@
     "Version"     : "0.0.1",
     "Type"        : "Graphics",
     "Supports"    : {
-        "Engine" : "QWarp-0.0.1",
+        "Engine" : "0.0.1",
         "Platforms" : [
             "Win64",
             "Android"

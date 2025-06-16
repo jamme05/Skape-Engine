@@ -4,7 +4,11 @@
         "Dir" : "Win64_Platform"
     },
     {
-        "Id"  : "40ae8314-183a-4cae-96ee-e27e8eda6443",
-        "Dir" : "Vulkan_Graphics"
+        "Id"  : "e4f5a45b-c3b3-461f-91bb-f4069569370c",
+        "Dir" : "OpenGL_Graphics"
+    },
+    {
+        "Id"  : "7bf87c8a-27fe-4368-be9e-7026145d4ff0",
+        "Dir" : "SDL3_Wrapper"
     }
 ]

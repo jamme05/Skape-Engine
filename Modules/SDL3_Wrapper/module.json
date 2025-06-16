@@ -1,0 +1,26 @@
+{
+    "Name"        : "SDL3 Wrapper",
+    "Description" : "Allows safe usage with SDL3.",
+    "Id"          : "7bf87c8a-27fe-4368-be9e-7026145d4ff0",
+    "Version"     : "0.0.1",
+    "Type"        : "Window",
+    "Supports"    : {
+        "Engine" : "0.0.1",
+        "Platforms" : [
+            "Win64",
+            "Android"
+        ]
+    },
+    "Dependencies" : [
+        {
+            "Type"  : "Platform",
+            "Group" : 0,
+            "Id"    : "c895cc22-aa64-46d2-badc-2a4c233b0989"
+        },
+        {
+            "Type"  : "Platform",
+            "Group" : 0,
+            "Id"    : "[placeholder for t.ex android]"
+        }
+    ]
+}

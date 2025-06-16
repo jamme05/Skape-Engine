@@ -10,7 +10,7 @@
 #include <math.h>
 #include <valarray>
 
-namespace qw
+namespace sk
 {
 	template< class T >
 	using enable_arithmetic_t = std::enable_if_t< std::is_arithmetic_v< T >, T >;
@@ -196,4 +196,4 @@ namespace qw
 			}
 
 	} // Math::
-} // qw::
+} // sk::

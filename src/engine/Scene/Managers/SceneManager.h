@@ -13,7 +13,7 @@
 #include "Misc/Singleton.h"
 #include "Misc/Smart_ptrs.h"
 
-namespace qw
+namespace sk
 {
 	class cScene;
 
@@ -36,7 +36,7 @@ namespace qw
 
 		static void render( void );
 
-		void render_with( qw::Object::Components::cCameraComponent& _camera, Graphics::cRender_context& _context, const bool _swap = true );
+		void render_with( sk::Object::Components::cCameraComponent& _camera, Graphics::cRender_context& _context, const bool _swap = true );
 
 		static auto get_active_context( void ){ return m_active_context; }
 
@@ -50,4 +50,4 @@ namespace qw
 
 		vector< cShared_ptr< cScene > > m_scenes;
 	};
-} // qw::
+} // sk::

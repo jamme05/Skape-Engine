@@ -8,7 +8,7 @@
 
 #include <fastgltf/types.hpp>
 
-namespace qw::Graphics::Helpers
+namespace sk::Graphics::Helpers
 {
     bool cMesh_Helper::ParseGltfPrimitiveMesh(
         const Assets::Mesh::ptr_t& _mesh, const fastgltf::Asset& _asset,
@@ -17,4 +17,4 @@ namespace qw::Graphics::Helpers
         // TODO: Get mesh functional with vulkan and then build the parser. Multi threaded?
         return false;
     } // ParseGltfAsset
-} // qw::Graphics::Helpers
+} // sk::Graphics::Helpers

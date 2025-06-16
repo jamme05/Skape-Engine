@@ -7,7 +7,7 @@
 
 #include "EventManager.h"
 
-namespace qw
+namespace sk
 {
 	namespace Event
 	{
@@ -73,4 +73,4 @@ namespace qw
 
 		return kInvalid_Id;
 	} // FindListenerId
-} // qw::
+} // sk::

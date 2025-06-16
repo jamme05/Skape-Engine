@@ -16,7 +16,7 @@
 
 #include "fastgltf/core.hpp"
 
-namespace qw
+namespace sk
 {
 	class iAsset;
 
@@ -126,7 +126,7 @@ namespace qw
 	namespace Assets
 	{
 		template< class Ty, class... Args >
-		cShared_ptr< Ty > create( Args... _args ){ auto asset = qw::cShared_ptr< Ty >( QW_NEW( Ty, 1, _args... ) ); cAssetManager::get().registerAsset( asset ); return asset; }
+		cShared_ptr< Ty > create( Args... _args ){ auto asset = sk::cShared_ptr< Ty >( QW_NEW( Ty, 1, _args... ) ); cAssetManager::get().registerAsset( asset ); return asset; }
 	} // Assets::
 
-} // qw::
+} // sk::

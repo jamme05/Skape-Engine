@@ -3,6 +3,8 @@
 // Use if instead?
 #if defined( __INTELLISENSE__ ) || defined( __RESHARPER__ )
 #define IN_EDITOR 1
+#else
+#define IN_EDITOR 0
 #endif // __INTELLISENSE__ || __RESHARPER__
 
 #define EMPTY( ... )

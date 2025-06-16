@@ -71,7 +71,7 @@ Add kEditorRender to premade events
 
 Add
 template< class Ty, class Ty2, Ty2 Value >
-constexpr qw::hash< Ty > CalcHash( Value );
+constexpr sk::hash< Ty > CalcHash( Value );
 
 Something like unreals user struct
 When created, creates a read-only header for the struct, or just a class type, such as unreal.
@@ -94,7 +94,7 @@ Make graphics and os cores different selections, allow more reusability. (Infras
 
 Plugins containing a lib and header? Should probably be made once the engine is functional within itself (Infrastructure, medium priority)
 
-Something similar to std::function class, but holds the logic for validating args as well as the class itself weak ptr? qw::callback
+Something similar to std::function class, but holds the logic for validating args as well as the class itself weak ptr? sk::callback
 
 ## Ensure Engine Structure:
 Base: Barebones requirements to get the Engine running as well as includes for both the Engine and Framework. Everything will be headers.

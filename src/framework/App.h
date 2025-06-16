@@ -9,19 +9,19 @@
 
 #include <Reflection/RuntimeStruct.h>
 
-namespace qw::Assets {
+namespace sk::Assets {
 	class cShader;
 }
 
-namespace qw::Graphics::Agc
+namespace sk::Graphics::Agc
 {
 	class cWindow_context;
-} // qw::Graphics::Agc
+} // sk::Graphics::Agc
 
-namespace qw::Graphics
+namespace sk::Graphics
 {
 	class cRender_context;
-} // qw::Graphics::
+} // sk::Graphics::
 
 MAKE_STRUCT( TestStruct,
 	M( int32_t, Count ),
@@ -36,7 +36,7 @@ MAKE_STRUCT( TestStructNested,
 	M( TestStruct, Val2 ),
 )
 
-class cApp : public qw::cSingleton< cApp >, qw::Input::iListener
+class cApp : public sk::cSingleton< cApp >, sk::Input::iListener
 {
 	bool m_running = true;
 
@@ -48,7 +48,7 @@ public:
 	bool running   ( void ) const         { return m_running; }
 	void setRunning( const bool _running ){ m_running = _running; }
 
-	bool onInput( const qw::Input::eType _type, const qw::Input::sEvent& _event ) override;
+	bool onInput( const sk::Input::eType _type, const sk::Input::sEvent& _event ) override;
 
 	void create ( void );
 	void destroy( void );
@@ -57,9 +57,9 @@ public:
 	static void print_types( void );
 	static void custom_event( void );
 
-	qw::cShared_ptr< qw::Assets::cShader > m_mesh_pair = nullptr;
-	qw::cShared_ptr< qw::Assets::cShader > m_post_pair = nullptr;
+	sk::cShared_ptr< sk::Assets::cShader > m_mesh_pair = nullptr;
+	sk::cShared_ptr< sk::Assets::cShader > m_post_pair = nullptr;
 
-	qw::cShared_ptr< qw::cScene > m_scene = nullptr;
-	std::vector< qw::cShared_ptr< qw::Assets::cMesh > > m_meshes = {};
+	sk::cShared_ptr< sk::cScene > m_scene = nullptr;
+	std::vector< sk::cShared_ptr< sk::Assets::cMesh > > m_meshes = {};
 };

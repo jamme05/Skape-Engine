@@ -10,7 +10,7 @@
 #include "Graphics/cRenderer.h"
 #include "Scene/Components/CameraComponent.h"
 
-namespace qw::Scene
+namespace sk::Scene
 {
 	cCameraManager::cCameraManager( void )
 	{
@@ -68,4 +68,4 @@ namespace qw::Scene
 		m_main_camera.m_camera->update(); // TODO: Get rid of force update.
 		cSceneManager::get().render_with( *m_main_camera.m_camera, Graphics::cRenderer::get().getRenderContext() );
 	} // render
-} // qw::Scene::
+} // sk::Scene::

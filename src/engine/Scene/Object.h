@@ -16,12 +16,12 @@
 #include "Components/TransformComponent.h"
 #include <Reflection/RuntimeClass.h>
 
-namespace qw
+namespace sk
 {
 	class cScene;
-} // qw::
+} // sk::
 
-namespace qw::Object
+namespace sk::Object
 {
 // TODO: Check if class shit is needed? Like with Assets and Components.
 	GENERATE_CLASS( iObject ), public Event::cEventListener, public cShared_from_this< iObject >
@@ -30,14 +30,14 @@ namespace qw::Object
 	public:
 		// TODO: Create templated constructor with root type + parameters
 		explicit iObject( std::string _name )
-		: m_root( qw::make_shared< Components::cTransformComponent >() )
+		: m_root( sk::make_shared< Components::cTransformComponent >() )
 		, m_name( std::move( _name ) )
 		{
 		} // iObject
 
 		template< class Ty = iComponent, class... Args >
 		explicit iObject( std::string _name, Args... _args )
-		: m_root( qw::make_shared< Ty >( _args... ) )
+		: m_root( sk::make_shared< Ty >( _args... ) )
 		, m_name( std::move( _name ) )
 	{
 		} // iObject
@@ -53,7 +53,7 @@ namespace qw::Object
 		requires std::is_base_of_v< iComponent, Ty >
 		cShared_ptr< Ty > addComponent( Args&&... _args )
 		{
-			auto ptr = qw::make_shared< Ty >( std::forward< Args >( _args )... );
+			auto ptr = sk::make_shared< Ty >( std::forward< Args >( _args )... );
 
 			ptr->m_object = get_weak_this();
 			ptr->setParent( m_root );
@@ -121,10 +121,10 @@ namespace qw::Object
 		explicit cObject( std::string _name ) : iObject( std::move( _name ) ){}
 	};
 
-} // qw::Object::
+} // sk::Object::
 
-#define OBJECT_PARENT_CLASS( ObjectName, ... ) qw::Object::iObject
-#define OBJECT_PARENT_VALIDATOR( ObjectName, ... ) std::is_base_of_v< qw::Object::iObject, __VA_ARGS__ >
+#define OBJECT_PARENT_CLASS( ObjectName, ... ) sk::Object::iObject
+#define OBJECT_PARENT_VALIDATOR( ObjectName, ... ) std::is_base_of_v< sk::Object::iObject, __VA_ARGS__ >
 #define OBJECT_PARENT_CREATOR_2( ObjectName, ... ) AFTER_FIRST( __VA_ARGS__ )
 #define OBJECT_PARENT_CREATOR_1( ObjectName, ... ) cObject< M_CLASS( ObjectName ), ObjectName :: runtime_class_t, ObjectName :: CONCAT( runtime_class_, ObjectName ) >
 #define OBJECT_PARENT_CREATOR( ObjectName, ... ) CONCAT( OBJECT_PARENT_CREATOR_, VARGS( __VA_ARGS__ ) ) ( ObjectName, __VA_ARGS__ )

@@ -10,7 +10,7 @@
 #include "Graphics/cRenderer.h"
 #include "Scene/Managers/CameraManager.h"
 
-namespace qw::Object
+namespace sk::Object
 {
 	cCamera::cCamera( const std::string& _name )
 	: cObject( _name )
@@ -34,4 +34,4 @@ namespace qw::Object
 	{
 		Scene::cCameraManager::get().setMainCamera( m_camera );
 	} // setAsMain
-} // qw::Object::
+} // sk::Object::

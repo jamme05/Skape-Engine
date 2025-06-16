@@ -10,7 +10,7 @@
 
 #include "Memory/Tracker/Tracker.h"
 
-namespace qw
+namespace sk
 {
 	namespace Input
 	{
@@ -110,4 +110,4 @@ namespace qw
 
 	} // Input::
 
-} // qw::
+} // sk::

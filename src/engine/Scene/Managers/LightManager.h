@@ -8,7 +8,7 @@
 
 #include "Misc/Singleton.h"
 
-namespace qw
+namespace sk
 {
 	class cLightManager : public cSingleton< cLightManager >
 	{

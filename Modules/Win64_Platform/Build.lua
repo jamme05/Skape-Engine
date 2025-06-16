@@ -5,7 +5,7 @@ module = {
         filter{ "platforms:Win64" }
             toolset( "clang" )
             cppdialect( "c++20" ) -- Add something like Maximum Cpp version/dialect?
-            defines( { "QW_TARGET_WIN64", "QW_CPP20", "QW_GAME_DIR=\"./\"" } )
+            defines( { "SK_TARGET_WIN64", "SK_CPP20", "SK_GAME_DIR=\"./\"" } )
 
         -- May remove QW_CPP20 later.
     end,

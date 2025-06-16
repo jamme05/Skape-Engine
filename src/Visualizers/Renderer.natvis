@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?> 
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
-	<Type Name= "qw::Graphics::cDynamic_buffer&lt;*&gt;">
+	<Type Name= "sk::Graphics::cDynamic_buffer&lt;*&gt;">
 		<Intrinsic Name="size"     Expression="m_data.current - m_data.start" />
 		<Intrinsic Name="capacity" Expression="m_data.limit   - m_data.start" />
 		<DisplayString>
@@ -16,7 +16,7 @@
 			</ArrayItems>
 		</Expand>
 	</Type>
-	<Type Name= "qw::Graphics::cRender_context">
+	<Type Name= "sk::Graphics::cRender_context">
 		<Intrinsic Name="count" Expression="m_context_count" />
 		<DisplayString>
 			{{ count={count()} }}
@@ -28,7 +28,7 @@
 			</ArrayItems>
 		</Expand>
 	</Type>
-	<Type Name= "qw::Graphics::cContext">
+	<Type Name= "sk::Graphics::cContext">
 		<Intrinsic Name="count" Expression="m_render_target_count" />
 		<DisplayString>
 			{{ count={count()} }}

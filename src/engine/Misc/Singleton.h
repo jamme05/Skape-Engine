@@ -8,7 +8,7 @@
 
 #include "Memory/Memory.h"
 
-namespace qw
+namespace sk
 {
 	template< class Ty >
 	class cSingleton
@@ -32,4 +32,4 @@ namespace qw
 
 	template< class Ty > Ty* cSingleton< Ty >::m_instance = nullptr;
 
-} // qw::
+} // sk::

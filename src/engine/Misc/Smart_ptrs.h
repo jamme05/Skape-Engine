@@ -11,7 +11,7 @@
 
 #include "Memory/Tracker/Tracker.h"
 
-namespace qw
+namespace sk
 {
 	namespace Ptr_logic
 	{
@@ -625,4 +625,4 @@ namespace qw
 		else
 			return cShared_ptr< Ty >( ptr );
 	}
-} // qw::
+} // sk::

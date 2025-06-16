@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <utility>
 
-namespace qw
+namespace sk
 {
     template< class Ty, size_t Size >
     struct array
@@ -21,11 +21,6 @@ namespace qw
         constexpr array( const Ty* _ptr )
         {
             std::copy_n( _ptr, Size, value );
-        } // array
-
-        constexpr array( const Ty ( &_arr )[ Size ] )
-        {
-            std::copy_n( _arr, Size, value );
         } // array
 
         template< class... Args >
@@ -187,7 +182,19 @@ namespace qw
     template< class Ty, size_t Size >
     array( const Ty ( & )[ Size ] ) -> array< Ty, Size >;
 
-    typedef char str_type;
-    template< size_t Size >
-    using string = array< str_type, Size >;
-} // qw::
+    template< class Ty >
+    struct is_array
+    {
+        static constexpr bool kValue    = false;
+        static constexpr bool kIsString = false;
+    };
+    template< class Ty, size_t S >
+    struct is_array< array< Ty, S > >
+    {
+        static constexpr bool kValue    = true;
+    };
+    template< class Ty >
+    constexpr static bool is_array_v = is_array< Ty >::kValue;
+    template< class Ty >
+    constexpr static bool is_string_v = is_array< Ty >::kIsString;
+} // sk::

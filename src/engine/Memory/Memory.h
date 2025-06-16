@@ -9,7 +9,7 @@
 #include <cstdint>
 #include <type_traits>
 
-namespace qw::Memory
+namespace sk::Memory
 {
 	enum eAlignment : uint8_t
 	{
@@ -38,9 +38,9 @@ namespace qw::Memory
 
 	template< typename Ty, size_t Count = 1, eAlignment Alignment = kDefaultAlign >
 	static constexpr size_t byte_size = get_size< Ty, Alignment >( Count );
-} // qw::Memory::
+} // sk::Memory::
 
-namespace qw::Memory::Internal
+namespace sk::Memory::Internal
 {
 	// Untrackable alloc, use only for internal stuff.
 	template< typename Ty, typename... Args >
@@ -65,7 +65,7 @@ namespace qw::Memory::Internal
 		::free( _block );
 	}
 
-} // qw::Memory::Internal::
+} // sk::Memory::Internal::
 
-#define QW_INTERNAL_ALLOC( size ) qw::Memory::Internal::alloc( size )
-#define QW_INTERNAL_FREE( block ) qw::Memory::Internal::free( block )
+#define QW_INTERNAL_ALLOC( size ) sk::Memory::Internal::alloc( size )
+#define QW_INTERNAL_FREE( block ) sk::Memory::Internal::free( block )

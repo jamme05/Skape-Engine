@@ -10,9 +10,9 @@
 
 #include "Macros/Manipulation.h"
 
-#include "Types.h"
+#include "Type_Registry.h"
 
-namespace qw
+namespace sk
 {
 	class iClass;
 
@@ -178,19 +178,19 @@ namespace qw
 
 	template< class Ty >
 	constexpr static bool is_valid_class_v = std::is_base_of_v< iClass, Ty >;
-} // qw::
+} // sk::
 
 // TODO: Rename getStaticClassType to getStaticType
 
-#define QW_BASE_CLASS( ... ) qw::iClass
-#define QW_CLASS_VALID( ClassName, Parent, ... ) qw::is_valid_class_v< Parent >
-#define QW_MESSAGE_CLASS_VALID( ClassName, Parent, ... ) qw::is_valid_class_v< Parent >, "Class " #Parent " isn't in the reflection system."
+#define QW_BASE_CLASS( ... ) sk::iClass
+#define QW_CLASS_VALID( ClassName, Parent, ... ) sk::is_valid_class_v< Parent >
+#define QW_MESSAGE_CLASS_VALID( ClassName, Parent, ... ) sk::is_valid_class_v< Parent >, "Class " #Parent " isn't in the reflection system."
 
 // Required to make a runtime class functional.
 #define CREATE_CLASS_IDENTIFIERS( RuntimeClass ) public: \
 	typedef decltype( RuntimeClass ) class_type;           \
-	constexpr const qw::iRuntimeClass&             getClass    ( void ) const override { return m_class;     } \
-	constexpr const qw::type_hash& getClassType( void ) override { return m_class.getType(); } \
+	constexpr const sk::iRuntimeClass&             getClass    ( void ) const override { return m_class;     } \
+	constexpr const sk::type_hash& getClassType( void ) override { return m_class.getType(); } \
 	std::string                       getClassName( void ) override { return m_class.getName(); } \
 	static constexpr auto&  getStaticClass    ( void ){ return RuntimeClass;           } \
 	static constexpr auto&  getStaticClassType( void ){ return RuntimeClass .getType(); } \
@@ -201,14 +201,14 @@ namespace qw
 
 #define CREATE_CLASS_BODY( Class ) CREATE_CLASS_IDENTIFIERS( runtime_class_ ## Class )
 
-#define CREATE_RUNTIME_CLASS_VALUE( Class, Name, ... ) static constexpr auto CONCAT( runtime_class_, Name ) = qw::cRuntimeClass< Class __VA_OPT__(,) FORWARD( __VA_ARGS__ ) >( #Name, __FILE__, __LINE__ );
+#define CREATE_RUNTIME_CLASS_VALUE( Class, Name, ... ) static constexpr auto CONCAT( runtime_class_, Name ) = sk::cRuntimeClass< Class __VA_OPT__(,) FORWARD( __VA_ARGS__ ) >( #Name, __FILE__, __LINE__ );
 
 // Requires you to manually add CREATE_CLASS_IDENTIFIERS inside the body. But gives greater freedom. First inheritance will always have to be public. Unable to function with templated classes.
 // Deprecated
 #define GENERATE_CLASS( Class, ... ) \
 class Class ; \
 CREATE_RUNTIME_CLASS_VALUE( Class, Class, __VA_ARGS__ ) \
-class Class : public qw::get_inherits_t< FIRST( __VA_ARGS__ ) > \
+class Class : public sk::get_inherits_t< FIRST( __VA_ARGS__ ) > \
 
 // Generates both runtime info and start of body body, but removes most of your freedom. Unable to function with templated classes.
 // Deprecated
@@ -239,9 +239,9 @@ class Class : public qw::get_inherits_t< FIRST( __VA_ARGS__ ) > \
 	class ClassType; \
 	namespace ClassName { \
 		static_assert( ParentValidator( ClassName, ParentClass ) ); \
-		typedef qw::cShared_ptr< ClassType > ptr_t; \
-		typedef qw::cWeak_Ptr< ClassType >   weak_t; \
-		typedef qw::cShared_Ref< ClassType > ref_t; \
+		typedef sk::cShared_ptr< ClassType > ptr_t; \
+		typedef sk::cWeak_Ptr< ClassType >   weak_t; \
+		typedef sk::cShared_Ref< ClassType > ref_t; \
 		CREATE_RUNTIME_CLASS_VALUE( ClassType, ClassName, ParentClass ) \
 		ExtrasMacro( ClassName __VA_OPT__( , ) __VA_ARGS__ ) \
 		typedef decltype( CONCAT( runtime_class_, ClassName ) ) runtime_class_t; \

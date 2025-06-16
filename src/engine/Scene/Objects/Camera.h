@@ -9,7 +9,7 @@
 #include "Scene/Object.h"
 #include "Scene/Components/CameraComponent.h"
 
-namespace qw::Object
+namespace sk::Object
 {
 	QW_OBJECT_CLASS( Camera )
 	{
@@ -20,4 +20,4 @@ namespace qw::Object
 
 		Components::CameraComponent::ptr_t m_camera;
 	};
-} // qw::Object
+} // sk::Object

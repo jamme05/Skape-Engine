@@ -10,8 +10,8 @@
 
 #include "allocator.h"
 
-namespace qw
+namespace sk
 {
 	template< typename Ty >
 	using vector = std::vector< Ty, allocator< Ty > >;
-} // qw::
+} // sk::

@@ -9,7 +9,7 @@
 #include "Object.h"
 #include "Assets/Asset.h"
 
-namespace qw
+namespace sk
 {
 	namespace Object::Components
 	{
@@ -28,7 +28,7 @@ namespace qw
 		requires std::is_base_of_v< Object::iObject, Ty >
 		cShared_ptr< Ty > create_object( const std::string& _name, Args... _args )
 		{
-			auto shared = qw::make_shared< Ty >( _name, _args... );
+			auto shared = sk::make_shared< Ty >( _name, _args... );
 			m_objects.emplace_back( shared );
 			return shared;
 		} // create_object
@@ -41,4 +41,4 @@ namespace qw
 		vector< cShared_ptr< Object::iObject > > m_objects = {};
 	};
 
-} // qw::
+} // sk::

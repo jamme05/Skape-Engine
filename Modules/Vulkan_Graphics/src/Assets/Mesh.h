@@ -8,11 +8,11 @@
 
 #include "Assets/Asset.h"
 
-namespace qw::Assets
+namespace sk::Assets
 {
     QW_ASSET_CLASS( Mesh )
     {
     public:
         virtual void Update( void );
     };
-} // qw::Assets
+} // sk::Assets

@@ -9,7 +9,7 @@
 #include "Scene/Managers/cCameraManager.h"
 #include "Scene/Managers/cSceneManager.h"
 
-namespace qw::Object::Components
+namespace sk::Object::Components
 {
 	cCameraComponent::cCameraComponent( const Graphics::sViewport& _viewport, const Graphics::sScissor& _scissors, const sCameraSettings& _settings, const eType _type )
 	: m_camera_settings( _settings )
@@ -65,4 +65,4 @@ namespace qw::Object::Components
 			cVector4f( 0.0f, 0.0f, -2.0f * m_camera_settings.far * m_camera_settings.near / depth, 0.0f ),
 		};
 	} // calculateProjectionMatrix
-} // qw::Object::Components::
+} // sk::Object::Components::

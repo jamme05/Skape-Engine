@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?> 
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
-	<Type Name= "qw::cVector&lt;2,*&gt;">
+	<Type Name= "sk::cVector&lt;2,*&gt;">
 		<DisplayString>
 			{{ {x}, {y} }}
 		</DisplayString>
@@ -9,7 +9,7 @@
 			<Item Name="Y">y</Item>
 		</Expand>
 	</Type>
-	<Type Name= "qw::cVector&lt;3,*&gt;">
+	<Type Name= "sk::cVector&lt;3,*&gt;">
 		<DisplayString>
 			{{ {x}, {y}, {z} }}
 		</DisplayString>
@@ -19,7 +19,7 @@
 			<Item Name="Z">z</Item>
 		</Expand>
 	</Type>
-	<Type Name= "qw::cVector&lt;4,*&gt;">
+	<Type Name= "sk::cVector&lt;4,*&gt;">
 		<DisplayString>
 			{{ {x}, {y}, {z}, {w} }}
 		</DisplayString>

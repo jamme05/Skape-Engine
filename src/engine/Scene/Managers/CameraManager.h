@@ -10,19 +10,19 @@
 #include "Misc/Smart_ptrs.h"
 #include "Scene/Object.h"
 
-namespace qw::Graphics
+namespace sk::Graphics
 {
 	class cRender_context;
-} // qw::Graphics
+} // sk::Graphics
 
-namespace qw::Object::Components
+namespace sk::Object::Components
 {
 	class cCameraComponent;
-} // qw::Object::Components
+} // sk::Object::Components
 
 #define INVALID_CAMERA_ID uint64_t( -1 )
 
-namespace qw::Scene
+namespace sk::Scene
 {
 	typedef Object::Components::cCameraComponent camera_t;
 
@@ -57,4 +57,4 @@ namespace qw::Scene
 	// All cameras being rendered to ( if they have a set render_context or render_target )
 		map< uint64_t, cShared_ptr< camera_t > > m_enabled_cameras;
 	};
-} // qw::Scene
+} // sk::Scene

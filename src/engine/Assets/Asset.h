@@ -14,7 +14,7 @@
 #include "Misc/Hashing.h"
 #include "Misc/Smart_Ptrs.h"
 
-namespace qw
+namespace sk
 {
 	class cAssetManager;
 
@@ -65,7 +65,7 @@ namespace qw
 		static Ty* create( Args... _args ){ return QW_NEW( Ty, 1, _args... ); }
 
 		template< class... Args >
-		static cShared_ptr< Ty > create_shared( Args... _args ){ return qw::cShared_ptr< Ty >( QW_NEW( Ty, 1, _args... ) ); }
+		static cShared_ptr< Ty > create_shared( Args... _args ){ return sk::cShared_ptr< Ty >( QW_NEW( Ty, 1, _args... ) ); }
 
 		void Save( void ) override { /* Saving not supported */ }
 
@@ -77,14 +77,14 @@ namespace qw
 	template< class Ty >
 	static constexpr bool is_valid_asset_v = std::is_base_of_v< iAsset, Ty >;
 
-} // qw::
+} // sk::
 
 // Initializes data required for cAsset.
 // The class created by this will be using the default naming (ex: Mesh becomes cMesh).
-// Raw values can be accessed in qw::Assets::[Name], (ex qw::Assets::Mesh)
-#define ASSET_PARENT_CLASS( AssetName, ... ) qw::iAsset
-#define ASSET_PARENT_VALIDATOR( AssetName, ... ) qw::is_valid_asset_v< __VA_ARGS__ >
+// Raw values can be accessed in sk::Assets::[Name], (ex sk::Assets::Mesh)
+#define ASSET_PARENT_CLASS( AssetName, ... ) sk::iAsset
+#define ASSET_PARENT_VALIDATOR( AssetName, ... ) sk::is_valid_asset_v< __VA_ARGS__ >
 #define ASSET_PARENT_CREATOR_2( AssetName, ... ) AFTER_FIRST( __VA_ARGS__ )
-#define ASSET_PARENT_CREATOR_1( AssetName, ... ) qw::cAsset< M_CLASS( AssetName ), AssetName::runtime_class_t, AssetName :: CONCAT( runtime_class_, AssetName ) >
+#define ASSET_PARENT_CREATOR_1( AssetName, ... ) sk::cAsset< M_CLASS( AssetName ), AssetName::runtime_class_t, AssetName :: CONCAT( runtime_class_, AssetName ) >
 #define ASSET_PARENT_CREATOR( AssetName, ... ) CONCAT( ASSET_PARENT_CREATOR_, VARGS( __VA_ARGS__ ) ) ( AssetName, __VA_ARGS__ )
 #define QW_ASSET_CLASS( AssetName, ... ) QW_RESTRICTED_CLASS( AssetName, ASSET_PARENT_CLASS, ASSET_PARENT_CREATOR, ASSET_PARENT_VALIDATOR, EMPTY __VA_OPT__( , __VA_ARGS__ ) )

@@ -15,7 +15,7 @@
 
 #include "Macros/Enum_Builder.h"
 
-namespace qw::Memory
+namespace sk::Memory
 {
 	namespace Tracker
 	{
@@ -155,7 +155,7 @@ private:
 
 	extern void free( void* _block );
 
-} // qw::Memory::
+} // sk::Memory::
 
 #if !defined( QW_TRACKER_DISABLED )
 /**
@@ -163,13 +163,13 @@ private:
  * 
  * Arguments: Byte Size
  */
-#define QW_ALLOC( Size ) qw::Memory::Tracker::alloc( Size )
+#define QW_ALLOC( Size ) sk::Memory::Tracker::alloc( Size )
 /**
  * Default tracked new.
  * 
  * Arguments: Type, Count, Args...
  */
-#define QW_NEW( Ty, Count, ... ) qw::Memory::alloc< Ty >( Count, std::source_location::current() __VA_OPT__(,) __VA_ARGS__ )
+#define QW_NEW( Ty, Count, ... ) sk::Memory::alloc< Ty >( Count, std::source_location::current() __VA_OPT__(,) __VA_ARGS__ )
 /**
  * Virtual array tracked new.
  *
@@ -177,38 +177,38 @@ private:
  * 
  * Arguments: Type, Count.
  */
-#define QW_VIRTUAL( Ty, Count ) qw::Memory::alloc< Ty*, Ty* >( Count, std::source_location::current(), nullptr )
+#define QW_VIRTUAL( Ty, Count ) sk::Memory::alloc< Ty*, Ty* >( Count, std::source_location::current(), nullptr )
 /**
  * Single object tracked new.
  * 
  * Arguments: Type, Args...
  */
-#define QW_SINGLE( Ty, ... ) qw::Memory::alloc< Ty >( 1, std::source_location::current(), __VA_ARGS__ )
+#define QW_SINGLE( Ty, ... ) sk::Memory::alloc< Ty >( 1, std::source_location::current(), __VA_ARGS__ )
 /**
  * Single object without params tracked new.
  * 
  * Arguments: Type, Args...
  */
-#define QW_SINGLE_EMPTY( Ty ) qw::Memory::alloc< Ty >( 1, std::source_location::current() )
+#define QW_SINGLE_EMPTY( Ty ) sk::Memory::alloc< Ty >( 1, std::source_location::current() )
 /**
  * Tracked free.
  * 
  * Arguments: Address
  */
-#define QW_FREE( address ) qw::Memory::free( address )
+#define QW_FREE( address ) sk::Memory::free( address )
 #else // !QW_TRACKER_DISABLED
 /**
  * Default tracked alloc.
  * 
  * Arguments: Byte Size
  */
-#define QW_ALLOC( Size ) qw::Memory::alloc_fast( Size )
+#define QW_ALLOC( Size ) sk::Memory::alloc_fast( Size )
 /**
  * Default new.
  * 
  * Arguments: Type, Count, Args...
  */
-#define QW_NEW( Ty, ... ) qw::Memory::alloc_no_tracker< Ty >( __VA_ARGS__ )
+#define QW_NEW( Ty, ... ) sk::Memory::alloc_no_tracker< Ty >( __VA_ARGS__ )
 /**
  * Virtual array tracked new.
  *
@@ -216,25 +216,25 @@ private:
  * 
  * Arguments: Type, Count.
  */
-#define QW_VIRTUAL( Ty, Count ) qw::Memory::alloc_no_tracker< Ty* >( Count, nullptr )
+#define QW_VIRTUAL( Ty, Count ) sk::Memory::alloc_no_tracker< Ty* >( Count, nullptr )
 /**
  * Single object tracked new.
  * 
  * Arguments: Type, Args...
  */
-#define QW_SINGLE( Ty, ... ) qw::Memory::alloc_no_tracker< Ty >( 1, __VA_ARGS__ )
+#define QW_SINGLE( Ty, ... ) sk::Memory::alloc_no_tracker< Ty >( 1, __VA_ARGS__ )
 /**
  * Single object without params tracked new.
  * 
  * Arguments: Type, Args...
  */
-#define QW_SINGLE_EMPTY( Ty ) qw::Memory::alloc_no_tracker< Ty >( 1 )
+#define QW_SINGLE_EMPTY( Ty ) sk::Memory::alloc_no_tracker< Ty >( 1 )
 /**
  * Free.
  * 
  * Arguments: Address
  */
-#define QW_FREE( address ) qw::Memory::free( address )
+#define QW_FREE( address ) sk::Memory::free( address )
 
 
 #endif // QW_TRACKER_DISABLED

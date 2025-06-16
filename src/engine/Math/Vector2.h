@@ -10,7 +10,7 @@
 
 #include "VectorSwizzle.h"
 
-namespace qw::Math
+namespace sk::Math
 {
 	template< typename T >
 	using cVector2 = cVector< 2, T >;
@@ -150,6 +150,6 @@ namespace qw::Math
 }
 
 template< typename Ty >
-qw::cVector2< Ty > operator*( const Ty& _l, const qw::cVector2< Ty >& _r ){ return qw::cVector2< Ty >{ _r.x * _l, _r.y * _l }; }
+sk::cVector2< Ty > operator*( const Ty& _l, const sk::cVector2< Ty >& _r ){ return sk::cVector2< Ty >{ _r.x * _l, _r.y * _l }; }
 
-constexpr auto a = sizeof( qw::cVector2f );
+constexpr auto a = sizeof( sk::cVector2f );

@@ -30,7 +30,7 @@ end
 
 local root_build_dir = "./Build/Project/"
 
-workspace "QWarp Playground"
+workspace "Skape Playground"
     configurations { "Debug", "Release", "Final" }
     platforms { Get_Supported_Platforms() }
     startproject "Startup"
@@ -52,7 +52,7 @@ filter { "configurations:Debug" }
 
 filter { "configurations:Release" }
     defines {
-        "NDEBUG", "RELEASE", "QW_TRACKER_DISABLED"
+        "NDEBUG", "RELEASE", "SK_TRACKER_DISABLED"
     }
     symbols "On"
     optimize "Debug"
@@ -61,7 +61,7 @@ filter { "configurations:Final" }
     defines {
         "NDEBUG",
         "FINAL",
-        "QW_TRACKER_DISABLED"
+        "SK_TRACKER_DISABLED"
     }
     optimize "Full"
 
@@ -91,7 +91,7 @@ project "Startup"
 
     includedirs { "src/engine", "src/framework", "external/fastgltf/include", "external/lodepng", Get_Module_Includes() }
 
-group "QWarp"
+group "Skape"
 
 project "Engine"
     kind "StaticLib"

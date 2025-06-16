@@ -10,7 +10,7 @@
 #include "Vector.h"
 #include "Vector2.h"
 
-namespace qw::Math
+namespace sk::Math
 {
 	template < size_t W, size_t H, typename T > class cMatrix
 	{
@@ -19,4 +19,4 @@ namespace qw::Math
 
 		cVector< W, T >& operator[]( size_t _r ){ return m_matrix[ _r ]; }
 	};
-} // qw::
+} // sk::

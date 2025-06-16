@@ -1,0 +1,15 @@
+{
+    "Name"        : "OpenGL Graphics",
+    "Description" : "Gives The Engine OpenGL support.",
+    "Id"          : "e4f5a45b-c3b3-461f-91bb-f4069569370c",
+    "Version"     : "0.0.1",
+    "Type"        : "Graphics",
+    "Supports"    : {
+        "Engine" : "0.0.1",
+        "Platforms" : [
+            "Win64",
+            "Android"
+        ]
+    },
+    "Dependencies" : []
+}

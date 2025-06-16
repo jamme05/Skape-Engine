@@ -6,7 +6,7 @@
 
 #include "Scene.h"
 
-namespace qw
+namespace sk
 {
 	cScene::~cScene( void )
 	{
@@ -28,4 +28,4 @@ namespace qw
 		for( auto& obj : m_objects )
 			obj->update();
 	} // update
-} // qw::
+} // sk::

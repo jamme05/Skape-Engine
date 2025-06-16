@@ -141,7 +141,7 @@ constexpr bool   operator>=( const Class & _other ) const { return m_hash >= _ot
 
 // TODO: Copy string if not std::is_constant_evaluated()
 
-namespace qw
+namespace sk
 {
 	template< class Ty >
 		class hash : public Hashing::iHashed
@@ -226,12 +226,12 @@ namespace qw
 
 		HASH_REQUIREMENTS( hash )
 	};
-} // qw::
+} // sk::
 
 template< class Ty >
-struct std::hash< qw::hash< Ty > >
+struct std::hash< sk::hash< Ty > >
 {
-	uint64_t operator()( const qw::hash< Ty >& _hash ) const
+	uint64_t operator()( const sk::hash< Ty >& _hash ) const
 	{
 		return _hash.getHash();
 	}

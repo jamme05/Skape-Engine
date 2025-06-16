@@ -14,11 +14,11 @@ namespace fastgltf
     class Asset;
 } // fastgltf
 
-namespace qw::Graphics::Helpers
+namespace sk::Graphics::Helpers
 {
     class cMesh_Helper
     {
     public:
         static bool ParseGltfPrimitiveMesh( const Assets::Mesh::ptr_t& _mesh, const fastgltf::Asset& _asset, const fastgltf::Primitive& _accessor );
     };
-} // qw::Graphics::Helpers::Mesh
+} // sk::Graphics::Helpers::Mesh
