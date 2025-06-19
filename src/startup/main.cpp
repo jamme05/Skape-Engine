@@ -12,13 +12,13 @@ namespace sk
 {
 	// NOTE: This will always fail in editor, but SHOULD be valid when compiling.
 	static_assert( registry::type_registry< 0 >::valid, "No types registered." );
-	constexpr static auto types = registry::type_registry< unique_id() - 1 >::registered;
+	constexpr static auto types = registry::type_registry< sk::registry::counter::next() - 1 >::registered;
 	const unordered_map< type_hash, const sType_Info* > type_map = { types.begin(), types.end() };
 } // sk::
 
 int main( int, char** )
 {
-	sk::Memory::cTracker::initialize();
+	sk::Memory::Tracker::init();
 	auto& app = cApp::initialize();
 	app.create();
 
@@ -27,12 +27,9 @@ int main( int, char** )
 
 	app.destroy();
 
-	cApp::deinitialize();
-
-	eExample1 test = eExample1::kBothEx;
-	test.getDisplayName()
+	cApp::shutdown();
 	
-	sk::Memory::cTracker::deinitialize();
+	sk::Memory::Tracker::shutdown();
 
 	return 0;
 }

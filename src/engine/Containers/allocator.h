@@ -53,12 +53,12 @@ namespace sk
 
 			auto byte_size = Memory::get_size< Ty >( _n );
 
-			return static_cast< Ty* >( QW_ALLOC( byte_size ) );
+			return static_cast< Ty* >( SK_ALLOC( byte_size ) );
 		} // allocate
 
 		void deallocate( void* _p, size_t _n )
 		{
-			QW_FREE( static_cast< void* >( _p ) );
+			SK_FREE( static_cast< void* >( _p ) );
 		} // deallocate
 
 		size_type max_size( void ) const

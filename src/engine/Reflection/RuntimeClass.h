@@ -10,7 +10,9 @@
 
 #include "Macros/Manipulation.h"
 
+#define SK_ALLOW_DIRECT_REGISTRY_ACCESS
 #include "Type_Registry.h"
+#undef SK_ALLOW_DIRECT_REGISTRY_ACCESS
 
 namespace sk
 {
@@ -204,7 +206,7 @@ namespace sk
 	{
 		struct sMember
 		{
-			MAKE_UNREFLECTED_ENUM( ENUM( eType ),
+			MAKE_UNREFLECTED_ENUM( FLAGS( eType ),
 				E( kVariable, 0x00 ),
 				E( kFunction, 0x01 ),
 				E( kStatic,   0x02 )

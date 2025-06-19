@@ -74,14 +74,14 @@ const char*  Name; \
 const char*  DisplayName; \
 };
 
-namespace qw::Reflection::Enum
+namespace sk::Reflection::Enum
 {
 	consteval int get_safe_enum_value( const char*, const int _counter, ... ){ return _counter; };
 	consteval int get_safe_enum_value( const int _value, const int, ... ){ return _value; };
 	consteval int get_safe_enum_value( const int _value ){ return _value; };
 } // qw::Reflection::Enum::
 
-#define GET_SAFE_VALUE_2( Counter, ... ) = qw::Reflection::Enum::get_safe_enum_value( __VA_ARGS__ __VA_OPT__(,) Counter )
+#define GET_SAFE_VALUE_2( Counter, ... ) = sk::Reflection::Enum::get_safe_enum_value( __VA_ARGS__ __VA_OPT__(,) Counter )
 #define GET_SAFE_VALUE_1( Counter, Value )
 #define GET_SAFE_VALUE( ... ) CONCAT( GET_SAFE_VALUE_, VARGS( __VA_ARGS__ ) )( __VA_ARGS__ )
 
@@ -120,7 +120,7 @@ namespace qw::Reflection::Enum
 	return kInvalid; \
 	}
 
-#define ENUM_VALUE_METADATA_1( Type, Name, Value, ... ) std::pair{ static_cast< value_t >( Name :: NAME ## Value ), qw::Reflection::Enum::enum_value_creator< Name, sValueInfo >( Name :: NAME ## Value, STR_NAME ## Value UNPACK_SAFE ## Value ) } __VA_OPT__(,)
+#define ENUM_VALUE_METADATA_1( Type, Name, Value, ... ) std::pair{ static_cast< value_t >( Name :: NAME ## Value ), sk::Reflection::Enum::enum_value_creator< Name, sValueInfo >( Name :: NAME ## Value, STR_NAME ## Value UNPACK_SAFE ## Value ) } __VA_OPT__(,)
 #define ENUM_VALUE_METADATA_0( Type, Value, ... ) ENUM_VALUE_METADATA_1( Type, NAME ## Type, Value, __VA_ARGS__ )
 #define ENUM_VALUE_METADATA( Type, Value, ... ) ENUM_VALUE_METADATA_0( Type, UNWRAP_E_VALUE( Value ), __VA_ARGS__ )
 
@@ -177,7 +177,7 @@ namespace qw::Reflection::Enum
 	BUILD_ENUM_BODY( Type, __VA_ARGS__ );  \
 	BUILD_ENUM_METADATA( Type, __VA_ARGS__ )
 
-namespace qw::Reflection::Enum
+namespace sk::Reflection::Enum
 {
 	struct sRawValue
 	{

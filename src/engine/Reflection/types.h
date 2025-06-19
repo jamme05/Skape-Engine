@@ -6,7 +6,9 @@
 
 #pragma once
 
+#define SK_ALLOW_DIRECT_REGISTRY_ACCESS
 #include "Type_Registry.h"
+#undef SK_ALLOW_DIRECT_REGISTRY_ACCESS
 
 REGISTER_TYPE  ( bool, "Boolean" )
 REGISTER_T_TYPE( int8, "Char" )

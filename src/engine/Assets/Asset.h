@@ -62,10 +62,10 @@ namespace sk
 		cAsset( std::string _name ) : iAsset( std::move( _name ) ){ }
 
 		template< class... Args >
-		static Ty* create( Args... _args ){ return QW_NEW( Ty, 1, _args... ); }
+		static Ty* create( Args... _args ){ return SK_NEW( Ty, 1, _args... ); }
 
 		template< class... Args >
-		static cShared_ptr< Ty > create_shared( Args... _args ){ return sk::cShared_ptr< Ty >( QW_NEW( Ty, 1, _args... ) ); }
+		static cShared_ptr< Ty > create_shared( Args... _args ){ return sk::cShared_ptr< Ty >( SK_NEW( Ty, 1, _args... ) ); }
 
 		void Save( void ) override { /* Saving not supported */ }
 

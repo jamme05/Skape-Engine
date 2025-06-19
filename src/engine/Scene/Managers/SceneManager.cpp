@@ -26,8 +26,8 @@ namespace sk
 	cSceneManager::~cSceneManager( void )
 	{
 		m_scenes.clear();
-		cEventManager::deinitialize();
-		Scene::cCameraManager::deinitialize();
+		cEventManager::shutdown();
+		Scene::cCameraManager::shutdown();
 	} // ~cSceneManager
 
 	void cSceneManager::registerScene( const cShared_ptr< cScene >& _scene )

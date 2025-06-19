@@ -235,7 +235,7 @@ namespace sk
 			return std::make_pair( true, dispatcher->add_listener( function ) );
 		}
 
-		auto dispatcher = QW_SINGLE_EMPTY( Event::cEventDispatcher< Args... > );
+		auto dispatcher = SK_SINGLE_EMPTY( Event::cEventDispatcher< Args... > );
 		dispatcher->add_listener( function );
 		m_dispatcher.emplace( _identity, dispatcher );
 		return { true, 0 };
@@ -260,7 +260,7 @@ namespace sk
 			return std::make_pair( true, dispatcher->add_listener( function ) );
 		}
 
-		auto dispatcher = QW_SINGLE_EMPTY( Event::cEventDispatcher<> );
+		auto dispatcher = SK_SINGLE_EMPTY( Event::cEventDispatcher<> );
 		dispatcher->add_listener( function );
 		m_dispatcher.emplace( _identity, dispatcher );
 		return { true, 0 };

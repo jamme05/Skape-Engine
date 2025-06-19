@@ -71,12 +71,12 @@ namespace sk
 		{
 			void deleteCont( void ) override
 			{
-				QW_FREE( m_ptr );
+				SK_FREE( m_ptr );
 				m_ptr = nullptr;
 			}
 			void deleteSelf( void ) override
 			{
-				QW_FREE( this );
+				SK_FREE( this );
 			}
 		public:
 			void* get_ptr( void ) override { return m_ptr; }
@@ -158,7 +158,7 @@ namespace sk
 
 		explicit cShared_ptr( Ty* _ptr )
 		{
-			m_data = QW_SINGLE( Ptr_logic::cData< Ty >, _ptr );
+			m_data = SK_SINGLE( Ptr_logic::cData< Ty >, _ptr );
 			inc();
 		} // cShared_ptr
 
@@ -303,7 +303,7 @@ namespace sk
 
 		explicit cShared_Ref( Ty* _ptr )
 		{
-			m_data = QW_SINGLE( Ptr_logic::cData< Ty >, _ptr );
+			m_data = SK_SINGLE( Ptr_logic::cData< Ty >, _ptr );
 			inc();
 		} // cShared_ptr
 
@@ -586,7 +586,7 @@ namespace sk
 		static auto make_unsafe( Ty* _ptr )
 		{
 			cWeak_Ptr unsafe;
-			unsafe.m_data = QW_SINGLE( Ptr_logic::cData< Ty >, _ptr );
+			unsafe.m_data = SK_SINGLE( Ptr_logic::cData< Ty >, _ptr );
 			unsafe.inc_weak();
 
 			return unsafe;
@@ -606,7 +606,7 @@ namespace sk
 
 	protected:
 		cShared_from_this( void )
-		: m_self( cPtr_base( QW_SINGLE( Ptr_logic::cData< Ty >, static_cast< Ty* >( this ) ) ) )
+		: m_self( cPtr_base( SK_SINGLE( Ptr_logic::cData< Ty >, static_cast< Ty* >( this ) ) ) )
 		{
 		} // cShared_from_this
 
@@ -618,7 +618,7 @@ namespace sk
 	auto make_shared( Args&&... _args ) -> cShared_ptr< Ty >
 	{
 		// TODO: Add protection for cShared_from_this, if get_shared_this is ran in constructor, it deletes itself.
-		Ty* ptr = QW_SINGLE( Ty, std::forward< Args >( _args )... );
+		Ty* ptr = SK_SINGLE( Ty, std::forward< Args >( _args )... );
 
 		if constexpr( std::is_base_of_v< cShared_from_this< Ty >, Ty > )
 			return ptr->get_shared_this();

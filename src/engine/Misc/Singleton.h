@@ -23,10 +23,10 @@ namespace sk
 	public:
 
 		template< typename... Args >
-		static Ty&   initialize  ( Args&&... _args ){ m_instance = Memory::Internal::alloc< Ty >( std::forward< Args >( _args )... ); return *m_instance; }
-		static void  deinitialize( void )         { Memory::Internal::free( m_instance ); }
-		static Ty&   get         ( void )         { return *m_instance; } // TODO: Add error/assert checks
-		static auto  getPtr      ( void )         { return  m_instance; }
+		static Ty&   initialize( Args&&... _args ){ m_instance = Memory::Internal::alloc< Ty >( std::forward< Args >( _args )... ); return *m_instance; }
+		static void  shutdown  ( void )           { Memory::Internal::free( m_instance ); }
+		static Ty&   get       ( void )           { return *m_instance; } // TODO: Add error/assert checks
+		static auto  getPtr    ( void )           { return  m_instance; }
 
 	};
 

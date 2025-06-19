@@ -203,8 +203,8 @@ void cApp::custom_event( void )
 
 void cApp::destroy( void )
 {
-	sk::cSceneManager::deinitialize();
-	sk::cAssetManager::deinitialize();
+	sk::cSceneManager::shutdown();
+	sk::cAssetManager::shutdown();
 	sk::Graphics::cRenderer::deinitialize();
 	sk::cPlatform::deinitialize();
 

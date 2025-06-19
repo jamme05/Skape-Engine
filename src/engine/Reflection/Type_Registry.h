@@ -6,6 +6,10 @@
 
 #pragma once
 
+#ifndef SK_ALLOW_DIRECT_REGISTRY_ACCESS
+#error You aren't allowed to access the type registry directly. Include <Reflection/Types.h> instead.
+#endif // !SK_ALLOW_DIRECT_REGISTRY_ACCESS
+
 #include "Containers/Const/Array.h"
 #include <Containers/Map.h>
 
@@ -119,6 +123,7 @@ namespace sk
         };
         constexpr static bool kValid  = false;
     };
+    // TODO: Make a new way to handle ptrs and refs
     template< class Ty >
     requires get_type_info< Ty >::kValid
     struct get_type_info< Ty* > : get_type_info< Ty >
@@ -177,6 +182,7 @@ namespace sk
     template<>
     constexpr inline bool kValidTypes<> = false;
     template< bool AllowVoid, class... Types >
+    requires kValidTypes< Types... >
     struct types_hash
     {
     };

@@ -126,7 +126,7 @@ namespace sk
 	namespace Assets
 	{
 		template< class Ty, class... Args >
-		cShared_ptr< Ty > create( Args... _args ){ auto asset = sk::cShared_ptr< Ty >( QW_NEW( Ty, 1, _args... ) ); cAssetManager::get().registerAsset( asset ); return asset; }
+		cShared_ptr< Ty > create( Args... _args ){ auto asset = sk::cShared_ptr< Ty >( SK_NEW( Ty, 1, _args... ) ); cAssetManager::get().registerAsset( asset ); return asset; }
 	} // Assets::
 
 } // sk::

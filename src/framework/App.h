@@ -2,8 +2,6 @@
 
 #include <Misc/Singleton.h>
 
-#include "Assets/cMesh.h"
-#include "Assets/Shader.h"
 #include "Scene/Scene.h"
 #include "Input/Input.h"
 
@@ -23,13 +21,7 @@ namespace sk::Graphics
 	class cRender_context;
 } // sk::Graphics::
 
-MAKE_STRUCT( TestStruct,
-	M( int32_t, Count ),
-	M( int32_t, Count2 ),
-	M( int32_t, Count3 ),
-	M( int8_t, Count4 ),
-	M( int32_t, Count5 ),
-)
+MAKE_STRUCT( TestStruct, M( int32_t, wha ) );
 
 MAKE_STRUCT( TestStructNested,
 	M( TestStruct, Val1 ),
