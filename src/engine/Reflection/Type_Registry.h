@@ -30,11 +30,11 @@ namespace sk
     struct sType_Info
     {
         MAKE_UNREFLECTED_ENUM( ENUMCLASS( eType ),
-            E( kStandard, "Standard" ),
-            E( kEnum ), //     "Enum" ),
-            E( kArray,    "Array" ),
-            E( kStruct,   "Struct" ),
-            E( kClass,    "Class" )
+            E( kStandard ),
+            E( kEnum ),
+            E( kArray ),
+            E( kStruct ),
+            E( kClass )
         );
 
         eType       type;

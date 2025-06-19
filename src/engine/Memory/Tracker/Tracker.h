@@ -19,6 +19,9 @@ namespace sk::Memory
 {
 	namespace Tracker
 	{
+		// Decides if the memory tracker should keep track of the entire history and not just the latest modification.
+		constexpr bool kSaveMemoryHistory = true;
+
 		struct sMem_header
 		{
 			size_t item_size;
@@ -26,9 +29,9 @@ namespace sk::Memory
 		};
 
 		// Can track source usage
-		extern void* alloc  ( size_t _size, const std::source_location& _location = std::source_location::current() );
-		extern void* realloc( void* _ptr, size_t _size, const std::source_location& _location = std::source_location::current() );
-		extern void  free   ( void* _block );
+		extern void*  alloc  ( size_t _size, const std::source_location& _location = std::source_location::current() );
+		extern void*  realloc( void* _ptr, size_t _size, const std::source_location& _location = std::source_location::current() );
+		extern void   free   ( void* _block, const std::source_location& _location = std::source_location::current() );
 		extern size_t max_heap_size( void );
 
 	} // Tracker::
@@ -36,32 +39,45 @@ namespace sk::Memory
 	class cTracker : public cSingleton< cTracker >
 	{
 	public:
-		MAKE_UNREFLECTED_ENUM( ENUMCLASS( eTrackerAction, uint16_t ),
-			E( kAllocate, "Allocation" ),
-			E( kReallocate, "Reallocation" ),
-			E( kFree, "Freed" )
+		// 16-bit for align.
+		MAKE_UNREFLECTED_ENUM( ENUMCLASS( eAction, uint16_t ),
+			E( kAllocate ),
+			E( kReallocate ),
+			E( kFree )
 		);
 
-		struct sFile_info
+		struct sHistory_action
 		{
-			const char*    file_name;
-			const char*    function;
-			uint32_t       line;
-			uint16_t       column;
-			eTrackerAction action;
+			sHistory_action( const std::source_location& _location, const eAction _action )
+			: file_name( _location.file_name() )
+			, function( _location.function_name() )
+			, line( static_cast< uint32_t >( _location.line() ) )
+			, column( static_cast< uint32_t >( _location.column() ) )
+			, action( _action )
+			{} // sFile_info
+	
+			const char* file_name;
+			const char* function;
+			uint32_t    line;
+			uint16_t    column;
+			eAction     action;
 		};
 
 		struct sTracker_entry
 		{
-			sFile_info  last_change;
-			sFile_info* history;
-			uint16_t    changes;
-			uint16_t    flags;
-			uint32_t    reallocations;
-			// Size excluding itself.
+			sHistory_action* history;
+			sHistory_action* last;
+			// N allocation. Aka incrementing by one each allocation but can't find a good word for it.
+			uint32_t    allocation;
+			// The alignment used for the allocation
+			uint16_t    alignment;
+			// Number of changes the entry has had. The will probably not reach more than 255 allocations.
+			uint8_t    changes;
+			uint8_t     flags;
+			// Non-aligned size of the allocation
 			size_t      size;
-			size_t      total_size;
 		};
+		constexpr static size_t aligned_entry_size = get_size< sTracker_entry >();
 
 		struct sStatistics
 		{
@@ -74,16 +90,15 @@ namespace sk::Memory
 		};
 
 		typedef std::unordered_set< void* > block_set_t;
+		typedef std::vector< sHistory_action* >  history_t;  
 
 		void* alloc  ( const size_t _size, const std::source_location& _location = std::source_location::current() );
-		void  free   ( void* _block );
+		void  free   ( void* _block, const std::source_location& _location = std::source_location::current() );
 		void* realloc( void* _block, const size_t _size, const std::source_location& _location = std::source_location::current() );
 
 		 cTracker( void );
 		~cTracker( void );
 
-		// TODO: Implement history save.
-		static void  SetSaveHistory( const bool _save_history );
 		static void* Alloc( const size_t _size, const auto& _location = std::source_location::current() ){ return get().alloc( _size, _location ); }
 		static void  Free ( void*  _block ){ get().free( _block ); }
 
@@ -92,9 +107,11 @@ namespace sk::Memory
 		static size_t m_memory_usage;
 
 private:
-		void free( const block_set_t::iterator& _entry );
+		void add_history( sTracker_entry& _entry, const sHistory_action& _action );
 
+		// NOTE: The save history is placed in front
 		block_set_t m_block_set;
+		history_t   m_history;
 		sStatistics m_statistics;
 		std::mutex  m_mtx;
 
@@ -102,6 +119,7 @@ private:
 
 	extern void* alloc_fast( size_t _size );
 	extern void  free_fast ( void*  _block );
+	extern void* realloc_fast( void* _block, size_t _size );
 
 	template< typename Ty, typename... Args >
 	static Ty* alloc( const size_t _count, const std::source_location& _location, Args&&... _args )

@@ -7,7 +7,6 @@
 #pragma once
 
 // Will be overriden by Module
-
 class iRenderer
 {
 protected:

@@ -17,30 +17,41 @@
 #define TYPE_ENUM_1( Name ) internal_ ## Name : uint8_t
 #define TYPE_ENUM( ... ) enum CONCAT( TYPE_ENUM_, VARGS( __VA_ARGS__ ) )( __VA_ARGS__ )
 #define TYPE_ENUMCLASS( ... ) enum class CONCAT( TYPE_ENUM_, VARGS( __VA_ARGS__ ) )( __VA_ARGS__ )
+#define TYPE_FLAGS( ... ) enum class CONCAT( TYPE_ENUM_, VARGS( __VA_ARGS__ ) )( __VA_ARGS__ )
 
 // enum_t is safe in all the current scenarios.
 #define SAFE_TYPE_ENUM_2( Name, Type ) enum_t
 #define SAFE_TYPE_ENUM_1( Name ) uint8_t
 #define SAFE_TYPE_ENUM( ... ) CONCAT( SAFE_TYPE_ENUM_, VARGS( __VA_ARGS__ ) )( __VA_ARGS__ )
 
+#define SAFE_TYPE_ENUMCLASS( Name, ... ) enum_t
+
+#define SAFE_TYPE_FLAGS_2( Name, Type ) Type
+#define SAFE_TYPE_FLAGS_1( Name ) uint8_t
+#define SAFE_TYPE_FLAGS( ... ) CONCAT( SAFE_TYPE_FLAGS_, VARGS( __VA_ARGS__ ) )( __VA_ARGS__ )
+
 #define SIZE_ENUM_2( Name, Type ) Type
 #define SIZE_ENUM_1( Name ) uint8_t
 #define SIZE_ENUM( ... ) CONCAT( SAFE_TYPE_ENUM_, VARGS( __VA_ARGS__ ) )( __VA_ARGS__ )
 #define SIZE_ENUMCLASS( ... ) SIZE_ENUM( __VA_ARGS__ )
+#define SIZE_FLAGS( ... ) SIZE_ENUM( __VA_ARGS__ )
 
-#define SAFE_TYPE_ENUMCLASS( Name, ... ) enum_t
 
 #define ENUM( ... ) _ENUM ( __VA_ARGS__ )
 #define ENUMCLASS( ... ) _ENUMCLASS ( __VA_ARGS__ )
+#define FLAGS( ... ) _FLAGS ( __VA_ARGS__ )
 
 #define RAW_ENUM( Name, ... ) Name
 #define RAW_ENUMCLASS( Name, ... ) Name
+#define RAW_FLAGS( Name, ... ) Name
 
 #define NAME_ENUM( Name, ... ) internal_ ## Name
 #define NAME_ENUMCLASS( Name, ... ) internal_ ## Name
+#define NAME_FLAGS( Name, ... ) internal_ ## Name
 
-#define BUILD_MACRO_ENUM( Name, ... ) BUILD_ENUM
-#define BUILD_MACRO_ENUMCLASS( Name, ... ) BUILD_ENUMCLASS
+#define BUILD_MACRO_ENUM( Name, ... ) BUILD_ENUM_ENUM
+#define BUILD_MACRO_ENUMCLASS( Name, ... ) BUILD_ENUM_ENUMCLASS
+#define BUILD_MACRO_FLAGS( Name, ... ) BUILD_ENUM_FLAGS
 
 #define E( ... ) _E( __VA_ARGS__ )
 
@@ -63,13 +74,14 @@ const char*  Name; \
 const char*  DisplayName; \
 };
 
-template< class... Args >
-constexpr int get_safe_enum_value( const char*, const int _counter, Args... ){ return _counter; };
-template< class... Args >
-constexpr int get_safe_enum_value( const int _value, const int, Args... ){ return _value; };
-constexpr int get_safe_enum_value( const int _value ){ return _value; };
+namespace qw::Reflection::Enum
+{
+	consteval int get_safe_enum_value( const char*, const int _counter, ... ){ return _counter; };
+	consteval int get_safe_enum_value( const int _value, const int, ... ){ return _value; };
+	consteval int get_safe_enum_value( const int _value ){ return _value; };
+} // qw::Reflection::Enum::
 
-#define GET_SAFE_VALUE_2( Counter, ... ) = get_safe_enum_value( __VA_ARGS__ __VA_OPT__(,) Counter )
+#define GET_SAFE_VALUE_2( Counter, ... ) = qw::Reflection::Enum::get_safe_enum_value( __VA_ARGS__ __VA_OPT__(,) Counter )
 #define GET_SAFE_VALUE_1( Counter, Value )
 #define GET_SAFE_VALUE( ... ) CONCAT( GET_SAFE_VALUE_, VARGS( __VA_ARGS__ ) )( __VA_ARGS__ )
 
@@ -85,11 +97,14 @@ constexpr int get_safe_enum_value( const int _value ){ return _value; };
 #define MAKE_ENUM_VALUE( Value, Counter ) MAKE_ENUM_VALUE_1( Value, Counter )
 #define UNPACK_ENUM_VALUE( Value, Counter ) MAKE_ENUM_VALUE( UNWRAP_E_VALUE( Value ), Counter )
 
-#define BUILD_ENUM( Type, ... ) \
+#define BUILD_ENUM_ENUM( Type, ... ) \
 	TYPE ## Type { COUNTER_FOR_EACH( UNPACK_ENUM_VALUE, 0, __VA_ARGS__ ) }
 
 
-#define BUILD_ENUMCLASS( Type, ... ) \
+#define BUILD_ENUM_ENUMCLASS( Type, ... ) \
+	TYPE ## Type { COUNTER_FOR_EACH( UNPACK_ENUM_VALUE, 0, __VA_ARGS__ ) }
+
+#define BUILD_ENUM_FLAGS( Type, ... ) \
 	TYPE ## Type { COUNTER_FOR_EACH( UNPACK_ENUM_VALUE, 0, __VA_ARGS__ ) }
 
 #define BUILD_ENUM_BODY( Type, ... ) \
@@ -105,11 +120,11 @@ constexpr int get_safe_enum_value( const int _value ){ return _value; };
 	return kInvalid; \
 	}
 
-#define ENUM_VALUE_METADATA_1( Type, Name, Value, ... ) std::pair{ static_cast< value_t >( Name :: NAME ## Value ), enum_value_creator< Name, sValueInfo >( Name :: NAME ## Value, STR_NAME ## Value UNPACK_SAFE ## Value ) } __VA_OPT__(,)
+#define ENUM_VALUE_METADATA_1( Type, Name, Value, ... ) std::pair{ static_cast< value_t >( Name :: NAME ## Value ), qw::Reflection::Enum::enum_value_creator< Name, sValueInfo >( Name :: NAME ## Value, STR_NAME ## Value UNPACK_SAFE ## Value ) } __VA_OPT__(,)
 #define ENUM_VALUE_METADATA_0( Type, Value, ... ) ENUM_VALUE_METADATA_1( Type, NAME ## Type, Value, __VA_ARGS__ )
 #define ENUM_VALUE_METADATA( Type, Value, ... ) ENUM_VALUE_METADATA_0( Type, UNWRAP_E_VALUE( Value ), __VA_ARGS__ )
 
-#define FAKE_ENUM_MEMBER_1( Type, Value ) static constexpr SAFE_TYPE ## Type NAME ## Value = enum_t :: NAME ## Value;
+#define FAKE_ENUM_MEMBER_1( Type, Value ) static constexpr value_t NAME ## Value = static_cast< value_t >( enum_t :: NAME ## Value );
 #define FAKE_ENUM_MEMBER_0( Type, Value ) FAKE_ENUM_MEMBER_1( Type, Value )
 #define FAKE_ENUM_MEMBER( Type, Value ) FAKE_ENUM_MEMBER_0( Type, UNWRAP_E_VALUE( Value ) )
 
@@ -129,8 +144,8 @@ constexpr int get_safe_enum_value( const int _value ){ return _value; };
 	constexpr bool operator==( const value_t & _right ) const { return m_value == _right; } \
 	constexpr bool operator!=( const value_t & _right ) const { return !( *this == _right ); } \
 	auto getInfo( void ) const { const auto index = kValues.find( m_value ); return ( index != -1 ? &kValues.get( index ).second : nullptr ); } \
-	auto getName( void ) const { if( const auto info = getInfo() ) return info->Name; return "Invalid ( Unable to find )"; } \
-	auto getDisplayName( void ) const { if( const auto info = getInfo() ) return info->DisplayName; return "Invalid ( Unable to find )"; } \
+	auto getName( void ) const { if( const auto info = getInfo() ) return info->name; return "Invalid ( Unable to find )"; } \
+	auto getDisplayName( void ) const { if( const auto info = getInfo() ) return info->display_name; return "Invalid ( Unable to find )"; } \
 	private: \
 	value_t m_value;
 
@@ -162,52 +177,80 @@ constexpr int get_safe_enum_value( const int _value ){ return _value; };
 	BUILD_ENUM_BODY( Type, __VA_ARGS__ );  \
 	BUILD_ENUM_METADATA( Type, __VA_ARGS__ )
 
-template< class Ty, class ETy >
-constexpr Ty enum_value_builder( ETy _value, const char* _name, const char* _display_name = nullptr )
+namespace qw::Reflection::Enum
 {
-	if( _display_name == nullptr )
+	struct sRawValue
 	{
-		_display_name = _name;
-		if( *_display_name == 'k' )
-			++_display_name;
+		sk::str_hash name_hash;
+		const char*  name;
+		const char*  display_name;
+	};
+	template< class ETy >
+	struct sValue : sRawValue
+	{
+		ETy value;
+	};
+
+	
+	template< class ETy >
+	consteval sValue< ETy > enum_value_builder( ETy _value, const char* _name, const char* _display_name = nullptr )
+	{
+		if( _display_name == nullptr )
+		{
+			_display_name = _name;
+			if( *_display_name == '_' )
+				__nop();
+			else if( *_display_name == 'k' )
+			{
+				++_display_name;
+				if( *_display_name == '_' )
+					++_display_name;
+			}
+		}
+		sValue< ETy > result = {};
+		result.value = _value;
+		result.name_hash = sk::str_hash( _name );
+		result.name = _name;
+		result.display_name = _display_name;
+
+		return result;
 	}
-	return { _value, _name, _name, _display_name };
-}
-template< class ETy, class Ty, class... Args >
-constexpr Ty enum_value_creator( ETy _value, const char* _name, const char* _display_name, Args... )
-{
-	return enum_value_builder< Ty >( _value, _name, _display_name );
-} // enum_value_creator
+	template< class ETy, class Ty >
+	consteval sValue< ETy > enum_value_creator( ETy _value, const char* _name, const char* _display_name, ... )
+	{
+		return enum_value_builder< Ty >( _value, _name, _display_name );
+	} // enum_value_creator
 
-template< class ETy, class Ty, class... Args >
-constexpr Ty enum_value_creator( ETy _value, const char* _name, const size_t, const char* _display_name, Args... )
-{
-	return enum_value_builder< Ty >( _value, _name, _display_name ); // Forward in case of future changes.
-} // enum_value_creator
+	template< class ETy, class Ty >
+	consteval sValue< ETy > enum_value_creator( ETy _value, const char* _name, const size_t, const char* _display_name, ... )
+	{
+		return enum_value_builder< Ty >( _value, _name, _display_name ); // Forward in case of future changes.
+	} // enum_value_creator
 
-template< class ETy, class Ty, class... Args >
-constexpr Ty enum_value_creator( ETy _value, const char* _name, const int, const char* _display_name, Args... )
-{
-	return enum_value_builder< Ty >( _value, _name, _display_name ); // Forward in case of future changes.
-} // enum_value_creator
+	template< class ETy, class Ty >
+	consteval sValue< ETy > enum_value_creator( ETy _value, const char* _name, const int, const char* _display_name, ... )
+	{
+		return enum_value_builder< Ty >( _value, _name, _display_name ); // Forward in case of future changes.
+	} // enum_value_creator
 
-template< class ETy, class Ty >
-constexpr Ty enum_value_creator( ETy _value, const char* _name )
-{
-	return enum_value_builder< Ty >( _value, _name );
-} // enum_value_creator
+	template< class ETy, class Ty >
+	consteval sValue< ETy > enum_value_creator( ETy _value, const char* _name )
+	{
+		return enum_value_builder< Ty >( _value, _name );
+	} // enum_value_creator
 
-template< class ETy, class Ty >
-constexpr Ty enum_value_creator( ETy _value, const char* _name, const size_t )
-{
-	return enum_value_builder< Ty >( _value, _name ); // Forward in case of future changes.
-} // enum_value_creator
+	template< class ETy, class Ty >
+	consteval sValue< ETy > enum_value_creator( ETy _value, const char* _name, const size_t )
+	{
+		return enum_value_builder< Ty >( _value, _name ); // Forward in case of future changes.
+	} // enum_value_creator
 
-template< class ETy, class Ty >
-constexpr Ty enum_value_creator( ETy _value, const char* _name, const int )
-{
-	return enum_value_builder< Ty >( _value, _name ); // Forward in case of future changes.
-} // enum_value_creator
+	template< class ETy, class Ty >
+	consteval sValue< ETy > enum_value_creator( ETy _value, const char* _name, const int )
+	{
+		return enum_value_builder< Ty >( _value, _name ); // Forward in case of future changes.
+	} // enum_value_creator
+} // qw::Reflection::Enum::
 
 MAKE_UNREFLECTED_ENUM( ENUM( eExample1 ),
 	E( kValueEx, 0x00 ),
@@ -222,7 +265,7 @@ MAKE_UNREFLECTED_ENUM( ENUMCLASS( eExample2 ),
 	E( kThird )
 );
 
-MAKE_UNREFLECTED_ENUM( ENUMCLASS( eExample3, uint16_t ),
+MAKE_UNREFLECTED_ENUM( FLAGS( eExample3, uint16_t ),
 	kFirst,
 	kSecond,
 	kThird

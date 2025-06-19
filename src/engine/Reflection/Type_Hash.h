@@ -27,7 +27,7 @@ namespace sk
         {
         } // type_hash
 
-        [[ deprecated( "Use the safer version with source location" ) ]]
+        [[ deprecated( "Constructor with Name and Line is deprecated. Use the safer version with source location" ) ]]
         constexpr hash( const char* _str, const uint64_t _val )
         : iHashed( Hashing::fnv1a_64( _str, _val ) )
         {

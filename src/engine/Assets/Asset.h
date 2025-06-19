@@ -28,7 +28,7 @@ namespace sk
 		: m_name( std::move( _name ) )
 		, m_name_hash( m_name )
 		{ }
-		virtual ~iAsset( void ) = default;
+		~iAsset( void ) override = default;
 
 		auto&     getPath ( void ) const { return m_path; }
 

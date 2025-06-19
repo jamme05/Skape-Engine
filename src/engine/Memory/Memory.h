@@ -7,6 +7,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstdlib>
 #include <type_traits>
 
 namespace sk::Memory
@@ -23,12 +24,14 @@ namespace sk::Memory
 	/* Allows changing the engines running alignment. But the general default will still be named Default.
 	 * NOTE: Alignment has to be a power of 2.
 	 */
-	constexpr static size_t default_alignment = kDefaultAlign;
+	constexpr static eAlignment default_alignment = kDefaultAlign;
 
-	// NOTE: Alignment has to be a power of 2.
-	constexpr size_t get_aligned( const size_t _size, const size_t _align = kDefaultAlign ){ const auto align = _align - 1; return ( _size + align ) & ~align; }
+	// Returns the size ( in bytes ) aligned.
+	constexpr size_t get_aligned ( const size_t _size, const eAlignment _align = default_alignment ){ const auto align = _align - 1; return ( _size + align ) & ~align; }
+	// Modifies and returns the size ( in bytes ) aligned.
+	constexpr size_t make_aligned( size_t& _size, const eAlignment _align = default_alignment ){ const auto align = _align - 1; return _size = align & ~align; }
 
-	template< typename Ty, eAlignment Alignment = kDefaultAlign >
+	template< typename Ty, eAlignment Alignment = default_alignment >
 	constexpr size_t get_size( const size_t _count = 1 )
 	{
 		const auto byte_size = sizeof( Ty ) * _count;
@@ -36,13 +39,14 @@ namespace sk::Memory
 		else return get_aligned( byte_size, Alignment );
 	} // get_size
 
-	template< typename Ty, size_t Count = 1, eAlignment Alignment = kDefaultAlign >
+	template< typename Ty, size_t Count = 1, eAlignment Alignment = default_alignment >
 	static constexpr size_t byte_size = get_size< Ty, Alignment >( Count );
 } // sk::Memory::
 
 namespace sk::Memory::Internal
 {
-	// Untrackable alloc, use only for internal stuff.
+	// Un-tracked alloc, use only for internal stuff.
+	// Use malloc for direct allocations.
 	template< typename Ty, typename... Args >
 	static Ty* alloc( Args... _args )
 	{
@@ -51,7 +55,7 @@ namespace sk::Memory::Internal
 		::new( ptr ) Ty( std::forward< Args >( _args )... );
 
 		return ptr;
-	}
+	} // alloc
 
 	// Unrackable free, use only for internal stuff.
 	template< typename Ty >
@@ -63,7 +67,7 @@ namespace sk::Memory::Internal
 		_block->~Ty();
 
 		::free( _block );
-	}
+	} // free
 
 } // sk::Memory::Internal::
 

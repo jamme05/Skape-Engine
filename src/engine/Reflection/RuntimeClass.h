@@ -19,14 +19,29 @@ namespace sk
 	class iRuntimeClass
 	{
 	public:
+		[[ deprecated( "Deprecated due to source_location, use overloaded version with it as an input instead." ) ]]
 		constexpr iRuntimeClass( const char* _name, const char* _file, const uint32_t _line = 0, const uint64_t& _parent_hash = Hashing::val_64_const )
-		: m_hash( _name, _parent_hash )
+		: m_hash( _name )
 		, m_raw_name( _name )
 		, m_file_path( _file )
 		, m_line( _line )
 		{
-		} // iClass
+		} // iRuntimeClass
+
+		constexpr iRuntimeClass( const char* _name, const std::source_location& _location = std::source_location::current(), const uint64_t& _parent_hash = Hashing::val_64_const )
+		: m_hash( _name )
+		, m_raw_name( _name )
+		, m_file_path( _location.file_name() )
+		, m_line( _location.line() )
+		{} // iRuntimeClass
+		
 		virtual ~iRuntimeClass() = default;
+
+		virtual void* create( void )
+		{
+			// TODO: Create function reflection system to allow for overload selection.
+			return nullptr;
+		} // create
 
 		constexpr auto& getType    ( void ) const { return m_hash; }
 		constexpr auto  getRawName ( void ) const { return m_raw_name; }
@@ -96,18 +111,18 @@ namespace sk
 	{
 	private:
 		template< class Ty2 >
-		static uint8_t  test( decltype( &Ty2::getStaticClass ) );
+		static std::true_type test( decltype( &Ty2::getStaticClass ) );
 		template< class >
-		static uint16_t test( ... );
+		static std::false_type test( ... );
 	public:
-		static constexpr bool has_value = sizeof( decltype( test< Ty >( 0 ) ) ) == 1;
+		static constexpr bool has_value = decltype( test< Ty >( 0 ) )::value;
 	private:
 		typedef typename select_class_type< has_value, Ty, iRuntimeClass >::type pre_type;
 	public:
 		static constexpr bool is_valid  = std::is_base_of_v< iRuntimeClass, pre_type >;
 		static constexpr bool is_base   = std::is_same_v< pre_type, iRuntimeClass >;
 		static constexpr bool uses_own  = is_valid && !is_base;
-		typedef typename select_class_type< uses_own, Ty, iRuntimeClass >::type   class_type;
+		typedef typename select_class_type< uses_own, Ty, iRuntimeClass >::type class_type;
 		typedef typename select_type< uses_own, Ty, iClass >::type inherits_type;
 	};
 
@@ -130,9 +145,14 @@ namespace sk
 		// TODO: Move
 		typedef typename get_parent_class< Pa >::inherits_type inherits_type;
 
-		constexpr cRuntimeClass( const char* _name, const char* _file = nullptr, const uint32_t _line = 0, const uint64_t& _parent_hash = Parent.getType().getHash() )
+		constexpr cRuntimeClass( const char* _name, const std::source_location& _location = std::source_location::current(), const uint64_t& _parent_hash = Parent.getType().getHash() )
+		: parent_type( _name, _location, _parent_hash )
+		{} // cRuntimeClass
+
+		[[ deprecated( "Deprecated due to source_location, use overloaded version with it as an input instead." ) ]]
+		constexpr cRuntimeClass( const char* _name, const char* _file, const uint32_t _line = 0, const uint64_t& _parent_hash = Parent.getType().getHash() )
 		: parent_type( _name, _file, _line, _parent_hash )
-		{} // cClass
+		{} // cRuntimeClass
 
 		// Use std::is_base_of / std::is_base_of_v instead of this in case both types are known.
 		constexpr bool isDerivedFrom( const iRuntimeClass& _base ) const override
@@ -157,7 +177,7 @@ namespace sk
 		Ty* create( Args&&... ){ return nullptr; } // TODO: Create function
 	};
 
-	class iClass // Switch names between iClass and iRuntrimeClass?
+	class iClass
 	{
 	public:
 		iClass( void ) = default;
@@ -178,6 +198,27 @@ namespace sk
 
 	template< class Ty >
 	constexpr static bool is_valid_class_v = std::is_base_of_v< iClass, Ty >;
+
+	// TODO: Use Reflection namespace.
+	namespace Reflection
+	{
+		struct sMember
+		{
+			MAKE_UNREFLECTED_ENUM( ENUM( eType ),
+				E( kVariable, 0x00 ),
+				E( kFunction, 0x01 ),
+				E( kStatic,   0x02 )
+			);
+
+			eType m_type;
+		};
+
+		struct sMemberValue : sMember
+		{
+			const sType_Info* m_type_info;
+			size_t            m_offset;
+		};
+	} // Reflection::
 } // sk::
 
 // TODO: Rename getStaticClassType to getStaticType
@@ -189,19 +230,19 @@ namespace sk
 // Required to make a runtime class functional.
 #define CREATE_CLASS_IDENTIFIERS( RuntimeClass ) public: \
 	typedef decltype( RuntimeClass ) class_type;           \
-	constexpr const sk::iRuntimeClass&             getClass    ( void ) const override { return m_class;     } \
+	constexpr const sk::iRuntimeClass& getClass( void ) const override { return m_class;     } \
 	constexpr const sk::type_hash& getClassType( void ) override { return m_class.getType(); } \
-	std::string                       getClassName( void ) override { return m_class.getName(); } \
+	std::string                    getClassName( void ) override { return m_class.getName(); } \
 	static constexpr auto&  getStaticClass    ( void ){ return RuntimeClass;           } \
-	static constexpr auto&  getStaticClassType( void ){ return RuntimeClass .getType(); } \
-	static auto             getStaticClassName( void ){ return RuntimeClass .getName(); } \
+	static constexpr auto&  getStaticType( void ){ return RuntimeClass .getType(); } \
+	static auto             getStaticName( void ){ return RuntimeClass .getName(); } \
 	protected:                              \
 	constexpr static auto& m_class = RuntimeClass; \
 	private:
 
 #define CREATE_CLASS_BODY( Class ) CREATE_CLASS_IDENTIFIERS( runtime_class_ ## Class )
 
-#define CREATE_RUNTIME_CLASS_VALUE( Class, Name, ... ) static constexpr auto CONCAT( runtime_class_, Name ) = sk::cRuntimeClass< Class __VA_OPT__(,) FORWARD( __VA_ARGS__ ) >( #Name, __FILE__, __LINE__ );
+#define CREATE_RUNTIME_CLASS_VALUE( Class, Name, ... ) static constexpr auto CONCAT( runtime_class_, Name ) = sk::cRuntimeClass< Class __VA_OPT__(,) FORWARD( __VA_ARGS__ ) >( #Name );
 
 // Requires you to manually add CREATE_CLASS_IDENTIFIERS inside the body. But gives greater freedom. First inheritance will always have to be public. Unable to function with templated classes.
 // Deprecated
@@ -210,7 +251,7 @@ class Class ; \
 CREATE_RUNTIME_CLASS_VALUE( Class, Class, __VA_ARGS__ ) \
 class Class : public sk::get_inherits_t< FIRST( __VA_ARGS__ ) > \
 
-// Generates both runtime info and start of body body, but removes most of your freedom. Unable to function with templated classes.
+// Generates both runtime info and start of body, but removes most of your freedom. Unable to function with templated classes.
 // Deprecated
 #define GENERATE_ALL_CLASS( Class, ... ) GENERATE_CLASS( Class __VA_OPT__(,) __VA_ARGS__ ) AFTER_FIRST( __VA_ARGS__ ) { CREATE_CLASS_BODY( Class )
 
