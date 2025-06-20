@@ -85,7 +85,7 @@ namespace sk::Memory
 		for( size_t i = 0; i < *count_ptr; i++ )
 			_block[ i ].~Ty();
 
-#if defined( QW_TRACKER_DISABLED )
+#if defined( SK_TRACKER_DISABLED )
 		Memory::free_fast( count_ptr );
 #else  // DEBUG
 		Tracker::free( count_ptr );
@@ -97,7 +97,7 @@ namespace sk::Memory
 
 } // sk::Memory::
 
-#if !defined( QW_TRACKER_DISABLED )
+#if !defined( SK_TRACKER_DISABLED )
 /**
  * Default tracked alloc.
  * 
@@ -136,7 +136,7 @@ namespace sk::Memory
  * Arguments: Address
  */
 #define SK_FREE( address ) sk::Memory::free( address )
-#else // !QW_TRACKER_DISABLED
+#else // !SK_TRACKER_DISABLED
 /**
  * Default tracked alloc.
  * 

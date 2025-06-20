@@ -159,7 +159,7 @@ private:
 
     	// Add statistics
     	++m_statistics.allocation_count;
-    	m_statistics.memory_allocated_exc_head += size;
+    	m_statistics.memory_allocated_exc_head += _size;
     	m_statistics.memory_allocated_inc_head += t_size;
     	m_memory_usage += t_size;
 
@@ -225,8 +225,17 @@ private:
     	m_statistics.memory_freed_inc_head += total_prev_size;
     	m_memory_usage -= total_prev_size;
 
-    	const auto entry = static_cast< sTracker_entry* >( ::realloc( prev_entry, _size ) );
+    	const auto size   = get_aligned( _size );
+    	const auto t_size = size + aligned_entry_size;
+    	const auto entry = static_cast< sTracker_entry* >( ::realloc( prev_entry, t_size ) );
+
     	++m_statistics.reallocation_count;
+    	m_statistics.memory_allocated_exc_head += size;
+    	m_statistics.memory_allocated_inc_head += t_size;
+    	m_memory_usage += t_size;
+
+    	entry->size  = _size;
+    	entry->extra = static_cast< uint16_t >( t_size - _size );
 
     	m_mtx.lock();
     	if constexpr( Tracker::kSaveMemoryHistory )
@@ -249,6 +258,7 @@ private:
     {
         for( auto& entry : m_block_set )
         {
+        	// TODO Printer for memory leaks.
         	::free( static_cast< sTracker_entry* >( entry )->last );
             ::free( entry );
         }
