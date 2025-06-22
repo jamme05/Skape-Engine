@@ -6,6 +6,8 @@
 
 #include "Model.h"
 
+#include "Reflection/Interface.h"
+
 namespace sk::Assets
 {
     cModel::cModel( const std::string& _name )

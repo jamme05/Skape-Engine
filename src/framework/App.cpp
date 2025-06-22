@@ -29,6 +29,7 @@
 #include "Graphics/cWindow_context.h"
 
 #include "Containers/allocator.h"
+#include "Containers/Const/Const_Wrapper.h"
 #include "Containers/Const/String.h"
 
 #include "Reflection/RuntimeClass.h"
@@ -119,7 +120,7 @@ void cApp::create( void )
 	auto list_2 = sk::cAssetManager::get().loadFile( "data/heheToiletwithtextures.glb" );
 
 	//sk::cAssetManager::get().loadFile( "data/mushroom.glb" );
-
+	
 	//auto cube          = sk::cAssetManager::get().getAssetAs< sk::Assets::cMesh >( 0 );
 	auto christopher_t = list_1.Get_Asset_Of_Type< sk::Assets::cTexture >();
 	auto christopher_m = list_1.Get_Asset_Of_Type< sk::Assets::cMesh    >();
@@ -152,6 +153,7 @@ void cApp::create( void )
 	sk::cSceneManager::get().registerScene( m_scene );
 
 	REGISTER_LISTENER( "Custom Event", &cApp::custom_event )
+	sk::Register_Event_Helper( sk::Const< sk::str_hash >( "Aaaa" ), &cApp::custom_event, this );
 
 	sk::Assets::cMaterial material{ "Test", *m_mesh_pair };
 

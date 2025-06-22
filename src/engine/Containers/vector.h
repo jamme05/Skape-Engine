@@ -12,6 +12,7 @@
 
 namespace sk
 {
+	// A vector using the memory tracker for allocation
 	template< typename Ty >
 	using vector = std::vector< Ty, allocator< Ty > >;
 } // sk::

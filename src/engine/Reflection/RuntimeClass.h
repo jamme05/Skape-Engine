@@ -30,16 +30,24 @@ namespace sk
 		{
 		} // iRuntimeClass
 
-		constexpr iRuntimeClass( const char* _name, const std::source_location& _location = std::source_location::current(), const uint64_t& _parent_hash = Hashing::val_64_const )
+		consteval iRuntimeClass( const char* _name, const std::source_location& _location = std::source_location::current(), const uint64_t& _parent_hash = Hashing::val_64_const )
 		: m_hash( _name )
 		, m_raw_name( _name )
 		, m_file_path( _location.file_name() )
 		, m_line( _location.line() )
 		{} // iRuntimeClass
+
+		consteval iRuntimeClass( const char* _name, type_hash _hash )
+		: m_hash( std::move( _hash ) )
+		, m_raw_name( _name )
+		, m_file_path( nullptr )
+		, m_line( 0 )
+		{
+		}
 		
 		virtual ~iRuntimeClass() = default;
 
-		virtual void* create( void )
+		virtual iClass* create( void )
 		{
 			// TODO: Create function reflection system to allow for overload selection.
 			return nullptr;
@@ -63,7 +71,7 @@ namespace sk
 		size_t      m_line;
 	};
 
-	constexpr static iRuntimeClass kInvalidClass{ "Invalid", __FILE__ };
+	constexpr static iRuntimeClass kInvalidClass{ "Invalid" };
 
 	template< bool Select, class Ty, class Ty2 >
 	struct select_class_type{};
@@ -78,7 +86,6 @@ namespace sk
 	{
 		typedef Ty2 type;
 	};
-
 
 	template< bool Select, class Ty, class Ty2 > // TODO: Move to a more global space, might be liked. Also maybe make an int variant?
 	struct select_type{};
@@ -137,7 +144,7 @@ namespace sk
 	using get_inherits_t     = typename get_parent_class< Ty >::inherits_type;
 
 	template< class Ty, class Pa = iRuntimeClass, const get_parent_class_t< Pa >& Parent = get_class_ref< Pa >, bool ForceShared = true >
-	requires std::is_base_of_v< iRuntimeClass, get_parent_class_t< Pa > >
+	requires std::is_base_of_v< iClass, Pa >
 	class cRuntimeClass : public get_parent_class_t< Pa >
 	{
 	public:
@@ -157,7 +164,7 @@ namespace sk
 		{} // cRuntimeClass
 
 		// Use std::is_base_of / std::is_base_of_v instead of this in case both types are known.
-		constexpr bool isDerivedFrom( const iRuntimeClass& _base ) const override
+		[[ nodiscard ]] constexpr bool isDerivedFrom( const iRuntimeClass& _base ) const override
 		{
 			if( *this == _base )
 				return true;

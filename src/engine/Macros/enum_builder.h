@@ -53,6 +53,7 @@
 #define BUILD_MACRO_ENUMCLASS( Name, ... ) BUILD_ENUM_ENUMCLASS
 #define BUILD_MACRO_FLAGS( Name, ... ) BUILD_ENUM_FLAGS
 
+// TODO: Rename E objects to ENUM_E.
 #define E( ... ) _E( __VA_ARGS__ )
 
 #define NAME_E( Name, ... ) Name
