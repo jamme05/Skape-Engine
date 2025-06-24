@@ -10,9 +10,8 @@
 
 namespace sk
 {
-	// NOTE: This will always fail in editor, but SHOULD be valid when compiling.
 	static_assert( registry::type_registry< 0 >::valid, "No types registered." );
-	constexpr static auto types = registry::type_registry< sk::registry::counter::next() - 1 >::registered;
+	constexpr static array types = registry::type_registry< sk::registry::counter::next() - 1 >::registered;
 	const unordered_map< type_hash, const sType_Info* > type_map = { types.begin(), types.end() };
 } // sk::
 

@@ -256,6 +256,7 @@ private:
 
     cTracker::~cTracker( void )
     {
+    	// TODO: Print statistics.
         for( auto& entry : m_block_set )
         {
         	// TODO Printer for memory leaks.

@@ -222,10 +222,15 @@ namespace sk
 			eType m_type;
 		};
 
-		struct sMemberValue : sMember
+		struct sMemberVariable : sMember
 		{
 			const sType_Info* m_type_info;
 			size_t            m_offset;
+		};
+
+		struct sMemberFunction
+		{
+			
 		};
 	} // Reflection::
 } // sk::

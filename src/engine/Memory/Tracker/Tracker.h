@@ -20,6 +20,7 @@ namespace sk::Memory
 	namespace Tracker
 	{
 		// Decides if the memory tracker should keep track of the entire history and not just the latest modification.
+		// TODO: Check if memory history actually works.
 		constexpr bool kSaveMemoryHistory = true;
 
 		struct sMem_header

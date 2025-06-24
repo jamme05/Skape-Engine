@@ -30,7 +30,7 @@ end
 
 local root_build_dir = "./Build/Project/"
 
-workspace "Skape Playground"
+workspace "Skape_Playground"
     configurations { "Debug", "Release", "Final" }
     platforms { Get_Supported_Platforms() }
     startproject "Startup"

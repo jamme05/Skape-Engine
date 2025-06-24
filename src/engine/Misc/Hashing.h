@@ -101,7 +101,7 @@ constexpr bool   operator>=( const Class & _other ) const { return m_hash >= _ot
 		constexpr bool operator< ( const iHashed& _other ) const { return m_hash <  _other.m_hash; }
 		constexpr bool operator> ( const iHashed& _other ) const { return m_hash >  _other.m_hash; }
 
-		constexpr auto& getHash( void ) const { return m_hash; }
+		[[ nodiscard ]] constexpr auto getValue( void ) const { return m_hash; }
 
 	protected:
 		uint64_t m_hash;

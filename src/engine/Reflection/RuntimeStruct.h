@@ -23,7 +23,7 @@
 
 #define BUILD_STRUCT_MEMBERS( ... ) FOR_EACH( BUILD_STRUCT_MEMBER, __VA_ARGS__ )
 
-#define GET_MEMBER_INFO( Struct, Type, Name, ... ) runtime_struct::sMemberInfo{ sk::kTypeId< Type >.hash, #Name, #Name, sizeof( Type ), offsetof( Struct, Name ) }
+#define GET_MEMBER_INFO( Struct, Type, Name, ... ) runtime_struct::sMemberInfo{ sk::get_type_hash_v< Type >, #Name, #Name, sizeof( Type ), offsetof( Struct, Name ) }
 #define GET_MEMBER_REFLECTION_0( Struct, Type, Name, ... ) std::pair{ str_hash{ #Name }, GET_MEMBER_INFO( Struct, Type, Name, __VA_ARGS__ ) }
 #define GET_MEMBER_REFLECTION( ... ) GET_MEMBER_REFLECTION_0( __VA_ARGS__ )
 #define BUILD_STRUCT_REFLECTED_MEMBER( Struct, Arg, ... ) GET_MEMBER_REFLECTION( Struct, UNWRAP_ ## Arg )  __VA_OPT__(,)
@@ -36,11 +36,11 @@
 
 #define GET_ARGS_HASH( ... ) struct_hash< __VA_ARGS__ >::kHash
 
+
 #define MAKE_STRUCT_TYPE_INFO( Type, Name, MembersHash, Types, ... ) \
-template<> struct sk::get_type_info< Type >{ \
+template<> struct sk::get_type_info< Type > : sk::template_type_info{ \
 	constexpr static auto kMembers = const_map{ BUILD_STRUCT_REFLECTED_MEMBERS( Type, __VA_ARGS__ ) }; \
 	constexpr static sStruct_Type_Info kInfo = { { sType_Info::eType::kStruct, MembersHash( UNWRAP( Types ) ), sizeof( Type ), Name, #Type }, kMembers }; \
-	constexpr static bool      kValid = true; \
 	};
 
 #define REGISTER_STRUCT( Type, Types, Name, ... ) \

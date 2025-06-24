@@ -18,6 +18,7 @@
 #include <Macros/Manipulation.h>
 
 #include "Type_Hash.h"
+#include "Input/Input.h"
 #include "Misc/Counter.h"
 
 namespace sk
@@ -46,21 +47,10 @@ namespace sk
         size_t      size;
         const char* name;
         const char* raw_name;
-        bool        is_ptr = false;
-        bool        is_ref = false;
 
-        // TODO: Implement in a better way. Like a runtime type ref.
-        constexpr sType_Info as_ptr( void ) const
-        {
-            return { .hash = hash, .size = size, .name = name, .raw_name = raw_name, .is_ptr = true };
-        } // as_ptr
-        constexpr sType_Info as_ref( void ) const
-        {
-            return { .hash = hash, .size = size, .name = name, .raw_name = raw_name, .is_ref = true };
-        } // as_ref
         constexpr type_pair_t pair( void ) const
         {
-            return { hash, this };
+            return { hash, static_cast< const sType_Info* >( this ) };
         } // pair
         /**
          * Function for converting to an instance of struct info.
@@ -110,8 +100,34 @@ namespace sk
         return nullptr;
     } // as_struct_info
 
+    struct sModifier
+    {
+        enum class eType : uint8_t
+        {
+            kArray,
+            kPointer,
+            kReference,
+        };
+        constexpr sModifier( const eType   _type  ) : array_size( 0 ),     type( _type ){}
+        constexpr sModifier( const uint16_t _size ) : array_size( _size ), type( eType::kArray ){}
+        uint16_t array_size;
+        eType    type;
+    };
+
+    // Maybe not required for the future?
     template< class Ty >
-    struct get_type_info
+    struct type_registry_internal
+    {
+    };
+
+    struct template_type_info
+    {
+        constexpr static auto kMods  = array< sModifier, 0 >{};
+        constexpr static bool kValid = true;
+    };
+
+    template< class Ty >
+    struct get_type_info : template_type_info
     {
         // static_assert( false, "Invalid Type" );
         constexpr static sType_Info kInfo = {
@@ -121,32 +137,75 @@ namespace sk
             .name = "Invalid",
             .raw_name = "invalid"
         };
-        constexpr static bool kValid  = false;
     };
-    // TODO: Make a new way to handle ptrs and refs
+    
+    // TODO: Use modifiers and recursive instead to allow for a better experience.
     template< class Ty >
     requires get_type_info< Ty >::kValid
     struct get_type_info< Ty* > : get_type_info< Ty >
     {
-        typedef get_type_info< Ty > raw_t;
-        constexpr static sType_Info kInfo = raw_t::kInfo.as_ptr();
+        typedef get_type_info< Ty > prev_t;
+        constexpr static sType_Info& kInfo = prev_t::kInfo;
+        constexpr static auto        kMods = array{ sModifier{ sModifier::eType::kPointer } } + prev_t::kMods;
     };
+
     template< class Ty >
     requires get_type_info< Ty >::kValid
     struct get_type_info< Ty& > : get_type_info< Ty >
     {
-        typedef get_type_info< Ty > raw_t;
-        constexpr static sType_Info kInfo = raw_t::kInfo.as_ref();
+        typedef get_type_info< Ty > prev_t;
+        constexpr static sType_Info& kInfo = prev_t::kInfo;
+        constexpr static auto        kMods = array{ sModifier{ sModifier::eType::kReference  } } + prev_t::kMods;
     };
-    template< class Ty >
+
+    template< class Ty, size_t Size >
     requires get_type_info< Ty >::kValid
-    struct get_type_hash
+    struct get_type_info< Ty[ Size ] > : get_type_info< Ty >
     {
-        constexpr static type_hash value = get_type_info< Ty >::kInfo.hash;
+        typedef get_type_info< Ty > prev_t;
+        constexpr static sType_Info& kInfo = prev_t::kInfo;
+        constexpr static auto        kMods = array{ sModifier{ Size } } + prev_t::kMods;
     };
+
+    template< class Ty >
+    struct get_type_info< Ty&& > : get_type_info< Ty >
+    {
+        // TODO: Figure out ways to actually support it?
+        static_assert( false, "R-Reference isn't supported." );
+    };
+
     template< class Ty >
     requires get_type_info< Ty >::kValid
-    constexpr inline type_hash get_type_hash_v = get_type_hash< Ty >::value;
+    constexpr inline type_hash get_type_hash_v = get_type_info< Ty >::kInfo.hash;
+
+    class sType
+    {
+    public:
+        template< class Ty >
+        requires get_type_info< Ty >::kValid
+        sType( void );
+
+        [[ nodiscard ]] constexpr auto get_info     ( void ) const { return m_type_info_; }
+        [[ nodiscard ]] constexpr auto get_modifiers( void ) const { return m_modifiers_; }
+
+    private:
+        const sType_Info*        m_type_info_;
+        std::vector< sModifier > m_modifiers_ = {};
+    };
+
+    template< class Ty >
+    requires get_type_info< Ty >::kValid
+    sType::sType( void )
+    : m_type_info_( &get_type_info< Ty >::kInfo )
+    {
+    }
+
+    template< class Ty >
+    struct get_type
+    {
+        using type_info = get_type_info< Ty >;
+        
+    };
 
     template< class Ty >
     constexpr static auto& kTypeId = get_type_info< Ty >::kInfo;
@@ -157,7 +216,7 @@ namespace sk
             typedef get_type_info< Ty > type_container_t;
             static_assert( type_container_t::kValid, "The type specified isn't registered as a valid Type." );
 
-            return type_container_t::kInfo.hash.getHash();
+            return type_container_t::kInfo.hash.getValue();
     } // get_type_hash
 
     enum eArgumentError : uint8_t
@@ -170,41 +229,50 @@ namespace sk
     constexpr uint8_t validate_args( const array< type_hash, Size >& _array, const bool _allow_void = true );
 
     template< class Ty >
-    struct valid_type
+    struct is_valid_type
     {
         constexpr static bool value = get_type_info< Ty >::kValid;
     };
     template< class Ty >
-    constexpr inline bool kValidType = valid_type< Ty >::value;
+    constexpr inline bool kValidType = is_valid_type< Ty >::value;
 
     template< class... Types >
-    constexpr inline bool kValidTypes = std::conjunction_v< valid_type< Types >... >;
+    constexpr inline bool kValidTypes = std::conjunction_v< is_valid_type< Types >... >;
     template<>
     constexpr inline bool kValidTypes<> = false;
+
+    consteval type_hash calculate_types_hash( const array_ref< type_hash >& _hashes )
+    {
+        if( _hashes.size() == 0 )
+            return get_type_hash_v< void >;
+
+        uint64_t value = Hashing::prime_64_const;
+        for( auto& hash : _hashes )
+            value = ( value ^ hash.getValue() ) * Hashing::prime_64_const;
+        return type_hash{ value };
+    } // calculate_types_hash
+    
+    template< class... Types >
+    consteval type_hash calculate_types_hash( void )
+    {
+        static constexpr auto hashes = array{ get_type_hash_v< Types >... };
+        if constexpr ( sizeof...( Types ) > 0 )
+            return calculate_types_hash( hashes );
+        else
+            return get_type_hash_v< void >;
+    }
+
     template< bool AllowVoid, class... Types >
     requires kValidTypes< Types... >
     struct types_hash
     {
-    };
-    template< bool AllowVoid, class Ty, class... Types >
-    requires kValidTypes< Ty, Types... >
-    struct types_hash< AllowVoid, Ty, Types... >
-    {
-        typedef types_hash< AllowVoid, Types... > previous_t;
-        constexpr static size_t   kCount = 1 + previous_t::kCount;
-        constexpr static uint64_t kHash  = ( previous_t::kHash ^ get_type_value< Ty >() ) * Hashing::prime_64_const;
-        constexpr static auto     kTypes = array{ get_type_info< Ty >::kInfo.hash } + previous_t::kTypes;
-        constexpr static auto     kError = validate_args( kTypes, AllowVoid );
-        // TODO: Some way to get the types as a string for debugging.
-        static_assert( !( kError & kVoidNotAllowed ), "Void found but was not allowed in this scenario." );
-        static_assert( !( kError & kVoidNotOnly ),    "Void isn't the only argument type in this scenario." );
-    };
-    template< bool AllowVoid >
-    struct types_hash< AllowVoid >
-    {
-        constexpr static size_t   kCount = 0;
-        constexpr static uint64_t kHash  = Hashing::prime_64_const;
-        constexpr static auto     kTypes = array< type_hash, 0 >{};
+        constexpr static size_t    kCount = sizeof...( Types );
+        constexpr static array     kTypes = array< type_hash, kCount >{ get_type_info< Types >::kInfo... };
+        constexpr static type_hash kHash  = calculate_types_hash< Types... >();
+        constexpr static auto      kError = validate_args( kTypes, AllowVoid );
+        static_assert( !( kCount == 0 && !AllowVoid ), "This reflection system doesn't support empty structs. Make native C++ structs instead." );
+        static_assert( !( kError & kVoidNotAllowed ),  "Type Void found but was not allowed in this scenario." );
+        static_assert( !( kError & kVoidNotOnly ),     "Type Void isn't the only type in this scenario." );
     };
     template< class... Types >
     using args_hash = types_hash< true, Types... >;

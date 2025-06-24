@@ -55,7 +55,7 @@ namespace sk
 		//} // hash
 
 		constexpr hash( const str_hash& _other )
-		: iHashed( _other.getHash() )
+		: iHashed( _other.getValue() )
 		{
 		} // hash
 

@@ -18,7 +18,7 @@ namespace sk
         : iHashed( 0 )
         {} // Invalid type
         constexpr hash( const str_hash& _str_hash )
-        : iHashed( _str_hash.getHash() )
+        : iHashed( _str_hash.getValue() )
         {
         } // type_hash
 
@@ -33,8 +33,8 @@ namespace sk
         {
         } // type_hash
 
-        constexpr hash( const char* _name, const std::source_location& _location = std::source_location::current() )
-        : iHashed( ( Hashing::fnv1a_64( _name ) ^ Hashing::fnv1a_64( _location.file_name() ) ) * Hashing::prime_64_const )
+        constexpr hash( const char* _name, const char* _namespace = "" )
+        : iHashed( ( Hashing::fnv1a_64( _name ) ^ Hashing::fnv1a_64( _namespace ) ) * Hashing::prime_64_const )
         {
         } // type_hash
 

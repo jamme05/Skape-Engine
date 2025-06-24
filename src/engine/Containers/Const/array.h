@@ -18,14 +18,14 @@ namespace sk
         typedef Ty ( & arr_type )[ Size ];
         constexpr static auto array_size = Size;
 
-        constexpr array( const Ty* _ptr )
+        explicit constexpr array( const Ty* _ptr )
         {
             std::copy_n( _ptr, Size, value );
         } // array
 
         template< class... Args >
         requires ( std::conjunction_v< std::is_same< Ty, Args >... > && !std::is_array_v< Ty > )
-        constexpr array( Args... _values )
+        explicit constexpr array( Args... _values )
         : value{ std::move( _values )... }
         {
         } // array
@@ -59,8 +59,7 @@ namespace sk
 
         constexpr size_t size( void ) const { return array_size - offset; }
 
-        // Really cheaty way of doing it.
-        // TODO: If a better way exists. Replace this
+        // TODO: Remove offset in the array in the future. Was just a quick cheat that shouldn't exist.
         size_t offset = 0;
         Ty value[ Size ];
     };
@@ -181,6 +180,8 @@ namespace sk
     array( Ty, Ty2... ) -> array< Ty, 1 + sizeof...( Ty2 ) >;
     template< class Ty, size_t Size >
     array( const Ty ( & )[ Size ] ) -> array< Ty, Size >;
+    template< class Ty, size_t Size >
+    array( const array< Ty, Size >& ) -> array< Ty, Size >;
 
     template< class Ty >
     struct is_array
