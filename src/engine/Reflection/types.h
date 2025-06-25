@@ -21,4 +21,4 @@ REGISTER_T_TYPE( int64, "Long" )
 REGISTER_T_TYPE( uint64, "Unsigned Long" )
 
 REGISTER_TYPE( float, "Float" )
-REGISTER_TYPE( double, "Double" )
+REGISTER_TYPE( double, "Double" ) 

@@ -49,6 +49,10 @@
 #define NAME_ENUMCLASS( Name, ... ) internal_ ## Name
 #define NAME_FLAGS( Name, ... ) internal_ ## Name
 
+#define IS_FLAG_ENUM( ... ) false
+#define IS_FLAG_ENUMCLASS( ... ) false
+#define IS_FLAG_FLAGS( ... ) true
+
 #define BUILD_MACRO_ENUM( Name, ... ) BUILD_ENUM_ENUM
 #define BUILD_MACRO_ENUMCLASS( Name, ... ) BUILD_ENUM_ENUMCLASS
 #define BUILD_MACRO_FLAGS( Name, ... ) BUILD_ENUM_FLAGS
@@ -77,14 +81,28 @@ const char*  DisplayName; \
 
 namespace sk::Reflection::Enum
 {
-	consteval int get_safe_enum_value( const char*, const int _counter, ... ){ return _counter; };
-	consteval int get_safe_enum_value( const int _value, const int, ... ){ return _value; };
-	consteval int get_safe_enum_value( const int _value ){ return _value; };
+	consteval int get_safe_enum_value( const bool _is_flag, const int _value )
+	{
+		if( _is_flag )
+			return Math::pow2( static_cast< uint8_t >( _value ) );
+		return _value;
+	}
+	consteval int get_safe_enum_value( const bool _is_flag, const char*, const int _counter, ... )
+	{
+		return get_safe_enum_value( _is_flag, _counter );
+	}
+	consteval int get_safe_enum_value( const bool, const int _value, const int, ... )
+	{
+		// Override flag bool due to this having a user-defined value.
+		return get_safe_enum_value( false, _value );
+	}
 } // qw::Reflection::Enum::
 
-#define GET_SAFE_VALUE_2( Counter, ... ) = sk::Reflection::Enum::get_safe_enum_value( __VA_ARGS__ __VA_OPT__(,) Counter )
+// TODO: Figure out why it doesn't use the normal once.
+#define GET_SAFE_VALUE_3( IsFlag, Counter, ... ) = sk::Reflection::Enum::get_safe_enum_value( IsFlag, __VA_OPT__( __VA_ARGS__ , ) Counter )
+#define GET_SAFE_VALUE_2( Counter, ... ) = get_safe_enum_value( false, __VA_OPT__( __VA_ARGS__ , ) Counter )
 #define GET_SAFE_VALUE_1( Counter, Value )
-#define GET_SAFE_VALUE( ... ) CONCAT( GET_SAFE_VALUE_, VARGS( __VA_ARGS__ ) )( __VA_ARGS__ )
+#define GET_SAFE_VALUE( IsFlag, ... ) CONCAT( GET_SAFE_VALUE_, VARGS( __VA_ARGS__, ) )( IsFlag, __VA_ARGS__ )
 
 #define VALID_E( ... ) ,1
 
@@ -94,19 +112,19 @@ namespace sk::Reflection::Enum
 #define IS_E_TYPE( ... ) SECOND( __VA_ARGS__, 0 )
 #define UNWRAP_E_VALUE( Value ) CONCAT( IS_VALID_, IS_E_TYPE( CONCAT( VALID, Value ) ) ) ( Value )
 
-#define MAKE_ENUM_VALUE_1( Value, Counter ) NAME ## Value GET_SAFE_VALUE( Counter, VALUE ## Value ),
-#define MAKE_ENUM_VALUE( Value, Counter ) MAKE_ENUM_VALUE_1( Value, Counter )
-#define UNPACK_ENUM_VALUE( Value, Counter ) MAKE_ENUM_VALUE( UNWRAP_E_VALUE( Value ), Counter )
+#define MAKE_ENUM_VALUE_1( IsFlag, Value, Counter ) NAME ## Value GET_SAFE_VALUE( IsFlag, Counter, VALUE ## Value ),
+#define MAKE_ENUM_VALUE( IsFlag, Value, Counter ) MAKE_ENUM_VALUE_1( IsFlag, Value, Counter )
+#define UNPACK_ENUM_VALUE( Value, Counter ) MAKE_ENUM_VALUE( false, UNWRAP_E_VALUE( Value ), Counter )
+#define UNPACK_FLAG_VALUE( Value, Counter ) MAKE_ENUM_VALUE( true, UNWRAP_E_VALUE( Value ), Counter )
 
 #define BUILD_ENUM_ENUM( Type, ... ) \
 	TYPE ## Type { COUNTER_FOR_EACH( UNPACK_ENUM_VALUE, 0, __VA_ARGS__ ) }
-
 
 #define BUILD_ENUM_ENUMCLASS( Type, ... ) \
 	TYPE ## Type { COUNTER_FOR_EACH( UNPACK_ENUM_VALUE, 0, __VA_ARGS__ ) }
 
 #define BUILD_ENUM_FLAGS( Type, ... ) \
-	TYPE ## Type { COUNTER_FOR_EACH( UNPACK_ENUM_VALUE, 0, __VA_ARGS__ ) }
+	TYPE ## Type { COUNTER_FOR_EACH( UNPACK_FLAG_VALUE, 0, __VA_ARGS__ ) }
 
 #define BUILD_ENUM_BODY( Type, ... ) \
 	BUILD_MACRO ## Type ( Type, __VA_ARGS__ )
@@ -121,7 +139,7 @@ namespace sk::Reflection::Enum
 	return kInvalid; \
 	}
 
-#define ENUM_VALUE_METADATA_1( Type, Name, Value, ... ) std::pair{ static_cast< value_t >( Name :: NAME ## Value ), sk::Reflection::Enum::enum_value_creator< Name, sValueInfo >( Name :: NAME ## Value, STR_NAME ## Value UNPACK_SAFE ## Value ) } __VA_OPT__(,)
+#define ENUM_VALUE_METADATA_1( Type, Name, Value, ... ) std::pair{ static_cast< value_t >( enum_t :: NAME ## Value ), sk::Reflection::Enum::enum_value_creator< enum_t, sValueInfo >( enum_t :: NAME ## Value, STR_NAME ## Value UNPACK_SAFE ## Value ) } __VA_OPT__(,)
 #define ENUM_VALUE_METADATA_0( Type, Value, ... ) ENUM_VALUE_METADATA_1( Type, NAME ## Type, Value, __VA_ARGS__ )
 #define ENUM_VALUE_METADATA( Type, Value, ... ) ENUM_VALUE_METADATA_0( Type, UNWRAP_E_VALUE( Value ), __VA_ARGS__ )
 
@@ -269,5 +287,6 @@ MAKE_UNREFLECTED_ENUM( ENUMCLASS( eExample2 ),
 MAKE_UNREFLECTED_ENUM( FLAGS( eExample3, uint16_t ),
 	kFirst,
 	kSecond,
-	kThird
+	kThird,
+	kFourth
 );

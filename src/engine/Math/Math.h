@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <math.h>
 #include <valarray>
+#include <numbers>
 
 namespace sk
 {
@@ -19,27 +20,27 @@ namespace sk
 	// TODO: Find if there's a better way, like having two concepts with the same name.
 
 	template< class T >
-	struct Promote_to_float
+	struct nearest_float
 	{
 		typedef std::conditional_t< std::is_same_v< T, long double >, long double,
 		std::conditional_t< std::is_same_v< T, double > || std::is_integral_v< T >, double, float > > type;
 	};
 
 	template< class T >
-	using promote_to_float_t = typename Promote_to_float< T >::type;
+	using nearest_float_t = typename nearest_float< T >::type;
 
 	template< class T1, class T2 >
-	struct Common_float_type
+	struct shared_nearest_float
 	{
-		typedef promote_to_float_t< T1 > Ty1;
-		typedef promote_to_float_t< T2 > Ty2;
+		typedef nearest_float_t< T1 > Ty1;
+		typedef nearest_float_t< T2 > Ty2;
 
 		typedef std::conditional_t< std::is_same_v< Ty1, long double > || std::is_same_v< Ty2, long double >, long double,
 		        std::conditional_t< std::is_same_v< Ty1, double >      || std::is_same_v< Ty2, double >, double, float > > type;
 	};
 
 	template< class T1, class T2 >
-	using common_float_type_t = typename Common_float_type< T1, T2 >::type;
+	using common_float_type_t = typename shared_nearest_float< T1, T2 >::type;
 
 	namespace Math
 	{
@@ -52,148 +53,166 @@ namespace sk
 		 *    [ function_name ]( Args... ){ return [ optional: static_cast< T > ][ code ] }
 		 *
 		 * Code allowed to be multiline in case of typedef or single line too long.
+		 *
+		 * TODO: Chance format.
 		 */
 
-		template< class >
-		struct sPi
-		{};
-
-		template<>
-		struct sPi< float >
-		{
-			constexpr static auto kPi  = 3.14159265358979323846f;
-			constexpr static auto kPi2 = kPi * kPi;
-			constexpr static auto kDegToRad = kPi / 180.0f;
-			constexpr static auto kRadToDeg = 180.0f / kPi;
-		};
-
-		template<>
-		struct sPi< double >
-		{
-			constexpr static auto kPi  = 3.14159265358979323846;
-			constexpr static auto kPi2 = kPi * kPi;
-			constexpr static auto kDegToRad = kPi / 180.0;
-			constexpr static auto kRadToDeg = 180.0 / kPi;
-		};
-
-		template< class Ty >
-		constexpr auto kPi = sPi< Ty >::kPi;
-		template< class Ty >
-		constexpr auto kPi2 = sPi< Ty >::kPi2;
-		template< class Ty >
-		constexpr auto kDegToRad = sPi< Ty >::kDegToRad;
-		template< class Ty >
-		constexpr auto kRadToDeg = sPi< Ty >::kRadToDeg;
+		template< std::floating_point Ty >
+		constexpr static auto kPi  = std::numbers::pi_v< Ty >;
+		template< std::floating_point Ty >
+		constexpr static auto kPi2 = kPi< Ty > * kPi< Ty >;
+		template< std::floating_point Ty >
+		constexpr static auto kDegToRad = kPi< Ty > / static_cast< Ty >( 180.0 );
+		template< std::floating_point Ty >
+		constexpr static auto kRadToDeg = static_cast< Ty >( 180.0 ) / kPi< Ty >;
 
 		// Math:
 		template< class T > T
-			pow2( const T _val ){ return _val * _val; }
+		constexpr square( const T _val ){ return _val * _val; }
 
-		template< class T > T
-			pow3( const T _val ){ return _val * _val * _val; }
+		// Const pow variant.
+		template< class T1 >
+		requires std::is_arithmetic_v< T1 >
+		consteval T1 cpow( T1 _val, uint32_t _exp )
+		{
+			// Based of: https://en.cppreference.com/w/cpp/language/if.html#Consteval_if
+			if( _val == T1( 0 ) )
+				return _val;
 
+			T1 res{ 1 };
+			while( _exp )
+			{
+				if( _exp & 1 ) res *= _val;
+				_exp /= 2;
+				_val *= _val;
+			}
+			return res;
+		}
+
+		// WARNING, if used during compile time, it's behaviour will be different. Check cpow.
+		// For a powering 2 by anything, use pow2 instead.
 		template< class T1, class T2 >
-		requires enable_artimetic_c< T1, T2 >
-		T1	pow ( const T1 _val, const T2 _exp )
+		requires ( enable_artimetic_c< T1, T2 > )
+		constexpr T1 pow( const T1 _val, const T2 _exp )
+		{
+			if consteval
 			{
-				typedef common_float_type_t< T1, T2 > type;
-				return static_cast< T1 >( ::pow( type( _val ), type( _exp ) ) );
+				return cpow( _val, static_cast< uint32_t >( _exp ) );
 			}
+			typedef common_float_type_t< T1, T2 > type;
+			return static_cast< T1 >( std::pow( type( _val ), type( _exp ) ) );
+		}
+
+		// Gets 2 powered by exp.
+		template< std::unsigned_integral Ty = uint8_t >
+		constexpr Ty pow2( const uint8_t _exp )
+		{
+			return static_cast< Ty >( 0x1 << _exp );
+		}
 
 		template< class T >
 		requires enable_artimetic_c< T >
-		T	cos ( const T _val )
-			{
-				typedef promote_to_float_t< T > type;
-				return static_cast< T >( ::cos( type( _val ) ) );
-			}
+		T cos( const T _val )
+		{
+			typedef nearest_float_t< T > type;
+			return static_cast< T >( std::cos( type( _val ) ) );
+		}
 
 		template< class T >
 		requires enable_artimetic_c< T >
-		T	sin ( const T _val )
-			{
-				typedef promote_to_float_t< T > type;
-				return static_cast< T >( ::sin( type( _val ) ) );
-			}
+		T sin( const T _val )
+		{
+			typedef nearest_float_t< T > type;
+			return static_cast< T >( std::sin( type( _val ) ) );
+		}
 
 		template< class T >
 		requires enable_artimetic_c< T >
-		T	tan ( const T _val )
-			{
-				typedef promote_to_float_t< T > type;
-				return static_cast< T >( ::tan( type( _val ) ) );
-			}
+		T tan( const T _val )
+		{
+			typedef nearest_float_t< T > type;
+			return static_cast< T >( std::tan( type( _val ) ) );
+		}
 
 		template< class T >
 		requires enable_artimetic_c< T >
-		T	acos( const T _val )
-			{
-				typedef promote_to_float_t< T > type;
-				return static_cast< T >( ::cos( type( _val ) ) );
-			}
+		T acos( const T _val )
+		{
+			typedef nearest_float_t< T > type;
+			return static_cast< T >( std::cos( type( _val ) ) );
+		}
 
 		template< class T >
 		requires enable_artimetic_c< T >
-		T	asin( const T _val )
-			{
-				typedef promote_to_float_t< T > type;
-				return static_cast< T >( ::sin( type( _val ) ) );
-			}
+		T asin( const T _val )
+		{
+			typedef nearest_float_t< T > type;
+			return static_cast< T >( std::sin( type( _val ) ) );
+		}
 
 		template< class T >
 		requires enable_artimetic_c< T >
-		T	atan( const T _val )
-			{
-				typedef promote_to_float_t< T > type;
-				return static_cast< T >( ::tan( type( _val ) ) );
-			}
+		T atan( const T _val )
+		{
+			typedef nearest_float_t< T > type;
+			return static_cast< T >( std::tan( type( _val ) ) );
+		}
 
 		template< class T >
 		requires enable_artimetic_c< T >
-		T	sqrt( const T _val )
-			{
-				typedef promote_to_float_t< T > type;
-				return static_cast< T >( ::sqrt( type( _val ) ) );
-			}
+		T sqrt( const T _val )
+		{
+			typedef nearest_float_t< T > type;
+			return static_cast< T >( std::sqrt( type( _val ) ) );
+		}
 
 		// Logical
 		template< class T >
 		requires enable_artimetic_c< T >
-		T	abs ( const T _val )
+		constexpr T abs( const T _val )
+		{
+			if consteval
 			{
-				typedef promote_to_float_t< T > type;
-				return static_cast< T >( ::abs( type( _val ) ) );
+				// No need to calculate anything if it can't be unsigned.
+				if constexpr( std::is_unsigned_v< T > )
+					return _val;
+				return _val < 0 ? -_val : _val;
 			}
+
+			// Default std
+			typedef nearest_float_t< T > type;
+			return static_cast< T >( std::abs( type( _val ) ) );
+		}
 
 		template< class T >
 		requires enable_artimetic_c< T >
 		constexpr T	degToRad( const T _val )
-			{
-				typedef promote_to_float_t< T > type;
-				return static_cast< T >( kDegToRad< type > * type( _val ) );
-			}
+		{
+			typedef nearest_float_t< T > type;
+			return static_cast< T >( kDegToRad< type > * type( _val ) );
+		}
 
 		template< class T >
 		requires enable_artimetic_c< T >
 		constexpr T	radToDeg( const T _val )
-			{
-				typedef promote_to_float_t< T > type;
-				return static_cast< T >( kRadToDeg< type > * type( _val ) );
-			}
+		{
+			typedef nearest_float_t< T > type;
+			return static_cast< T >( kRadToDeg< type > * type( _val ) );
+		}
 
 		template< class T >
 		requires enable_artimetic_c< T >
 		constexpr T	min( const T _a, const T _b )
-			{
-				return _a < _b ? _a : _b;
-			}
+		{
+			return _a < _b ? _a : _b;
+		}
 
 		template< class T >
 		requires enable_artimetic_c< T >
 		constexpr T	max( const T _a, const T _b )
-			{
-				return _a > _b ? _a : _b;
-			}
+		{
+			return _a > _b ? _a : _b;
+		}
 
 	} // Math::
 } // sk::

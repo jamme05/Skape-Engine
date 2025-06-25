@@ -20,8 +20,8 @@ namespace sk
 
 	cSceneManager::cSceneManager( void )
 	{
-		cEventManager::initialize();
-		Scene::cCameraManager::initialize();
+		cEventManager::init();
+		Scene::cCameraManager::init();
 	}
 	cSceneManager::~cSceneManager( void )
 	{

@@ -44,6 +44,7 @@ cApp::cApp( void )
 
 cApp::~cApp( void )
 {
+	destroy();
 	m_scene = nullptr;
 } // ~cApp
 
@@ -99,8 +100,8 @@ void cApp::create( void )
 {
 	sk::cPlatform::initialize();
 	sk::Graphics::cRenderer::initialize();
-	sk::cAssetManager::initialize();
-	sk::cSceneManager::initialize();
+	sk::cAssetManager::init();
+	sk::cSceneManager::init();
 
 	sk::Graphics::cRenderer::get().registerVertexAttribute( sk::Graphics::sBaseVertex::g_attribute_regs );
 

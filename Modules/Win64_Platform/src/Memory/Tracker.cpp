@@ -143,7 +143,7 @@ private:
         	max_allowed_memory_size = static_cast< size_t >( static_cast< float >( mem_status.ullTotalPhys ) * max_memory_usage_percentage );
 
         	// But remember to start the Tracker!
-        	cTracker::initialize();
+        	cTracker::init();
         } // init
         void shutdown( void )
         {

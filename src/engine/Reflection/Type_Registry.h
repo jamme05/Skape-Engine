@@ -18,6 +18,7 @@
 #include <Macros/Manipulation.h>
 
 #include "Type_Hash.h"
+#include "Containers/Const/Linked_Array.h"
 #include "Input/Input.h"
 #include "Misc/Counter.h"
 
@@ -168,7 +169,7 @@ namespace sk
     };
 
     template< class Ty >
-    struct get_type_info< Ty&& > : get_type_info< Ty >
+    struct get_type_info< Ty&& >
     {
         // TODO: Figure out ways to actually support it?
         static_assert( false, "R-Reference isn't supported." );
@@ -210,23 +211,14 @@ namespace sk
     template< class Ty >
     constexpr static auto& kTypeId = get_type_info< Ty >::kInfo;
 
-    template< class Ty >
-    constexpr uint64_t get_type_value( void ) // Make some version already applying the prime_64_const
-    {
-            typedef get_type_info< Ty > type_container_t;
-            static_assert( type_container_t::kValid, "The type specified isn't registered as a valid Type." );
-
-            return type_container_t::kInfo.hash.getValue();
-    } // get_type_hash
-
     enum eArgumentError : uint8_t
     {
         kValid = 0, // The argument types are valid.
         kVoidNotAllowed = 1, // Void isn't allowed in this scenario.
         kVoidNotOnly   = 2,  // Void isn't the only type in this scenario.
     };
-    template< size_t Size >
-    constexpr uint8_t validate_args( const array< type_hash, Size >& _array, const bool _allow_void = true );
+    template< class... Types >
+    constexpr uint8_t validate_args( const bool _allow_void = true );
 
     template< class Ty >
     struct is_valid_type
@@ -238,26 +230,23 @@ namespace sk
 
     template< class... Types >
     constexpr inline bool kValidTypes = std::conjunction_v< is_valid_type< Types >... >;
-    template<>
-    constexpr inline bool kValidTypes<> = false;
 
-    consteval type_hash calculate_types_hash( const array_ref< type_hash >& _hashes )
+    consteval type_hash calculate_types_hash( const array_ref< type_hash >& _hashes, uint64_t _val )
     {
         if( _hashes.size() == 0 )
             return get_type_hash_v< void >;
 
-        uint64_t value = Hashing::prime_64_const;
         for( auto& hash : _hashes )
-            value = ( value ^ hash.getValue() ) * Hashing::prime_64_const;
-        return type_hash{ value };
+            _val = ( _val ^ hash.getValue() ) * Hashing::prime_64_const;
+        return type_hash{ _val };
     } // calculate_types_hash
     
     template< class... Types >
-    consteval type_hash calculate_types_hash( void )
+    consteval type_hash calculate_types_hash( const uint64_t _val )
     {
         static constexpr auto hashes = array{ get_type_hash_v< Types >... };
         if constexpr ( sizeof...( Types ) > 0 )
-            return calculate_types_hash( hashes );
+            return calculate_types_hash( hashes, _val );
         else
             return get_type_hash_v< void >;
     }
@@ -266,10 +255,11 @@ namespace sk
     requires kValidTypes< Types... >
     struct types_hash
     {
-        constexpr static size_t    kCount = sizeof...( Types );
-        constexpr static array     kTypes = array< type_hash, kCount >{ get_type_info< Types >::kInfo... };
-        constexpr static type_hash kHash  = calculate_types_hash< Types... >();
-        constexpr static auto      kError = validate_args( kTypes, AllowVoid );
+        static constexpr auto   kPrime = AllowVoid ? Hashing::fnv1a_64( "args" ) : Hashing::fnv1a_64( "struct" );
+        static constexpr size_t kCount = sizeof...( Types );
+        static constexpr auto   kTypes = array{ static_cast< const sType_Info* >( &get_type_info< Types >::kInfo )... };
+        static constexpr auto   kHash  = calculate_types_hash< Types... >( kPrime );
+        static constexpr auto   kError = validate_args< Types... >( AllowVoid );
         static_assert( !( kCount == 0 && !AllowVoid ), "This reflection system doesn't support empty structs. Make native C++ structs instead." );
         static_assert( !( kError & kVoidNotAllowed ),  "Type Void found but was not allowed in this scenario." );
         static_assert( !( kError & kVoidNotOnly ),     "Type Void isn't the only type in this scenario." );
@@ -287,14 +277,17 @@ template<> struct sk::get_type_info< void >
     constexpr static bool       kValid = true;
 }; // Void my beloved
 
-template< size_t Size >
-constexpr uint8_t sk::validate_args( const array< type_hash, Size >& _array, const bool _allow_void )
+template< class... Types >
+constexpr uint8_t sk::validate_args( const bool _allow_void )
 {
+    constexpr static auto size  = sizeof...( Types );
+    constexpr static auto types = array{ get_type_hash_v< Types >... };
+
     // TODO: Decide if void* should be allowed in the reflection system.
-    if constexpr( Size == 1 )
+    if constexpr( size == 1 )
     {
         // If not void it's always going to be valid.
-        if( _array[ 0 ] != get_type_hash_v< void > )
+        if( types[ 0 ] != get_type_hash_v< void > )
             return kValid;
         // Otherwise the bool decides the fate.
         return _allow_void ? kValid : kVoidNotAllowed; // -1 = Type void found but was not allowed.
@@ -302,10 +295,10 @@ constexpr uint8_t sk::validate_args( const array< type_hash, Size >& _array, con
     else
     {
         // Validate so there's only a single void type.
-        for( size_t i = 0; i < Size; ++i )
+        for( auto& type : types )
         {
             // in case it has a void type, it will always be an error.
-            if( _array[ i ] == get_type_hash_v< void > )
+            if( type == get_type_hash_v< void > )
             {
                 if( !_allow_void )
                     return kVoidNotAllowed | kVoidNotOnly; // -1 = Type void found but was not allowed
@@ -324,8 +317,8 @@ namespace sk::registry
     template< int64_t Iteration >
     struct type_registry
     {
-        constexpr static array< type_pair_t, 0 > registered = {};
-        constexpr static bool                    valid      = false;
+        constexpr static auto registered = cLinked_Array< const sType_Info* >{};
+        constexpr static bool valid      = false;
     };
 } // sk::
 
@@ -333,8 +326,7 @@ namespace sk::registry
 constexpr static auto IdLocation = sk::registry::counter::next(); \
 template<> struct sk::registry::type_registry< IdLocation >{ \
     typedef type_registry< IdLocation - 1 > previous_t; \
-    constexpr static auto   Iteration  = IdLocation; \
-    constexpr static array  registered = previous_t::registered + array{ get_type_info< Type >::kInfo.pair() }; \
+    constexpr static auto registered = cLinked_Array{ static_cast< const sk::sType_Info* >( &get_type_info< Type >::kInfo ), previous_t::registered }; \
     constexpr static bool valid = true; \
 };
 #define REGISTER_TYPE_INTERNAL( Type ) REGISTER_TYPE_INTERNAL_0( Type, CONCAT( type_registry_, __COUNTER__ ) )

@@ -27,23 +27,21 @@ namespace sk
 		, m_raw_name( _name )
 		, m_file_path( _file )
 		, m_line( _line )
-		{
-		} // iRuntimeClass
+		{ } // iRuntimeClass
 
 		consteval iRuntimeClass( const char* _name, const std::source_location& _location = std::source_location::current(), const uint64_t& _parent_hash = Hashing::val_64_const )
 		: m_hash( _name )
 		, m_raw_name( _name )
 		, m_file_path( _location.file_name() )
 		, m_line( _location.line() )
-		{} // iRuntimeClass
+		{ } // iRuntimeClass
 
 		consteval iRuntimeClass( const char* _name, type_hash _hash )
 		: m_hash( std::move( _hash ) )
 		, m_raw_name( _name )
 		, m_file_path( nullptr )
 		, m_line( 0 )
-		{
-		}
+		{ } // iRuntimeClass
 		
 		virtual ~iRuntimeClass() = default;
 
@@ -53,11 +51,11 @@ namespace sk
 			return nullptr;
 		} // create
 
-		constexpr auto& getType    ( void ) const { return m_hash; }
-		constexpr auto  getRawName ( void ) const { return m_raw_name; }
+		constexpr auto& getType    ( void ) const { return m_hash;      }
+		constexpr auto  getRawName ( void ) const { return m_raw_name;  }
 		constexpr auto  getFileName( void ) const { return m_file_path; }
+		constexpr auto  getLine    ( void ) const { return m_line;      }
 		auto            getName    ( void ) const { return std::string( m_raw_name ); }
-		auto            getLine    ( void ) const { return m_line; }
 
 		virtual constexpr bool isDerivedFrom( const iRuntimeClass& _base    ) const { return false; } // Has to be set so iClass isn't a pure virtual
 		virtual constexpr bool isBaseOf     ( const iRuntimeClass& _derived ) const { return false; } // Has to be set so iClass isn't a pure virtual
@@ -128,9 +126,9 @@ namespace sk
 	private:
 		typedef typename select_class_type< has_value, Ty, iRuntimeClass >::type pre_type;
 	public:
-		static constexpr bool is_valid  = std::is_base_of_v< iRuntimeClass, pre_type >;
-		static constexpr bool is_base   = std::is_same_v< pre_type, iRuntimeClass >;
-		static constexpr bool uses_own  = is_valid && !is_base;
+		static constexpr bool is_valid = std::is_base_of_v< iRuntimeClass, pre_type >;
+		static constexpr bool is_base  = std::is_same_v< pre_type, iRuntimeClass >;
+		static constexpr bool uses_own = is_valid && !is_base;
 		typedef typename select_class_type< uses_own, Ty, iRuntimeClass >::type class_type;
 		typedef typename select_type< uses_own, Ty, iClass >::type inherits_type;
 	};
@@ -216,7 +214,7 @@ namespace sk
 			MAKE_UNREFLECTED_ENUM( FLAGS( eType ),
 				E( kVariable, 0x00 ),
 				E( kFunction, 0x01 ),
-				E( kStatic,   0x02 )
+				E( kStatic,   0x02 ),
 			);
 
 			eType m_type;
@@ -224,6 +222,11 @@ namespace sk
 
 		struct sMemberVariable : sMember
 		{
+			sMemberVariable( const sType_Info& _info, const size_t _offset )
+			: m_type_info( &_info )
+			, m_offset( _offset )
+			{}
+
 			const sType_Info* m_type_info;
 			size_t            m_offset;
 		};
@@ -231,6 +234,71 @@ namespace sk
 		struct sMemberFunction
 		{
 			
+		};
+
+		class Test
+		{
+			uint64_t member_0 = 0;
+			uint32_t member_1 = 0;
+			uint32_t member_2 = 0;
+			constexpr static auto test = &Test::member_1;
+
+			template< class, auto >
+			friend struct member_type;
+			template< class Ty, class M >
+			friend M extract_member_type( M Ty::* );
+		};
+
+		template< class Ty, auto Ty::* M >
+		struct member_type
+		{
+		private:
+			
+		public:
+			
+		};
+
+		template< class Ty, class M > M extract_member_type( M Ty::* )
+		{
+			return {};
+		}
+		member_type< Test, &Test::member_0 >;
+		using some_test = decltype( extract_member_type( &Test::member_0 ) );
+		constexpr static auto test = offsetof( Test, member_0 );
+
+		template<typename Tag, typename Tag::type M>
+		struct Rob { 
+			friend typename Tag::type get(Tag) {
+				return M;
+			}
+		};
+
+		struct A_member { 
+			typedef uint32_t Test::*type;
+			friend type get(A_member);
+		};
+
+		template struct Rob<A_member, &Test::member_0>;
+
+		using counter_t = const_counter< Test >;
+		template< class Class, size_t MemberId >
+		struct member
+		{
+			constexpr static auto kMembers = cLinked_Array< const sMember* >{};
+		};
+		template<>
+		struct member< Test, 0 >
+		{
+			using prev_t = member< Test, 0 - 1 >;
+			constexpr static auto kMember  = sMemberVariable{ {}, 0 };
+			constexpr static auto kMembers = cLinked_Array{ static_cast< const sMember* >( &kMember ), prev_t::kMembers };
+		};
+		template<>
+		struct member< Test, 1 >
+		{
+			using prev_t = member< Test, 1 - 1 >;
+			constexpr static auto kMember  = sMemberVariable{ {}, 0 };
+			constexpr static auto kMembers = cLinked_Array{ static_cast< const sMember* >( &kMember ), prev_t::kMembers };
 		};
 	} // Reflection::
 } // sk::

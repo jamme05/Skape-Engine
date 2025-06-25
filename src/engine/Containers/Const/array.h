@@ -140,6 +140,9 @@ namespace sk
     template< class Ty >
     constexpr auto& array_ref< Ty >::operator=( const array_ref& _other )
     {
+        if( this == &_other )
+            return *this;
+
         m_size = _other.m_size;
         m_data = _other.m_data;
         return *this;
