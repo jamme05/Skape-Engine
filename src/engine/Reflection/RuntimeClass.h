@@ -241,44 +241,32 @@ namespace sk
 			uint64_t member_0 = 0;
 			uint32_t member_1 = 0;
 			uint32_t member_2 = 0;
-			constexpr static auto test = &Test::member_1;
 
-			template< class, auto >
-			friend struct member_type;
-			template< class Ty, class M >
-			friend M extract_member_type( M Ty::* );
-		};
-
-		template< class Ty, auto Ty::* M >
-		struct member_type
-		{
-		private:
-			
 		public:
-			
+			template< size_t M >
+			struct member_registry
+			{
+				static constexpr auto kMember = nullptr;
+			};
+
+			template<>
+			struct member_registry< 0 >
+			{
+				static constexpr auto kMember = &Test::member_1;
+				
+			};
+			constexpr static auto CONCAT( test_, __COUNTER__ ) = &Test::member_1;
 		};
 
-		template< class Ty, class M > M extract_member_type( M Ty::* )
-		{
-			return {};
-		}
-		member_type< Test, &Test::member_0 >;
-		using some_test = decltype( extract_member_type( &Test::member_0 ) );
-		constexpr static auto test = offsetof( Test, member_0 );
+		// TODO: Move this somewhere more relevant.
+		// Source: https://stackoverflow.com/a/8866219
+		template <class T, class M> M get_member_type(M T::*);
+#define GET_MEMBER_TYPE( Member ) decltype( get_member_type( Member ) )
 
-		template<typename Tag, typename Tag::type M>
-		struct Rob { 
-			friend typename Tag::type get(Tag) {
-				return M;
-			}
-		};
-
-		struct A_member { 
-			typedef uint32_t Test::*type;
-			friend type get(A_member);
-		};
-
-		template struct Rob<A_member, &Test::member_0>;
+		// Could I be fine just saving member pointers?
+		// Reasoning: I still need to access the values by their offset and type somehow. Using the pointer may be a safer method overall.
+		using some_other_test = GET_MEMBER_TYPE( Test::test_680239905 );
+		constexpr static auto test2 = std::is_same_v< uint32_t, some_other_test >;
 
 		using counter_t = const_counter< Test >;
 		template< class Class, size_t MemberId >
