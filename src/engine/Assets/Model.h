@@ -25,6 +25,7 @@ namespace sk::Assets
 {
 	QW_ASSET_CLASS( Model )
 	{
+		SK_CLASS_BODY( Model )
 	public:
 		cModel( const std::string& _name );
 		// TODO: Model class, aka container for meshes and a name.
@@ -42,3 +43,5 @@ namespace sk::Assets
 		cTransform m_transform;
 	};
 } // sk::Assets::
+
+REGISTER_CLASS( sk::Assets::Model )

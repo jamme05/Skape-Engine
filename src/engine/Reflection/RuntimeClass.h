@@ -242,15 +242,23 @@ namespace sk
 		static constexpr auto kMembers = sk::cLinked_Array< const sk::Reflection::cMemberVariable* >{}; }; \
 	template< size_t > struct function_registry { \
 		static constexpr auto kMembers = sk::cLinked_Array< const sk::Reflection::cMemberFunction* >{}; }; \
-	private:
 
+#define CREATE_MEMBER_REFLECTION_FUNCTIONS( RuntimeClass ) \
+	public: \
+	static constexpr auto getVariable( const sk::str_hash& _hash ) -> sk::Reflection::cMemberVariable; \
+	auto getBoundVariable( const sk::str_hash& _hash ) -> sk::Reflection::cMemberVariableInstance< class_type >; \
+	static constexpr auto getFunction( const sk::str_hash& _hash ) -> sk::Reflection::cMemberVariable; \
+	auto getBoundFunction( const sk::str_hash& _hash ) -> sk::Reflection::cMemberVariableInstance< class_type >; \
+	private:
 
 // Internal use only.
 #define CREATE_CLASS_IDENTIFIERS_0_( RuntimeClass ) public: \
 	/* Prepare function to get information about which class it is. */ \
 	CREATE_CLASS_IDENTITY_IDENTIFIERS( RuntimeClass ) \
 	/* Prepare for member reflection: */ \
-	CREATE_MEMBER_REFLECTION_VALUES( RuntimeClass )
+	CREATE_MEMBER_REFLECTION_VALUES( RuntimeClass ) \
+	/* Create incomplete functions so that I remember and to allow all variables to be ready upon usage. */ \
+	CREATE_MEMBER_REFLECTION_FUNCTIONS( RuntimeClass )
 
 // Required to make a runtime class functional.
 #define CREATE_CLASS_IDENTIFIERS( RuntimeClass ) \
@@ -297,6 +305,7 @@ class Class : public sk::get_inherits_t< FIRST( __VA_ARGS__ ) > \
 #define SK_CLASS_INTERNAL( Type, ClassName, ClassType, ParentValidator, ExtrasMacro, ParentCreator, ParentClass, ... ) \
 	Type ClassType; \
 	namespace ClassName { \
+		using class_type = ClassType; \
 		static_assert( ParentValidator( ClassName, ParentClass ) ); \
 		typedef sk::cShared_ptr< ClassType > ptr_t; \
 		typedef sk::cWeak_Ptr< ClassType >   weak_t; \
@@ -749,7 +758,32 @@ namespace sk::Reflection
 #define SK_REGISTER_PROTECTED_OVERLOADED_FUNCTION( Function, ... ) REGISTER_MEMBER_DIRECT_0_( Member, kProtected ) protected:
 #define SK_REGISTER_PUBLIC_OVERLOADED_FUNCTION( Function, ... )    REGISTER_MEMBER_DIRECT_0_( Member, kPublic ) public:
 
-#define REGISTER_CLASS( Class ) namespace Class { } 
+// Add final class requirements and register it as a type in the global namespace.
+
+#define BUILD_CLASS_STATIC_VARIABLE_GETTER( Class ) \
+	constexpr auto Class ::class_type::getVariable( const sk::str_hash& _hash ) -> sk::Reflection::cMemberVariable{ \
+	} /* TODO: Add find logic (use const map?) */
+
+#define BUILD_CLASS_VARIABLE_GETTER( Class ) \
+	inline auto Class ::class_type::getBoundVariable( const sk::str_hash& _hash ) -> sk::Reflection::cMemberVariableInstance< class_type >{ \
+	} /* TODO: Add find logic (use const map?) */
+
+#define BUILD_CLASS_STATIC_FUNCTION_GETTER( Class ) \
+	constexpr auto Class ::class_type::getFunction( const sk::str_hash& _hash ) -> sk::Reflection::cMemberVariable{ \
+	} /* TODO: Add function reflection, and then work more on this. */
+
+#define BUILD_CLASS_FUNCTION_GETTER( Class ) \
+	inline auto Class ::class_type::getBoundFunction( const sk::str_hash& _hash ) -> sk::Reflection::cMemberVariableInstance< class_type >{ \
+	} /* TODO: Add function reflection, and then work more on this. */
+
+/**
+ * 
+ * @param Class Namespace and name of class.
+ */
+#define REGISTER_CLASS( Class ) namespace Class { /* Prepare members here. */ \
+	} \
+	BUILD_CLASS_STATIC_VARIABLE_GETTER( Class ) \
+	BUILD_CLASS_VARIABLE_GETTER( Class )
 
 SK_CLASS( Test )
 {
@@ -764,5 +798,9 @@ SK_CLASS( Test )
 	static constexpr uint32_t member_4 = 10;
 	SK_REGISTER_PRIVATE_MEMBER( member_4 )
 };
+
+REGISTER_CLASS( Test )
+
+
 static constexpr auto  member_id_ = cTest::var_counter_t::next();
 static constexpr auto& Test_members = cTest::member_registry< member_id_ - 1 >::kMembers;
