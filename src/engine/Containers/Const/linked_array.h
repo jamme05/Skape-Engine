@@ -14,6 +14,13 @@ namespace sk
     class cLinked_Iterator
     {
     public:
+        typedef size_t difference_type;
+        typedef Ty     value_type;
+        typedef Ty*    pointer;
+        typedef Ty&    reference;
+        typedef std::bidirectional_iterator_tag iterator_category;
+
+
         constexpr cLinked_Iterator( void )
         : m_next( nullptr )
         , m_element( nullptr )
@@ -82,12 +89,12 @@ namespace sk
 
         constexpr auto operator==( cLinked_Iterator& _right ) const
         {
-            return m_element == _right.m_element;
+            return m_element == _right.m_element && m_next == _right.m_next;
         } // self == right
 
         constexpr auto operator!=( cLinked_Iterator& _right ) const
         {
-            return m_element != _right.m_element;
+            return !( *this == _right );
         } // self != right
 
     private:
@@ -109,6 +116,8 @@ namespace sk
         constexpr auto begin( void ) const { return m_iterator; }
         constexpr auto end  ( void )       { return cLinked_Iterator< Ty >{}; }
         constexpr auto end  ( void ) const { return cLinked_Iterator< Ty >{}; }
+
+        constexpr auto size ( void ) const { return std::distance( this->begin(), this->end() ); }
 
     private:
         Ty                     m_element;
@@ -160,4 +169,6 @@ inline void tmp()
 {
     constexpr sk::cLinked_Array arr1{ 10 };
     constexpr sk::cLinked_Array arr2{ 12, arr1 };
+    constexpr auto t = std::distance( arr1.begin(), arr1.end() );
+    constexpr auto t2 = arr2.size();
 }

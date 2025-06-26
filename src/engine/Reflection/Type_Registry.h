@@ -49,6 +49,16 @@ namespace sk
         const char* name;
         const char* raw_name;
 
+        constexpr bool operator==( const sType_Info& _other ) const
+        {
+            return hash == _other.hash;
+        }
+
+        constexpr bool operator!=( const sType_Info& _other ) const
+        {
+            return !( *this == _other );
+        }
+
         constexpr type_pair_t pair( void ) const
         {
             return { hash, static_cast< const sType_Info* >( this ) };
