@@ -69,6 +69,7 @@ namespace sk
          */
         constexpr const sStruct_Type_Info* as_struct_info( void ) const;
     };
+    typedef const sType_Info* type_info_t;
 
     // TODO: Move individual types to their own spaces.
     namespace runtime_struct
@@ -241,25 +242,27 @@ namespace sk
     template< class... Types >
     constexpr inline bool kValidTypes = std::conjunction_v< is_valid_type< Types >... >;
 
-    consteval type_hash calculate_types_hash( const array_ref< type_hash >& _hashes, uint64_t _val )
-    {
-        if( _hashes.size() == 0 )
-            return get_type_hash_v< void >;
+    consteval type_hash calculate_types_hash( const array_ref< type_hash >& _hashes, uint64_t _val );
 
-        for( auto& hash : _hashes )
-            _val = ( _val ^ hash.getValue() ) * Hashing::prime_64_const;
-        return type_hash{ _val };
-    } // calculate_types_hash
-    
     template< class... Types >
-    consteval type_hash calculate_types_hash( const uint64_t _val )
+    consteval type_hash calculate_types_hash( const uint64_t _val );
+
+    // Struct making it easier for getting more info about args.
+    struct sType_Array_Info
     {
-        static constexpr auto hashes = array{ get_type_hash_v< Types >... };
-        if constexpr ( sizeof...( Types ) > 0 )
-            return calculate_types_hash( hashes, _val );
-        else
-            return get_type_hash_v< void >;
-    }
+        typedef array_ref< const sType_Info* > arr_ref_t;
+        arr_ref_t types;
+        type_hash hash;
+
+        [[nodiscard]] std::string to_string() const
+        {
+            std::stringstream ss;
+            for( auto& type : types )
+                ss << type->raw_name << ", ";
+            return ss.str();
+        } // to_string
+    };
+    typedef const sType_Array_Info* args_info_t;
 
     template< bool AllowVoid, class... Types >
     requires kValidTypes< Types... >
@@ -267,9 +270,10 @@ namespace sk
     {
         static constexpr auto   kPrime = AllowVoid ? Hashing::fnv1a_64( "args" ) : Hashing::fnv1a_64( "struct" );
         static constexpr size_t kCount = sizeof...( Types );
-        static constexpr auto   kTypes = array{ static_cast< const sType_Info* >( &get_type_info< Types >::kInfo )... };
+        static constexpr auto   kTypes = array< const sType_Info*, kCount >{ static_cast< const sType_Info* >( &get_type_info< Types >::kInfo )... };
         static constexpr auto   kHash  = calculate_types_hash< Types... >( kPrime );
         static constexpr auto   kError = validate_args< Types... >( AllowVoid );
+        static constexpr auto   kInfo  = sType_Array_Info{ kTypes, kHash };
         static_assert( !( kCount == 0 && !AllowVoid ), "This reflection system doesn't support empty structs. Make native C++ structs instead." );
         static_assert( !( kError & kVoidNotAllowed ),  "Type Void found but was not allowed in this scenario." );
         static_assert( !( kError & kVoidNotOnly ),     "Type Void isn't the only type in this scenario." );
@@ -319,6 +323,27 @@ constexpr uint8_t sk::validate_args( const bool _allow_void )
     }
     return kValid; // Nothing wrong.
 }
+
+template< class ... Types >
+consteval sk::type_hash sk::calculate_types_hash( const uint64_t _val )
+{
+    static constexpr auto hashes = array< type_hash, sizeof...( Types ) >{ get_type_hash_v< Types >... };
+    if constexpr ( sizeof...( Types ) > 0 )
+        return calculate_types_hash( hashes, _val );
+    else
+        return get_type_hash_v< void >;
+}
+
+consteval sk::type_hash sk::calculate_types_hash( const array_ref< type_hash >& _hashes, uint64_t _val )
+{
+    if( _hashes.size() == 0 )
+        return sk::get_type_hash_v< void >;
+
+    for( const auto& hash : _hashes )
+        _val = ( _val ^ hash.getValue() ) * Hashing::prime_64_const;
+
+    return type_hash{ _val };
+} // calculate_types_hash
 
 namespace sk::registry
 {

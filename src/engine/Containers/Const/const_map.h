@@ -56,6 +56,7 @@ namespace sk
         } // _get_middle
     } // map_helper::
 
+    // TODO: Decide weather or not the const map functioning as a multimap is undefined behaviour. Will be treated as fine for now due to convenience.
     template< class KeyTy, class ValueTy, size_t Size, class Pred = std::less< KeyTy > >
     class const_map
     {
@@ -117,7 +118,7 @@ namespace sk
         return -1;
     } // find
 
-    template< class KeyTy, class ValueTy, class Pred >
+    template< class KeyTy, class ValueTy, class Pred = std::less<> >
     class map_ref
     {
     public:
@@ -141,6 +142,19 @@ namespace sk
         typedef const pair_t& pair_ref_t;
 
         pair_ptr_t find( const KeyTy& _key ) const;
+        constexpr int64_t find_index( const KeyTy& _key ) const;
+        constexpr std::pair< pair_ptr_t, pair_ptr_t > range( const KeyTy& _key ) const
+        {
+            auto start = find_index( _key );
+            if( start == -1 )
+                return { end(), end() };
+            for( size_t i = 0; i < m_size; ++i )
+            {
+                if( m_data[ i ].first != _key )
+                    return { m_data[ start ], m_data[ i ] };
+            }
+            return { start, end() };
+        }
 
         constexpr pair_ptr_t begin( void ) const { return get(); }
         constexpr pair_ptr_t end  ( void ) const { return get() + size(); }
@@ -177,6 +191,29 @@ namespace sk
 
         return m_data + m_size;
     } // find
+
+    template< class KeyTy, class ValueTy, class Pred >
+    constexpr int64_t map_ref< KeyTy, ValueTy, Pred >::find_index( const KeyTy& _key ) const
+    {
+        constexpr auto pred = Pred();
+        size_t begin_edge = 0;
+        size_t end_edge   = size();
+#define GET_MID c = map_helper::_get_middle( begin_edge, end_edge )
+        for( size_t GET_MID; c != end_edge; GET_MID )
+#undef GET_MID
+        {
+            // TODO: Figure out why this doesn't work.
+            auto& current = m_data[ c ];
+            if( current.first == _key )
+                return static_cast< int64_t >( c );
+            if( pred( current.first, _key ) )
+                begin_edge = c + 1;
+            else
+                end_edge = c;
+        }
+
+        return -1;
+    } // find_index
 
     template< class KeyTy, class ValueTy, class Pred >
     template< size_t Size >

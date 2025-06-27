@@ -1,6 +1,6 @@
 # Check out https://premake.github.io/docs/Using-Premake for more builds
 param (
-	[string]$toolset = "gmake",
+	[string]$toolset = "vs2022",
 	[string]$target_abi = $null,
 	[string]$device
 )

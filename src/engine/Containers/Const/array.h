@@ -94,7 +94,8 @@ namespace sk
     class array_ref
     {
     public:
-        array_ref( void );
+        constexpr  array_ref( void );
+        constexpr ~array_ref( void ) = default;
         /**
          *
          * @attention Requires _array to be static.
@@ -133,7 +134,7 @@ namespace sk
     template< size_t Size >
     constexpr array_ref< Ty >::array_ref( const array< Ty, Size >& _array )
     : m_size( _array.size() )
-    , m_data( _array.get() )
+    , m_data( _array.unsafe_get() )
     {
     } // array_ref
 
@@ -175,7 +176,7 @@ namespace sk
         struct remove_offset
         {
             typedef type< Arr > type;
-            constexpr static auto kValue = array< type, Arr.size() >{ Arr.get() };
+            constexpr static auto kValue = array< type, Arr.size() >{ Arr.unsafe_get() };
         };
     } // arr::
     template< class Ty, class... Ty2 >
