@@ -134,7 +134,7 @@ namespace sk
     template< size_t Size >
     constexpr array_ref< Ty >::array_ref( const array< Ty, Size >& _array )
     : m_size( _array.size() )
-    , m_data( _array.unsafe_get() )
+    , m_data( _array.get() )
     {
     } // array_ref
 

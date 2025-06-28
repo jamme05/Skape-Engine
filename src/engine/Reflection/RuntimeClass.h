@@ -6,15 +6,17 @@
 
 #pragma once
 
-#include "Misc/Hashing.h"
+#include <Misc/Hashing.h>
 
-#include "Macros/Manipulation.h"
+#include <Debugging/Debugging.h>
+#include <Macros/Manipulation.h>
 
 #include <Reflection/Types.h>
+#include <Misc/Smart_Ptrs.h>
 
 #include <print>
 
-#include "RuntimeClass.h"
+#include "Misc/Function.h"
 
 namespace sk
 {
@@ -251,8 +253,10 @@ namespace sk
 	public: \
 	static constexpr auto getVariables() -> sk::map_ref< sk::str_hash, sk::Reflection::cMemberVariable*, std::less<> >; \
 	static constexpr auto getFunctions() -> sk::map_ref< sk::str_hash, sk::Reflection::cMemberFunction*, std::less<> >; \
+	static constexpr auto getConstructors() -> sk::map_ref< sk::str_hash, sk::Reflection::cMemberVariable*, std::less<> >; \
 	static constexpr auto getVariable( const sk::str_hash& _hash ) -> sk::Reflection::cMemberVariable*; \
 	static constexpr auto getFunction( const sk::str_hash& _hash ) -> sk::Reflection::cMemberFunction*; \
+	static constexpr auto getConstructor( const sk::str_hash& _hash ) -> sk::Reflection::cMemberFunction*; \
 	auto getBoundVariable( const sk::str_hash& _hash ) -> sk::Reflection::cMemberVariableInstance< class_type >; \
 	auto getBoundFunction( const sk::str_hash& _hash ) -> sk::Reflection::cMemberFunctionInstance< class_type >; \
 	private:
@@ -298,6 +302,7 @@ class Class : public sk::get_inherits_t< FIRST( __VA_ARGS__ ) > \
 #define PICK_CLASS( ... ) CONCAT( PICK_CLASS_, VARGS( __VA_ARGS__ ) )( __VA_ARGS__ )
 
 // TODO: Use AFTER_FIRST to parse away the parent class?
+// TODO: Add display name option.
 /**
  * Not recommended to be used directly.
  * @param ClassName The name of the class
@@ -732,12 +737,23 @@ namespace sk::Reflection
 		return cMemberVariableInstance< Ty >{ *this, _instance };
 	}
 
+	struct sFunctionHash
+	{
+		str_hash  name;
+		type_hash args_hash;
+
+		constexpr bool operator==( const sFunctionHash& _other ) const { return name == _other.name && args_hash == _other.args_hash; }
+		constexpr bool operator!=( const sFunctionHash& _other ) const { return !( *this == _other ); }
+	};
+
 	class iMemberFunctionHolder
 	{
 	protected:
 		virtual ~iMemberFunctionHolder() = default;
-		// Getters return nullptr on fail, whilst setters return false on fail.
+		// Static/Instance call
 		virtual void unsafe_invoke( void* _input, void* _return ) const = 0;
+		// Targeted Instance call
+		virtual void unsafe_invoke( void* _instance, void* _input, void* _return ) const = 0;
 
 		friend class cMemberFunction;
 		template< class Ty >
@@ -749,7 +765,7 @@ namespace sk::Reflection
 	class cMemberFunctionHolder : public iMemberFunctionHolder
 	{
 		typedef Re( Ty::*func_t )( Args... );
-		typedef std::tuple< Ty*&&, Args&&... > tuple_t;
+		typedef std::tuple< Args&&... > tuple_t;
 		func_t m_func;
 	public:
 		explicit consteval cMemberFunctionHolder( const func_t _func )
@@ -760,15 +776,29 @@ namespace sk::Reflection
 		static constexpr uint8_t kFlags = kFunction;
 
 	protected:
+		// Static member function.
 		void unsafe_invoke( void* _input, void* _return ) const override
 		{
+			// Not required to safety check, as everything should be correct.
 			if( _return )
 			{
 				auto ret = static_cast< Re* >( _return );
-				*ret = std::apply( m_func, *static_cast< tuple_t* >( _return ) );
+				*ret = sk::apply( m_func, *static_cast< tuple_t* >( _return ) );
 			}
 			else
-				std::apply( m_func, *static_cast< tuple_t* >( _return ) );
+				sk::apply( m_func, *static_cast< tuple_t* >( _return ) );
+		}
+		// Instanced member function
+		void unsafe_invoke( void* _instance, void* _input, void* _return ) const override
+		{
+			Ty* inst = static_cast< Ty* >( _instance );
+			if( _return )
+			{
+				auto ret = static_cast< Re* >( _return );
+				*ret = sk::apply( m_func, inst, *static_cast< tuple_t* >( _return ) );
+			}
+			else
+				sk::apply( m_func, inst, *static_cast< tuple_t* >( _return ) );
 		}
 	};
 
@@ -791,14 +821,28 @@ namespace sk::Reflection
 	protected:
 		void unsafe_invoke( void* _input, void* _return ) const override
 		{
+			// TODO: Maybe just in case safety check input value?
 			if( _return )
 			{
-				// Only set return value if provided. Not required to safety check as it'll happen where the information exists.
+				// Only set return value if provided. Not required to safety check as other places have better checks.
 				auto ret = static_cast< Re* >( _return );
-				*ret = std::apply( m_func, *static_cast< tuple_t* >( _return ) );
+				*ret = sk::apply( m_func, *static_cast< tuple_t* >( _return ) );
 			}
 			else
-				std::apply( m_func, *static_cast< tuple_t* >( _return ) );
+				sk::apply( m_func, *static_cast< tuple_t* >( _return ) );
+		}
+		// Instanced member function
+		void unsafe_invoke( void* _instance, void* _input, void* _return ) const override
+		{
+			// No need for the ptr to be const. It'll be safe either way in this scenario.
+			Ty* inst = static_cast< Ty* >( _instance );
+			if( _return )
+			{
+				auto ret = static_cast< Re* >( _return );
+				*ret = sk::apply( m_func, inst, *static_cast< tuple_t* >( _return ) );
+			}
+			else
+				sk::apply( m_func, inst, *static_cast< tuple_t* >( _return ) );
 		}
 	};
 
@@ -824,10 +868,16 @@ namespace sk::Reflection
 			if( _return )
 			{
 				auto ret = static_cast< Re* >( _return );
-				*ret = std::apply( m_func, *static_cast< tuple_t* >( _return ) );
+				*ret = sk::apply( m_func, *static_cast< tuple_t* >( _return ) );
 			}
 			else
-				std::apply( m_func, *static_cast< tuple_t* >( _return ) );
+				sk::apply( m_func, *static_cast< tuple_t* >( _return ) );
+		}
+		// Instanced member function
+		void unsafe_invoke( void*, void* _input, void* _return ) const override
+		{
+			// Simply ignore instance if static.
+			unsafe_invoke( _input, _return );
 		}
 	};
 
@@ -851,6 +901,7 @@ namespace sk::Reflection
 		class_t     m_class_;
 		holder_t    m_holder_;
 	public:
+		// TODO: Declare function hash.
 		// Non-Static
 		template< sk_class Ty = iClass, class Re, class... Args >
 		constexpr cMemberFunction( const char* _name, const cMemberFunctionHolder< Ty, Re, Args... >& _holder, const uint8_t& _extras )
@@ -873,67 +924,112 @@ namespace sk::Reflection
 
 		// Call static or Instance function. Check out calli in case an instance needs to be provided.
 		template< class Re, class... Args >
-		bool call( Re* _return, Args&&... _args ) const;
+		bool call( Re* _return, Args&&... _args ) const
+		{
+			// Verify args.
+			typedef args_hash< Args... > args_t;
+			SK_WARN_RET_IF( args_t::kHash != m_args_info_->hash,
+				FORMAT( "Error: Wrong types provided! Provided types: {}. Required types: {}.", args_t::kInfo.to_string(), m_args_info_->to_string() ),
+				false )
+
+			// Verify return type. But only if it's required.
+			constexpr static auto& other_type = get_type_info< Re >::kInfo;
+			SK_WARN_RET_IF( _return != nullptr && *m_return_type_ != other_type,
+				FORMAT( "Error: Wrong return type provided. Provided type: {}. Required type: {}.", other_type.raw_name, m_return_type_->raw_name ),
+				false )
+
+			// Prepare args.
+			auto args = std::forward_as_tuple( std::forward< Args >( _args )... );
+
+			return call_( nullptr, _return, &args );
+		}
 
 		// Call function on specific instance.
 		template< sk_class Ty = iClass, class Re, class... Args >
-		bool calli( Ty* _instance, Re* _return, Args&&... _args ) const
+		bool calli( Ty& _instance, Re* _return, Args&&... _args ) const
 		{
 			// Static check.
-			if( getIsStatic() )
-			{
-				std::println( "Warning: Calling static function through instance." );
-				return call< Re, Args... >( _return, std::forward< Args >( _args )... );
-			}
+			SK_WARN_RET_IF( getIsStatic(),
+				"Warning: Calling static function through instance.",
+				call< Re, Args... >( _return, std::forward< Args >( _args )... ) )
+
+			// Const check. If getting called by a const ptr.
+			if constexpr( !std::is_const_v< Ty > )
+				SK_WARN_RET_IF( !getIsReadOnly(), "Error: Calling a non-const function with a constant instance.", false )
+
 			// Verify class.
-			if( Ty::kClass != *m_class_ )
-			{
-				std::println( "Error: Tried accessing value through class {} when it required class {}.", Ty::getClassName(), m_class_->getName() );
-				return false;
-			}
+			SK_WARN_RET_IF( Ty::kClass != *m_class_,
+				FORMAT( "Error: Tried calling function through class {} when it required class {}.", Ty::getClassName(), m_class_->getName() ),
+				false )
+
 			// Verify args.
 			typedef args_hash< Args... > args_t;
-			if( args_t::kHash != m_args_info_->hash )
-			{
-				std::string required_types = m_args_info_->to_string();
-				std::string provided_types = args_t::kInfo.to_string();
-				std::println( "Error: Wrong types provided! Provided types: {}. Required types: {}.", required_types, provided_types );
-				return false;
-			}
+			SK_WARN_RET_IF( args_t::kHash != m_args_info_->hash,
+				FORMAT( "Error: Wrong types provided! Provided types: {}. Required types: {}.", args_t::kInfo.to_string(), m_args_info_->to_string() ),
+				false )
+
 			// Verify return type. But only if it's required.
-			constexpr static auto& other_type = get_type_info< Ty >::kInfo;
-			if( _return != nullptr && *m_return_type_ != other_type )
-			{
-				std::println( "Error: Wrong return type provided. Provided type: {}. Required type: {}.", other_type.raw_name, m_return_type_->raw_name );
-			}
-			// Instance check.
-			if( _instance == nullptr )
-			{
-				std::println( "Error: No Instance provided." );
-				return false;
-			}
+			constexpr static auto& other_type = get_type_info< Re >::kInfo;
+			SK_WARN_RET_IF( _return != nullptr && *m_return_type_ != other_type,
+				FORMAT( "Error: Wrong return type provided. Provided type: {}. Required type: {}.", other_type.raw_name, m_return_type_->raw_name ),
+				false )
+
 			// Add member to front of tuple.
-			auto args = std::make_tuple( _instance, std::forward< Args >( _args )... );
-			call_( true, _return, &args );
-			return true;
+			auto args = std::forward_as_tuple( std::forward< Args >( _args )... );
+
+			// Const cast the instance to allow its conversion to a void*
+			return call_( const_cast< std::remove_const_t< Ty > >( &_instance ), _return, &args );
 		}
 
 		template< sk_class Ty = iClass >
-		constexpr auto bind( Ty* _instance ) const -> cMemberFunctionInstance< Ty >;
+		constexpr auto bind( Ty& _instance ) const -> std::optional< cMemberFunctionInstance< Ty > >;
 
 	protected:
-		virtual void call_( bool _has_instance, void* _return, void* _args )
+		virtual bool call_( void* _instance, void* _return, void* _args ) const
 		{
-			// Doesn't care weather it has an instance or not. Will have been caught by now.
-			m_holder_->unsafe_invoke( _args, _return );
+			SK_WARN_RET_IF( _instance == nullptr && !getIsStatic(),
+				"Error: Calling non-static member function without instance.",
+				false )
+
+			if( _instance )
+				m_holder_->unsafe_invoke( _instance, _args, _return );
+			else
+				m_holder_->unsafe_invoke( _args, _return );
+			return true;
 		}
 	};
 
 	template< class Ty >
 	class cMemberFunctionInstance : public cMemberFunction
 	{
-		// TODO: Bound function
+		Ty* m_instance;
+	public:
+		cMemberFunctionInstance( const cMemberFunction& _function, Ty* _instance )
+		: cMemberFunction( _function )
+		, m_instance( _instance )
+		{}
+
+		bool call_( void* _instance, void* _return, void* _args ) const override
+		{
+			if( _instance )
+				m_holder_->unsafe_invoke( _instance, _args, _return );
+			else
+				m_holder_->unsafe_invoke( _args, _return );
+			return true;
+		}
 	};
+
+	template< sk_class Ty >
+	constexpr auto cMemberFunction::bind( Ty& _instance ) const -> std::optional< cMemberFunctionInstance< Ty > >
+	{
+		// Verify class.
+		if( Ty::kClass != *m_class_ )
+		{
+			std::println( "Error: Tried binding function to class {} when it required class {}.", Ty::getClassName(), m_class_->getName() );
+			return {};
+		}
+		return cMemberFunctionInstance< Ty >( static_cast< class_t >( &_instance ) );
+	}
 
 	using member_var_pair_t  = std::pair< str_hash, cMember* >;
 	using member_func_pair_t = std::pair< str_hash, cMember* >;
@@ -955,6 +1051,7 @@ namespace sk::Reflection
 // Internal macro. Do not use.
 #define REGISTER_FUNCTION_DIRECT_1_( Member, Counter, Visibility ) \
 	static constexpr auto Counter = func_counter_t::next(); \
+	public: \
 	template<> struct function_registry< Counter > { \
 	using prev_t = function_registry< (Counter) - 1 >;  \
 	static constexpr auto kMemberHolder = sk::Reflection::cMemberFunctionHolder{ &class_type:: Member }; \
@@ -962,7 +1059,7 @@ namespace sk::Reflection
 	static constexpr auto kMembers      = sk::cLinked_Array< const sk::Reflection::cMemberFunction* >{ &kMember, prev_t::kMembers }; };
 			
 // Internal macro. Do not use.
-#define REGISTER_FUNCTION_DIRECT_0_( Member, Visibility ) public: \
+#define REGISTER_FUNCTION_DIRECT_0_( Member, Visibility ) private: \
 	REGISTER_FUNCTION_DIRECT_1_( Member, CONCAT( member_id_,__COUNTER__ ), Visibility )
 
 // TODO: Add allow for extra reflection info for members.
@@ -1017,7 +1114,16 @@ namespace sk::Reflection
 	} /* TODO: Add function reflection, and then work more on this. */
 
 // Build type_info
-#define BUILD_CLASS_REFLECTION_INFO( Class )
+#define BUILD_CLASS_REFLECTION_INFO( Class ) \
+	template<> struct sk::get_type_info< Class ::class_type >{ \
+	constexpr static auto& kClass = Class ::class_type::kClass; \
+	constexpr static sType_Info kInfo = { \
+		.type = sType_Info::eType::kClass, \
+		.hash = kClass.getType(), \
+		.size = sizeof( Class ::class_type ), \
+		.name = kClass.getRawName(), \
+		.raw_name = kClass.getRawName() }; \
+	constexpr static bool kValid = true; };
 
 /**
  * HAS to be used in the global namespace (aka not within any namespace)
@@ -1053,14 +1159,13 @@ public:
 	: member_0( _mem0 ), member_1( _mem1 )
 	{
 		// Look at std::apply and std::make_index_sequence and std::index_sequence to succeed with construction reflection.
-		std::apply(  );
-		std::make_index_sequence< std::tuple_size_v< std::tuple< int > > >;
 	}
 	SK_CONSTRUCTOR( cTest )
 
 	void test_func( const uint32_t _val ) { member_1 = _val; }
 	auto test_func2( void ) const { return member_2; }
 	static void test_func3( const uint32_t _val ){ member_3 = _val; }
+	// TODO: Figure out how to handle virtual functions? Some custom virtual table or member functions?
 	virtual auto test_func4( void ) const { return member_2; }
 
 	// TODO: Figure out a way to register virtual functions. Overridable tag?
@@ -1069,12 +1174,12 @@ public:
 	SK_PUBLIC_FUNCTION( test_func3 )
 };
 
-static constexpr auto t0 = sk::Reflection::cMemberFunctionHolder{ &cTest::test_func2 };
+template< class Ty >
+constexpr bool test = std::is_const_v< std::remove_pointer_t< Ty > >;
+
+static constexpr auto t0 = sk::Reflection::cMemberFunctionHolder{ &cTest::test_func };
 static constexpr auto t1 = sk::Reflection::cMemberFunction{ "Erm", t0, 0 };
-void t()
-{
-	t1.bind< cTest >( nullptr );
-}
+static constexpr auto t2 = cTest::function_registry< 0 >::kMember;
 
 REGISTER_CLASS( Test )
 

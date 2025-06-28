@@ -76,6 +76,7 @@ namespace sk
     {
         struct sMemberInfo
         {
+            // TODO: Use sType_Info ptr instead of hash?
             type_hash   type;
             str_hash    name_hash; // Original name shouldn't be required to be accessed?
             const char* display_name;
@@ -167,7 +168,7 @@ namespace sk
     {
         typedef get_type_info< Ty > prev_t;
         constexpr static sType_Info& kInfo = prev_t::kInfo;
-        constexpr static auto        kMods = array{ sModifier{ sModifier::eType::kReference  } } + prev_t::kMods;
+        constexpr static auto        kMods = array{ sModifier{ sModifier::eType::kReference } } + prev_t::kMods;
     };
 
     template< class Ty, size_t Size >
