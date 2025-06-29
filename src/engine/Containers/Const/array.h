@@ -46,13 +46,13 @@ namespace sk
             }
         }
 
-        constexpr const Ty* begin( void ) const { return get(); }
         constexpr       Ty* begin( void )       { return get(); }
-        constexpr const Ty* end  ( void ) const { return get() + Size; }
+        constexpr const Ty* begin( void ) const { return get(); }
         constexpr       Ty* end  ( void )       { return get() + Size; }
+        constexpr const Ty* end  ( void ) const { return get() + Size; }
 
-        constexpr const Ty* get  ( void ) const { return value + offset; }
         constexpr       Ty* get  ( void )       { return value + offset; }
+        constexpr const Ty* get  ( void ) const { return value + offset; }
 
         constexpr const Ty& operator[]( const size_t _index ) const { return get()[ _index ]; }
         constexpr       Ty& operator[]( const size_t _index )       { return get()[ _index ]; }
@@ -124,7 +124,7 @@ namespace sk
     };
 
     template< class Ty >
-    array_ref< Ty >::array_ref( void )
+    constexpr array_ref< Ty >::array_ref( void )
     : m_size( 0 )
     , m_data( nullptr )
     {

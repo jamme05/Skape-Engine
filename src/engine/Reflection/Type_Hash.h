@@ -11,9 +11,8 @@
 namespace sk
 {
     template<>
-    class hash< void > : public Hashing::iHashed
+    struct hash< void > : Hashing::iHashed
     {
-    public:
         constexpr hash( void )
         : iHashed( 0 )
         {} // Invalid type
@@ -37,7 +36,6 @@ namespace sk
         : iHashed( ( Hashing::fnv1a_64( _name ) ^ Hashing::fnv1a_64( _namespace ) ) * Hashing::prime_64_const )
         {
         } // type_hash
-
 
         HASH_REQUIREMENTS( hash )
     };

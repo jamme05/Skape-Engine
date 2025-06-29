@@ -15,8 +15,7 @@
 #include <Misc/Smart_Ptrs.h>
 
 #include <print>
-
-#include "Misc/Function.h"
+#include <functional>
 
 namespace sk
 {
@@ -145,7 +144,7 @@ namespace sk
 	template< class Ty = iClass >
 	using get_inherits_t     = typename get_parent_class< Ty >::inherits_type;
 
-	template< class Ty, class Pa = iRuntimeClass, const get_parent_class_t< Pa >& Parent = get_class_ref< Pa >, bool ForceShared = true >
+	template< class Ty, class Pa = iClass, const get_parent_class_t< Pa >& Parent = get_class_ref< Pa >, bool ForceShared = true >
 	requires std::is_base_of_v< iClass, Pa >
 	class cRuntimeClass : public get_parent_class_t< Pa >
 	{
@@ -156,7 +155,7 @@ namespace sk
 		// TODO: Move
 		typedef typename get_parent_class< Pa >::inherits_type inherits_type;
 
-		constexpr cRuntimeClass( const char* _name, const std::source_location& _location = std::source_location::current(), const uint64_t& _parent_hash = Parent.getType().getHash() )
+		constexpr cRuntimeClass( const char* _name, const std::source_location& _location = std::source_location::current(), const uint64_t& _parent_hash = Parent.getType().getValue() )
 		: parent_type( _name, _location, _parent_hash )
 		{} // cRuntimeClass
 
@@ -237,17 +236,16 @@ namespace sk
 
 #define CREATE_MEMBER_REFLECTION_VALUES( RuntimeClass ) \
 	private: \
-	consteval auto _extract_type(){ return this; } \
-	struct CONCAT( var_tag_ ){}; \
-	struct CONCAT( func_tag_ ){}; \
+	struct var_tag_{}; \
+	struct func_tag_{}; \
 	public: \
-	using class_type = std::remove_pointer_t< decltype( _extract_type() ) > ; \
+	using class_type = Test::class_type; \
 	using var_counter_t  = const_counter< var_tag_ >;   \
 	using func_counter_t  = const_counter< func_tag_ >; \
-	template< size_t > struct member_registry { \
-		static constexpr auto kMembers = sk::cLinked_Array< const sk::Reflection::cMemberVariable* >{}; }; \
-	template< size_t > struct function_registry { \
-		static constexpr auto kMembers = sk::cLinked_Array< const sk::Reflection::cMemberFunction* >{}; }; \
+	template< int > struct member_registry { \
+		static constexpr auto kMembers = sk::cLinked_Array< sk::Reflection::member_var_pair_t >{}; }; \
+	template< int > struct function_registry { \
+		static constexpr auto kMembers = sk::cLinked_Array< sk::Reflection::member_func_pair_t >{}; }; \
 
 #define CREATE_MEMBER_REFLECTION_FUNCTIONS( RuntimeClass ) \
 	public: \
@@ -256,6 +254,9 @@ namespace sk
 	static constexpr auto getConstructors() -> sk::map_ref< sk::str_hash, sk::Reflection::cMemberVariable*, std::less<> >; \
 	static constexpr auto getVariable( const sk::str_hash& _hash ) -> sk::Reflection::cMemberVariable*; \
 	static constexpr auto getFunction( const sk::str_hash& _hash ) -> sk::Reflection::cMemberFunction*; \
+	static constexpr auto getFunctionOverloads( const sk::str_hash& _hash ) -> std::pair< sk::Reflection::member_func_pair_t*, sk::Reflection::member_func_pair_t* >; \
+	static constexpr auto getFunction( const sk::str_hash& _hash, const sk::type_hash& _args ) -> sk::Reflection::cMemberFunction*; \
+	template< class... Args > static constexpr auto getFunction( const sk::str_hash& _hash ) -> sk::Reflection::cMemberFunction*; \
 	static constexpr auto getConstructor( const sk::str_hash& _hash ) -> sk::Reflection::cMemberFunction*; \
 	auto getBoundVariable( const sk::str_hash& _hash ) -> sk::Reflection::cMemberVariableInstance< class_type >; \
 	auto getBoundFunction( const sk::str_hash& _hash ) -> sk::Reflection::cMemberFunctionInstance< class_type >; \
@@ -443,14 +444,14 @@ namespace sk::Reflection
 			return m_name == _other.m_name;
 		}
 
-		constexpr [[ nodiscard ]] auto getName() const { return m_name; }
+		[[ nodiscard ]] constexpr auto getName() const { return m_name; }
 
-		constexpr [[ nodiscard ]] auto getFlags     ( void ) const { return m_flags; }
-		constexpr [[ nodiscard ]] auto getMemberType( void ) const { return eType::getType( m_flags ); }
-		constexpr [[ nodiscard ]] auto getIsStatic  ( void ) const { return eType::getIsStatic( m_flags ); }
-		constexpr [[ nodiscard ]] auto getIsVirtual ( void ) const { return eType::getIsVirtual( m_flags ); }
-		constexpr [[ nodiscard ]] auto getIsReadOnly( void ) const { return eType::getIsReadOnly( m_flags ); }
-		constexpr [[ nodiscard ]] auto getVisibility( void ) const { return eType::getVisibility( m_flags ); }
+		[[ nodiscard ]] constexpr auto getFlags     ( void ) const { return m_flags; }
+		[[ nodiscard ]] constexpr auto getMemberType( void ) const { return eType::getType( m_flags ); }
+		[[ nodiscard ]] constexpr auto getIsStatic  ( void ) const { return eType::getIsStatic( m_flags ); }
+		[[ nodiscard ]] constexpr auto getIsVirtual ( void ) const { return eType::getIsVirtual( m_flags ); }
+		[[ nodiscard ]] constexpr auto getIsReadOnly( void ) const { return eType::getIsReadOnly( m_flags ); }
+		[[ nodiscard ]] constexpr auto getVisibility( void ) const { return eType::getVisibility( m_flags ); }
 
 	private:
 		const char* m_name;
@@ -474,14 +475,14 @@ namespace sk::Reflection
 	protected:
 		virtual ~iMemberVariableHolder() = default;
 		// Getters return nullptr on fail, whilst setters return false on fail.
-		[[ nodiscard ]] virtual void* unsafe_get() const = 0;
+		[[ nodiscard ]] virtual const void* unsafe_get() const = 0;
 		[[ nodiscard ]] virtual bool  unsafe_set( void* _src ) const = 0;
-		[[ nodiscard ]] virtual void* unsafe_get( void* _inst ) const = 0;
+		[[ nodiscard ]] virtual const void* unsafe_get( void* _inst ) const = 0;
 		[[ nodiscard ]] virtual bool  unsafe_set( void* _inst, void* _src ) const = 0;
 
 		friend class cMemberVariable;
 		template< class Ty >
-		friend class cMemberVariableInstance< Ty >;
+		friend class cMemberVariableInstance;
 	};
 
 	// Non-static Member variable container
@@ -501,7 +502,7 @@ namespace sk::Reflection
 	protected:
 
 		// Unsupported. Requires class instance.
-		void* unsafe_get() const override
+		const void* unsafe_get() const override
 		{
 			return nullptr;
 		}
@@ -509,13 +510,13 @@ namespace sk::Reflection
 		// Unsupported. Requires class instance.
 		bool unsafe_set( void* _src ) const override { return false; }
 
-		void* unsafe_get( void* _inst ) const override
+		const void* unsafe_get( void* _inst ) const override
 		{
 			if( _inst == nullptr )
 				return nullptr;
 
 			Ty*    inst = static_cast< Ty* >( _inst );
-			auto   var  = &inst->*m_member_;
+			auto   var  = &( inst->*m_member_ );
 			return var;
 		}
 
@@ -544,20 +545,23 @@ namespace sk::Reflection
 		static constexpr uint8_t kFlags = kVariable | kStatic | std::is_const_v< Ty > * kConst;
 
 	protected:
-		[[ nodiscard ]] void* unsafe_get() const override
+		[[ nodiscard ]] const void* unsafe_get() const override
 		{
 			return m_value_;
 		}
 		bool unsafe_set( void* _src ) const override
 		{
-			*m_value_ = *static_cast< Ty* >( _src );
-			return true;
+			if constexpr( !std::is_const_v< Ty > )
+			{
+				*m_value_ = *static_cast< Ty* >( _src );
+				return true;
+			}
+			return false;
 		}
 
 		// Static doesn't require instance so simply use the static getter/setter.
-		[[ nodiscard ]] void* unsafe_get( void* _inst ) const override { return unsafe_get(); }
-		[[ nodiscard ]] bool  unsafe_set( void* _inst, void* _src ) const override { return unsafe_set( _src ); }
-
+		[[ nodiscard ]] const void* unsafe_get( void* ) const override { return unsafe_get(); }
+		[[ nodiscard ]] bool unsafe_set( void*, void* _src ) const override { return unsafe_set( _src ); }
 	private:
 		Ty* m_value_;
 	};
@@ -574,7 +578,6 @@ namespace sk::Reflection
 	public:
 		// Non-Static
 		template< class Ty = iClass, class Me >
-		requires std::is_base_of_v< iClass, Ty >
 		constexpr cMemberVariable( const char* _name, const cMemberVariableHolder< Ty, Me >& _holder, const uint8_t& _extras )
 		: cMember( _name, _extras | _holder.kFlags )
 		, m_member_type_info_( &get_type_info< Me >::kInfo )
@@ -610,7 +613,7 @@ namespace sk::Reflection
 
 	protected:
 		// Direct access getter and setter.
-		virtual void* get_() const { return m_holder_->unsafe_get(); }
+		virtual const void* get_() const { return m_holder_->unsafe_get(); }
 		virtual bool set_( void* _src ) const { return m_holder_->unsafe_set( _src ); }
 	};
 
@@ -640,7 +643,7 @@ namespace sk::Reflection
 		{
 			// TODO: Add error.
 			std::println( "Error: Member {} is of type {} and not type {} which was provided.", getName(), m_member_type_info_->raw_name, other_type.raw_name );
-			return nullptr;
+			return false;
 		}
 		return set_( static_cast< void* >( _src ) );
 	} // set
@@ -682,14 +685,14 @@ namespace sk::Reflection
 			// TODO: Support a class hierarchy. Class.AllMyMembers = Class.MyMembers + ParentClass.MyMembers
 			// TODO: Add error as well.
 			std::println( "Error: Tried accessing value through class {} when it required class {}.", Ty::getClassName(), m_class_->getName() );
-			return nullptr;
+			return false;
 		}
 		constexpr static auto& other_type = get_type_info< Ty >::kInfo;
 		if( *m_member_type_info_ != other_type )
 		{
 			// TODO: Add error.
 			std::println( "Error: Member {} is of type {} and not type {} which was provided.", getName(), m_member_type_info_->raw_name, other_type.raw_name );
-			return nullptr;
+			return false;
 		}
 		return m_holder_->unsafe_set( _inst, _src );
 	} // set
@@ -705,7 +708,7 @@ namespace sk::Reflection
 		{}
 
 	protected:
-		[[ nodiscard ]] void* get_() const override
+		[[ nodiscard ]] const void* get_() const override
 		{
 			return m_holder_->unsafe_get( m_instance_ );
 		}
@@ -737,15 +740,6 @@ namespace sk::Reflection
 		return cMemberVariableInstance< Ty >{ *this, _instance };
 	}
 
-	struct sFunctionHash
-	{
-		str_hash  name;
-		type_hash args_hash;
-
-		constexpr bool operator==( const sFunctionHash& _other ) const { return name == _other.name && args_hash == _other.args_hash; }
-		constexpr bool operator!=( const sFunctionHash& _other ) const { return !( *this == _other ); }
-	};
-
 	class iMemberFunctionHolder
 	{
 	protected:
@@ -757,7 +751,7 @@ namespace sk::Reflection
 
 		friend class cMemberFunction;
 		template< class Ty >
-		friend class cMemberFunctionInstance< Ty >;
+		friend class cMemberFunctionInstance;
 	};
 
 	// Normal member function holder
@@ -765,11 +759,11 @@ namespace sk::Reflection
 	class cMemberFunctionHolder : public iMemberFunctionHolder
 	{
 		typedef Re( Ty::*func_t )( Args... );
-		typedef std::tuple< Args&&... > tuple_t;
-		func_t m_func;
+		typedef std::tuple< Args... > tuple_t;
+		func_t m_func_;
 	public:
 		explicit consteval cMemberFunctionHolder( const func_t _func )
-		: m_func( _func )
+		: m_func_( _func )
 		{}
 
 		using enum cMember::eType::eRaw;
@@ -777,28 +771,26 @@ namespace sk::Reflection
 
 	protected:
 		// Static member function.
-		void unsafe_invoke( void* _input, void* _return ) const override
+		void unsafe_invoke( void*, void* ) const override
 		{
-			// Not required to safety check, as everything should be correct.
-			if( _return )
-			{
-				auto ret = static_cast< Re* >( _return );
-				*ret = sk::apply( m_func, *static_cast< tuple_t* >( _return ) );
-			}
-			else
-				sk::apply( m_func, *static_cast< tuple_t* >( _return ) );
+			// TODO: Throw error as this shouldn't happen.
 		}
 		// Instanced member function
 		void unsafe_invoke( void* _instance, void* _input, void* _return ) const override
 		{
 			Ty* inst = static_cast< Ty* >( _instance );
-			if( _return )
+			if constexpr( !std::is_same_v< Re, void > )
 			{
-				auto ret = static_cast< Re* >( _return );
-				*ret = sk::apply( m_func, inst, *static_cast< tuple_t* >( _return ) );
+				if( _return )
+				{
+					auto ret = static_cast< Re* >( _return );
+					*ret = std::apply( std::bind_front( m_func_, inst ), *static_cast< tuple_t* >( _return ) );
+					return;
+				}
 			}
-			else
-				sk::apply( m_func, inst, *static_cast< tuple_t* >( _return ) );
+
+			// Fallback to no return.
+			std::apply( std::bind_front( m_func_, inst ), *static_cast< tuple_t* >( _return ) );
 		}
 	};
 
@@ -808,41 +800,37 @@ namespace sk::Reflection
 	{
 		typedef std::remove_const_t< Ty > class_t;
 		typedef Re( class_t::*func_t )( Args... ) const;
-		typedef std::tuple< Re*, Args... > tuple_t;
-		func_t m_func;
+		typedef std::tuple< Args... > tuple_t;
+		func_t m_func_;
 	public:
 		explicit consteval cMemberFunctionHolder( const func_t _func )
-		: m_func( _func )
+		: m_func_( _func )
 		{}
 
 		using enum cMember::eType::eRaw;
 		static constexpr uint8_t kFlags = kFunction | kConst;
 
 	protected:
-		void unsafe_invoke( void* _input, void* _return ) const override
+		void unsafe_invoke( void*, void* ) const override
 		{
-			// TODO: Maybe just in case safety check input value?
-			if( _return )
-			{
-				// Only set return value if provided. Not required to safety check as other places have better checks.
-				auto ret = static_cast< Re* >( _return );
-				*ret = sk::apply( m_func, *static_cast< tuple_t* >( _return ) );
-			}
-			else
-				sk::apply( m_func, *static_cast< tuple_t* >( _return ) );
+			// TODO: Throw error as this shouldn't happen.
 		}
 		// Instanced member function
 		void unsafe_invoke( void* _instance, void* _input, void* _return ) const override
 		{
-			// No need for the ptr to be const. It'll be safe either way in this scenario.
 			Ty* inst = static_cast< Ty* >( _instance );
-			if( _return )
+			if constexpr( !std::is_same_v< Re, void > )
 			{
-				auto ret = static_cast< Re* >( _return );
-				*ret = sk::apply( m_func, inst, *static_cast< tuple_t* >( _return ) );
+				if( _return )
+				{
+					auto ret = static_cast< Re* >( _return );
+					*ret = std::apply( std::bind_front( m_func_, inst ), *static_cast< tuple_t* >( _return ) );
+					return;
+				}
 			}
-			else
-				sk::apply( m_func, inst, *static_cast< tuple_t* >( _return ) );
+
+			// Fallback to no return.
+			std::apply( std::bind_front( m_func_, inst ), *static_cast< tuple_t* >( _return ) );
 		}
 	};
 
@@ -851,12 +839,12 @@ namespace sk::Reflection
 	class cMemberFunctionHolder< void, Re, Args... > : public iMemberFunctionHolder
 	{
 		typedef Re( *func_t )( Args... );
-		typedef std::tuple< Re*, Args... > tuple_t;
-		func_t m_func;
+		typedef std::tuple< Args... > tuple_t;
+		func_t m_func_;
 
 	public:
 		explicit consteval cMemberFunctionHolder( const func_t _func )
-		: m_func( _func )
+		: m_func_( _func )
 		{}
 
 		using enum cMember::eType::eRaw;
@@ -865,13 +853,18 @@ namespace sk::Reflection
 	protected:
 		void unsafe_invoke( void* _input, void* _return ) const override
 		{
-			if( _return )
+			if constexpr( !std::is_same_v< Re, void > )
 			{
-				auto ret = static_cast< Re* >( _return );
-				*ret = sk::apply( m_func, *static_cast< tuple_t* >( _return ) );
+				if( _return )
+				{
+					auto ret = static_cast< Re* >( _return );
+					*ret = std::apply( std::bind_front( m_func_ ), *static_cast< tuple_t* >( _return ) );
+					return;
+				}
 			}
-			else
-				sk::apply( m_func, *static_cast< tuple_t* >( _return ) );
+
+			// Fallback to no return.
+			std::apply( std::bind_front( m_func_ ), *static_cast< tuple_t* >( _return ) );
 		}
 		// Instanced member function
 		void unsafe_invoke( void*, void* _input, void* _return ) const override
@@ -903,7 +896,7 @@ namespace sk::Reflection
 	public:
 		// TODO: Declare function hash.
 		// Non-Static
-		template< sk_class Ty = iClass, class Re, class... Args >
+		template< class Ty = iClass, class Re, class... Args >
 		constexpr cMemberFunction( const char* _name, const cMemberFunctionHolder< Ty, Re, Args... >& _holder, const uint8_t& _extras )
 		: cMember( _name, _extras | _holder.kFlags )
 		, m_return_type_( &get_type_info< Re >::kInfo )
@@ -950,12 +943,12 @@ namespace sk::Reflection
 		{
 			// Static check.
 			SK_WARN_RET_IF( getIsStatic(),
-				"Warning: Calling static function through instance.",
+				TEXT( "Warning: Calling static function through instance." ),
 				call< Re, Args... >( _return, std::forward< Args >( _args )... ) )
 
 			// Const check. If getting called by a const ptr.
 			if constexpr( !std::is_const_v< Ty > )
-				SK_WARN_RET_IF( !getIsReadOnly(), "Error: Calling a non-const function with a constant instance.", false )
+				SK_WARN_RET_IF( !getIsReadOnly(), TEXT( "Error: Calling a non-const function with a constant instance." ), false )
 
 			// Verify class.
 			SK_WARN_RET_IF( Ty::kClass != *m_class_,
@@ -988,7 +981,7 @@ namespace sk::Reflection
 		virtual bool call_( void* _instance, void* _return, void* _args ) const
 		{
 			SK_WARN_RET_IF( _instance == nullptr && !getIsStatic(),
-				"Error: Calling non-static member function without instance.",
+				TEXT( "Error: Calling non-static member function without instance." ),
 				false )
 
 			if( _instance )
@@ -1002,11 +995,11 @@ namespace sk::Reflection
 	template< class Ty >
 	class cMemberFunctionInstance : public cMemberFunction
 	{
-		Ty* m_instance;
+		Ty* m_instance_;
 	public:
 		cMemberFunctionInstance( const cMemberFunction& _function, Ty* _instance )
 		: cMemberFunction( _function )
-		, m_instance( _instance )
+		, m_instance_( _instance )
 		{}
 
 		bool call_( void* _instance, void* _return, void* _args ) const override
@@ -1014,7 +1007,8 @@ namespace sk::Reflection
 			if( _instance )
 				m_holder_->unsafe_invoke( _instance, _args, _return );
 			else
-				m_holder_->unsafe_invoke( _args, _return );
+				m_holder_->unsafe_invoke( m_instance_, _args, _return );
+
 			return true;
 		}
 	};
@@ -1031,18 +1025,20 @@ namespace sk::Reflection
 		return cMemberFunctionInstance< Ty >( static_cast< class_t >( &_instance ) );
 	}
 
-	using member_var_pair_t  = std::pair< str_hash, cMember* >;
-	using member_func_pair_t = std::pair< str_hash, cMember* >;
+	typedef std::pair< str_hash, const cMemberVariable* > member_var_pair_t;
+	typedef std::pair< str_hash, const cMemberFunction* > member_func_pair_t;
 } // sk::Reflection::
 
 // Internal macro. Do not use.
 #define REGISTER_MEMBER_DIRECT_1_( Member, Counter, Visibility ) \
 	static constexpr auto Counter = var_counter_t::next(); \
 	template<> struct member_registry< Counter > { \
-	using prev_t = member_registry< (Counter) - 1 >; \
+	using enum sk::Reflection::cMember::eType::eRaw; \
+	using prev_t = member_registry< (Counter) -1 >; \
+	using pair_t = sk::Reflection::member_var_pair_t; \
 	static constexpr auto kMemberHolder = sk::Reflection::cMemberVariableHolder{ &class_type:: Member }; \
-	static constexpr auto kMember       = sk::Reflection::cMemberVariable{ #Member, kMemberHolder, sk::Reflection::cMember::eType:: Visibility }; \
-	static constexpr auto kMembers      = sk::cLinked_Array< const sk::Reflection::cMemberVariable* >{ &kMember, prev_t::kMembers }; };
+	static constexpr auto kMember       = sk::Reflection::cMemberVariable{ #Member, kMemberHolder, Visibility }; \
+	static constexpr auto kMembers      = sk::cLinked_Array< pair_t >{ pair_t{ #Member, &kMember }, prev_t::kMembers }; };
 			
 // Internal macro. Do not use.
 #define REGISTER_MEMBER_DIRECT_0_( Member, Visibility ) public: \
@@ -1053,10 +1049,12 @@ namespace sk::Reflection
 	static constexpr auto Counter = func_counter_t::next(); \
 	public: \
 	template<> struct function_registry< Counter > { \
-	using prev_t = function_registry< (Counter) - 1 >;  \
+	using enum sk::Reflection::cMember::eType::eRaw; \
+	using prev_t = function_registry< (Counter) - 1 >; \
+	using pair_t = sk::Reflection::member_func_pair_t; \
 	static constexpr auto kMemberHolder = sk::Reflection::cMemberFunctionHolder{ &class_type:: Member }; \
-	static constexpr auto kMember       = sk::Reflection::cMemberFunction{ #Member, kMemberHolder, sk::Reflection::cMember::eType:: Visibility }; \
-	static constexpr auto kMembers      = sk::cLinked_Array< const sk::Reflection::cMemberFunction* >{ &kMember, prev_t::kMembers }; };
+	static constexpr auto kMember       = sk::Reflection::cMemberFunction{ #Member, kMemberHolder, Visibility }; \
+	static constexpr auto kMembers      = sk::cLinked_Array< pair_t >{ pair_t{ #Member, &kMember }, prev_t::kMembers }; };
 			
 // Internal macro. Do not use.
 #define REGISTER_FUNCTION_DIRECT_0_( Member, Visibility ) private: \
@@ -1084,32 +1082,51 @@ namespace sk::Reflection
 
 // Add final class requirements and register it as a type in the global namespace.
 
-#define BUILD_CLASS_MEMBER_EXTRACTION( Class ) namespace Class { \
-	}
+#define BUILD_CLASS_MEMBER_EXTRACTION_0_( Class, Counter ) namespace Class { namespace { \
+	static constexpr auto CONCAT( func_, Counter ) = class_type::func_counter_t::next() - 1; \
+	static constexpr auto CONCAT( var_, Counter ) = class_type::var_counter_t::next() - 1; \
+	} }
+
+#define BUILD_CLASS_MEMBER_EXTRACTION( Class ) \
+	BUILD_CLASS_MEMBER_EXTRACTION_0_( Class, CONCAT( counter_, __COUNTER__ ) )
 
 // Member variable getters.
 #define BUILD_CLASS_GET_VARIABLES( Class ) \
 	constexpr auto Class ::class_type::getVariables() -> sk::map_ref< sk::str_hash, sk::Reflection::cMemberVariable* >{ \
 	} /* TODO: Add find logic (use const map?) */
 
-#define BUILD_CLASS_STATIC_VARIABLE_GETTER( Class ) \
+#define BUILD_CLASS_VARIABLE_GETTER( Class ) \
 	constexpr auto Class ::class_type::getVariable( const sk::str_hash& _hash ) -> sk::Reflection::cMemberVariable*{ \
 	} /* TODO: Add find logic (use const map?) */
 
-#define BUILD_CLASS_VARIABLE_GETTER( Class ) \
+#define BUILD_CLASS_BOUND_VARIABLE_GETTER( Class ) \
 	inline auto Class ::class_type::getBoundVariable( const sk::str_hash& _hash ) -> sk::Reflection::cMemberVariableInstance< class_type >{ \
 	} /* TODO: Add find logic (use const map?) */
 
 // Member function getters
 #define BUILD_CLASS_GET_FUNCTIONS( Class ) \
-	inline auto Class ::class_type::getFunctions() -> sk::map_ref< sk::str_hash, sk::Reflection::cMemberFunction* > { \
-	} /* TODO: Add function reflection, and then work more on this. */
-
-#define BUILD_CLASS_STATIC_FUNCTION_GETTER( Class ) \
-	constexpr auto Class ::class_type::getFunction( const sk::str_hash& _hash ) -> sk::Reflection::cMemberFunction*{ \
+	constexpr auto Class ::class_type::getFunctions() -> sk::map_ref< sk::str_hash, sk::Reflection::cMemberFunction* > { \
 	} /* TODO: Add function reflection, and then work more on this. */
 
 #define BUILD_CLASS_FUNCTION_GETTER( Class ) \
+	constexpr auto Class ::class_type::getFunction( const sk::str_hash& _hash ) -> sk::Reflection::cMemberFunction*{ \
+	} /* TODO: Add function reflection, and then work more on this. */
+
+#define BUILD_CLASS_FUNCTION_OVERLOADS_GETTER( Class ) \
+	constexpr auto Class ::class_type::getFunctionOverloads( const sk::str_hash& _hash ) \
+	-> std::pair< sk::Reflection::member_func_pair_t*, sk::Reflection::member_func_pair_t* >{ \
+	} /* TODO: Add function reflection, and then work more on this. */
+
+#define BUILD_CLASS_FUNCTION_OVERLOAD_RAW_GETTER( Class ) \
+	constexpr auto Class ::class_type::getFunction( const sk::str_hash& _hash, const sk::type_hash& _args ) -> sk::Reflection::cMemberFunction*{ \
+	} /* TODO: Add function reflection, and then work more on this. */
+
+#define BUILD_CLASS_FUNCTION_OVERLOAD_TEMPLATE_GETTER( Class ) \
+	template< class... Args > \
+	constexpr auto Class ::class_type::getFunction( const sk::str_hash& _hash ) -> sk::Reflection::cMemberFunction*{ \
+	return getFunction( _hash, sk::args_hash< Args... >::kHash ); } /* TODO: Add function reflection, and then work more on this. */
+
+#define BUILD_CLASS_BOUND_FUNCTION_GETTER( Class ) \
 	inline auto Class ::class_type::getBoundFunction( const sk::str_hash& _hash ) -> sk::Reflection::cMemberFunctionInstance< class_type >{ \
 	} /* TODO: Add function reflection, and then work more on this. */
 
@@ -1133,12 +1150,15 @@ namespace sk::Reflection
 	BUILD_CLASS_MEMBER_EXTRACTION( Class ) \
 	/* Build Member variable getters */ \
 	BUILD_CLASS_GET_VARIABLES( Class ) \
-	BUILD_CLASS_STATIC_VARIABLE_GETTER( Class ) \
 	BUILD_CLASS_VARIABLE_GETTER( Class ) \
+	BUILD_CLASS_BOUND_VARIABLE_GETTER( Class ) \
 	/* Build Member variable getters */ \
 	BUILD_CLASS_GET_FUNCTIONS( Class ) \
-	BUILD_CLASS_STATIC_FUNCTION_GETTER( Class ) \
 	BUILD_CLASS_FUNCTION_GETTER( Class ) \
+	BUILD_CLASS_FUNCTION_OVERLOADS_GETTER( Class ) \
+	BUILD_CLASS_FUNCTION_OVERLOAD_RAW_GETTER( Class ) \
+	BUILD_CLASS_FUNCTION_OVERLOAD_TEMPLATE_GETTER( Class ) \
+	BUILD_CLASS_BOUND_FUNCTION_GETTER( Class ) \
 	/* Build Reflection and register */ \
 	BUILD_CLASS_REFLECTION_INFO( Class ) \
 	REGISTER_TYPE_INTERNAL( M_CLASS( Class ) )
@@ -1163,25 +1183,73 @@ public:
 	SK_CONSTRUCTOR( cTest )
 
 	void test_func( const uint32_t _val ) { member_1 = _val; }
-	auto test_func2( void ) const { return member_2; }
+	uint32_t test_func2( void ) const { return member_2; }
 	static void test_func3( const uint32_t _val ){ member_3 = _val; }
 	// TODO: Figure out how to handle virtual functions? Some custom virtual table or member functions?
-	virtual auto test_func4( void ) const { return member_2; }
+	virtual uint8_t test_func4( void ) const { return member_2; }
 
 	// TODO: Figure out a way to register virtual functions. Overridable tag?
 	SK_PUBLIC_FUNCTION( test_func )
 	SK_PUBLIC_FUNCTION( test_func2 )
 	SK_PUBLIC_FUNCTION( test_func3 )
 };
-
-template< class Ty >
-constexpr bool test = std::is_const_v< std::remove_pointer_t< Ty > >;
+inline void test()
+{
+	// constexpr auto func = cTest::getFunction( "test_func" );
+}
 
 static constexpr auto t0 = sk::Reflection::cMemberFunctionHolder{ &cTest::test_func };
 static constexpr auto t1 = sk::Reflection::cMemberFunction{ "Erm", t0, 0 };
-static constexpr auto t2 = cTest::function_registry< 0 >::kMember;
+static constexpr auto t2 = cTest::function_registry< 2 >::kMember;
 
-REGISTER_CLASS( Test )
+namespace Test {
+	namespace
+	{
+		// Register functions:
+		constexpr auto  func_counter_680239913 = class_type::func_counter_t::next() - 1;
+		constexpr auto& last_func_member       = class_type::function_registry< func_counter_680239913 >::kMembers;
+		using func_t = sk::Reflection::member_func_pair_t;
+		using func_map_t = sk::const_map< func_t::first_type, func_t::second_type, last_func_member.size() >;
+
+		// Register variables:
+		constexpr auto  var_counter_680239913 = class_type::var_counter_t::next() - 1;
+		constexpr auto& last_var_member       = class_type::member_registry< var_counter_680239913 >::kMembers;
+		using var_t  = sk::Reflection::member_var_pair_t;
+		using var_map_t = sk::const_map< var_t::first_type, var_t::second_type, last_var_member.size() >;
+	}
+	static constexpr auto kFunctions = func_map_t{ last_func_member.begin(), last_func_member.end() };
+	static constexpr auto kVariables = var_map_t { last_var_member.begin(), last_var_member.end() };
+	
+}
+constexpr auto Test ::class_type::getVariables() -> sk::map_ref< sk::str_hash, sk::Reflection::cMemberVariable* >
+{
+	
+} constexpr auto Test ::class_type::getVariable( const sk::str_hash& _hash ) -> sk::Reflection::cMemberVariable*
+{
+	
+} inline auto Test ::class_type::getBoundVariable( const sk::str_hash& _hash ) -> sk::Reflection::cMemberVariableInstance< class_type >
+{
+	
+} constexpr auto Test ::class_type::getFunctions() -> sk::map_ref< sk::str_hash, sk::Reflection::cMemberFunction* >
+{
+	
+} constexpr auto Test ::class_type::getFunction( const sk::str_hash& _hash ) -> sk::Reflection::cMemberFunction*
+{
+	
+} constexpr auto Test ::class_type::getFunctionOverloads( const sk::str_hash& _hash ) -> std::pair< sk::Reflection::member_func_pair_t*, sk::Reflection::member_func_pair_t* >
+{
+	
+} constexpr auto Test ::class_type::getFunction( const sk::str_hash& _hash, const sk::type_hash& _args ) -> sk::Reflection::cMemberFunction*
+{
+	
+} template< class... Args > constexpr auto Test ::class_type::getFunction( const sk::str_hash& _hash ) -> sk::Reflection::cMemberFunction*
+{
+	return getFunction( _hash, sk::args_hash< Args... >::kHash );
+} inline auto Test ::class_type::getBoundFunction( const sk::str_hash& _hash ) -> sk::Reflection::cMemberFunctionInstance< class_type >
+{
+	
+} template<> struct sk::get_type_info< Test ::class_type >{ constexpr static auto& kClass = Test ::class_type::kClass; constexpr static sType_Info kInfo = { .type = sType_Info::eType::kClass, .hash = kClass.getType(), .size = sizeof( Test ::class_type ), .name = kClass.getRawName(), .raw_name = kClass.getRawName() }; constexpr static bool kValid = true; }; constexpr static auto type_registry_680239914 = sk::registry::counter::next(); template<> struct sk::registry::type_registry< type_registry_680239914 >{ typedef type_registry< type_registry_680239914 - 1 > previous_t; constexpr static auto registered = cLinked_Array{ static_cast< const sk::sType_Info* >( &get_type_info< cTest >::kInfo ), previous_t::registered }; constexpr static bool valid = true; };
+// REGISTER_CLASS( Test )
 
 static constexpr auto  member_id_ = cTest::var_counter_t::next();
 static constexpr auto& Test_members = cTest::member_registry< member_id_ - 1 >::kMembers;

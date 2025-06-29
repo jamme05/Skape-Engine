@@ -310,7 +310,7 @@ private:
     {
         _size += sizeof( size_t );
         const auto size = static_cast< size_t* >( ::malloc( make_aligned( _size, _alignment ) ) );
-        cTracker::m_memory_usage += *size;
+        cTracker::m_memory_usage += *size = _size;
         return size + 1;
     } // alloc_fast
 
@@ -326,8 +326,8 @@ private:
         _size += sizeof( size_t );
         const auto size = static_cast< size_t* >( _block ) - 1;
         cTracker::m_memory_usage -= *size;
-        const auto n_size = ::realloc( size, make_aligned( _size, _alignment ) );
-        cTracker::m_memory_usage += n_size;
+        const auto n_size = static_cast< size_t* >( ::realloc( size, make_aligned( _size, _alignment ) ) );
+        cTracker::m_memory_usage += *n_size = _size;
         return n_size + 1;
     } // realloc_fast
 } // sk::Memory::Tracker

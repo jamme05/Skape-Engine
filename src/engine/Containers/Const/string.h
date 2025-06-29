@@ -328,9 +328,9 @@ namespace sk
     {
         string< 6 > buff;
         if( _v )
-            buff = { "true" };
+            buff = string< 6 >{ "true" };
         else
-            buff = { "false" };
+            buff = string{ "false" };
         return buff;
     } // to_string
 

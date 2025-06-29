@@ -74,7 +74,7 @@ constexpr bool   operator<=( const Class & _other ) const { return m_hash <= _ot
 constexpr bool   operator>=( const Class & _other ) const { return m_hash >= _other.m_hash; }
 
 
-	class iHashed
+	struct iHashed
 	{
 	protected:
 		explicit constexpr iHashed( const uint64_t _hash )
@@ -144,18 +144,16 @@ constexpr bool   operator>=( const Class & _other ) const { return m_hash >= _ot
 namespace sk
 {
 	template< class Ty >
-		class hash : public Hashing::iHashed
+	struct hash : Hashing::iHashed
 	{
-	public:
 		constexpr hash( const Ty& _to_hash )
 		: iHashed( fnv1a_64( _to_hash ) ){}
 	};
 
 	// TODO: Make name class like unreal
 	template<>
-	class hash< char > : public Hashing::iHashed
+	struct hash< char > : Hashing::iHashed
 	{
-	public:
 		constexpr hash( void ) : iHashed( 0 ){}
 
 		constexpr hash( const std::string& _to_hash )
@@ -208,9 +206,8 @@ namespace sk
 	constexpr static str_hash string_hash_none{ "" };
 
 	template<>
-	class hash< uint32_t > : public Hashing::iHashed
+	struct hash< uint32_t > : Hashing::iHashed
 	{
-	public:
 		constexpr hash( const uint32_t& _to_hash )
 		: iHashed( static_cast< uint64_t >( _to_hash ) ){}
 
@@ -218,9 +215,8 @@ namespace sk
 	};
 
 	template<>
-	class hash< uint64_t > : public Hashing::iHashed
+	struct hash< uint64_t > : Hashing::iHashed
 	{
-	public:
 		constexpr hash( const uint64_t& _to_hash )
 		: iHashed( _to_hash ){}
 
@@ -233,6 +229,6 @@ struct std::hash< sk::hash< Ty > >
 {
 	uint64_t operator()( const sk::hash< Ty >& _hash ) const
 	{
-		return _hash.getHash();
+		return _hash.getValue();
 	}
 };

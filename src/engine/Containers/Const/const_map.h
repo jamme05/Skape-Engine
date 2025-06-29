@@ -10,6 +10,8 @@
 #include <Containers/Const/Array.h>
 #include <Misc/Hashing.h>
 
+#include <utility>
+
 namespace sk
 {
     template< class Ty >
@@ -65,7 +67,17 @@ namespace sk
         typedef ValueTy value_type;
         typedef std::pair< KeyTy, ValueTy > value_pair_type;
 
+        constexpr const_map( const const_map& ) = default;
+        constexpr const_map( const_map&& ) = default;
+
         consteval const_map( const array< std::pair< KeyTy, ValueTy >, Size >& _array );
+        consteval const_map( std::initializer_list< std::pair< KeyTy, ValueTy > > _list );
+        template< class Itr >
+        requires std::is_same_v< typename Itr::value_type, value_pair_type >
+        consteval const_map( Itr _left, Itr _right );
+
+        constexpr const_map& operator=( const const_map& _map ) = default;
+        constexpr const_map& operator=( const_map&& _map ) = default;
 
         // TODO: Make iterator so find can become constexpr?
         constexpr int64_t find( const KeyTy& _key ) const;
@@ -95,6 +107,21 @@ namespace sk
     } // const_hashmap
 
     template< class KeyTy, class ValueTy, size_t Size, class Pred >
+    consteval const_map< KeyTy, ValueTy, Size, Pred >::const_map( std::initializer_list< std::pair< KeyTy, ValueTy > > _list )
+    : const_map( _list.begin(), _list.end() )
+    {} // const_map
+
+    template< class KeyTy, class ValueTy, size_t Size, class Pred >
+    template< class Itr > requires std::is_same_v< typename Itr::value_type, std::pair< KeyTy, ValueTy > >
+    consteval const_map<KeyTy, ValueTy, Size, Pred>::const_map( Itr _left, Itr _right )
+    : m_array()
+    {
+        const auto dist = std::distance( _left, std::move( _right ) );
+        std::copy_n( _left, Math::min( size(), dist ), m_array.value );
+        std::sort( m_array.begin(), m_array.end(), _compare );
+    } // const_map
+
+    template< class KeyTy, class ValueTy, size_t Size, class Pred >
     constexpr int64_t
         const_map< KeyTy, ValueTy, Size,Pred >::find( const KeyTy& _key ) const
     {
@@ -117,7 +144,7 @@ namespace sk
 
         return -1;
     } // find
-
+    
     template< class KeyTy, class ValueTy, class Pred = std::less<> >
     class map_ref
     {

@@ -72,12 +72,7 @@
 #define UNPACK_SAFE_E( Name, ... ) __VA_OPT__(,) __VA_ARGS__
 
 #define CREATE_VALUE_METADATA_TYPE( Type ) \
-struct sValueInfo \
-{ Type Value; \
-sk::str_hash name_hash; \
-const char*  Name; \
-const char*  DisplayName; \
-};
+	using sValueInfo = sk::Reflection::Enum::sValue< Type >;
 
 namespace sk::Reflection::Enum
 {
@@ -139,7 +134,7 @@ namespace sk::Reflection::Enum
 	return kInvalid; \
 	}
 
-#define ENUM_VALUE_METADATA_1( Type, Name, Value, ... ) std::pair{ static_cast< value_t >( enum_t :: NAME ## Value ), sk::Reflection::Enum::enum_value_creator< enum_t, sValueInfo >( enum_t :: NAME ## Value, STR_NAME ## Value UNPACK_SAFE ## Value ) } __VA_OPT__(,)
+#define ENUM_VALUE_METADATA_1( Type, Name, Value, ... ) std::pair{ static_cast< value_t >( enum_t :: NAME ## Value ), sk::Reflection::Enum::enum_value_creator< enum_t >( enum_t :: NAME ## Value, STR_NAME ## Value UNPACK_SAFE ## Value ) } __VA_OPT__(,)
 #define ENUM_VALUE_METADATA_0( Type, Value, ... ) ENUM_VALUE_METADATA_1( Type, NAME ## Type, Value, __VA_ARGS__ )
 #define ENUM_VALUE_METADATA( Type, Value, ... ) ENUM_VALUE_METADATA_0( Type, UNWRAP_E_VALUE( Value ), __VA_ARGS__ )
 
@@ -200,7 +195,7 @@ namespace sk::Reflection::Enum
 {
 	struct sRawValue
 	{
-		sk::str_hash name_hash;
+		str_hash name_hash;
 		const char*  name;
 		const char*  display_name;
 	};
@@ -228,46 +223,46 @@ namespace sk::Reflection::Enum
 		}
 		sValue< ETy > result = {};
 		result.value = _value;
-		result.name_hash = sk::str_hash( _name );
+		result.name_hash = str_hash( _name );
 		result.name = _name;
 		result.display_name = _display_name;
 
 		return result;
 	}
-	template< class ETy, class Ty >
+	template< class ETy >
 	consteval sValue< ETy > enum_value_creator( ETy _value, const char* _name, const char* _display_name, ... )
 	{
-		return enum_value_builder< Ty >( _value, _name, _display_name );
+		return enum_value_builder< ETy >( _value, _name, _display_name );
 	} // enum_value_creator
 
-	template< class ETy, class Ty >
+	template< class ETy >
 	consteval sValue< ETy > enum_value_creator( ETy _value, const char* _name, const size_t, const char* _display_name, ... )
 	{
-		return enum_value_builder< Ty >( _value, _name, _display_name ); // Forward in case of future changes.
+		return enum_value_builder< ETy >( _value, _name, _display_name ); // Forward in case of future changes.
 	} // enum_value_creator
 
-	template< class ETy, class Ty >
+	template< class ETy >
 	consteval sValue< ETy > enum_value_creator( ETy _value, const char* _name, const int, const char* _display_name, ... )
 	{
-		return enum_value_builder< Ty >( _value, _name, _display_name ); // Forward in case of future changes.
+		return enum_value_builder< ETy >( _value, _name, _display_name ); // Forward in case of future changes.
 	} // enum_value_creator
 
-	template< class ETy, class Ty >
+	template< class ETy >
 	consteval sValue< ETy > enum_value_creator( ETy _value, const char* _name )
 	{
-		return enum_value_builder< Ty >( _value, _name );
+		return enum_value_builder< ETy >( _value, _name );
 	} // enum_value_creator
 
-	template< class ETy, class Ty >
+	template< class ETy >
 	consteval sValue< ETy > enum_value_creator( ETy _value, const char* _name, const size_t )
 	{
-		return enum_value_builder< Ty >( _value, _name ); // Forward in case of future changes.
+		return enum_value_builder< ETy >( _value, _name ); // Forward in case of future changes.
 	} // enum_value_creator
 
-	template< class ETy, class Ty >
+	template< class ETy >
 	consteval sValue< ETy > enum_value_creator( ETy _value, const char* _name, const int )
 	{
-		return enum_value_builder< Ty >( _value, _name ); // Forward in case of future changes.
+		return enum_value_builder< ETy >( _value, _name ); // Forward in case of future changes.
 	} // enum_value_creator
 } // qw::Reflection::Enum::
 

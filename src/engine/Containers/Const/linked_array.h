@@ -20,12 +20,11 @@ namespace sk
         typedef Ty&    reference;
         typedef std::bidirectional_iterator_tag iterator_category;
 
-
         constexpr cLinked_Iterator( void )
         : m_next( nullptr )
         , m_element( nullptr )
         { }
-        constexpr cLinked_Iterator( const Ty& _element, const cLinked_Iterator* _next )
+        constexpr cLinked_Iterator( Ty& _element, const cLinked_Iterator* _next )
         : m_next( _next )
         , m_element( &_element )
         { }
@@ -61,7 +60,12 @@ namespace sk
             return tmp;
         } // self++
 
-        constexpr auto& operator*( void ) const
+        constexpr auto& operator*( void ) noexcept
+        {
+            return *m_element;
+        } // *self
+
+        constexpr auto& operator*( void ) const noexcept
         {
             return *m_element;
         } // *self
@@ -87,19 +91,19 @@ namespace sk
             return *this;
         } // self = (move)
 
-        constexpr auto operator==( cLinked_Iterator& _right ) const
+        constexpr auto operator==( const cLinked_Iterator& _right ) const
         {
             return m_element == _right.m_element && m_next == _right.m_next;
         } // self == right
 
-        constexpr auto operator!=( cLinked_Iterator& _right ) const
+        constexpr auto operator!=( const cLinked_Iterator& _right ) const
         {
             return !( *this == _right );
         } // self != right
 
     private:
         const cLinked_Iterator* m_next;
-        const Ty*               m_element;
+        Ty*                     m_element;
     };
 
     template< typename Ty >
@@ -107,8 +111,8 @@ namespace sk
     {
     public:
         constexpr cLinked_Array( void );
-        constexpr cLinked_Array( Ty&& _element );
-        constexpr cLinked_Array( Ty&& _element, const cLinked_Array& _next );
+        constexpr cLinked_Array( Ty _element );
+        constexpr cLinked_Array( Ty _element, const cLinked_Array& _next );
         constexpr cLinked_Array( const cLinked_Array& _other );
         constexpr cLinked_Array( cLinked_Array&& _other ) noexcept;
 
@@ -132,14 +136,14 @@ namespace sk
     } // cLinked_Array
 
     template< typename Ty >
-    constexpr cLinked_Array< Ty >::cLinked_Array( Ty&& _element )
+    constexpr cLinked_Array< Ty >::cLinked_Array( Ty _element )
     : m_element( std::move( _element ) )
     , m_iterator( m_element, nullptr )
     {
     } // sLinked_Array
 
     template< typename Ty >
-    constexpr cLinked_Array< Ty >::cLinked_Array( Ty&& _element, const cLinked_Array& _next )
+    constexpr cLinked_Array< Ty >::cLinked_Array( Ty _element, const cLinked_Array& _next )
     : m_element( std::move( _element ) )
     , m_iterator( m_element, &_next.m_iterator )
     {
@@ -167,8 +171,12 @@ namespace sk
 
 inline void tmp()
 {
-    constexpr sk::cLinked_Array arr1{ 10 };
-    constexpr sk::cLinked_Array arr2{ 12, arr1 };
-    constexpr auto t = std::distance( arr1.begin(), arr1.end() );
-    constexpr auto t2 = arr2.size();
+    static constexpr sk::cLinked_Array arr1{ 10 };
+    static constexpr sk::cLinked_Array arr2{ 12, arr1 };
+    static constexpr sk::cLinked_Array arr3{ 14, arr2 };
+    static constexpr auto t = std::_Is_ranges_random_iter_v< decltype( arr3.begin() ) >;
+    static constexpr auto t1 = std::distance( arr3.begin(), arr3.end() );
+    static constexpr auto t2 = arr2.size();
+    static constexpr auto t3 = ++( ++( ++arr3.begin() ) );
+    static constexpr auto t4 =  t3 == arr1.end();
 }

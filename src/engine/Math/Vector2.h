@@ -150,6 +150,4 @@ namespace sk::Math
 }
 
 template< typename Ty >
-sk::cVector2< Ty > operator*( const Ty& _l, const sk::cVector2< Ty >& _r ){ return sk::cVector2< Ty >{ _r.x * _l, _r.y * _l }; }
-
-constexpr auto a = sizeof( sk::cVector2f );
+sk::Math::cVector2< Ty > operator*( const Ty& _l, const sk::Math::cVector2< Ty >& _r ){ return sk::Math::cVector2< Ty >{ _r.x * _l, _r.y * _l }; }

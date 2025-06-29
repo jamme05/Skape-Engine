@@ -296,7 +296,7 @@ template< class... Types >
 constexpr uint8_t sk::validate_args( const bool _allow_void )
 {
     constexpr static auto size  = sizeof...( Types );
-    constexpr static auto types = array{ get_type_hash_v< Types >... };
+    constexpr static auto types = array< type_hash, size >{ get_type_hash_v< Types >... };
 
     // TODO: Decide if void* should be allowed in the reflection system.
     if constexpr( size == 1 )
