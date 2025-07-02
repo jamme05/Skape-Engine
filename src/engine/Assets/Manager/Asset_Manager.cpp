@@ -4,7 +4,7 @@
  *
  */
 
-#include "Asset_manager.h"
+#include "Asset_Manager.h"
 
 #include "fastgltf/tools.hpp"
 

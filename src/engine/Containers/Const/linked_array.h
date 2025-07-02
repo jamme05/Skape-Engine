@@ -65,7 +65,7 @@ namespace sk
             return *m_element;
         } // *self
 
-        constexpr auto& operator*( void ) const noexcept
+        constexpr const Ty& operator*( void ) const noexcept
         {
             return *m_element;
         } // *self
@@ -168,15 +168,3 @@ namespace sk
     template< typename Ty >
     cLinked_Array( Ty, cLinked_Array< Ty > ) -> cLinked_Array< Ty >;
 } // sk::
-
-inline void tmp()
-{
-    static constexpr sk::cLinked_Array arr1{ 10 };
-    static constexpr sk::cLinked_Array arr2{ 12, arr1 };
-    static constexpr sk::cLinked_Array arr3{ 14, arr2 };
-    static constexpr auto t = std::_Is_ranges_random_iter_v< decltype( arr3.begin() ) >;
-    static constexpr auto t1 = std::distance( arr3.begin(), arr3.end() );
-    static constexpr auto t2 = arr2.size();
-    static constexpr auto t3 = ++( ++( ++arr3.begin() ) );
-    static constexpr auto t4 =  t3 == arr1.end();
-}

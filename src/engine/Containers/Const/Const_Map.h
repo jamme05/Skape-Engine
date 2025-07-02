@@ -59,7 +59,7 @@ namespace sk
     } // map_helper::
 
     // TODO: Decide weather or not the const map functioning as a multimap is undefined behaviour. Will be treated as fine for now due to convenience.
-    template< class KeyTy, class ValueTy, size_t Size, class Pred = std::less< KeyTy > >
+    template< class KeyTy, class ValueTy, size_t Size, class Pred = std::less<> >
     class const_map
     {
     public:
@@ -80,7 +80,18 @@ namespace sk
         constexpr const_map& operator=( const_map&& _map ) = default;
 
         // TODO: Make iterator so find can become constexpr?
-        constexpr int64_t find( const KeyTy& _key ) const;
+        [[ nodiscard ]]
+        constexpr const value_pair_type* find( const KeyTy& _key ) const
+        {
+            // TODO: See if there's a better way? Default construction may fail.
+            return std::lower_bound( begin(), end(), std::pair{ _key, ValueTy{} }, Pred{} );
+        }
+
+        [[ nodiscard ]]
+        constexpr auto range( const KeyTy& _key ) const
+        {
+            return std::equal_range( begin(), end(), std::pair{ _key, ValueTy{} }, Pred{} );
+        }
         constexpr const value_pair_type& get( const size_t _index ) const { return m_array[ _index ]; }
 
         constexpr const value_pair_type* begin( void ) const { return m_array.begin(); }
@@ -114,37 +125,12 @@ namespace sk
     template< class KeyTy, class ValueTy, size_t Size, class Pred >
     template< class Itr > requires std::is_same_v< typename Itr::value_type, std::pair< KeyTy, ValueTy > >
     consteval const_map<KeyTy, ValueTy, Size, Pred>::const_map( Itr _left, Itr _right )
-    : m_array()
+    : m_array{}
     {
-        const auto dist = std::distance( _left, std::move( _right ) );
-        std::copy_n( _left, Math::min( size(), dist ), m_array.value );
+        std::copy( std::move( _left ), std::move( _right ), m_array.value );
         std::sort( m_array.begin(), m_array.end(), _compare );
     } // const_map
 
-    template< class KeyTy, class ValueTy, size_t Size, class Pred >
-    constexpr int64_t
-        const_map< KeyTy, ValueTy, Size,Pred >::find( const KeyTy& _key ) const
-    {
-        constexpr auto pred = Pred();
-        size_t begin_edge = 0;
-        size_t end_edge   = size();
-#define GET_MID c = map_helper::_get_middle( begin_edge, end_edge )
-        for( size_t GET_MID; c != end_edge; GET_MID )
-#undef GET_MID
-        {
-            // TODO: Figure out why this doesn't work.
-            auto& current = m_array[ c ];
-            if( current.first == _key )
-                return static_cast< int64_t >( c );
-            if( pred( current.first, _key ) )
-                begin_edge = c + 1;
-            else
-                end_edge = c;
-        }
-
-        return -1;
-    } // find
-    
     template< class KeyTy, class ValueTy, class Pred = std::less<> >
     class map_ref
     {
@@ -168,56 +154,37 @@ namespace sk
         typedef const pair_t* pair_ptr_t;
         typedef const pair_t& pair_ref_t;
 
-        pair_ptr_t find( const KeyTy& _key ) const;
+        [[ nodiscard ]]
+        constexpr pair_ptr_t find( const KeyTy& _key ) const
+        {
+            return std::lower_bound( begin(), end(), std::pair{ _key, ValueTy{} }, Pred{} );
+        }
+        [[ nodiscard ]]
         constexpr int64_t find_index( const KeyTy& _key ) const;
+        [[ nodiscard ]]
         constexpr std::pair< pair_ptr_t, pair_ptr_t > range( const KeyTy& _key ) const
         {
-            auto start = find_index( _key );
-            if( start == -1 )
-                return { end(), end() };
-            for( size_t i = 0; i < m_size; ++i )
-            {
-                if( m_data[ i ].first != _key )
-                    return { m_data[ start ], m_data[ i ] };
-            }
-            return { start, end() };
+            return std::equal_range( begin(), end(), std::pair{ _key, ValueTy{} }, Pred{} );
         }
 
+        [[ nodiscard ]]
         constexpr pair_ptr_t begin( void ) const { return get(); }
+        [[ nodiscard ]]
         constexpr pair_ptr_t end  ( void ) const { return get() + size(); }
 
+        [[ nodiscard ]]
         constexpr pair_ptr_t get  ( void ) const { return m_data; }
 
+        [[ nodiscard ]]
         constexpr pair_ref_t operator[]( const size_t _index ) const { return get()[ _index ]; }
 
+        [[ nodiscard ]]
         constexpr size_t size( void ) const { return m_size; }
 
     private:
         size_t     m_size;
         pair_ptr_t m_data;
     };
-
-    template< class KeyTy, class ValueTy, class Pred >
-    typename map_ref< KeyTy, ValueTy, Pred >::pair_ptr_t map_ref< KeyTy, ValueTy, Pred >::find( const KeyTy& _key ) const
-    {
-        constexpr auto pred = Pred();
-        size_t begin_edge = 0;
-        size_t end_edge   = size();
-#define GET_MID c = map_helper::_get_middle( begin_edge, end_edge )
-        for( size_t GET_MID; c != end_edge; GET_MID )
-#undef GET_MID
-        {
-            auto& current = m_data[ c ];
-            if( current.first == _key )
-                return &current;
-            if( pred( current.first, _key ) )
-                begin_edge = c + 1;
-            else
-                end_edge = c;
-        }
-
-        return m_data + m_size;
-    } // find
 
     template< class KeyTy, class ValueTy, class Pred >
     constexpr int64_t map_ref< KeyTy, ValueTy, Pred >::find_index( const KeyTy& _key ) const

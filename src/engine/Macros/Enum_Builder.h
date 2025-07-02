@@ -157,9 +157,9 @@ namespace sk::Reflection::Enum
 	constexpr bool operator!=( const Type & _right ) const { return !( *this == _right ); } \
 	constexpr bool operator==( const value_t & _right ) const { return m_value == _right; } \
 	constexpr bool operator!=( const value_t & _right ) const { return !( *this == _right ); } \
-	auto getInfo( void ) const { const auto index = kValues.find( m_value ); return ( index != -1 ? &kValues.get( index ).second : nullptr ); } \
-	auto getName( void ) const { if( const auto info = getInfo() ) return info->name; return "Invalid ( Unable to find )"; } \
-	auto getDisplayName( void ) const { if( const auto info = getInfo() ) return info->display_name; return "Invalid ( Unable to find )"; } \
+	std::optional< sValueInfo > getInfo( void ) const { const auto itr = kValues.find( m_value ); return itr != nullptr ? itr->second : std::optional< sValueInfo >{}; } \
+	auto getName( void ) const { if( const auto info = getInfo(); info.has_value() ) return info->name; return "Invalid ( Unable to find )"; } \
+	auto getDisplayName( void ) const { if( const auto info = getInfo(); info.has_value() ) return info->display_name; return "Invalid ( Unable to find )"; } \
 	private: \
 	value_t m_value;
 
@@ -195,14 +195,20 @@ namespace sk::Reflection::Enum
 {
 	struct sRawValue
 	{
-		str_hash name_hash;
-		const char*  name;
-		const char*  display_name;
+		str_hash name_hash = {};
+		const char*  name  = nullptr;
+		const char*  display_name = nullptr;
 	};
 	template< class ETy >
 	struct sValue : sRawValue
 	{
-		ETy value;
+		constexpr auto operator<=>( const sValue& _other ) const
+		{
+			// TODO: Look at using something other than int64_t. It may come and bit me in the ass.
+			const auto ov = static_cast< int64_t >( _other.value );
+			return static_cast< int64_t >( value ) <=> ov; 
+		}
+		ETy value = static_cast< ETy >( 0 );
 	};
 
 	
