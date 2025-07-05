@@ -21,12 +21,13 @@ namespace sk::Memory
 
 		struct sHistory_action
 		{
-			sHistory_action( const std::source_location& _location, const eAction _action )
+			sHistory_action( const std::source_location& _location, const eAction _action, const size_t _size )
 			: file_name( _location.file_name() )
 			, function( _location.function_name() )
 			, line( static_cast< uint32_t >( _location.line() ) )
 			, column( static_cast< uint32_t >( _location.column() ) )
 			, action( _action )
+			, size( _size )
 			{} // sFile_info
 	
 			const char* file_name;
@@ -107,25 +108,29 @@ private:
             size_t max_allowed_memory_size = 0;
             // Uses percentage of 
             constexpr float  max_memory_usage_percentage = 0.2f;
-        }
+        } // ::
+
         void* alloc( const size_t _size, const std::source_location& _location )
         {
             if( const auto tracker = cTracker::getPtr() )
                 return tracker->alloc( _size, _location );
             return alloc_fast( _size );
         } // alloc
+
         void* realloc( void* _ptr, const size_t _size, const std::source_location& _location )
         {
             if( const auto tracker = cTracker::getPtr() )
                 return tracker->realloc( _ptr, _size, _location );
             return realloc_fast( _ptr, _size );
         } // realloc
+
         void free( void* _block, const std::source_location& _location )
         {
             if( const auto tracker = cTracker::getPtr() )
                 return tracker->free( _block, _location );
             return free_fast( _block );
         } // free
+
         size_t max_heap_size( void )
         {
             return max_allowed_memory_size;
@@ -153,6 +158,9 @@ private:
 
     void* cTracker::alloc( const size_t _size, const std::source_location& _location )
     {
+    	if( _size == 0 )
+    		return nullptr;
+
         const auto size   = get_aligned( _size );
     	// Total size to be allocated.
         const auto t_size = size + aligned_entry_size;
@@ -179,7 +187,7 @@ private:
         m_mtx.lock();
         if constexpr( Tracker::kSaveMemoryHistory )
         {
-            add_history( *entry, { _location, eAction::kAllocate } );
+            add_history( *entry, { _location, eAction::kAllocate, _size } );
         }
     	else
     	{
@@ -207,7 +215,7 @@ private:
         m_mtx.lock();
         if constexpr( Tracker::kSaveMemoryHistory )
         {
-            add_history( *entry, { _location, eAction::kFree } );
+            add_history( *entry, { _location, eAction::kFree, 0 } );
         }
         m_block_set.erase( entry );
         m_mtx.unlock();
@@ -217,6 +225,10 @@ private:
 
     void* cTracker::realloc( void* _block, const size_t _size, const std::source_location& _location )
     {
+    	// Do a normal alloc in case no block provided.
+    	if( _block == nullptr )
+    		return alloc( _size, _location );
+
     	// Get the entry.
     	const auto prev_entry = static_cast< sTracker_entry* >( _block ) - 1;
 
@@ -240,7 +252,7 @@ private:
     	m_mtx.lock();
     	if constexpr( Tracker::kSaveMemoryHistory )
     	{
-    		add_history( *entry, { _location, eAction::kFree } );
+    		add_history( *entry, { _location, eAction::kFree, _size } );
     	}
     	m_block_set.erase( prev_entry );
     	m_block_set.insert( entry );
@@ -308,6 +320,9 @@ private:
 
     void* alloc_fast( size_t _size, const eAlignment _alignment )
     {
+    	if( _size == 0 )
+    		return nullptr;
+
         _size += sizeof( size_t );
         const auto size = static_cast< size_t* >( ::malloc( make_aligned( _size, _alignment ) ) );
         cTracker::m_memory_usage += *size = _size;
@@ -323,6 +338,10 @@ private:
 
     void* realloc_fast( void* _block, size_t _size, const eAlignment _alignment )
     {
+    	// Normal alloc in case no block is provided.
+    	if( _block == nullptr )
+    		return alloc_fast( _size, _alignment );
+
         _size += sizeof( size_t );
         const auto size = static_cast< size_t* >( _block ) - 1;
         cTracker::m_memory_usage -= *size;
