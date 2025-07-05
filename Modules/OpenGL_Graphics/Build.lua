@@ -1,5 +1,5 @@
 
-local OpenGL_Path = "glfw-3.4.bin"
+local glad_Path = "glad"
 
 module = {
     Name = "OpenGL",
@@ -7,13 +7,16 @@ module = {
         defines( { "SK_GRAPHICS_OPENGL" } )
     end,
 
-    Module_Project = Module_Setup( "OpenGL",
-        -- Lib Dirs
-        function( module_dir )
-            return { OpenGL_Path .. "/lib-vc2022" } -- TODO: Make it non dependent on editor.
-        end,
-        -- Include Dirs
-        function( module_dir )
-            return { OpenGL_Path .. "/include" }
-        end )
+    IncludeLibs = function( module_dir )
+        -- TODO: Make it non dependent on editor.
+        return {  }
+    end,
+
+    IncludeDirs = function( module_dir )
+        return { module_dir .. "/" .. glad_Path .. "/include" }
+    end,
 }
+module.Module_Project = Module_Setup( "OpenGL",
+    module.IncludeLibs,
+    module.IncludeDirs
+)   
