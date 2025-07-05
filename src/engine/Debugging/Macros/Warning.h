@@ -6,3 +6,4 @@
 
 #pragma once
 
+#define SK_ERROR( ... ) std::println( stderr, __VA_ARGS__ )

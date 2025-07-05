@@ -53,12 +53,12 @@ namespace sk::Input
 
 	struct sPadEvent
 	{
-		eButton         button          = eButton::kNone;
-		eAnalog         analog          = eAnalog::kMouse;
-		Math::cVector2f current_stick   = { };
-		Math::cVector2f previous_stick  = { };
-		float           current_analog  = { };
-		float           previous_analog = { };
+		eButton   button          = eButton::kNone;
+		eAnalog   analog          = eAnalog::kMouse;
+		cVector2f current_stick   = { };
+		cVector2f previous_stick  = { };
+		float     current_analog  = { };
+		float     previous_analog = { };
 		Platform::cPad* pad             = nullptr;
 
 	};

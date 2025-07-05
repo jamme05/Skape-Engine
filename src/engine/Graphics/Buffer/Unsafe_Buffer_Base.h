@@ -10,6 +10,7 @@
 // Will be overriden in Module
 // The override SHOULD be at sk::Graphics::cUnsafe_Buffer
 // The unsafe buffer will be acting as the allocator for buffers.
+// It is NOT recommended to use the unsafe buffer directly.
 
 namespace sk::Graphics
 {
@@ -23,17 +24,39 @@ namespace sk::Graphics
             kVertex
         };
 
-        enum eAccess : uint8_t
+        enum class eAccess : uint8_t
         {
-            kNone      = 0x00,
-            kRead      = 0x01,
-            kWrite     = 0x02,
-            kReadWrite = kRead | kWrite
+            kRead,
+            kWrite,
+            kReadWrite
         };
         virtual ~iUnsafe_Buffer( void ) = 0;
 
-        virtual void   Read   ( void* _out,  size_t _map_size ) = 0;
-        virtual void   Update ( void* _data, size_t _size, size_t _offset = 0 ) = 0;
+        /**
+         * Will copy the active version of data from the Buffer to specified pointer.
+         * @param _out Pointer to copy the data to.
+         * @param _max_size Maximum allowed size. If 0 it'll use the buffers size. Default: 0
+         */
+        virtual void   Read   ( void* _out,  size_t _max_size = 0 ) = 0;
+        /**
+         * Will copy the data from the gpu to specified pointer.
+         * @param _out Pointer to copy the data to.
+         * @param _max_size Maximum allowed size. If 0 it'll use the buffers size. Default: 0
+         */
+        virtual void   ReadRaw( void* _out,  size_t _max_size = 0 ) = 0;
+        /**
+         * Update the data on the buffer.
+         * @param _data Pointer to the data that is going to be copied to the buffer.
+         * @param _size The new size of the buffer. NOTE: If the purpose is resizing. Use Resize instead.
+         */
+        virtual void   Update ( void* _data, size_t _size ) = 0;
+        /**
+         * 
+         * @param _data Pointer to the data that is going to be copied to the segment.
+         * @param _size 
+         * @param _offset 
+         */
+        virtual void   UpdateSeg( void* _data, size_t _size, size_t _offset = 0 ) = 0;
         [[ nodiscard ]]
         virtual size_t GetSize( void ) const = 0;
         virtual void   Resize ( size_t _byte_size ) = 0;
