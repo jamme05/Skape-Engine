@@ -10,6 +10,7 @@
 #include "Assets/Asset.h"
 
 #include "Containers/Map.h"
+#include "Containers/vector.h"
 
 #include "Misc/Singleton.h"
 #include "Misc/Smart_Ptrs.h"
@@ -35,6 +36,8 @@ namespace sk
 	class cAssetManager : public cSingleton< cAssetManager >
 	{
 	public:
+		typedef std::pair< str_hash, std::string > file_pair_t;
+
 		 cAssetManager( void );
 		~cAssetManager( void );
 
@@ -92,12 +95,16 @@ namespace sk
 		static auto getAbsolutePath ( const std::filesystem::path& _path ) -> std::filesystem::path;
 		static void makeAbsolutePath(       std::filesystem::path& _path );
 
-	private:
 		typedef Assets::cAsset_List( *load_file_func_t )( const std::filesystem::path& );
+
+		void AddFileLoader( const std::vector< str_hash >& _extensions, load_file_func_t _function );
+
+	private:
 		typedef unordered_map< hash< uint64_t >, cShared_ptr< iAsset > > id_to_asset_map_t;
-		typedef multimap< str_hash, cShared_ptr< iAsset > >     name_to_asset_map_t;
+		typedef multimap< str_hash, cShared_ptr< iAsset > >      name_to_asset_map_t;
 		typedef unordered_map< str_hash, load_file_func_t >      extension_loader_map_t;
 		typedef extension_loader_map_t::value_type extension_map_entry_t;
+		typedef vector< std::thread > loaders_vector_t;
 
 #define EXTENSION_ENTRY( Ext, Func ) extension_map_entry_t{ str_hash( Ext ), Func },
 
@@ -116,11 +123,12 @@ namespace sk
 			EXTENSION_ENTRY( ".gltf", loadGltfFile )
 			EXTENSION_ENTRY( ".png",  loadPngFile  )
 		};
+		// TODO: Make the asset loader multithreaded.
+		loaders_vector_t    m_loaders;
 
 		id_to_asset_map_t   m_assets;
 		name_to_asset_map_t m_asset_name_map;
 		name_to_asset_map_t m_asset_path_map;
-
 	};
 
 	namespace Assets

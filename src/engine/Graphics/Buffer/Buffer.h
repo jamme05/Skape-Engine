@@ -5,3 +5,5 @@
  */
 
 #pragma once
+
+// TYPE SAFE BUFFER

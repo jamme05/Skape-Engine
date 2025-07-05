@@ -15,11 +15,6 @@ namespace sk::Math
 	template< typename T >
 	using cVector2 = cVector< 2, T >;
 
-	typedef cVector2< float >    cVector2f;
-	typedef cVector2< double >   cVector2d;
-	typedef cVector2< int32_t >  cVector2i;
-	typedef cVector2< uint32_t > cVector2u;
-
 	template< typename T >
 	class cVector< 2, T >
 	{
@@ -147,6 +142,15 @@ namespace sk::Math
 		// Returns a normalized version of vector
 		template <typename T> inline	cVector2<T>	Normalized(const cVector2<T>& _v)							{ return Normalized(_v, Length(_v)); }
 	}
+}
+
+namespace sk
+{
+	typedef Math::cVector2< float >    cVector2f;
+	typedef Math::cVector2< double >   cVector2d;
+	typedef Math::cVector2< int32_t >  cVector2i;
+	typedef Math::cVector2< uint32_t > cVector2u;
+
 }
 
 template< typename Ty >

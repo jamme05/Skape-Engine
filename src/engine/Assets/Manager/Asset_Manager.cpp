@@ -10,7 +10,7 @@
 
 #include <Assets/Mesh.h>
 
-#include "Asset_List.h"
+#include <Assets/Asset_List.h>
 #include "Assets/Model.h"
 #include "Assets/Texture.h"
 #include "Graphics/cRenderer.h"
@@ -134,13 +134,19 @@ namespace sk
 
 	auto cAssetManager::getAbsolutePath( const std::filesystem::path& _path ) -> std::filesystem::path
 	{
-		return std::filesystem::path( QW_GAME_DIR ) /= _path;
+		return std::filesystem::path( SK_GAME_DIR ) /= _path;
 	} // getAbsolutePath
 
 	void cAssetManager::makeAbsolutePath( std::filesystem::path& _path )
 	{
 		_path = getAbsolutePath( _path );
 	} // makeAbsolutePath
+
+	void cAssetManager::AddFileLoader( const std::vector< str_hash >& _extensions, load_file_func_t _function )
+	{
+		for( const auto& extension : _extensions )
+			m_load_callbacks.emplace( extension, _function );
+	} // AddFileLoader
 
 	auto cAssetManager::loadGltfFile( const std::filesystem::path& _path ) -> Assets::cAsset_List
 	{
@@ -260,6 +266,4 @@ namespace sk
 
 		Graphics::cRenderer::m_white_texture = createAsset< Assets::cTexture >( "White", white_texture.data(), resolution, Assets::cTexture::eFormat::kRGBA8, true );
 	} // loadEmbedded
-
-
 } // sk::
