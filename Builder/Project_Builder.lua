@@ -16,14 +16,21 @@ os.chdir( "../" )
 Load_Modules()
 
 -- TODO: Move to external file.
-function CMakeBuilder( dependency )
-    local dependency_path = "./Build/" .. dependency .. "/CMAKE"
-    local return_path   = "../../../../"
+function CMakeBuilder( dependency, cmake_path, build_config )
+    local dependency_path = "./Build/" .. dependency .. "/cmake"
+    local return_path   = os.realpath( "./" )
+
+    if( cmake_path == nil ) then
+        cmake_path = ""
+    end
 
     os.mkdir( dependency_path )
     os.chdir( dependency_path )
     print( "Building " .. dependency .. " files..." )
-    os.execute( "cmake " .. return_path .. dependency )
+    os.execute( "cmake " .. path.join( return_path, dependency, cmake_path ) )
+    if( build_config ~= nil ) then
+        os.execute( "cmake --build . --config " .. build_config )
+    end
     print( "Build done.\n" )
     os.chdir( return_path )
 end
@@ -111,7 +118,8 @@ CreateModules()
 
 group "Dependencies"
 
-CMakeBuilder( "External/fastgltf" )
+CMakeBuilder( "External/fastgltf", "" )
+
 project "fastgltf"
     kind "StaticLib"
     location "Build/External/fastgltf"

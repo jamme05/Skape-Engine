@@ -15,9 +15,9 @@ function Default_Module_Setup( module_name )
     return function( module_dir )
     project( module_name )
         kind "StaticLib"
-        location( "Build/Module/" .. module_name )
+        location( "Build/Modules/" .. module_name )
         language "C++"
-        targetdir( "bin/Module/" .. module_name )
+        targetdir( "bin/Modules/" .. module_name )
     
         files { DefaultModuleFiles( "Modules/" .. module_dir .. "/src/**", { ".hpp", ".h", ".cpp", ".c" } ) }
         
@@ -29,15 +29,15 @@ function Module_Setup( module_name, library_dirs, includes )
     return function( module_dir )
     project( module_name )
         kind "StaticLib"
-        location( "Build/Module/" .. module_name )
+        location( "Build/Modules/" .. module_name )
         language "C++"
-        targetdir( "bin/Module/" .. module_name )
+        targetdir( "bin/Modules/" .. module_name )
     
         -- TODO: Add module.extensions to decide which files.
         files { DefaultModuleFiles( "Modules/" .. module_dir .. "/src/**", { ".hpp", ".h", ".cpp", ".c" } ) }
         
-        includedirs { "src/engine", "Modules/" .. module_dir .. "/src", includes( "Modules/" .. module_dir ) }
-        libdirs { library_dirs( "Modules/" .. module_dir ) }
+        includedirs { "src/engine", "Modules/" .. module_dir .. "/src", includes( module_dir ) }
+        libdirs { library_dirs( module_dir ) }
     end
 end
 
