@@ -19,9 +19,9 @@ function Default_Module_Setup( module_name )
         language "C++"
         targetdir( "bin/Module/" .. module_name )
     
-        files { DefaultModuleFiles( "Modules/" .. module_dir .. "/src/**", { ".hpp", ".h", ".cpp" } ) }
+        files { DefaultModuleFiles( "Modules/" .. module_dir .. "/src/**", { ".hpp", ".h", ".cpp", ".c" } ) }
         
-        includedirs { "src/engine" }
+        includedirs { "src/engine", "Modules/" .. module_dir .. "/src" }
     end
 end
 
@@ -33,10 +33,11 @@ function Module_Setup( module_name, library_dirs, includes )
         language "C++"
         targetdir( "bin/Module/" .. module_name )
     
-        files { DefaultModuleFiles( "Modules/" .. module_dir .. "/src/**", { ".hpp", ".h", ".cpp" } ) }
+        -- TODO: Add module.extensions to decide which files.
+        files { DefaultModuleFiles( "Modules/" .. module_dir .. "/src/**", { ".hpp", ".h", ".cpp", ".c" } ) }
         
-        includedirs { "src/engine", includes( module_dir ) }
-        libdirs { library_dirs( module_dir ) }
+        includedirs { "src/engine", "Modules/" .. module_dir .. "/src", includes( "Modules/" .. module_dir ) }
+        libdirs { library_dirs( "Modules/" .. module_dir ) }
     end
 end
 
@@ -120,13 +121,17 @@ function Get_Module_Links()
 end
 
 function Get_Module_Includes()
-    local links = {}
+    local includes = {}
     ForeachModule( function( mod )
-        table.insert( links, "Modules/" .. mod.Dir .. "/src" )
+        if( mod.IncludeDirs ~= nil ) then
+            table.insert( includes, mod.IncludeDirs( "Modules/" .. mod.Dir ) )
+        end
+        table.insert( includes, "Modules/" .. mod.Dir .. "/src" )
     end )
-    return links;
+    return includes;
 end
 
 function CreateModules()
+    includedirs( Get_Module_Includes() )
     ForeachModule( function( mod ) mod.Module_Project( mod.Dir ) end )
 end
