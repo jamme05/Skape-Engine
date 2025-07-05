@@ -1,5 +1,6 @@
 
-local glad_Path = "glad"
+local binder_path = "glbinding"
+local binder_src = path.join( binder_path, "source" )
 
 module = {
     Name = "OpenGL",
@@ -8,15 +9,29 @@ module = {
     end,
 
     IncludeLibs = function( module_dir )
-        -- TODO: Make it non dependent on editor.
-        return {  }
+        CMakeBuilder( path.join( "Modules", module_dir, binder_path ), "", "Release" )
+        return { path.join( module_dir, binder_path, "cmake/Release/glbinding.lib" ) }
     end,
 
+    -- TODO: Add cache.
     IncludeDirs = function( module_dir )
-        return { module_dir .. "/" .. glad_Path .. "/include" }
+        local includes = {}
+        
+        local tmp = {
+            "3rdparty/KHR",
+            "glbinding"
+        }
+        for _, include in pairs( tmp ) do
+            table.insert( includes, path.join( "Modules", module_dir, binder_src, include, "include" ) )
+        end
+
+        table.insert( includes, path.join( "Build/Modules", module_dir, binder_path, "cmake/source/include" ) )
+        table.insert( includes, path.join( "Build/Modules", module_dir, binder_path, "cmake/source/glbinding/include" ) )
+
+        return includes
     end,
 }
 module.Module_Project = Module_Setup( "OpenGL",
     module.IncludeLibs,
     module.IncludeDirs
-)   
+)

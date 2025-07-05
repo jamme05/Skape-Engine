@@ -4,3 +4,6 @@
 [submodule "external/lodepng"]
 	path = external/lodepng
 	url = https://github.com/lvandeve/lodepng.git
+[submodule "Modules/OpenGL_Graphics/glbinding"]
+	path = Modules/OpenGL_Graphics/glbinding
+	url = https://github.com/cginternals/glbinding.git
