@@ -19,8 +19,8 @@ namespace sk::Graphics
         using value_type = Ty;
 
         cBuffer();
-        cBuffer( const cBuffer& ) = default;
-        cBuffer( cBuffer&& ) noexcept = default;
+        cBuffer( const cBuffer& );
+        cBuffer( cBuffer&& ) noexcept;
         ~cBuffer();
     private:
         cUnsafe_Buffer m_buffer_;
@@ -33,3 +33,5 @@ namespace sk::Graphics
     template< class Ty >
     using cVertexBuffer = cBuffer< Ty, Buffer::eType::kVertex >;
 } // sk::Graphics::
+
+#include "Buffer.inl"

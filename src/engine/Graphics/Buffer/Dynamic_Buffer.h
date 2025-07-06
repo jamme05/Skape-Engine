@@ -15,10 +15,11 @@
 
 namespace sk::Graphics
 {
+    template< Buffer::eType Type >
     class cDynamic_Buffer
     {
     public:
-        cDynamic_Buffer( Buffer::eType _type, const std::string& _name );
+        cDynamic_Buffer( const std::string& _name );
 
         cDynamic_Buffer( const cDynamic_Buffer& _other );
         cDynamic_Buffer( cDynamic_Buffer&& _other ) noexcept;

@@ -4,4 +4,6 @@
  *
  */
 
+#pragma once
+
 #include "Dynamic_Buffer.h"
