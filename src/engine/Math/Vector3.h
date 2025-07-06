@@ -10,16 +10,22 @@
 
 #include "VectorSwizzle.h"
 
+namespace sk
+{
+	namespace Math
+	{
+		template <class T>
+		using cVector3 = cVector<3, T>;
+	} // Math::
+
+	using cVector3f = Math::cVector3< float >;
+	using cVector3d = Math::cVector3< double >;
+	using cVector3u = Math::cVector3< uint32_t >;
+	using cVector3i = Math::cVector3< int32_t >;
+} // sk::
 namespace sk::Math
 {
-
-	template <typename T> using cVector3 = cVector<3, T>;
-
-	typedef cVector3<float>		cVector3f;
-	typedef cVector3<double>	cVector3d;
-	typedef cVector3<int>		cVector3i;
-
-	template <typename T>
+	template <class T>
 	class cVector<3, T>
 	{
 	public:
@@ -36,8 +42,11 @@ namespace sk::Math
 		// Sets all axis
 		constexpr cVector(const T _x, const T _y, const T _z) : x(_x), y(_y), z(_z) {}
 		// Sets all axis (but using multiple types you psyco)
-		template <typename T2, typename T3, typename T4> constexpr cVector(const T2 _x, const T3 _y, const T4 _z) : x(static_cast<T>(_x)), y(static_cast<T>(_y)), z(static_cast<T>(_z)) {}
-
+		template <typename T2, typename T3, typename T4>
+		constexpr cVector(const T2 _x, const T3 _y, const T4 _z) : x(static_cast<T>(_x)), y(static_cast<T>(_y)), z(static_cast<T>(_z)) {}
+		constexpr cVector( const cVector& ) = default;
+		constexpr cVector( cVector&& ) = default;
+		constexpr ~cVector() = default;
 
 		// Construction from other Vectors:
 
@@ -70,6 +79,7 @@ namespace sk::Math
 		// Operators:
 		constexpr cVector  operator-(void) const { return { -x, -y, -z }; }
 		constexpr cVector& operator=(const cVector& _v){ x = _v.x; y = _v.z; z = _v.z; return *this; }
+		constexpr cVector& operator=( cVector&& ) = default;
 
 
 		constexpr cVector operator+(const cVector& _v) const { return { x + _v.x, y + _v.y, z + _v.z }; }
@@ -151,8 +161,7 @@ namespace sk::Math
 	static constexpr auto kDown  = -cVector3f{ 0.0f, 1.0f, 0.0f };
 	static constexpr auto kLeft  = -cVector3f{ 1.0f, 0.0f, 0.0f };
 	static constexpr auto kBack  = -cVector3f{ 0.0f, 0.0f, 1.0f };
-
 } // sk::
 
 template< typename Ty >
-sk::cVector3< Ty > operator*( const Ty& _l, const sk::cVector3< Ty >& _r ){ return sk::cVector3< Ty >{ _r.x * _l, _r.y * _l, _r.z * _l }; }
+sk::Math::cVector3< Ty > operator*( const Ty& _l, const sk::Math::cVector3< Ty >& _r ){ return sk::Math::cVector3< Ty >{ _r.x * _l, _r.y * _l, _r.z * _l }; }

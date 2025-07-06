@@ -15,6 +15,16 @@
 
 #include "Matrix_helper.h"
 
+namespace sk
+{
+	namespace Math
+	{
+		template <typename T> using cMatrix4x4 = Math::cMatrix<4, 4, T>;
+	} // Math
+
+	using cMatrix4x4f = Math::cMatrix4x4< float >;
+	using cMatrix4x4d = Math::cMatrix4x4< double >;
+} // sk
 namespace sk::Math
 {
 	template <typename T>
@@ -334,53 +344,47 @@ namespace sk::Math
 		} // inverse_fast
 	};
 
-	
-	template <typename T> using cMatrix4x4 = cMatrix<4, 4, T>;
-
-	typedef cMatrix4x4<float>	cMatrix4x4f;
-	typedef cMatrix4x4<double>	cMatrix4x4d;
-
 	namespace Matrix4x4
 	{
 		template <typename T> constexpr cMatrix4x4<T> rotateX(const float& _a)
 		{
 			return {
-				sk::cVector3< T >{ T(1), T(0),	T(0), T(0)},
-				sk::cVector3< T >{ T(0), Math::cos(_a), -Math::sin(_a), T(0)},
-				sk::cVector3< T >{ T(0), Math::sin(_a), Math::cos(_a), T(0) },
+				cVector3< T >{ T(1), T(0),	T(0), T(0)},
+				cVector3< T >{ T(0), Math::cos(_a), -Math::sin(_a), T(0)},
+				cVector3< T >{ T(0), Math::sin(_a), Math::cos(_a), T(0) },
 			};
 		}
 		template <typename T> constexpr cMatrix4x4<T> rotateY(const float& _a)
 		{
 			return {
-				sk::cVector3< T >{ Math::cos(_a), T(0), -Math::sin(_a), T(0) },
-				sk::cVector3< T >{ T(0), T(1), T(0), T(0) },
-				sk::cVector3< T >{ Math::sin(_a), T(0), Math::cos(_a), T(0) },
+				cVector3< T >{ Math::cos(_a), T(0), -Math::sin(_a), T(0) },
+				cVector3< T >{ T(0), T(1), T(0), T(0) },
+				cVector3< T >{ Math::sin(_a), T(0), Math::cos(_a), T(0) },
 			};
 		}
 		template <typename T> constexpr cMatrix4x4<T> rotateZ(const float& _a)
 		{
 			return {
-				sk::cVector3< T >{ Math::cos(_a), -Math::sin(_a),T(0), T(0)},
-				sk::cVector3< T >{ Math::sin(_a), Math::cos(_a), T(0), T(0) },
-				sk::cVector3< T >{ T(0), T(0), T(1), T(0) },
+				cVector3< T >{ Math::cos(_a), -Math::sin(_a),T(0), T(0)},
+				cVector3< T >{ Math::sin(_a), Math::cos(_a), T(0), T(0) },
+				cVector3< T >{ T(0), T(0), T(1), T(0) },
 			};
 		}
 		// Rotates around XYZ according to euler angles
 		template <typename T> constexpr cMatrix4x4<T> rotate(const cVector3<T>& _v)
 		{
 			return {
-				sk::cVector3< T >{
+				cVector3< T >{
 					Math::cos(_v.y) * Math::cos(_v.z),
 					Math::sin(_v.x) * Math::sin(_v.y) * Math::cos(_v.z) - Math::cos(_v.x) * Math::sin(_v.z),
 					Math::cos(_v.x) * Math::sin(_v.y) * Math::cos(_v.z) + Math::sin(_v.x) * Math::sin(_v.z),
 				},
-				sk::cVector3< T >{
+				cVector3< T >{
 					Math::cos(_v.y) * Math::sin(_v.z),
 					Math::sin(_v.x) * Math::sin(_v.y) * Math::sin(_v.z) + Math::cos(_v.x) * Math::cos(_v.z),
 					Math::cos(_v.x) * Math::sin(_v.y) * Math::sin(_v.z) - Math::sin(_v.x) * Math::cos(_v.z),
 				},
-				sk::cVector3< T >{
+				cVector3< T >{
 					-Math::sin(_v.y),
 					Math::sin(_v.x) * Math::cos(_v.y),
 					Math::cos(_v.x) * Math::cos(_v.y),
@@ -393,17 +397,17 @@ namespace sk::Math
 
 			const cVector3< T > _n = Vector3::Normalized(_v);
 			return {
-				sk::cVector3< T >{
+				cVector3< T >{
 					_v.x * _v.x * (1 - Math::cos(_a)) + Math::cos(_a),
 					_v.x * _v.y * (1 - Math::cos(_a)) - _v.z * Math::sin(_a),
 					_v.x * _v.z * (1 - Math::cos(_a)) + _v.y * Math::sin(_a), T(0)
 				},
-				sk::cVector3< T >{
+				cVector3< T >{
 					_v.x * _v.y * (1 - Math::cos(_a)) + _v.z * Math::sin(_a),
 					_v.y * _v.y * (1 - Math::cos(_a)) + Math::cos(_a),
 					_v.y * _v.z * (1 - Math::cos(_a)) - _v.x * Math::sin(_a), T(0)
 				},
-				sk::cVector3< T >{
+				cVector3< T >{
 					_v.x * _v.z * (1 - Math::cos(_a)) - _v.y * Math::sin(_a),
 					_v.y * _v.z * (1 - Math::cos(_a)) + _v.x * Math::sin(_a),
 					_v.z * _v.z * (1 - Math::cos(_a)) + Math::cos(_a), T(0)
@@ -436,17 +440,17 @@ namespace sk::Math
 			const auto crz = Math::cos(rz);
 
 			return cMatrix4x4< T >(
-				sk::cVector3< T >{
+				cVector3< T >{
 					cry * crz,
 				   -cry * srz,
 					sry,
 				} * sx,
-				sk::cVector3< T >{
+				cVector3< T >{
 					crx * srz + crz * srx * sry,
 					crx * crz - srx * sry * srz,
 				   -cry * srx,
 				} * sy,
-				sk::cVector3< T >{
+				cVector3< T >{
 					srx * srz - crx * crz * sry,
 					crz * srx + crx * sry * srz,
 					crx * cry,
@@ -456,4 +460,4 @@ namespace sk::Math
 		}
 
 	} // Matrix4x4::
-} // sk::
+} // sk::Math::

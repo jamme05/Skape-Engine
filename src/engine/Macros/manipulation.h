@@ -40,3 +40,5 @@
 #define PLACEHOLDER( A, B ) A
 #define COMMENT( ... )
 #endif // !IN_EDITOR
+
+#define NOT( ... ) !( __VA_ARGS__ )

@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <print>
+
 #include <Debugging/Macros/Assert.h>
-#include <Debugging/Macros/Format.h>
+#include <Debugging/Macros/Text.h>
 #include <Debugging/Macros/Warning.h>

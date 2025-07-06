@@ -239,6 +239,8 @@ namespace sk
     };
     template< class Ty >
     constexpr inline bool kValidType = is_valid_type< Ty >::value;
+    template< class Ty >
+    concept reflected = is_valid_type< Ty >::value;
 
     template< class... Types >
     constexpr inline bool kValidTypes = std::conjunction_v< is_valid_type< Types >... >;

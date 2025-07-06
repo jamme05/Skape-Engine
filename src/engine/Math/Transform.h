@@ -30,14 +30,6 @@ namespace sk
 		auto& getScale   ( void )       { return m_scale; }
 		auto& getScale   ( void ) const { return m_scale; }
 
-		constexpr auto& getLocal( void ) const { return m_local; }
-
-		auto& getLocalFront( void ) const { return reinterpret_cast< const Math::cVector3f& >( m_local.z ); }
-		auto& getLocalRight( void ) const { return reinterpret_cast< const Math::cVector3f& >( m_local.x ); }
-		auto& getLocalUp   ( void ) const { return reinterpret_cast< const Math::cVector3f& >( m_local.y ); }
-
-		auto& getLocalPosition( void ) const { return reinterpret_cast< const Math::cVector3f& >( m_local.w ); }
-
 		constexpr auto& getWorld( void ) const { return m_world; }
 
 		auto& getWorldFront( void ) const { return reinterpret_cast< const Math::cVector3f& >( m_world.z ); }
@@ -52,22 +44,23 @@ namespace sk
 		// TODO: Move to cpp file
 		cTransform& update( void )
 		{
-			m_local = Math::Matrix4x4::scale_rotate_translate( m_scale, m_rotation * Math::kDegToRad< float >, m_position );
+			const auto local = Math::Matrix4x4::scale_rotate_translate(
+				m_scale, m_rotation * Math::kDegToRad< float >, m_position );
 
 			if( m_parent )
-				m_world = m_parent->getWorld() * m_local;
+				m_world = m_parent->getWorld() * local;
 			else
-				m_world = m_local;
+				m_world = local;
 
 			return *this;
 		} // update
 
 	private:
+		// TODO: Use the local matrix and remove the direct access.
 		Math::cVector3f m_position;
 		Math::cVector3f m_rotation;
 		Math::cVector3f m_scale;
 
-		Math::cMatrix4x4f m_local;
 		Math::cMatrix4x4f m_world;
 
 		const cTransform* m_parent = nullptr;

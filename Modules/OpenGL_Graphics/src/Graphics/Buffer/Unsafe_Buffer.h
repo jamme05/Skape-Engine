@@ -11,12 +11,15 @@
 #include <glbinding/gl/gl.h>
 
 #include <atomic>
+#include <mutex>
 #include <string>
 
 namespace sk::Graphics
 {
     namespace OpenGL
     {
+        // This is designed for being accessed by a rendering thread ( which locks/unlocks )
+        // and a secondary thread which writes.
         class cUnsafe_Buffer final : public iUnsafe_Buffer
         {
             static constexpr gl::GLenum kTypeConverter[]
@@ -32,14 +35,16 @@ namespace sk::Graphics
                 gl::GLenum::GL_READ_WRITE
             };
         public:
-            cUnsafe_Buffer( std::string _name, size_t _byte_size, eType _type, bool _is_static );
+             cUnsafe_Buffer( std::string _name, size_t _byte_size, Buffer::eType _type, bool _is_static );
+            ~cUnsafe_Buffer() override;
 
             void   Read     ( void* _out, size_t _max_size = 0 ) override;
             void   ReadRaw  ( void* _out, size_t _max_size = 0 ) override;
-            void   Update   ( void* _data, size_t _size ) override;
-            void   UpdateSeg( void* _data, size_t _size, size_t _offset ) override;
+            void   Update   ( const void* _data, size_t _size ) override;
+            void   UpdateSeg( const void* _data, size_t _size, size_t _offset ) override;
             [[ nodiscard ]]
             size_t GetSize() const override { return m_size_; }
+            size_t GetSafeSize() const override;
             void   Resize ( size_t _byte_size ) override;
             void   Lock   () override;
             void   Unlock () override;
@@ -50,11 +55,15 @@ namespace sk::Graphics
             [[ nodiscard ]]
             auto get_buffer() const { return m_buffer_; }
         private:
-            void create_backup( size_t _size = 0 );
+            void create_backup( size_t _size = 0, bool _force_copy = false );
 
+            // If the backup is in use.
+            std::atomic_bool m_in_use_    = false;
             std::atomic_bool m_is_locked_ = false;
-            bool   m_is_static_;
-            bool   m_is_changed_ = false;
+            bool m_is_static_;
+            bool m_has_backup_ = false;
+
+            std::mutex m_write_mtx_;
 
             gl::GLenum m_type_;
             gl::GLuint m_buffer_;

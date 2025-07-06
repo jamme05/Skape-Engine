@@ -15,7 +15,6 @@
 #include "Math/Transform.h"
 #include "Math/Vector4.h"
 
-
 namespace sk::Assets
 {
 	class cMesh;
@@ -29,18 +28,12 @@ namespace sk::Assets
 	public:
 		cModel( const std::string& _name );
 		// TODO: Model class, aka container for meshes and a name.
-
-		[[nodiscard]] auto& getTransform( void )       { return m_transform; }
-		[[nodiscard]] auto& getTransform( void ) const { return m_transform; }
-
-		[[nodiscard]] auto& getMeshes( void )       { return m_meshes; }
+		
 		[[nodiscard]] auto& getMeshes( void ) const { return m_meshes; }
-
+		SK_PUBLIC_FUNCTION( getMeshes )
 	private:
 		vector< cShared_ptr< cModel > > m_children;
 		vector< cShared_ptr< cMesh > >  m_meshes;
-
-		cTransform m_transform;
 	};
 } // sk::Assets::
 

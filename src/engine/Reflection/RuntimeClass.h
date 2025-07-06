@@ -121,9 +121,9 @@ namespace sk
 	{
 	private:
 		template< class Ty2 >
-		static std::true_type test( decltype( &Ty2::getStaticClass ) );
+		static std::true_type test( decltype( &Ty2::getStaticClass ) ){ return {}; }
 		template< class >
-		static std::false_type test( ... );
+		static std::false_type test( ... ){ return {}; }
 	public:
 		static constexpr bool has_value = decltype( test< Ty >( 0 ) )::value;
 	private:
@@ -234,19 +234,19 @@ namespace sk
 	static constexpr auto&  getStaticType( void ){ return kClass.getType(); } \
 	static auto             getStaticName( void ){ return kClass.getName(); } \
 
-#define CREATE_MEMBER_REFLECTION_VALUES( RuntimeClass ) \
+#define CREATE_MEMBER_REFLECTION_VALUES( ClassName, RuntimeClass ) \
 	private: \
 	struct var_tag_{}; \
 	struct func_tag_{}; \
-	template< class > struct member_registry { \
+	template< class > struct variable_registry { \
 		static constexpr auto kMembers = sk::cLinked_Array< sk::Reflection::member_var_pair_t >{}; }; \
 	template< class > struct function_registry { \
 		static constexpr auto kMembers = sk::cLinked_Array< sk::Reflection::member_func_pair_t >{}; }; \
 	public: \
-	using class_type = Test::class_type; \
+	using class_type = ClassName ::class_type; \
 	using var_counter_t  = const_counter< var_tag_ >;   \
 	using func_counter_t  = const_counter< func_tag_ >; \
-	template< int N > struct member_extractor : member_registry< std::integral_constant< int, N > >{};\
+	template< int N > struct variable_extractor : variable_registry< std::integral_constant< int, N > >{};\
 	template< int N > struct function_extractor : function_registry< std::integral_constant< int, N > >{};\
 
 #define CREATE_MEMBER_REFLECTION_FUNCTIONS( RuntimeClass ) \
@@ -265,17 +265,17 @@ namespace sk
 	private:
 
 // Internal use only.
-#define CREATE_CLASS_IDENTIFIERS_0_( RuntimeClass ) public: \
+#define CREATE_CLASS_IDENTIFIERS_0_( ClassName, RuntimeClass ) public: \
 	/* Prepare function to get information about which class it is. */ \
 	CREATE_CLASS_IDENTITY_IDENTIFIERS( RuntimeClass ) \
 	/* Prepare for member reflection: */ \
-	CREATE_MEMBER_REFLECTION_VALUES( RuntimeClass ) \
+	CREATE_MEMBER_REFLECTION_VALUES( ClassName, RuntimeClass ) \
 	/* Create incomplete functions so that I remember and to allow all variables to be ready upon usage. */ \
 	CREATE_MEMBER_REFLECTION_FUNCTIONS( RuntimeClass )
 
 // Required to make a runtime class functional.
-#define CREATE_CLASS_IDENTIFIERS( RuntimeClass ) \
-	CREATE_CLASS_IDENTIFIERS_0_( RuntimeClass )
+#define CREATE_CLASS_IDENTIFIERS( ClassName, RuntimeClass ) \
+	CREATE_CLASS_IDENTIFIERS_0_( ClassName, RuntimeClass )
 
 
 #define CREATE_CLASS_BODY( Class ) CREATE_CLASS_IDENTIFIERS( runtime_class_ ## Class )
@@ -396,7 +396,7 @@ class Class : public sk::get_inherits_t< FIRST( __VA_ARGS__ ) > \
  * Creates everything required to get the class functional. Used in combination with QW_CLASS
  * @param ClassName The name for the class to create the body for.
  */
-#define SK_CLASS_BODY( ClassName ) CREATE_CLASS_IDENTIFIERS( ClassName :: CONCAT( runtime_class_, ClassName ) )
+#define SK_CLASS_BODY( ClassName ) CREATE_CLASS_IDENTIFIERS( ClassName, ClassName :: CONCAT( runtime_class_, ClassName ) )
 
 namespace sk::Reflection
 {
@@ -464,13 +464,6 @@ namespace sk::Reflection
 	class cMemberVariableInstance;
 	template< class Ty >
 	class cMemberFunctionInstance;
-
-	class iHolder
-	{
-	public:
-		virtual ~iHolder() = default;
-		virtual constexpr uint8_t getFlags() = 0;
-	};
 
 	class iMemberVariableHolder
 	{
@@ -923,13 +916,13 @@ namespace sk::Reflection
 		{
 			// Verify args.
 			typedef args_hash< Args... > args_t;
-			SK_WARN_RET_IF( args_t::kHash != m_args_info_->hash,
+			SK_WARN_IF_RET( sk::Severity::kReflection, args_t::kHash != m_args_info_->hash,
 				FORMAT( "Error: Wrong types provided! Provided types: {}. Required types: {}.", args_t::kInfo.to_string(), m_args_info_->to_string() ),
 				false )
 
 			// Verify return type. But only if it's required.
 			constexpr static auto& other_type = get_type_info< Re >::kInfo;
-			SK_WARN_RET_IF( _return != nullptr && *m_return_type_ != other_type,
+			SK_WARN_IF_RET( sk::Severity::kReflection, _return != nullptr && *m_return_type_ != other_type,
 				FORMAT( "Error: Wrong return type provided. Provided type: {}. Required type: {}.", other_type.raw_name, m_return_type_->raw_name ),
 				false )
 
@@ -944,28 +937,28 @@ namespace sk::Reflection
 		bool calli( Ty& _instance, Re* _return, Args&&... _args ) const
 		{
 			// Static check.
-			SK_WARN_RET_IF( getIsStatic(),
+			SK_WARN_IF_RET( sk::Severity::kReflection, getIsStatic(),
 				TEXT( "Warning: Calling static function through instance." ),
-				call< Re, Args... >( _return, std::forward< Args >( _args )... ) )
+				call< Re, Args... >( _return, std::forward< Args >( _args )... ) );
 
 			// Const check. If getting called by a const ptr.
 			if constexpr( !std::is_const_v< Ty > )
-				SK_WARN_RET_IF( !getIsReadOnly(), TEXT( "Error: Calling a non-const function with a constant instance." ), false )
+				SK_WARN_IF_RET( sk::Severity::kReflection, !getIsReadOnly(), TEXT( "Error: Calling a non-const function with a constant instance." ), false )
 
 			// Verify class.
-			SK_WARN_RET_IF( Ty::kClass != *m_class_,
+			SK_WARN_IF_RET( sk::Severity::kReflection, Ty::kClass != *m_class_,
 				FORMAT( "Error: Tried calling function through class {} when it required class {}.", Ty::getClassName(), m_class_->getName() ),
 				false )
 
 			// Verify args.
 			typedef args_hash< Args... > args_t;
-			SK_WARN_RET_IF( args_t::kHash != m_args_info_->hash,
+			SK_WARN_IF_RET( sk::Severity::kReflection, args_t::kHash != m_args_info_->hash,
 				FORMAT( "Error: Wrong types provided! Provided types: {}. Required types: {}.", args_t::kInfo.to_string(), m_args_info_->to_string() ),
 				false )
 
 			// Verify return type. But only if it's required.
 			constexpr static auto& other_type = get_type_info< Re >::kInfo;
-			SK_WARN_RET_IF( _return != nullptr && *m_return_type_ != other_type,
+			SK_WARN_IF_RET( sk::Severity::kReflection, _return != nullptr && *m_return_type_ != other_type,
 				FORMAT( "Error: Wrong return type provided. Provided type: {}. Required type: {}.", other_type.raw_name, m_return_type_->raw_name ),
 				false )
 
@@ -992,7 +985,7 @@ namespace sk::Reflection
 	protected:
 		virtual bool call_( void* _instance, void* _return, void* _args ) const
 		{
-			SK_WARN_RET_IF( _instance == nullptr && !getIsStatic(),
+			SK_WARN_IF_RET( sk::Severity::kReflection, _instance == nullptr && !getIsStatic(),
 				TEXT( "Error: Calling non-static member function without instance." ),
 				false )
 
@@ -1100,53 +1093,70 @@ namespace sk::Reflection
 
 // Add final class requirements and register it as a type in the global namespace.
 
-#define BUILD_CLASS_MEMBER_EXTRACTION_0_( Class, Counter ) namespace Class { namespace { \
-	static constexpr auto CONCAT( func_, Counter ) = class_type::func_counter_t::next() - 1; \
-	static constexpr auto CONCAT( var_, Counter ) = class_type::var_counter_t::next() - 1; \
-	} }
+// Register functions.
+#define BUILD_CLASS_MEMBER_EXTRACTION_1_func_( Class, Counter ) \
+	static constexpr auto CONCAT( func_, Counter ) = class_type::func_counter_t::next(); \
+	static constexpr auto& last_func_member        = class_type::function_extractor< CONCAT( func_, Counter ) - 1 >::kMembers; \
+	using func_t = sk::Reflection::member_func_pair_t; \
+	using func_map_t = sk::const_map< func_t::first_type, func_t::second_type, last_func_member.size() >;
+
+// Register variables.
+#define BUILD_CLASS_MEMBER_EXTRACTION_1_var_( Class, Counter ) \
+	static constexpr auto CONCAT( var_, Counter ) = class_type::var_counter_t::next(); \
+	static constexpr auto& last_var_member        = class_type::variable_extractor< CONCAT( var_, Counter ) - 1 >::kMembers; \
+	using var_t = sk::Reflection::member_var_pair_t; \
+	using var_map_t = sk::const_map< var_t::first_type, var_t::second_type, last_var_member.size() >;
+
+#define BUILD_CLASS_MEMBER_EXTRACTION_0_( Class, Counter ) namespace Class { namespace Internal { \
+	BUILD_CLASS_MEMBER_EXTRACTION_1_func_( Class, Counter ) \
+	BUILD_CLASS_MEMBER_EXTRACTION_1_var_( Class, Counter ) } \
+	static constexpr auto kFunctions = Internal::func_map_t{ Internal::last_func_member.begin(), Internal::last_func_member.end() }; \
+	static constexpr auto kVariables = Internal::var_map_t { Internal::last_var_member .begin(), Internal::last_var_member .end() }; \
+	}
 
 #define BUILD_CLASS_MEMBER_EXTRACTION( Class ) \
 	BUILD_CLASS_MEMBER_EXTRACTION_0_( Class, CONCAT( counter_, __COUNTER__ ) )
 
 // Member variable getters.
 #define BUILD_CLASS_GET_VARIABLES( Class ) \
-	constexpr auto Class ::class_type::getVariables() -> sk::map_ref< sk::str_hash, sk::Reflection::cMemberVariable* >{ \
-	} /* TODO: Add find logic (use const map?) */
+	constexpr auto Class ::class_type::getVariables() -> sk::Reflection::member_var_map_ref_t{ \
+	return Class ::kVariables; }
 
 #define BUILD_CLASS_VARIABLE_GETTER( Class ) \
-	constexpr auto Class ::class_type::getVariable( const sk::str_hash& _hash ) -> sk::Reflection::cMemberVariable*{ \
-	} /* TODO: Add find logic (use const map?) */
+	constexpr auto Class ::class_type::getVariable( const sk::str_hash& _hash ) -> sk::Reflection::member_var_t{ \
+	const auto itr = Test ::kVariables.find( _hash ); return itr == nullptr ? nullptr : itr->second; }
 
 #define BUILD_CLASS_BOUND_VARIABLE_GETTER( Class ) \
-	inline auto Class ::class_type::getBoundVariable( const sk::str_hash& _hash ) -> sk::Reflection::cMemberVariableInstance< class_type >{ \
-	} /* TODO: Add find logic (use const map?) */
+	inline auto Class ::class_type::getBoundVariable( const sk::str_hash& _hash ) -> std::optional< sk::Reflection::cMemberVariableInstance< class_type > >{ \
+	if( const auto member = getVariable( _hash ); member == nullptr ) return {}; \
+	else return sk::Reflection::cMemberVariableInstance{ *member, this }; }
 
 // Member function getters
 #define BUILD_CLASS_GET_FUNCTIONS( Class ) \
-	constexpr auto Class ::class_type::getFunctions() -> sk::map_ref< sk::str_hash, sk::Reflection::cMemberFunction* > { \
-	} /* TODO: Add function reflection, and then work more on this. */
+	constexpr auto Class ::class_type::getFunctions() -> sk::Reflection::member_func_map_ref_t{ \
+	return Class ::kFunctions; }
 
 #define BUILD_CLASS_FUNCTION_GETTER( Class ) \
-	constexpr auto Class ::class_type::getFunction( const sk::str_hash& _hash ) -> sk::Reflection::cMemberFunction*{ \
-	} /* TODO: Add function reflection, and then work more on this. */
+	constexpr auto Class ::class_type::getFunction( const sk::str_hash& _hash ) -> sk::Reflection::member_func_t{ \
+	const auto itr = Test ::kFunctions.find( _hash ); return itr == nullptr ? nullptr : itr->second; }
 
 #define BUILD_CLASS_FUNCTION_OVERLOADS_GETTER( Class ) \
-	constexpr auto Class ::class_type::getFunctionOverloads( const sk::str_hash& _hash ) \
-	-> std::pair< sk::Reflection::member_func_pair_t*, sk::Reflection::member_func_pair_t* >{ \
-	} /* TODO: Add function reflection, and then work more on this. */
+	constexpr auto Class ::class_type::getFunctionOverloads( const sk::str_hash& _hash ) -> sk::Reflection::member_func_range_t{ \
+	return Class ::kFunctions.range( _hash ); }
 
 #define BUILD_CLASS_FUNCTION_OVERLOAD_RAW_GETTER( Class ) \
-	constexpr auto Class ::class_type::getFunction( const sk::str_hash& _hash, const sk::type_hash& _args ) -> sk::Reflection::cMemberFunction*{ \
-	} /* TODO: Add function reflection, and then work more on this. */
+	constexpr auto Class ::class_type::getFunction( const sk::str_hash& _hash, const sk::type_hash& _args ) -> sk::Reflection::member_func_t{ \
+	for( auto [ fst, lst ] = Test ::kFunctions.range( _hash ); fst != lst; ++fst ) \
+	{ if( fst->second->hasArgs( _args ) ) return fst->second; } return nullptr; }
 
 #define BUILD_CLASS_FUNCTION_OVERLOAD_TEMPLATE_GETTER( Class ) \
-	template< class... Args > \
-	constexpr auto Class ::class_type::getFunction( const sk::str_hash& _hash ) -> sk::Reflection::cMemberFunction*{ \
-	return getFunction( _hash, sk::args_hash< Args... >::kHash ); } /* TODO: Add function reflection, and then work more on this. */
+	template< class... Args > constexpr auto Class ::class_type::getFunction( const sk::str_hash& _hash ) -> sk::Reflection::member_func_t{ \
+	return getFunction( _hash, sk::args_hash< Args... >::kHash ); }
 
 #define BUILD_CLASS_BOUND_FUNCTION_GETTER( Class ) \
-	inline auto Class ::class_type::getBoundFunction( const sk::str_hash& _hash ) -> sk::Reflection::cMemberFunctionInstance< class_type >{ \
-	} /* TODO: Add function reflection, and then work more on this. */
+	inline auto Class ::class_type::getBoundFunction( const sk::str_hash& _hash ) -> std::optional< sk::Reflection::cMemberFunctionInstance< class_type > >{ \
+	if( const auto member = getFunction( _hash ); member == nullptr ) return {}; \
+	else return sk::Reflection::cMemberFunctionInstance{ *member, this }; }
 
 // Build type_info
 #define BUILD_CLASS_REFLECTION_INFO( Class ) \
@@ -1179,7 +1189,7 @@ namespace sk::Reflection
 	BUILD_CLASS_BOUND_FUNCTION_GETTER( Class ) \
 	/* Build Reflection and register */ \
 	BUILD_CLASS_REFLECTION_INFO( Class ) \
-	REGISTER_TYPE_INTERNAL( M_CLASS( Class ) )
+	REGISTER_TYPE_INTERNAL( Class::class_type )
 
 SK_CLASS( Test )
 {
@@ -1212,52 +1222,4 @@ public:
 	SK_PUBLIC_FUNCTION( test_func3 )
 };
 
-namespace Test {
-	namespace Internal
-	{
-		// Register functions:
-		constexpr auto  func_counter_680239913 = class_type::func_counter_t::next();
-		constexpr auto& last_func_member       = class_type::function_extractor< func_counter_680239913 - 1 >::kMembers;
-		using func_t = sk::Reflection::member_func_pair_t;
-		using func_map_t = sk::const_map< func_t::first_type, func_t::second_type, last_func_member.size() >;
-
-		// Register variables:
-		constexpr auto  var_counter_680239913 = class_type::var_counter_t::next();
-		constexpr auto& last_var_member       = class_type::member_extractor< var_counter_680239913 - 1 >::kMembers;
-		using var_t  = sk::Reflection::member_var_pair_t;
-		using var_map_t = sk::const_map< var_t::first_type, var_t::second_type, last_var_member.size() >;
-	}
-	static constexpr auto kFunctions = Internal::func_map_t{ Internal::last_func_member.begin(), Internal::last_func_member.end() };
-	static constexpr auto kVariables = Internal::var_map_t { Internal::last_var_member .begin(), Internal::last_var_member .end() };
-}
-constexpr auto Test ::class_type::getVariables() -> sk::Reflection::member_var_map_ref_t{
-	return Test ::kVariables;
-} constexpr auto Test ::class_type::getVariable( const sk::str_hash& _hash ) -> sk::Reflection::member_var_t{
-	const auto itr = Test ::kVariables.find( _hash ); return itr == nullptr ? nullptr : itr->second;
-}constexpr auto Test ::class_type::getFunctions() -> sk::Reflection::member_func_map_ref_t{
-	return Test ::kFunctions;
-} constexpr auto Test ::class_type::getFunction( const sk::str_hash& _hash ) -> sk::Reflection::member_func_t{
-	const auto itr = Test ::kFunctions.find( _hash ); return itr == nullptr ? nullptr : itr->second;
-} constexpr auto Test ::class_type::getFunctionOverloads( const sk::str_hash& _hash ) -> sk::Reflection::member_func_range_t{
-	return Test ::kFunctions.range( _hash );
-} constexpr auto Test ::class_type::getFunction( const sk::str_hash& _hash, const sk::type_hash& _args ) -> sk::Reflection::member_func_t{
-	for( auto [ fst, lst ] = Test ::kFunctions.range( _hash ); fst != lst; ++fst )
-	{
-		if( fst->second->hasArgs( _args ) )
-			return fst->second;
-	}
-	return nullptr;
-} template< class... Args > constexpr auto Test ::class_type::getFunction( const sk::str_hash& _hash ) -> sk::Reflection::member_func_t{
-	return getFunction( _hash, sk::args_hash< Args... >::kHash );
-} inline auto Test ::class_type::getBoundVariable( const sk::str_hash& _hash ) -> std::optional< sk::Reflection::cMemberVariableInstance< class_type > >{
-	if( const auto member = getVariable( _hash ); member == nullptr )
-		return {};
-	else
-		return sk::Reflection::cMemberVariableInstance{ *member, this };
-} inline auto Test ::class_type::getBoundFunction( const sk::str_hash& _hash ) -> std::optional< sk::Reflection::cMemberFunctionInstance< class_type > >{
-	if( const auto member = getFunction( _hash ); member == nullptr )
-		return {};
-	else
-		return sk::Reflection::cMemberFunctionInstance{ *member, this };
-} template<> struct sk::get_type_info< Test ::class_type >{ constexpr static auto& kClass = Test ::class_type::kClass; constexpr static sType_Info kInfo = { .type = sType_Info::eType::kClass, .hash = kClass.getType(), .size = sizeof( Test ::class_type ), .name = kClass.getRawName(), .raw_name = kClass.getRawName() }; constexpr static bool kValid = true; }; constexpr static auto type_registry_680239914 = sk::registry::counter::next(); template<> struct sk::registry::type_registry< type_registry_680239914 >{ typedef type_registry< type_registry_680239914 - 1 > previous_t; constexpr static auto registered = cLinked_Array{ static_cast< const sk::sType_Info* >( &get_type_info< cTest >::kInfo ), previous_t::registered }; constexpr static bool valid = true; };
-// REGISTER_CLASS( Test )
+REGISTER_CLASS( Test )
