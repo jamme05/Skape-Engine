@@ -16,22 +16,27 @@ namespace sk::Graphics
     class cBuffer
     {
     public:
+        static constexpr auto kType     = Type;
+        static constexpr auto kTypeSize = sizeof( Ty );
         using value_type = Ty;
 
-        cBuffer();
-        cBuffer( const cBuffer& );
-        cBuffer( cBuffer&& ) noexcept;
+        explicit cBuffer( std::string _name, const bool _is_static = false )
+        : m_buffer_( std::move( _name ), 0, kType, _is_static )
+        {} // cBuffer
+
+        cBuffer( const cBuffer& _other );
+        cBuffer( cBuffer&& _other ) noexcept;
         ~cBuffer();
     private:
         cUnsafe_Buffer m_buffer_;
     };
 
     template< class Ty >
-    using cConstantBuffer = cBuffer< Ty, Buffer::eType::kConstant >;
+    using cConstant_Buffer = cBuffer< Ty, Buffer::eType::kConstant >;
     template< class Ty >
-    using cStructedBuffer = cBuffer< Ty, Buffer::eType::kStructed >;
+    using cStructed_Buffer = cBuffer< Ty, Buffer::eType::kStructed >;
     template< class Ty >
-    using cVertexBuffer = cBuffer< Ty, Buffer::eType::kVertex >;
-} // sk::Graphics::
+    using cVertex_Buffer = cBuffer< Ty, Buffer::eType::kVertex >;
 
-#include "Buffer.inl"
+    
+} // sk::Graphics::

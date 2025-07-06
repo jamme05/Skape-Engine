@@ -12,7 +12,7 @@
 // The override SHOULD be at sk::Graphics::cUnsafe_Buffer
 // The header HAS to be in src/Graphics/Buffer/Unsafe_Buffer.h
 // The unsafe buffer will be acting as the allocator for buffers.
-// It is NOT recommended to use the unsafe buffer directly.
+// It is NOT recommended to use the unsafe buffer directly unless you know what you're doing.
 
 namespace sk::Graphics
 {
@@ -21,15 +21,16 @@ namespace sk::Graphics
         enum class eType : uint8_t
         {
             kConstant,
+            kUniform,
+            kVertex,
             kStructed,
-            kVertex
         };
 
         enum class eAccess : uint8_t
         {
             kRead,
             kWrite,
-            kReadWrite
+            kReadWrite,
         };
     } // Buffer::
 
@@ -43,13 +44,13 @@ namespace sk::Graphics
          * @param _out Pointer to copy the data to.
          * @param _max_size Maximum allowed size. If 0 it'll use the buffers size. Default: 0
          */
-        virtual void   Read   ( void* _out,  size_t _max_size = 0 ) = 0;
+        virtual void   Read   ( void* _out,  size_t _max_size = 0 ) const = 0;
         /**
          * Will copy the data from the gpu to specified pointer.
          * @param _out Pointer to copy the data to.
          * @param _max_size Maximum allowed size. If 0 it'll use the buffers size. Default: 0
          */
-        virtual void   ReadRaw( void* _out,  size_t _max_size = 0 ) = 0;
+        virtual void   ReadRaw( void* _out,  size_t _max_size = 0 ) const = 0;
         /**
          * Update the data on the buffer.
          * @param _data Pointer to the data that is going to be copied to the buffer.

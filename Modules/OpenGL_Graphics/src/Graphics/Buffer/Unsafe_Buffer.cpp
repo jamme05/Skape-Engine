@@ -16,28 +16,107 @@
 namespace sk::Graphics
 {
     cUnsafe_Buffer::cUnsafe_Buffer( std::string _name, const size_t _byte_size, Buffer::eType _type, const bool _is_static )
+    : cUnsafe_Buffer( std::move( _name ), _byte_size, kTypeConverter[ static_cast< size_t >( _type ) ], _is_static )
+    {} // cUnsafe_Buffer
+
+    cUnsafe_Buffer::cUnsafe_Buffer( std::string _name, const size_t _byte_size, gl::GLenum _type, const bool _is_static )
     : m_is_static_( _is_static )
     , m_type_( kTypeConverter[ static_cast< size_t >( _type ) ] )
     , m_size_( _byte_size )
     , m_name_( std::move( _name ) )
     {
-        gl::glGenBuffers( 1, &m_buffer_ );
-        gl::glBindBuffer( m_type_, m_buffer_ );
-
-        if( m_size_ > 0 )
-            gl::glNamedBufferData( m_buffer_, static_cast< gl::GLsizeiptr >( m_size_ ), nullptr,
-                m_is_static_ ? gl::GLenum::GL_STATIC_DRAW : gl::GLenum::GL_DYNAMIC_DRAW );
+        Create();
     } // cUnsafe_Buffer
 
     cUnsafe_Buffer::~cUnsafe_Buffer()
+    {
+        Destroy();
+    } // ~cUnsafe_Buffer
+
+    cUnsafe_Buffer& cUnsafe_Buffer::operator=( const cUnsafe_Buffer& _other )
+    {
+        if( this != &_other )
+            return *this;
+
+        Destroy();
+
+        m_is_static_ = _other.m_is_static_;
+        m_type_      = _other.m_type_;
+        m_size_      = _other.m_size_;
+        m_name_      = _other.m_name_ + " Copy";
+
+        Create();
+        Copy( _other );
+
+        return *this;
+    } // operator= ( Copy )
+
+    cUnsafe_Buffer& cUnsafe_Buffer::operator=( cUnsafe_Buffer&& _other ) noexcept
+    {
+        Destroy();
+
+        // Should be safe?
+        m_is_static_ = _other.m_is_static_;
+        m_type_      = _other.m_type_;
+        m_size_      = _other.m_size_;
+        m_name_      = std::move( _other.m_name_ );
+        m_buffer_    = _other.m_buffer_;
+
+        return *this;
+    } // operator=
+
+    void cUnsafe_Buffer::Create()
+    {
+        gl::glGenBuffers( 1, &m_buffer_ );
+        gl::glBindBuffer( m_type_, m_buffer_ );
+
+        // TODO: Have the buffer always have a cpu copy IF it is dynamic. Otherwise it'll only have a gpu version.
+        // This should in theory save performance and give static a better role.
+        if( m_size_ > 0 )
+            gl::glNamedBufferData( m_buffer_, static_cast< gl::GLsizeiptr >( m_size_ ), nullptr,
+                m_is_static_ ? gl::GLenum::GL_STATIC_DRAW : gl::GLenum::GL_DYNAMIC_DRAW );
+    } // Create
+
+    void cUnsafe_Buffer::Copy( const cUnsafe_Buffer& _other )
+    {
+        if( _other.m_is_locked_ )
+            Update( _other.m_backup_data_, m_size_ );
+        else
+        {
+            // Maybe make a copy function?
+            gl::glBindBuffer( gl::GLenum::GL_COPY_READ_BUFFER, _other.m_buffer_ );
+            gl::glBindBuffer( gl::GLenum::GL_COPY_WRITE_BUFFER, m_buffer_ );
+            gl::glCopyBufferSubData( gl::GLenum::GL_COPY_READ_BUFFER, gl::GLenum::GL_COPY_WRITE_BUFFER,
+                0, 0, static_cast< gl::GLsizeiptr >( m_size_ ) );
+        }
+    } // Copy
+
+    void cUnsafe_Buffer::Destroy() const
     {
         if( m_has_backup_ )
             Memory::Tracker::free( m_backup_data_ );
 
         gl::glDeleteBuffers( 1, &m_buffer_ );
-    } // ~cUnsafe_Buffer
+    } // Free
 
-    void cUnsafe_Buffer::Read( void* _out, const size_t _max_size )
+    cUnsafe_Buffer::cUnsafe_Buffer( const cUnsafe_Buffer& _other )
+    : cUnsafe_Buffer( _other.m_name_ + " Copy", _other.m_size_, _other.m_type_, _other.m_is_static_ )
+    {
+        // Copy the buffer after creation.
+        Copy( _other );
+    } // cUnsafe_Buffer ( Copy )
+
+    // Should be safe?
+    cUnsafe_Buffer::cUnsafe_Buffer( cUnsafe_Buffer&& _other ) noexcept
+    : m_is_static_( _other.m_is_static_ )
+    , m_type_( _other.m_type_ )
+    , m_buffer_( _other.m_buffer_ )
+    , m_size_( _other.m_size_ )
+    , m_name_( std::move( _other.m_name_ ) )
+    {
+    } // cUnsafe_Buffer ( Move )
+
+    void cUnsafe_Buffer::Read( void* _out, const size_t _max_size ) const
     {
         // Backup doesn't care about access.
         if( m_has_backup_ && m_is_locked_ )
@@ -46,17 +125,15 @@ namespace sk::Graphics
             ReadRaw( _out, _max_size );
     } // Get
 
-    void cUnsafe_Buffer::ReadRaw( void* _out, const size_t _max_size )
+    void cUnsafe_Buffer::ReadRaw( void* _out, const size_t _max_size ) const
     {
-        // TODO: Look over this formatting.
         gl::glGetNamedBufferSubData( m_buffer_, 0, static_cast< gl::GLsizeiptr >(
-            ( _max_size == 0 ? m_size_ : Math::min( m_size_, _max_size ) ) )
-            , _out );
+            ( _max_size == 0 ? m_size_ : Math::min( m_size_, _max_size ) ) ), _out );
     } // ReadRaw
 
     void cUnsafe_Buffer::Update( const void* _data, const size_t _size )
     {
-        SK_WARN_IF( sk::Severity::kGraphics | 100,
+        SK_BREAK_IF_RET( sk::Severity::kGraphics | 100,
             m_is_static_, TEXT( "WARNING: The buffer is static." ) )
 
         std::lock_guard lock( m_write_mtx_ );
@@ -87,7 +164,7 @@ namespace sk::Graphics
 
     void cUnsafe_Buffer::UpdateSeg( const void* _data, const size_t _size, const size_t _offset )
     {
-        SK_WARN_IF( sk::Severity::kGraphics | 100,
+        SK_BREAK_IF_RET( sk::Severity::kGraphics | 100,
             m_is_static_, TEXT( "WARNING: The buffer is static." ) )
 
         // Copy value to not require store.
@@ -114,7 +191,7 @@ namespace sk::Graphics
             }
 
             // TODO: Fix manual variant of glNamedBufferSubData
-            memcpy( m_backup_data_, _data, _size );
+            memcpy( m_backup_data_ + _offset, _data, _size );
         }
         else
         {

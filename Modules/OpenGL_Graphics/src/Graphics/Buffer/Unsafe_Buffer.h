@@ -24,8 +24,13 @@ namespace sk::Graphics
         {
             static constexpr gl::GLenum kTypeConverter[]
             {
+                // kConstant
                 gl::GLenum::GL_UNIFORM_BUFFER, // https://www.khronos.org/opengl/wiki/Uniform_Buffer_Object
+                // kUniform
+                gl::GLenum::GL_UNIFORM_BUFFER,
+                // kVertex
                 gl::GLenum::GL_ARRAY_BUFFER, // https://learnopengl.com/Getting-started/Hello-Triangle#12
+                // kStructed
                 gl::GLenum::GL_SHADER_STORAGE_BUFFER, // https://www.khronos.org/opengl/wiki/Shader_Storage_Buffer_Object
             };
             static constexpr gl::GLenum kAccessConverter[]
@@ -35,11 +40,22 @@ namespace sk::Graphics
                 gl::GLenum::GL_READ_WRITE
             };
         public:
-             cUnsafe_Buffer( std::string _name, size_t _byte_size, Buffer::eType _type, bool _is_static );
+            cUnsafe_Buffer( std::string _name, size_t _byte_size, Buffer::eType _type, bool _is_static );
+            cUnsafe_Buffer( std::string _name, size_t _byte_size, gl::GLenum _type, bool _is_static );
+            cUnsafe_Buffer( const cUnsafe_Buffer& _other );
+            cUnsafe_Buffer( cUnsafe_Buffer&& _other ) noexcept;
+
             ~cUnsafe_Buffer() override;
 
-            void   Read     ( void* _out, size_t _max_size = 0 ) override;
-            void   ReadRaw  ( void* _out, size_t _max_size = 0 ) override;
+            cUnsafe_Buffer& operator=( const cUnsafe_Buffer& _other );
+            cUnsafe_Buffer& operator=( cUnsafe_Buffer&& _other ) noexcept;
+
+            void   Create();
+            void   Copy( const cUnsafe_Buffer& _other );
+            void   Destroy() const;
+
+            void   Read     ( void* _out, size_t _max_size = 0 ) const override;
+            void   ReadRaw  ( void* _out, size_t _max_size = 0 ) const override;
             void   Update   ( const void* _data, size_t _size ) override;
             void   UpdateSeg( const void* _data, size_t _size, size_t _offset ) override;
             [[ nodiscard ]]
@@ -63,16 +79,16 @@ namespace sk::Graphics
             bool m_is_static_;
             bool m_has_backup_ = false;
 
-            std::mutex m_write_mtx_;
-
             gl::GLenum m_type_;
             gl::GLuint m_buffer_;
-            size_t m_size_;
+            size_t     m_size_;
 
             size_t m_backup_size_ = 0;
             void*  m_backup_data_ = nullptr;
 
             std::string m_name_;
+
+            std::mutex m_write_mtx_;
         };
     } // OpenGL::
 
