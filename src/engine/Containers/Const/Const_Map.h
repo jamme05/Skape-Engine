@@ -127,7 +127,10 @@ namespace sk
     consteval const_map<KeyTy, ValueTy, Size, Pred>::const_map( Itr _left, Itr _right )
     : m_array{}
     {
-        std::copy( std::move( _left ), std::move( _right ), m_array.value );
+        if( m_array.size() == 0 )
+            return;
+            
+        std::copy( std::move( _left ), std::move( _right ), m_array.get() );
         std::sort( m_array.begin(), m_array.end(), _compare );
     } // const_map
 

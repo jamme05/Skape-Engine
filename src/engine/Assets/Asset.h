@@ -56,7 +56,7 @@ namespace sk
 	requires std::is_base_of_v< iRuntimeClass, RTClassTy >
 	class cAsset : public iAsset
 	{
-		CREATE_CLASS_IDENTIFIERS( RTClass )
+		// CREATE_CLASS_IDENTIFIERS( Ty, RTClass )
 	public:
 
 		cAsset( std::string _name ) : iAsset( std::move( _name ) ){ }

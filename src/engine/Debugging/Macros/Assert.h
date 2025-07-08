@@ -43,38 +43,57 @@
 #endif // !defined( SK_BREAK )
 
 #define SK_ASSERT_TEMPLATE_IF_RET( Method, Condition, Text, ... ) \
-    if( Condition ){ [[ unlikely ]] CONCAT( Method, Text ); return __VA_OPT__( __VA_ARGS__ ) ; }
+    if( Condition ){ [[ unlikely ]] CONCAT( Method, Text ); return __VA_OPT__( __VA_ARGS__ ; ) }
 
 #define SK_ASSERT_TEMPLATE_IF( Method, Condition, Text, ... ) \
     if( Condition ){ [[ unlikely ]] CONCAT( Method, Text ); __VA_ARGS__ }
+
+#define SK_CONST_ASSERT_TEMPLATE_IF_RET( Method, Condition, Text, ... ) \
+    if constexpr( Condition ){ [[ unlikely ]] CONCAT( Method, Text ); return __VA_OPT__( __VA_ARGS__ ; ) }
+
+#define SK_CONST_ASSERT_TEMPLATE_IF( Method, Condition, Text, ... ) \
+    if constexpr( Condition ){ [[ unlikely ]] CONCAT( Method, Text ); __VA_ARGS__ }
 
 // Warnings
 
 // TODO: Maybe move to its own file?
 // If the Condition is true, an error message will be printed and the function will return if.
 #define SK_WARN_IF_RET( Severity, Condition, Text, ... ) \
-    SK_CONST_PASSTHROUGH( Severity, SK_ASSERT_TEMPLATE_IF_RET( WARN, Condition, Text, __VA_ARGS__ ) )
+    SK_PASSTHROUGH( Severity, SK_ASSERT_TEMPLATE_IF_RET( WARN, Condition, Text, __VA_ARGS__ ) )
 
 // If the Condition is false, an error message will be printed and the function will return.
 #define SK_WARN_IFN_RET( Severity, Condition, Text, ... ) \
     SK_WARN_IF_RET( Severity, NOT( Condition ), Text, __VA_ARGS__ )
 
 #define SK_WARN_IF( Severity, Condition, Text ) \
-    SK_CONST_PASSTHROUGH( Severity, SK_ASSERT_TEMPLATE_IF( WARN, Condition, Text ) )
+    SK_PASSTHROUGH( Severity, SK_ASSERT_TEMPLATE_IF( WARN, Condition, Text ) )
 
 #define SK_WARN_IFN( Severity, Condition, Text ) \
+    SK_WARN_IF( Severity, NOT( Condition ), Text )
+
+#define SK_CONST_WARN_IF_RET( Severity, Condition, Text, ... ) \
+    SK_PASSTHROUGH( Severity, SK_CONST_ASSERT_TEMPLATE_IF_RET( WARN, Condition, Text, __VA_ARGS__ ) )
+
+// If the Condition is false, an error message will be printed and the function will return.
+#define SK_CONST_WARN_IFN_RET( Severity, Condition, Text, ... ) \
+    SK_WARN_IF_RET( Severity, NOT( Condition ), Text, __VA_ARGS__ )
+
+#define SK_CONST_WARN_IF( Severity, Condition, Text ) \
+    SK_PASSTHROUGH( Severity, SK_CONST_ASSERT_TEMPLATE_IF( WARN, Condition, Text ) )
+
+#define SK_CONST_WARN_IFN( Severity, Condition, Text ) \
     SK_WARN_IF( Severity, NOT( Condition ), Text )
 
 // Breaks
 
 #define SK_BREAK_IF( Severity, Condition, Text ) \
-    SK_CONST_PASSTHROUGH( Severity, SK_ASSERT_TEMPLATE_IF( WARN, Condition, Text, SK_BREAK ) )
+    SK_PASSTHROUGH( Severity, SK_ASSERT_TEMPLATE_IF( WARN, Condition, Text, SK_BREAK ) )
 
 #define SK_BREAK_IFN( Severity, Condition, Text ) \
     SK_BREAK_IF( Severity, NOT( Condition ), Text )
 
 #define SK_BREAK_IF_RET( Severity, Condition, Text, ... ) \
-    SK_CONST_PASSTHROUGH( Severity, SK_ASSERT_TEMPLATE_IF( WARN, Condition, Text, SK_BREAK return __VA_ARGS__; ) )
+    SK_PASSTHROUGH( Severity, SK_ASSERT_TEMPLATE_IF( WARN, Condition, Text, SK_BREAK return __VA_ARGS__; ) )
 
 #define SK_BREAK_IFN_RET( Severity, Condition, Text, ... ) \
     SK_BREAK_IF_RET( Severity, NOT( Condition ), Text )

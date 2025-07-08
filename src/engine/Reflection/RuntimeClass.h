@@ -17,6 +17,10 @@
 #include <print>
 #include <functional>
 
+#include "RuntimeClass.h"
+#include "RuntimeClass.h"
+#include "Misc/Offsetof.h"
+
 namespace sk
 {
 	class iClass;
@@ -227,9 +231,9 @@ namespace sk
 #define CREATE_CLASS_IDENTITY_IDENTIFIERS( RuntimeClass ) \
 	typedef decltype( RuntimeClass ) runtime_class_type; \
 	constexpr static auto& kClass = RuntimeClass; \
-	constexpr const sk::iRuntimeClass& getClass( void ) const override { return kClass;     } \
-	constexpr const sk::type_hash& getClassType( void ) override { return kClass.getType(); } \
-	std::string                    getClassName( void ) override { return kClass.getName(); } \
+	virtual constexpr const sk::iRuntimeClass& getClass( void ) const override { return kClass;     } \
+	virtual constexpr const sk::type_hash& getClassType( void ) override { return kClass.getType(); } \
+	virtual std::string                    getClassName( void ) override { return kClass.getName(); } \
 	static constexpr auto&  getStaticClass    ( void ){ return kClass;           } \
 	static constexpr auto&  getStaticType( void ){ return kClass.getType(); } \
 	static auto             getStaticName( void ){ return kClass.getName(); } \
@@ -243,11 +247,12 @@ namespace sk
 	template< class > struct function_registry { \
 		static constexpr auto kMembers = sk::cLinked_Array< sk::Reflection::member_func_pair_t >{}; }; \
 	public: \
-	using class_type = ClassName ::class_type; \
+	using class_type = runtime_class_type::value_type; \
 	using var_counter_t  = const_counter< var_tag_ >;   \
 	using func_counter_t  = const_counter< func_tag_ >; \
 	template< int N > struct variable_extractor : variable_registry< std::integral_constant< int, N > >{};\
 	template< int N > struct function_extractor : function_registry< std::integral_constant< int, N > >{};\
+	using access_point = sk::Reflection::access_point< class_type >;
 
 #define CREATE_MEMBER_REFLECTION_FUNCTIONS( RuntimeClass ) \
 	public: \
@@ -278,7 +283,7 @@ namespace sk
 	CREATE_CLASS_IDENTIFIERS_0_( ClassName, RuntimeClass )
 
 
-#define CREATE_CLASS_BODY( Class ) CREATE_CLASS_IDENTIFIERS( runtime_class_ ## Class )
+#define CREATE_CLASS_BODY( Class ) CREATE_CLASS_IDENTIFIERS( Class, runtime_class_ ## Class )
 
 #define CREATE_RUNTIME_CLASS_TYPE( Class, Name, ... ) sk::cRuntimeClass< Class __VA_OPT__(, FORWARD( __VA_ARGS__ ) ) >
 #define CREATE_RUNTIME_CLASS_VALUE( Class, Name, ... ) static constexpr auto CONCAT( runtime_class_, Name ) = CREATE_RUNTIME_CLASS_TYPE( Class, Name __VA_OPT__(, __VA_ARGS__) ) ( #Name );
@@ -416,18 +421,18 @@ namespace sk::Reflection
 				kFunction = 0x01,
 				kTypeMask = kFunction,
 
-				kPublic     = 0x00,
-				kProtected  = 0x02,
-				kPrivate    = 0x04,
+				kPublic     = 0x02,
+				kProtected  = 0x04,
+				kPrivate    = 0x08,
 				kVisibility = kPublic | kProtected | kPrivate,
 
 				// Modifiers
-				kStatic      = 0x08,
-				kVirtual     = 0x10,
-				kConst       = 0x20,
+				kStatic      = 0x10,
+				kVirtual     = 0x20,
+				kConst       = 0x40,
 				// Alias for Const
-				kReadOnly    = 0x20,
-				kConstructor = 0x40,
+				kReadOnly    = 0x40,
+				kConstructor = 0x80,
 			};
 			static constexpr auto getType      ( const uint8_t _type ){ return static_cast< eRaw >( kTypeMask & _type ); }
 			static constexpr auto getVisibility( const uint8_t _type ){ return static_cast< eRaw >( kVisibility & _type ); }
@@ -943,7 +948,8 @@ namespace sk::Reflection
 
 			// Const check. If getting called by a const ptr.
 			if constexpr( !std::is_const_v< Ty > )
-				SK_WARN_IF_RET( sk::Severity::kReflection, !getIsReadOnly(), TEXT( "Error: Calling a non-const function with a constant instance." ), false )
+				SK_WARN_IF_RET( sk::Severity::kReflection,
+					!getIsReadOnly(), TEXT( "Error: Calling a non-const function with a constant instance." ), false )
 
 			// Verify class.
 			SK_WARN_IF_RET( sk::Severity::kReflection, Ty::kClass != *m_class_,
@@ -1015,8 +1021,9 @@ namespace sk::Reflection
 				m_holder_->unsafe_invoke( m_instance_, _args, _return );
 
 			return true;
-		}
-	};
+		} // call_
+
+	}; // cMemberFunctionInstance
 
 	template< sk_class Ty >
 	constexpr auto cMemberFunction::bind( Ty& _instance ) const -> std::optional< cMemberFunctionInstance< Ty > >
@@ -1024,11 +1031,23 @@ namespace sk::Reflection
 		// Verify class.
 		if( Ty::kClass != *m_class_ )
 		{
+			// TODO: Use SK_WARN_IF_RET macro.
 			std::println( "Error: Tried binding function to class {} when it required class {}.", Ty::getClassName(), m_class_->getName() );
 			return {};
 		}
 		return cMemberFunctionInstance< Ty >( static_cast< class_t >( &_instance ) );
-	}
+
+	} // cMemberFunction::bind
+
+	template< class Ty >
+	struct access_point
+	{
+		using counter_t = const_counter< access_point >;
+		struct point{};
+
+		uint32_t m_access;
+		point Ty::*  m_point;
+	};
 
 	typedef const cMemberVariable*               member_var_t;
 	typedef const cMemberFunction*               member_func_t;
@@ -1043,17 +1062,17 @@ namespace sk::Reflection
 // Internal macro. Do not use.
 #define REGISTER_MEMBER_DIRECT_1_( Member, Counter, Visibility ) \
 	static constexpr auto Counter = var_counter_t::next(); \
-	template< class Ty > struct member_registry< std::integral_constant< Ty, Counter > > { \
+	template< class Ty > struct variable_registry< std::integral_constant< Ty, Counter > > { \
 	using enum sk::Reflection::cMember::eType::eRaw; \
-	using prev_t = member_registry< std::integral_constant< Ty, (Counter) -1 > >; \
+	using prev_t = variable_registry< std::integral_constant< Ty, (Counter) -1 > >; \
 	using pair_t = sk::Reflection::member_var_pair_t; \
 	static constexpr auto kMemberHolder = sk::Reflection::cMemberVariableHolder{ &class_type:: Member }; \
 	static constexpr auto kMember       = sk::Reflection::cMemberVariable{ #Member, kMemberHolder, Visibility }; \
 	static constexpr auto kMembers      = sk::cLinked_Array< pair_t >{ pair_t{ #Member, &kMember }, prev_t::kMembers }; };
 			
 // Internal macro. Do not use.
-#define REGISTER_MEMBER_DIRECT_0_( Member, Visibility ) public: \
-	REGISTER_MEMBER_DIRECT_1_( Member, CONCAT( member_id_,__COUNTER__ ), Visibility )
+#define REGISTER_MEMBER_DIRECT_0_( Member, Visibility ) \
+	REGISTER_MEMBER_DIRECT_1_( Member, CONCAT( _xxx_sk_member_id_, __COUNTER__ ), Visibility )
 
 // Internal macro. Do not use.
 #define REGISTER_FUNCTION_DIRECT_1_( Member, Counter, Visibility ) \
@@ -1069,7 +1088,7 @@ namespace sk::Reflection
 			
 // Internal macro. Do not use.
 #define REGISTER_FUNCTION_DIRECT_0_( Member, Visibility ) private: \
-	REGISTER_FUNCTION_DIRECT_1_( Member, CONCAT( member_id_,__COUNTER__ ), Visibility )
+	REGISTER_FUNCTION_DIRECT_1_( Member, CONCAT( _xxx_sk_member_id_, __COUNTER__ ), Visibility )
 
 // TODO: Add allow for extra reflection info for members.
 // TODO: Add check so that a single member isn't registered multiple times.
@@ -1095,15 +1114,15 @@ namespace sk::Reflection
 
 // Register functions.
 #define BUILD_CLASS_MEMBER_EXTRACTION_1_func_( Class, Counter ) \
-	static constexpr auto CONCAT( func_, Counter ) = class_type::func_counter_t::next(); \
-	static constexpr auto& last_func_member        = class_type::function_extractor< CONCAT( func_, Counter ) - 1 >::kMembers; \
+	static constexpr auto CONCAT( _xxx_sk_func_, Counter ) = class_type::func_counter_t::next(); \
+	static constexpr auto& last_func_member        = class_type::function_extractor< CONCAT( _xxx_sk_func_, Counter ) - 1 >::kMembers; \
 	using func_t = sk::Reflection::member_func_pair_t; \
 	using func_map_t = sk::const_map< func_t::first_type, func_t::second_type, last_func_member.size() >;
 
 // Register variables.
 #define BUILD_CLASS_MEMBER_EXTRACTION_1_var_( Class, Counter ) \
-	static constexpr auto CONCAT( var_, Counter ) = class_type::var_counter_t::next(); \
-	static constexpr auto& last_var_member        = class_type::variable_extractor< CONCAT( var_, Counter ) - 1 >::kMembers; \
+	static constexpr auto CONCAT( _xxx_sk_var_, Counter ) = class_type::var_counter_t::next(); \
+	static constexpr auto& last_var_member        = class_type::variable_extractor< CONCAT( _xxx_sk_var_, Counter ) - 1 >::kMembers; \
 	using var_t = sk::Reflection::member_var_pair_t; \
 	using var_map_t = sk::const_map< var_t::first_type, var_t::second_type, last_var_member.size() >;
 
@@ -1191,17 +1210,65 @@ namespace sk::Reflection
 	BUILD_CLASS_REFLECTION_INFO( Class ) \
 	REGISTER_TYPE_INTERNAL( Class::class_type )
 
+#define SK_ACCESS_CREATOR( Instance, Access ) \
+	[[ no_unique_address, maybe_unused ]] access_point::point CONCAT( _xxx_sk_point_, Instance );
+	
+#define sk_public \
+	SK_ACCESS_CREATOR( __COUNTER__, kPublic ) public
+
 SK_CLASS( Test )
 {
 	SK_CLASS_BODY( Test )
 
+	template< class >
+	struct _xxx_sk_access{
+		static constexpr auto kAccess = access_point{ .m_access = sk::Reflection::cMember::eType::kNone, .m_point = nullptr };
+	};
+
+	static constexpr auto _xxx_sk_access_counter_0 = access_point::counter_t::next();
+	template< class Ty >
+	struct _xxx_sk_access< std::integral_constant< Ty, 0 > >
+	{
+		static constexpr auto kAccess =
+			access_point{ .m_access = sk::Reflection::cMember::eType::kPrivate, .m_point = nullptr };
+	};
+	
 	uint64_t member_0 = 0; SK_PRIVATE_MEMBER( member_0 )
 	uint32_t member_1 = 0; SK_PRIVATE_MEMBER( member_1 )
 	uint32_t member_2 = 0; SK_PRIVATE_MEMBER( member_2 )
 
+	// TODO: Create macro for no_unique_address.
+	[[ msvc::no_unique_address, maybe_unused ]] access_point::point _xxx_sk_point_hidden_;
+	static constexpr auto _xxx_sk_access_counter_1 = access_point::counter_t::next();
+	template< class Ty >
+	struct _xxx_sk_access< std::integral_constant< Ty, 1 > >
+	{
+		static constexpr auto kAccess =
+			access_point{ .m_access = sk::Reflection::cMember::eType::kPublic, .m_point = &class_type::_xxx_sk_point_hidden_ };
+	};
+
 public:
+	template< size_t Layer = 0 >
+	static consteval uint32_t _xxx_sk_get_offset_access( const int _offset, const uint32_t _previous_access = 69 )
+	{
+		using enum sk::Reflection::cMember::eType::eRaw;
+		// 0 Will always be defined. Hence, it'll never begin with there being nothing.
+		constexpr auto& point = _xxx_sk_access< std::integral_constant< int, Layer > >::kAccess;
+
+		if( _offset < offset_of< class_type, point.m_point >() )
+			return point.m_access;
+
+		if constexpr( point.m_access == 0 )
+			return _previous_access;
+		else
+			return _xxx_sk_get_offset_access< Layer + 1 >( _offset, point.m_access );
+	} // _xxx_sk_get_offset_access
+
+// sk_public:
+
 	static uint32_t member_3; SK_PUBLIC_MEMBER( member_3 )
 	static constexpr uint32_t member_4 = 10; SK_PUBLIC_MEMBER( member_4 )
+	uint32_t member_5 = 0; SK_PRIVATE_MEMBER( member_2 )
 
 	cTest( uint64_t _mem0, uint32_t _mem1 )
 	: member_0( _mem0 ), member_1( _mem1 )
@@ -1221,5 +1288,11 @@ public:
 	SK_PUBLIC_FUNCTION( test_func2 )
 	SK_PUBLIC_FUNCTION( test_func3 )
 };
+
+static constexpr auto test_offset_0 = offset_of< cTest, &cTest::member_5 >();
+static_assert( test_offset_0 == 24, "MAaaaaan" );
+
+static constexpr auto test_access_1 = cTest::_xxx_sk_get_offset_access( test_offset_0 );
+static_assert( test_access_1 == sk::Reflection::cMember::eType::kPublic );
 
 REGISTER_CLASS( Test )

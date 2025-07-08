@@ -66,36 +66,6 @@ bool cApp::onInput( const sk::Input::eType _type, const sk::Input::sEvent& _even
 	return false;
 } // onInput
 
-class test1;
-static constexpr auto target_test1 = sk::cRuntimeClass< test1 >( "test1", __FILE__, __LINE__ );
-class test1 : public sk::get_inherits_t<>
-{
-	CREATE_CLASS_IDENTIFIERS( target_test1 )
-};
-
-class test2;
-static constexpr auto target_test2 = sk::cRuntimeClass< test2, test1 >( "test2", __FILE__, __LINE__ );
-class test2 : public sk::get_inherits_t< test1 >
-{
-	CREATE_CLASS_IDENTIFIERS( target_test2 )
-};
-
-class test3;
-static constexpr auto target_test3 = sk::cRuntimeClass< test3 >( "test3", __FILE__, __LINE__ );
-class test3 : public sk::get_inherits_t<>
-{
-	CREATE_CLASS_IDENTIFIERS( target_test3 )
-};
-
-GENERATE_CLASS( test4, test3 )
-{
-	CREATE_CLASS_BODY( test4 )
-};
-
-GENERATE_ALL_CLASS( test5, test4 )
-	
-};
-
 void cApp::create( void )
 {
 	sk::cPlatform::initialize();

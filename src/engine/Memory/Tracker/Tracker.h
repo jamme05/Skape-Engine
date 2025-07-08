@@ -106,6 +106,12 @@ namespace sk::Memory
  */
 #define SK_ALLOC( Size ) sk::Memory::Tracker::alloc( Size )
 /**
+ * Default tracked alloc.
+ * 
+ * Arguments: Byte Size
+ */
+#define SK_REALLOC( Block, NewSize ) sk::Memory::Tracker::realloc( Block, NewSize )
+/**
  * Default tracked new.
  * 
  * Arguments: Type, Count, Args...

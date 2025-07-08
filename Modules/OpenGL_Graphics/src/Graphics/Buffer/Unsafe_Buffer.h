@@ -22,6 +22,14 @@ namespace sk::Graphics
         // and a secondary thread which writes.
         class cUnsafe_Buffer final : public iUnsafe_Buffer
         {
+            // REQUIRED.
+            struct sRaw_Buffer
+            {
+                gl::GLenum type   = gl::GLenum::GL_INVALID_VALUE;
+                gl::GLuint buffer = 0;
+                size_t     size   = 0;
+            };
+
             static constexpr gl::GLenum kTypeConverter[]
             {
                 // kConstant
@@ -40,6 +48,7 @@ namespace sk::Graphics
                 gl::GLenum::GL_READ_WRITE
             };
         public:
+            cUnsafe_Buffer();
             cUnsafe_Buffer( std::string _name, size_t _byte_size, Buffer::eType _type, bool _is_static );
             cUnsafe_Buffer( std::string _name, size_t _byte_size, gl::GLenum _type, bool _is_static );
             cUnsafe_Buffer( const cUnsafe_Buffer& _other );
@@ -50,20 +59,19 @@ namespace sk::Graphics
             cUnsafe_Buffer& operator=( const cUnsafe_Buffer& _other );
             cUnsafe_Buffer& operator=( cUnsafe_Buffer&& _other ) noexcept;
 
-            void   Create();
-            void   Copy( const cUnsafe_Buffer& _other );
-            void   Destroy() const;
+            void   Destroy() override;
 
-            void   Read     ( void* _out, size_t _max_size = 0 ) const override;
-            void   ReadRaw  ( void* _out, size_t _max_size = 0 ) const override;
-            void   Update   ( const void* _data, size_t _size ) override;
-            void   UpdateSeg( const void* _data, size_t _size, size_t _offset ) override;
+            auto Get      ()       -> void* override;
+            auto Get      () const -> const void* override;
+            void Read     ( void* _out, size_t _max_size = 0 ) const override;
+            void ReadRaw  ( void* _out, size_t _max_size = 0 ) const override;
+            void Update   ( const void* _data, size_t _size ) override;
+            void UpdateSeg( const void* _data, size_t _size, size_t _offset ) override;
             [[ nodiscard ]]
-            size_t GetSize() const override { return m_size_; }
-            size_t GetSafeSize() const override;
-            void   Resize ( size_t _byte_size ) override;
-            void   Lock   () override;
-            void   Unlock () override;
+            auto GetSize() const -> size_t override { return m_size_; }
+            void Resize ( size_t _byte_size ) override;
+            void Lock   () override;
+            void Unlock () override;
             [[ nodiscard ]]
             bool IsLocked() const override { return m_is_locked_; }
 
@@ -71,20 +79,18 @@ namespace sk::Graphics
             [[ nodiscard ]]
             auto get_buffer() const { return m_buffer_; }
         private:
-            void create_backup( size_t _size = 0, bool _force_copy = false );
+            void   create();
+            void   copy( const cUnsafe_Buffer& _other );
 
             // If the backup is in use.
-            std::atomic_bool m_in_use_    = false;
             std::atomic_bool m_is_locked_ = false;
             bool m_is_static_;
-            bool m_has_backup_ = false;
+            bool m_is_initialized_ = false;
 
-            gl::GLenum m_type_;
-            gl::GLuint m_buffer_;
-            size_t     m_size_;
+            sRaw_Buffer m_buffer_;
 
-            size_t m_backup_size_ = 0;
-            void*  m_backup_data_ = nullptr;
+            size_t m_size_ = 0;
+            void*  m_data_ = nullptr;
 
             std::string m_name_;
 

@@ -14,8 +14,8 @@ namespace sk::Memory
 	public:
 		// 16-bit for align.
 		MAKE_UNREFLECTED_ENUM( ENUMCLASS( eAction, uint16_t ),
-			E( kAllocate ),
-			E( kReallocate ),
+			E( kAllocate, "Allocation" ),
+			E( kReallocate, "Reallocation" ),
 			E( kFree )
 		);
 
@@ -150,10 +150,12 @@ private:
         	// But remember to start the Tracker!
         	cTracker::init();
         } // init
+
         void shutdown( void )
         {
         	cTracker::shutdown();
         } // shutdown
+
     } // Tracker::
 
     void* cTracker::alloc( const size_t _size, const std::source_location& _location )
@@ -191,7 +193,7 @@ private:
         }
     	else
     	{
-    		entry->last = static_cast< sHistory_action* >( alloc_fast( t_size, kHalfAlign ) );
+    		entry->last = static_cast< sHistory_action* >( alloc_fast( t_size, kB32Align ) );
     		
     	}
         m_block_set.insert( entry );
@@ -297,8 +299,8 @@ private:
     		{
     		case eAction::kAllocate:
     		{
-	            constexpr auto history_action_size = get_size< sHistory_action, kHalfAlign >();
-    			_entry.history        = &m_history.emplace_back( static_cast< sHistory_action* >( alloc_fast( history_action_size, kHalfAlign ) ) );
+	            constexpr auto history_action_size = get_size< sHistory_action, kB32Align >();
+    			_entry.history        = &m_history.emplace_back( static_cast< sHistory_action* >( alloc_fast( history_action_size, kB32Align ) ) );
 	            _entry.last           = *_entry.history;
     			_entry.history_length = 1;
     		}
@@ -306,8 +308,8 @@ private:
     		case eAction::kReallocate:
     		case eAction::kFree:
     		{
-    			const auto history_action_size = get_size< sHistory_action, kHalfAlign >( ++_entry.history_length );
-    			*_entry.history = static_cast< sHistory_action* >( realloc_fast( *_entry.history, history_action_size, kHalfAlign ) );
+    			const auto history_action_size = get_size< sHistory_action, kB32Align >( ++_entry.history_length );
+    			*_entry.history = static_cast< sHistory_action* >( realloc_fast( *_entry.history, history_action_size, kB32Align ) );
     			_entry.last = *_entry.history + ( _entry.history_length - 1 );
     		}
     		break;
@@ -349,4 +351,10 @@ private:
         cTracker::m_memory_usage += *n_size = _size;
         return n_size + 1;
     } // realloc_fast
-} // sk::Memory::Tracker
+
+    void free( void* _block )
+    {
+    	Tracker::free( _block );
+    } // free
+
+} // sk::Memory::

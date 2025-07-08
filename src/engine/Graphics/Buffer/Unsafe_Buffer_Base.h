@@ -20,7 +20,7 @@ namespace sk::Graphics
     {
         enum class eType : uint8_t
         {
-            kConstant,
+            kConstant, // TODO: Delete uniform buffer as it's usually the exact same?
             kUniform,
             kVertex,
             kStructed,
@@ -39,6 +39,9 @@ namespace sk::Graphics
     public:
         virtual ~iUnsafe_Buffer( void ) = 0;
 
+        virtual void Destroy() = 0;
+        virtual auto Get()       -> void* = 0;
+        virtual auto Get() const -> const void* = 0;
         /**
          * Will copy the active version of data from the Buffer to specified pointer.
          * @param _out Pointer to copy the data to.
@@ -64,11 +67,8 @@ namespace sk::Graphics
          * @param _offset 
          */
         virtual void   UpdateSeg( const void* _data, size_t _size, size_t _offset = 0 ) = 0;
-        // The gpu buffers size.
         [[ nodiscard ]]
         virtual size_t GetSize( void ) const = 0;
-        // Either the temporary buffers size or the gpu buffers size.
-        virtual size_t GetSafeSize() const = 0;
         virtual void   Resize ( size_t _byte_size ) = 0;
 
         virtual void  Lock    ( void ) = 0;

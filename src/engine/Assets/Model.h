@@ -30,7 +30,7 @@ namespace sk::Assets
 		// TODO: Model class, aka container for meshes and a name.
 		
 		[[nodiscard]] auto& getMeshes( void ) const { return m_meshes; }
-		SK_PUBLIC_FUNCTION( getMeshes )
+		// SK_PUBLIC_FUNCTION( getMeshes )
 	private:
 		vector< cShared_ptr< cModel > > m_children;
 		vector< cShared_ptr< cMesh > >  m_meshes;

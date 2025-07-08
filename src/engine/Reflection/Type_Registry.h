@@ -96,12 +96,12 @@ namespace sk
 
     struct sStruct_Type_Info : sType_Info
     {
-        map_ref< str_hash, runtime_struct::sMemberInfo, std::less< str_hash > > members;
+        map_ref< str_hash, runtime_struct::sMemberInfo > members;
     };
 
     struct sEnum_Type_Info : sType_Info
     {
-        map_ref< str_hash, runtime_struct::sMemberInfo, std::less< str_hash > > members;
+        map_ref< str_hash, runtime_struct::sMemberInfo > members;
     };
 
     // Functions for converting sType_Info

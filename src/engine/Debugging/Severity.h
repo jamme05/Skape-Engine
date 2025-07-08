@@ -17,13 +17,22 @@ namespace sk::Severity
 
         // A way to use general in case it isn't specified.
         kAny        = 0,
-        kGeneral    = 1 << 16,
-        kEngine     = 1 << 17,
-        kGraphics   = 1 << 18,
-        kPlatform   = 1 << 19,
-        kEditor     = 1 << 20,
-        kMemory     = 1 << 21,
-        kReflection = 1 << 22,
+        kGeneral    = 1u << 16,
+        kEngine     = 1u << 17,
+        kGraphics   = 1u << 18,
+        kPlatform   = 1u << 19,
+        kEditor     = 1u << 20,
+        kMemory     = 1u << 21,
+        kReflection = 1u << 22,
+
+        // TODO: Maybe do the inverse?
+        kConst         = 1u << 31,
+        kConstGeneral  = kConst | kGeneral,
+        kConstEngine   = kConst | kEngine,
+        kConstGraphics = kConst | kGraphics,
+        kConstPlatform = kConst | kPlatform,
+        kConstEditor   = kConst | kEditor,
+        kConstMemory   = kConst | kMemory,
 
         kAllValues = kValueMask,
         kAllTypes  = kTypeMask,
@@ -44,22 +53,53 @@ namespace sk::Severity
         return static_cast< uint32_t >( _value );
     }
 
-    static constexpr uint32_t kSeverityFilter = kAll; // All severities on for now.
-    static constexpr uint32_t kSeverityValue  = GetValue( kSeverityFilter ) == 0 ? kAllTypes : GetValue( kSeverityFilter );
-    static constexpr uint32_t kSeverityType   = GetType ( kSeverityFilter );
+    struct sSeverity_Filter
+    {
+        constexpr sSeverity_Filter( const uint32_t _filter ) noexcept
+        : m_filter( _filter )
+        , m_value ( GetValue( _filter ) == 0 ? kAllTypes : GetValue( _filter ) )
+        , m_type  ( GetType ( _filter ) )
+        {} // sSeverity_Filter
 
+        uint32_t m_filter;
+        uint32_t m_value;
+        uint32_t m_type;
+    };
+
+    static constexpr sSeverity_Filter kConstFilter = kAll;
+    static constinit sSeverity_Filter kFilter      = kConstFilter;
+
+    static constexpr bool IsConst( const uint32_t _severity ) noexcept { return _severity & kConst; }
     static constexpr bool IsEnabled( const uint32_t _severity ) noexcept
     {
-        const auto value = GetValue( _severity ) | kSeverityValue;
+        uint32_t filter_value;
+        uint32_t filter_type;
+
+        if consteval
+        {
+            filter_value = kConstFilter.m_value;
+            filter_type  = kConstFilter.m_type;
+        }
+        else
+        {
+            filter_value = kFilter.m_value;
+            filter_type  = kFilter.m_type;
+        }
+
+        const auto value = GetValue( _severity ) | filter_value;
         auto       type  = GetType ( _severity );
         if( type == kAny )
             type = kGeneral;
 
-        return ( value <= kSeverityValue ) && ( type & kSeverityType );
+        return ( value <= filter_value ) && ( type & filter_type );
     }
 } // sk::Severity::
 
 // TODO: Add runtime variant.
-#define SK_CONST_PASSTHROUGH( SeverityValue, ... ) \
-    if constexpr( sk::Severity::IsEnabled( SeverityValue ) ){ \
-    __VA_ARGS__ };
+#define SK_PASSTHROUGH( SeverityValue, ... ) \
+    { \
+    /* If the severity is to be decided at compile time */\
+    if constexpr( sk::Severity::IsConst( SeverityValue ) && sk::Severity::IsEnabled( SeverityValue ) )\
+    { __VA_ARGS__; } \
+    else if( sk::Severity::IsEnabled( SeverityValue ) ){ __VA_ARGS__; } \
+    }

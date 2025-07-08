@@ -13,7 +13,7 @@ namespace sk
 	class cTransform
 	{
 	public:
-		cTransform( const Math::cVector3f& _position = Math::kZero, const Math::cVector3f& _rotation = Math::kZero, const Math::cVector3f& _scale = Math::kOne )
+		cTransform( const cVector3f& _position = Math::kZero, const cVector3f& _rotation = Math::kZero, const cVector3f& _scale = Math::kOne )
 		: m_position( _position )
 		, m_rotation( _rotation )
 		, m_scale   ( _scale )
@@ -32,11 +32,11 @@ namespace sk
 
 		constexpr auto& getWorld( void ) const { return m_world; }
 
-		auto& getWorldFront( void ) const { return reinterpret_cast< const Math::cVector3f& >( m_world.z ); }
-		auto& getWorldRight( void ) const { return reinterpret_cast< const Math::cVector3f& >( m_world.x ); }
-		auto& getWorldUp   ( void ) const { return reinterpret_cast< const Math::cVector3f& >( m_world.y ); }
+		auto& getWorldFront( void ) const { return reinterpret_cast< const cVector3f& >( m_world.z ); }
+		auto& getWorldRight( void ) const { return reinterpret_cast< const cVector3f& >( m_world.x ); }
+		auto& getWorldUp   ( void ) const { return reinterpret_cast< const cVector3f& >( m_world.y ); }
 
-		auto& getWorldPosition( void ) const { return reinterpret_cast< const Math::cVector3f& >( m_world.w ); }
+		auto& getWorldPosition( void ) const { return reinterpret_cast< const cVector3f& >( m_world.w ); }
 
 		void setParent( const cTransform& _parent ){ m_parent = &_parent; }
 		void setParent( const cTransform* _parent ){ m_parent =  _parent; }
@@ -57,11 +57,11 @@ namespace sk
 
 	private:
 		// TODO: Use the local matrix and remove the direct access.
-		Math::cVector3f m_position;
-		Math::cVector3f m_rotation;
-		Math::cVector3f m_scale;
+		cVector3f m_position;
+		cVector3f m_rotation;
+		cVector3f m_scale;
 
-		Math::cMatrix4x4f m_world;
+		cMatrix4x4f m_world;
 
 		const cTransform* m_parent = nullptr;
 	};

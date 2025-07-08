@@ -11,4 +11,4 @@
 
 #define SK_FATAL( ... ) { std::println( stderr, __VA_ARGS__ ); SK_BREAK; std::exit( EXIT_FAILURE ); }
 
-#define SK_WARNING( Severity, ... ) SK_CONST_PASSTHROUGH( Severity, std::println( stderr, __VA_ARGS__ ); )
+#define SK_WARNING( Severity, ... ) SK_PASSTHROUGH( Severity, std::println( stderr, __VA_ARGS__ ); )
