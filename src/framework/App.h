@@ -35,7 +35,7 @@ class cApp : public sk::cSingleton< cApp >, sk::Input::iListener
 public:
 
 	 cApp( void );
-	~cApp( void );
+	~cApp( void ) override;
 
 	bool running   ( void ) const         { return m_running; }
 	void setRunning( const bool _running ){ m_running = _running; }

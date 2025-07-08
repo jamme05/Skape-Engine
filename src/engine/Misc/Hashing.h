@@ -176,7 +176,7 @@ namespace sk
 		}
 
 		constexpr hash( const char* _to_hash )
-		: iHashed( Hashing::fnv1a_64( _to_hash ) )
+		: iHashed( _to_hash ? Hashing::fnv1a_64( _to_hash ) : 0 )
 		{
 			COPY_STRING( _to_hash, 128 )
 		}

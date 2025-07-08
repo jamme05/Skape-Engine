@@ -46,16 +46,16 @@ namespace sk
             }
         }
 
-        constexpr       Ty* begin( void )       { return get(); }
-        constexpr const Ty* begin( void ) const { return get(); }
-        constexpr       Ty* end  ( void )       { return get() + Size; }
-        constexpr const Ty* end  ( void ) const { return get() + Size; }
+        constexpr       Ty* begin( void )       { return value; }
+        constexpr const Ty* begin( void ) const { return value; }
+        constexpr       Ty* end  ( void )       { return value + Size; }
+        constexpr const Ty* end  ( void ) const { return value + Size; }
 
         constexpr       Ty* get  ( void )       { return value + offset; }
         constexpr const Ty* get  ( void ) const { return value + offset; }
 
-        constexpr const Ty& operator[]( const size_t _index ) const { return get()[ _index ]; }
-        constexpr       Ty& operator[]( const size_t _index )       { return get()[ _index ]; }
+        constexpr const Ty& operator[]( const size_t _index ) const { return value[ _index ]; }
+        constexpr       Ty& operator[]( const size_t _index )       { return value[ _index ]; }
 
         constexpr size_t size( void ) const { return array_size - offset; }
 
@@ -86,6 +86,8 @@ namespace sk
             std::copy_n( _other.value, Size2, result.value );
             return result;
         }
+
+        constexpr Ty& operator[]( const size_t _index ) const { return get()[ _index ]; }
 
         constexpr size_t size( void ) const { return array_size; }
     };
@@ -202,4 +204,17 @@ namespace sk
     constexpr static bool is_array_v = is_array< Ty >::kValue;
     template< class Ty >
     constexpr static bool is_string_v = is_array< Ty >::kIsString;
+
+    template< class Fst, class Snd, size_t Size >
+    constexpr auto make_ptr_array_pair( const sk::array< std::pair< Fst, Snd >, Size >& _val )
+    {
+        using NewSnd = std::add_pointer_t< std::add_const_t< Snd > >;
+        array< std::pair< Fst, NewSnd >, Size > new_val{};
+
+        for( size_t i = 0; i < _val.size(); i++ )
+        {
+            new_val[ i ] = std::make_pair( _val[ i ].first, &_val[ i ].second );
+        }
+        return new_val;
+    } // make_ptr_array_pair
 } // sk::

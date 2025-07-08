@@ -58,6 +58,15 @@ namespace sk
         } // _get_middle
     } // map_helper::
 
+    struct pair_less
+    {
+        template< class Ty1, class Ty2 >
+        constexpr bool operator()( std::pair< Ty1, Ty2 >&& _left, Ty2&& _right ) const
+        {
+            return static_cast< Ty1&& >( _left.first ) < static_cast< Ty2&& >( _right.first );
+        }
+    };
+
     // TODO: Decide weather or not the const map functioning as a multimap is undefined behaviour. Will be treated as fine for now due to convenience.
     template< class KeyTy, class ValueTy, size_t Size, class Pred = std::less<> >
     class const_map
@@ -66,15 +75,25 @@ namespace sk
         typedef KeyTy key_type;
         typedef ValueTy value_type;
         typedef std::pair< KeyTy, ValueTy > value_pair_type;
+        static constexpr auto kSize = Size;
+
+        constexpr const_map() = default;
 
         constexpr const_map( const const_map& ) = default;
         constexpr const_map( const_map&& ) = default;
 
         consteval const_map( const array< std::pair< KeyTy, ValueTy >, Size >& _array );
         consteval const_map( std::initializer_list< std::pair< KeyTy, ValueTy > > _list );
+
         template< class Itr >
         requires std::is_same_v< typename Itr::value_type, value_pair_type >
         consteval const_map( Itr _left, Itr _right );
+
+        constexpr static bool _compare( const value_pair_type& _left, const value_pair_type& _right )
+        {
+            static constexpr auto pred = Pred();
+            return pred( _left.first, _right.first );
+        } // _compare_values
 
         constexpr const_map& operator=( const const_map& _map ) = default;
         constexpr const_map& operator=( const_map&& _map ) = default;
@@ -84,13 +103,13 @@ namespace sk
         constexpr const value_pair_type* find( const KeyTy& _key ) const
         {
             // TODO: See if there's a better way? Default construction may fail.
-            return std::lower_bound( begin(), end(), std::pair{ _key, ValueTy{} }, Pred{} );
+            return std::lower_bound( begin(), end(), std::pair{ _key, ValueTy{} }, _compare );
         }
 
         [[ nodiscard ]]
         constexpr auto range( const KeyTy& _key ) const
         {
-            return std::equal_range( begin(), end(), std::pair{ _key, ValueTy{} }, Pred{} );
+            return std::equal_range( begin(), end(), std::pair{ _key, ValueTy{} }, _compare );
         }
         constexpr const value_pair_type& get( const size_t _index ) const { return m_array[ _index ]; }
 
@@ -100,12 +119,6 @@ namespace sk
         constexpr const value_pair_type* end  ( void )       { return m_array.end(); }
 
         constexpr size_t size( void ) const { return m_array.size(); }
-
-        constexpr static bool _compare( const value_pair_type& _left, const value_pair_type& _right )
-        {
-            constexpr auto pred = Pred();
-            return pred( _left.first, _right.first );
-        } // _compare_values
 
         array< value_pair_type, Size > m_array;
     };

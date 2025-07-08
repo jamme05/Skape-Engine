@@ -13,13 +13,12 @@
 
 #include <Reflection/Types.h>
 #include <Misc/Smart_Ptrs.h>
+#include <Misc/Offsetof.h>
+
+#include <Reflection/ClassMacros.h>
 
 #include <print>
 #include <functional>
-
-#include "RuntimeClass.h"
-#include "RuntimeClass.h"
-#include "Misc/Offsetof.h"
 
 namespace sk
 {
@@ -191,23 +190,7 @@ namespace sk
 		Ty* create( Args&&... ){ return nullptr; } // TODO: Create function
 	};
 
-	class iClass
-	{
-	public:
-		iClass( void ) = default;
-		virtual ~iClass( void ) = default;
-		virtual constexpr const iRuntimeClass& getClass    ( void ) const = 0;
-		virtual constexpr const type_hash&     getClassType( void ) = 0;
-		virtual                 std::string    getClassName( void ) = 0;
-
-		// Here for placeholder and template help.
-		
-		static constexpr auto& kClass = kInvalidClass;
-		// Recommended to use Ty::kClass instead.
-		static constexpr auto& getStaticClass( void ) { return kClass; }
-		static constexpr auto& getStaticType( void ) { return kClass.getType(); }
-		static auto getStaticName( void ) { return kClass.getName(); }
-	};
+	class iClass;
 
 	template< class Ty >
 	requires std::is_base_of_v< iClass, Ty >
@@ -223,185 +206,6 @@ namespace sk
 	template< class Ty >
 	concept sk_class = is_valid_class_v< Ty >;
 } // sk::
-
-#define QW_BASE_CLASS( ... ) sk::iClass
-#define QW_CLASS_VALID( ClassName, Parent, ... ) sk::is_valid_class_v< Parent >
-#define QW_MESSAGE_CLASS_VALID( ClassName, Parent, ... ) sk::is_valid_class_v< Parent >, "Class " #Parent " isn't in the reflection system."
-
-#define CREATE_CLASS_IDENTITY_IDENTIFIERS( RuntimeClass ) \
-	typedef decltype( RuntimeClass ) runtime_class_type; \
-	constexpr static auto& kClass = RuntimeClass; \
-	virtual constexpr const sk::iRuntimeClass& getClass( void ) const override { return kClass;     } \
-	virtual constexpr const sk::type_hash& getClassType( void ) override { return kClass.getType(); } \
-	virtual std::string                    getClassName( void ) override { return kClass.getName(); } \
-	static constexpr auto&  getStaticClass    ( void ){ return kClass;           } \
-	static constexpr auto&  getStaticType( void ){ return kClass.getType(); } \
-	static auto             getStaticName( void ){ return kClass.getName(); } \
-
-#define CREATE_MEMBER_REFLECTION_VALUES( ClassName, RuntimeClass ) \
-	private: \
-	struct var_tag_{}; \
-	struct func_tag_{}; \
-	template< class > struct variable_registry { \
-		static constexpr auto kMembers = sk::cLinked_Array< sk::Reflection::member_var_pair_t >{}; }; \
-	template< class > struct function_registry { \
-		static constexpr auto kMembers = sk::cLinked_Array< sk::Reflection::member_func_pair_t >{}; }; \
-	public: \
-	using class_type = runtime_class_type::value_type; \
-	using var_counter_t  = const_counter< var_tag_ >;   \
-	using func_counter_t  = const_counter< func_tag_ >; \
-	template< int N > struct variable_extractor : variable_registry< std::integral_constant< int, N > >{};\
-	template< int N > struct function_extractor : function_registry< std::integral_constant< int, N > >{};\
-	using access_point = sk::Reflection::access_point< class_type >;
-
-#define CREATE_MEMBER_REFLECTION_FUNCTIONS( RuntimeClass ) \
-	public: \
-	static constexpr auto getVariables() -> sk::Reflection::member_var_map_ref_t; \
-	static constexpr auto getFunctions() -> sk::Reflection::member_func_map_ref_t; \
-	/* static constexpr auto getConstructors() -> sk::Reflection::member_func_map_ref_t; WIP */ \
-	static constexpr auto getVariable( const sk::str_hash& _hash ) -> sk::Reflection::member_var_t; \
-	static constexpr auto getFunction( const sk::str_hash& _hash ) -> sk::Reflection::member_func_t; \
-	static constexpr auto getFunctionOverloads( const sk::str_hash& _hash ) -> sk::Reflection::member_func_range_t; \
-	static constexpr auto getFunction( const sk::str_hash& _hash, const sk::type_hash& _args ) -> sk::Reflection::member_func_t; \
-	template< class... Args > static constexpr auto getFunction( const sk::str_hash& _hash ) -> sk::Reflection::member_func_t; \
-	/* static constexpr auto getConstructor( const sk::str_hash& _hash ) -> sk::Reflection::cMemberFunction* WIP */; \
-	auto getBoundVariable( const sk::str_hash& _hash ) -> std::optional< sk::Reflection::cMemberVariableInstance< class_type > >; \
-	auto getBoundFunction( const sk::str_hash& _hash ) -> std::optional< sk::Reflection::cMemberFunctionInstance< class_type > >; \
-	private:
-
-// Internal use only.
-#define CREATE_CLASS_IDENTIFIERS_0_( ClassName, RuntimeClass ) public: \
-	/* Prepare function to get information about which class it is. */ \
-	CREATE_CLASS_IDENTITY_IDENTIFIERS( RuntimeClass ) \
-	/* Prepare for member reflection: */ \
-	CREATE_MEMBER_REFLECTION_VALUES( ClassName, RuntimeClass ) \
-	/* Create incomplete functions so that I remember and to allow all variables to be ready upon usage. */ \
-	CREATE_MEMBER_REFLECTION_FUNCTIONS( RuntimeClass )
-
-// Required to make a runtime class functional.
-#define CREATE_CLASS_IDENTIFIERS( ClassName, RuntimeClass ) \
-	CREATE_CLASS_IDENTIFIERS_0_( ClassName, RuntimeClass )
-
-
-#define CREATE_CLASS_BODY( Class ) CREATE_CLASS_IDENTIFIERS( Class, runtime_class_ ## Class )
-
-#define CREATE_RUNTIME_CLASS_TYPE( Class, Name, ... ) sk::cRuntimeClass< Class __VA_OPT__(, FORWARD( __VA_ARGS__ ) ) >
-#define CREATE_RUNTIME_CLASS_VALUE( Class, Name, ... ) static constexpr auto CONCAT( runtime_class_, Name ) = CREATE_RUNTIME_CLASS_TYPE( Class, Name __VA_OPT__(, __VA_ARGS__) ) ( #Name );
-
-// Requires you to manually add CREATE_CLASS_IDENTIFIERS inside the body. But gives greater freedom. First inheritance will always have to be public. Unable to function with templated classes.
-// Deprecated
-#define GENERATE_CLASS( Class, ... ) \
-class Class ; \
-CREATE_RUNTIME_CLASS_VALUE( Class, Class, __VA_ARGS__ ) \
-class Class : public sk::get_inherits_t< FIRST( __VA_ARGS__ ) > \
-
-// Generates both runtime info and start of body, but removes most of your freedom. Unable to function with templated classes.
-// Deprecated
-#define GENERATE_ALL_CLASS( Class, ... ) GENERATE_CLASS( Class __VA_OPT__(,) __VA_ARGS__ ) AFTER_FIRST( __VA_ARGS__ ) { CREATE_CLASS_BODY( Class )
-
-#define TRUE_MAC( ... ) true
-
-#define DEFAULT_CLASS_CREATOR_2( ... ) SECOND( __VA_ARGS__ )
-#define DEFAULT_CLASS_CREATOR_1( ... ) FIRST( __VA_ARGS__ )
-#define DEFAULT_CLASS_CREATOR( ClassName, ... ) CONCAT( DEFAULT_CLASS_CREATOR_, VARGS( __VA_ARGS__ ) )( __VA_ARGS__ )
-
-#define PICK_CLASS_3( ParentMacro, ParentCreator, CustomClass ) ParentCreator
-#define PICK_CLASS_2( ParentMacro, ParentCreator ) ParentMacro
-#define PICK_CLASS( ... ) CONCAT( PICK_CLASS_, VARGS( __VA_ARGS__ ) )( __VA_ARGS__ )
-
-// TODO: Use AFTER_FIRST to parse away the parent class?
-// TODO: Add display name option.
-/**
- * Not recommended to be used directly.
- * @param ClassName The name of the class
- * @param ClassType The type of the class, aka name after naming convention.
- * @param ParentValidator Has a constexpr bool deciding if the parent is valid or not.
- * @param ParentCreator Creates the final parent class. Includes said parent class if it isn't default.
- * @param ExtrasMacro Extra reflection data within the namespace.
- * @param ParentClass The parent class.
- * @param ... Extra info for ExtrasMacro.
- */
-#define SK_CLASS_INTERNAL( Type, ClassName, ClassType, ParentValidator, ExtrasMacro, ParentCreator, ParentClass, ... ) \
-	Type ClassType; \
-	namespace ClassName { \
-		using class_type = ClassType; \
-		static_assert( ParentValidator( ClassName, ParentClass ) ); \
-		typedef sk::cShared_ptr< ClassType > ptr_t; \
-		typedef sk::cWeak_Ptr< ClassType >   weak_t; \
-		typedef sk::cShared_Ref< ClassType > ref_t; \
-		CREATE_RUNTIME_CLASS_VALUE( ClassType, ClassName, ParentClass ) \
-		ExtrasMacro( ClassName __VA_OPT__( , ) __VA_ARGS__ ) \
-		typedef CREATE_RUNTIME_CLASS_TYPE( ClassType, ClassName, ParentClass ) runtime_class_t; \
-	} \
-	class ClassType : public ParentCreator( ClassName, ParentClass __VA_OPT__(, ParentClass ) )
-
-#define PICK_VALIDATOR( A, B, ... ) PICK_CLASS( A, B __VA_OPT__( , FIRST( __VA_ARGS__ ) ) )
-#define PICK_PARENT_MAC( A, B, ... ) PICK_CLASS( A, B __VA_OPT__( , FIRST( __VA_ARGS__ ) ) )
-
-/**
- * Used below another macro to add requirements for class inheritance.
- * Creates a class with a wider range of customization and restrictions.
- * Have: QW_CLASS_BODY( ClassName ) inside the class body to complete the reflection.
- * @param ClassName The name of the class
- * @param ParentMacro Macro for getting the default parent class. Args: ClassName, ...
- * @param ParentCreator Post-processing of the parent class. Will send the parent class again to allow for customization. Args: ClassName, ParentClass, [ParentClass] ...
- * @param ParentValidator A macro that returns a bool deciding if the parent class is valid. Args: ClassName, Parent, ...
- * @param ExtrasMacro In case there's demand for making anymore metadata. Args: ClassName, ...
- * @param ... First argument is an optional Parent class. ParentMacro won't be called in this scenario. It and the rest will be forwarded into the macros.
- */
-#define QW_RESTRICTED_CLASS( ClassName, ParentMacro, ParentCreator, ParentValidator, ExtrasMacro, ... ) \
-	SK_CLASS_INTERNAL( class, ClassName, M_CLASS( ClassName ), PICK_VALIDATOR( TRUE_MAC, ParentValidator __VA_OPT__(,) __VA_ARGS__ ), ExtrasMacro, ParentCreator, PICK_CLASS( ParentMacro, SECOND __VA_OPT__( , FIRST( __VA_ARGS__ ) ) ) ( ClassName, __VA_ARGS__ ) __VA_OPT__(,) __VA_ARGS__ )
-
-/**
- * Used below another macro to add requirements for class inheritance.
- * Creates a class with a wider range of customization and restrictions.
- * Have: QW_CLASS_BODY( ClassName ) inside the class body to complete the reflection.
- * @param ClassName The name of the class
- * @param ParentMacro Macro for getting the default parent class. Args: ClassName, ...
- * @param ParentCreator Post-processing of the parent class. Will send the parent class again to allow for customization. Args: ClassName, ParentClass, [ParentClass] ...
- * @param ParentValidator A macro that returns a bool deciding if the parent class is valid. Args: ClassName, Parent, ...
- * @param ExtrasMacro In case there's demand for making anymore metadata. Args: ClassName, ...
- * @param ... First argument is an optional Parent class. ParentMacro won't be called in this scenario. It and the rest will be forwarded into the macros.
- */
-#define QW_RESTRICTED_STRUCT( ClassName, ParentMacro, ParentCreator, ParentValidator, ExtrasMacro, ... ) \
-	SK_CLASS_INTERNAL( struct, ClassName, M_CLASS( ClassName ), PICK_VALIDATOR( TRUE_MAC, ParentValidator __VA_OPT__(,) __VA_ARGS__ ), ExtrasMacro, ParentCreator, PICK_CLASS( ParentMacro, SECOND __VA_OPT__( , FIRST( __VA_ARGS__ ) ) ) ( ClassName, __VA_ARGS__ ) __VA_OPT__(,) __VA_ARGS__ )
-
-/**
- * Creates classes with extra reflection metadata.
- * Have: QW_CLASS_BODY( ClassName ) inside the class body to complete the reflection.
- * @param Type class/struct
- * @param ClassName The name of the class
- * @param ExtrasMacro In case there's demand for making anymore metadata. Args: ClassName, ...
- * @param ... First argument is an optional Parent class. ParentMacro won't be called in this scenario. It and the rest will be forwarded into the macros.
- */
-#define SK_CLASS_EX( Type, ClassName, ExtrasMacro, ... ) \
-	SK_CLASS_INTERNAL( Type, ClassName, M_CLASS( ClassName ), QW_MESSAGE_CLASS_VALID, ExtrasMacro, DEFAULT_CLASS_CREATOR, PICK_CLASS( QW_BASE_CLASS, SECOND __VA_OPT__( , FIRST( __VA_ARGS__ ) ) ) ( ClassName, __VA_ARGS__ ), __VA_ARGS__ )
-
-/**
- * Creates classes reflected with the default metadata.
- * Have: `QW_CLASS_BODY( ClassName )` inside the class body to complete the reflection.
- * @param ClassName The name of the class
- * @param Parent Optional parent class
- * @param ... ParentMacro won't be called in this scenario. It and the rest will be forwarded into the macros.
- */
-#define SK_CLASS( ClassName, ... ) \
-	SK_CLASS_EX( class, ClassName, EMPTY, __VA_ARGS__ )
-
-/**
- * Creates classes reflected with the default metadata.
- * Have: `QW_CLASS_BODY( ClassName )` inside the class body to complete the reflection.
- * @param ClassName The name of the class
- * @param Parent Optional parent class
- * @param ... ParentMacro won't be called in this scenario. It and the rest will be forwarded into the macros.
- */
-#define SK_STRUCT( ClassName, ... ) \
-	SK_CLASS_EX( struct, ClassName, EMPTY, __VA_ARGS__ )
-
-/**
- * Creates everything required to get the class functional. Used in combination with QW_CLASS
- * @param ClassName The name for the class to create the body for.
- */
-#define SK_CLASS_BODY( ClassName ) CREATE_CLASS_IDENTIFIERS( ClassName, ClassName :: CONCAT( runtime_class_, ClassName ) )
 
 namespace sk::Reflection
 {
@@ -494,6 +298,8 @@ namespace sk::Reflection
 		: m_member_( _member )
 		{}
 
+		consteval auto get_raw() const { return m_member_; }
+
 		using enum cMember::eType::eRaw;
 		static constexpr uint8_t kFlags = kVariable | std::is_const_v< Me > * kConst;
 
@@ -541,6 +347,8 @@ namespace sk::Reflection
 		: m_value_( _member )
 		{}
 
+		consteval auto get_raw() const { return m_value_; }
+
 		using enum cMember::eType::eRaw;
 		static constexpr uint8_t kFlags = kVariable | kStatic | std::is_const_v< Ty > * kConst;
 
@@ -576,6 +384,13 @@ namespace sk::Reflection
 		class_t           m_class_;
 		holder_t          m_holder_;
 	public:
+		constexpr cMemberVariable()
+		: cMember( nullptr, 0 )
+		, m_member_type_info_( nullptr )
+		, m_class_( nullptr )
+		, m_holder_( nullptr )
+		{}
+
 		// Non-Static
 		template< class Ty = iClass, class Me >
 		constexpr cMemberVariable( const char* _name, const cMemberVariableHolder< Ty, Me >& _holder, const uint8_t& _extras )
@@ -728,7 +543,7 @@ namespace sk::Reflection
 
 	// Declare bind here to have access to the type of instance.
 	template< sk_class Ty = iClass >
-	constexpr auto cMemberVariable::bind( Ty* _instance )->cMemberVariableInstance< Ty >
+	constexpr auto cMemberVariable::bind( Ty* _instance ) -> cMemberVariableInstance< Ty >
 	{
 		if( *m_class_ != Ty::kClass )
 		{
@@ -765,6 +580,8 @@ namespace sk::Reflection
 		explicit consteval cMemberFunctionHolder( const func_t _func )
 		: m_func_( _func )
 		{}
+
+		consteval auto get_raw() const { return m_func_; }
 
 		using enum cMember::eType::eRaw;
 		static constexpr uint8_t kFlags = kFunction;
@@ -807,6 +624,8 @@ namespace sk::Reflection
 		: m_func_( _func )
 		{}
 
+		consteval auto get_raw() const { return m_func_; }
+
 		using enum cMember::eType::eRaw;
 		static constexpr uint8_t kFlags = kFunction | kConst;
 
@@ -846,6 +665,8 @@ namespace sk::Reflection
 		explicit consteval cMemberFunctionHolder( const func_t _func )
 		: m_func_( _func )
 		{}
+
+		consteval auto get_raw() const { return m_func_; }
 
 		using enum cMember::eType::eRaw;
 		static constexpr uint8_t kFlags = kFunction | kStatic;
@@ -894,6 +715,14 @@ namespace sk::Reflection
 		class_t     m_class_;
 		holder_t    m_holder_;
 	public:
+		constexpr cMemberFunction()
+		: cMember( nullptr, 0 )
+		, m_return_type_{ nullptr }
+		, m_args_info_{ nullptr }
+		, m_class_{ nullptr }
+		, m_holder_{ nullptr }
+		{}
+
 		// TODO: Declare function hash.
 		// Non-Static
 		template< class Ty = iClass, class Re, class... Args >
@@ -922,13 +751,13 @@ namespace sk::Reflection
 			// Verify args.
 			typedef args_hash< Args... > args_t;
 			SK_WARN_IF_RET( sk::Severity::kReflection, args_t::kHash != m_args_info_->hash,
-				FORMAT( "Error: Wrong types provided! Provided types: {}. Required types: {}.", args_t::kInfo.to_string(), m_args_info_->to_string() ),
+				TEXT( "Error: Wrong types provided! Provided types: {}. Required types: {}.", args_t::kInfo.to_string(), m_args_info_->to_string() ),
 				false )
 
 			// Verify return type. But only if it's required.
 			constexpr static auto& other_type = get_type_info< Re >::kInfo;
 			SK_WARN_IF_RET( sk::Severity::kReflection, _return != nullptr && *m_return_type_ != other_type,
-				FORMAT( "Error: Wrong return type provided. Provided type: {}. Required type: {}.", other_type.raw_name, m_return_type_->raw_name ),
+				TEXT( "Error: Wrong return type provided. Provided type: {}. Required type: {}.", other_type.raw_name, m_return_type_->raw_name ),
 				false )
 
 			// Prepare args.
@@ -944,7 +773,7 @@ namespace sk::Reflection
 			// Static check.
 			SK_WARN_IF_RET( sk::Severity::kReflection, getIsStatic(),
 				TEXT( "Warning: Calling static function through instance." ),
-				call< Re, Args... >( _return, std::forward< Args >( _args )... ) );
+				call< Re, Args... >( _return, std::forward< Args >( _args )... ) )
 
 			// Const check. If getting called by a const ptr.
 			if constexpr( !std::is_const_v< Ty > )
@@ -953,19 +782,19 @@ namespace sk::Reflection
 
 			// Verify class.
 			SK_WARN_IF_RET( sk::Severity::kReflection, Ty::kClass != *m_class_,
-				FORMAT( "Error: Tried calling function through class {} when it required class {}.", Ty::getClassName(), m_class_->getName() ),
+				TEXT( "Error: Tried calling function through class {} when it required class {}.", Ty::getClassName(), m_class_->getName() ),
 				false )
 
 			// Verify args.
 			typedef args_hash< Args... > args_t;
 			SK_WARN_IF_RET( sk::Severity::kReflection, args_t::kHash != m_args_info_->hash,
-				FORMAT( "Error: Wrong types provided! Provided types: {}. Required types: {}.", args_t::kInfo.to_string(), m_args_info_->to_string() ),
+				TEXT( "Error: Wrong types provided! Provided types: {}. Required types: {}.", args_t::kInfo.to_string(), m_args_info_->to_string() ),
 				false )
 
 			// Verify return type. But only if it's required.
 			constexpr static auto& other_type = get_type_info< Re >::kInfo;
 			SK_WARN_IF_RET( sk::Severity::kReflection, _return != nullptr && *m_return_type_ != other_type,
-				FORMAT( "Error: Wrong return type provided. Provided type: {}. Required type: {}.", other_type.raw_name, m_return_type_->raw_name ),
+				TEXT( "Error: Wrong return type provided. Provided type: {}. Required type: {}.", other_type.raw_name, m_return_type_->raw_name ),
 				false )
 
 			// Add member to front of tuple.
@@ -1045,230 +874,185 @@ namespace sk::Reflection
 		using counter_t = const_counter< access_point >;
 		struct point{};
 
-		uint32_t m_access;
-		point Ty::*  m_point;
+		uint32_t    m_access;
+		point Ty::* m_point;
 	};
 
-	typedef const cMemberVariable*               member_var_t;
-	typedef const cMemberFunction*               member_func_t;
-	typedef std::pair< str_hash, member_var_t >  member_var_pair_t;
-	typedef std::pair< str_hash, member_func_t > member_func_pair_t;
-	typedef map_ref  < str_hash, member_var_t >  member_var_map_ref_t;
-	typedef map_ref  < str_hash, member_func_t > member_func_map_ref_t;
-	typedef std::pair< const member_var_pair_t*, const member_var_pair_t* > member_var_range_t;
-	typedef std::pair< const member_func_pair_t*, const member_func_pair_t* > member_func_range_t;
-} // sk::Reflection::
-
-// Internal macro. Do not use.
-#define REGISTER_MEMBER_DIRECT_1_( Member, Counter, Visibility ) \
-	static constexpr auto Counter = var_counter_t::next(); \
-	template< class Ty > struct variable_registry< std::integral_constant< Ty, Counter > > { \
-	using enum sk::Reflection::cMember::eType::eRaw; \
-	using prev_t = variable_registry< std::integral_constant< Ty, (Counter) -1 > >; \
-	using pair_t = sk::Reflection::member_var_pair_t; \
-	static constexpr auto kMemberHolder = sk::Reflection::cMemberVariableHolder{ &class_type:: Member }; \
-	static constexpr auto kMember       = sk::Reflection::cMemberVariable{ #Member, kMemberHolder, Visibility }; \
-	static constexpr auto kMembers      = sk::cLinked_Array< pair_t >{ pair_t{ #Member, &kMember }, prev_t::kMembers }; };
-			
-// Internal macro. Do not use.
-#define REGISTER_MEMBER_DIRECT_0_( Member, Visibility ) \
-	REGISTER_MEMBER_DIRECT_1_( Member, CONCAT( _xxx_sk_member_id_, __COUNTER__ ), Visibility )
-
-// Internal macro. Do not use.
-#define REGISTER_FUNCTION_DIRECT_1_( Member, Counter, Visibility ) \
-	static constexpr auto Counter = func_counter_t::next(); \
-	public: \
-	template< class Ty > struct function_registry< std::integral_constant< Ty, Counter > > { \
-	using enum sk::Reflection::cMember::eType::eRaw; \
-	using prev_t = function_registry< std::integral_constant< Ty, (Counter) - 1 > >; \
-	using pair_t = sk::Reflection::member_func_pair_t; \
-	static constexpr auto kMemberHolder = sk::Reflection::cMemberFunctionHolder{ &class_type:: Member }; \
-	static constexpr auto kMember       = sk::Reflection::cMemberFunction{ #Member, kMemberHolder, Visibility }; \
-	static constexpr auto kMembers      = sk::cLinked_Array< pair_t >{ pair_t{ #Member, &kMember }, prev_t::kMembers }; };
-			
-// Internal macro. Do not use.
-#define REGISTER_FUNCTION_DIRECT_0_( Member, Visibility ) private: \
-	REGISTER_FUNCTION_DIRECT_1_( Member, CONCAT( _xxx_sk_member_id_, __COUNTER__ ), Visibility )
-
-// TODO: Add allow for extra reflection info for members.
-// TODO: Add check so that a single member isn't registered multiple times.
-#define SK_PRIVATE_MEMBER( Member, ... )   REGISTER_MEMBER_DIRECT_0_( Member, kPrivate   ) private:
-#define SK_PROTECTED_MEMBER( Member, ... ) REGISTER_MEMBER_DIRECT_0_( Member, kProtected ) protected:
-#define SK_PUBLIC_MEMBER( Member, ... )    REGISTER_MEMBER_DIRECT_0_( Member, kPublic    ) public:
-
-#define SK_PRIVATE_FUNCTION( Function, ... )   REGISTER_FUNCTION_DIRECT_0_( Function, kPrivate ) private:
-#define SK_PROTECTED_FUNCTION( Function, ... ) REGISTER_FUNCTION_DIRECT_0_( Function, kProtected ) protected:
-#define SK_PUBLIC_FUNCTION( Function, ... )    REGISTER_FUNCTION_DIRECT_0_( Function, kPublic ) public:
-
-// WIP, Currently not functional
-#define SK_PRIVATE_OVERLOADED_FUNCTION( Function, ... )   REGISTER_FUNCTION_DIRECT_0_( Function, kPrivate ) private:
-// WIP, Currently not functional
-#define SK_PROTECTED_OVERLOADED_FUNCTION( Function, ... ) REGISTER_FUNCTION_DIRECT_0_( Function, kProtected ) protected:
-// WIP, Currently not functional
-#define SK_PUBLIC_OVERLOADED_FUNCTION( Function, ... )    REGISTER_FUNCTION_DIRECT_0_( Function, kPublic ) public:
-
-#define SK_CONSTRUCTOR( Function, ... )
-#define SK_OVERLOADED_CONSTRUCTOR( Function, ... )
-
-// Add final class requirements and register it as a type in the global namespace.
-
-// Register functions.
-#define BUILD_CLASS_MEMBER_EXTRACTION_1_func_( Class, Counter ) \
-	static constexpr auto CONCAT( _xxx_sk_func_, Counter ) = class_type::func_counter_t::next(); \
-	static constexpr auto& last_func_member        = class_type::function_extractor< CONCAT( _xxx_sk_func_, Counter ) - 1 >::kMembers; \
-	using func_t = sk::Reflection::member_func_pair_t; \
-	using func_map_t = sk::const_map< func_t::first_type, func_t::second_type, last_func_member.size() >;
-
-// Register variables.
-#define BUILD_CLASS_MEMBER_EXTRACTION_1_var_( Class, Counter ) \
-	static constexpr auto CONCAT( _xxx_sk_var_, Counter ) = class_type::var_counter_t::next(); \
-	static constexpr auto& last_var_member        = class_type::variable_extractor< CONCAT( _xxx_sk_var_, Counter ) - 1 >::kMembers; \
-	using var_t = sk::Reflection::member_var_pair_t; \
-	using var_map_t = sk::const_map< var_t::first_type, var_t::second_type, last_var_member.size() >;
-
-#define BUILD_CLASS_MEMBER_EXTRACTION_0_( Class, Counter ) namespace Class { namespace Internal { \
-	BUILD_CLASS_MEMBER_EXTRACTION_1_func_( Class, Counter ) \
-	BUILD_CLASS_MEMBER_EXTRACTION_1_var_( Class, Counter ) } \
-	static constexpr auto kFunctions = Internal::func_map_t{ Internal::last_func_member.begin(), Internal::last_func_member.end() }; \
-	static constexpr auto kVariables = Internal::var_map_t { Internal::last_var_member .begin(), Internal::last_var_member .end() }; \
-	}
-
-#define BUILD_CLASS_MEMBER_EXTRACTION( Class ) \
-	BUILD_CLASS_MEMBER_EXTRACTION_0_( Class, CONCAT( counter_, __COUNTER__ ) )
-
-// Member variable getters.
-#define BUILD_CLASS_GET_VARIABLES( Class ) \
-	constexpr auto Class ::class_type::getVariables() -> sk::Reflection::member_var_map_ref_t{ \
-	return Class ::kVariables; }
-
-#define BUILD_CLASS_VARIABLE_GETTER( Class ) \
-	constexpr auto Class ::class_type::getVariable( const sk::str_hash& _hash ) -> sk::Reflection::member_var_t{ \
-	const auto itr = Test ::kVariables.find( _hash ); return itr == nullptr ? nullptr : itr->second; }
-
-#define BUILD_CLASS_BOUND_VARIABLE_GETTER( Class ) \
-	inline auto Class ::class_type::getBoundVariable( const sk::str_hash& _hash ) -> std::optional< sk::Reflection::cMemberVariableInstance< class_type > >{ \
-	if( const auto member = getVariable( _hash ); member == nullptr ) return {}; \
-	else return sk::Reflection::cMemberVariableInstance{ *member, this }; }
-
-// Member function getters
-#define BUILD_CLASS_GET_FUNCTIONS( Class ) \
-	constexpr auto Class ::class_type::getFunctions() -> sk::Reflection::member_func_map_ref_t{ \
-	return Class ::kFunctions; }
-
-#define BUILD_CLASS_FUNCTION_GETTER( Class ) \
-	constexpr auto Class ::class_type::getFunction( const sk::str_hash& _hash ) -> sk::Reflection::member_func_t{ \
-	const auto itr = Test ::kFunctions.find( _hash ); return itr == nullptr ? nullptr : itr->second; }
-
-#define BUILD_CLASS_FUNCTION_OVERLOADS_GETTER( Class ) \
-	constexpr auto Class ::class_type::getFunctionOverloads( const sk::str_hash& _hash ) -> sk::Reflection::member_func_range_t{ \
-	return Class ::kFunctions.range( _hash ); }
-
-#define BUILD_CLASS_FUNCTION_OVERLOAD_RAW_GETTER( Class ) \
-	constexpr auto Class ::class_type::getFunction( const sk::str_hash& _hash, const sk::type_hash& _args ) -> sk::Reflection::member_func_t{ \
-	for( auto [ fst, lst ] = Test ::kFunctions.range( _hash ); fst != lst; ++fst ) \
-	{ if( fst->second->hasArgs( _args ) ) return fst->second; } return nullptr; }
-
-#define BUILD_CLASS_FUNCTION_OVERLOAD_TEMPLATE_GETTER( Class ) \
-	template< class... Args > constexpr auto Class ::class_type::getFunction( const sk::str_hash& _hash ) -> sk::Reflection::member_func_t{ \
-	return getFunction( _hash, sk::args_hash< Args... >::kHash ); }
-
-#define BUILD_CLASS_BOUND_FUNCTION_GETTER( Class ) \
-	inline auto Class ::class_type::getBoundFunction( const sk::str_hash& _hash ) -> std::optional< sk::Reflection::cMemberFunctionInstance< class_type > >{ \
-	if( const auto member = getFunction( _hash ); member == nullptr ) return {}; \
-	else return sk::Reflection::cMemberFunctionInstance{ *member, this }; }
-
-// Build type_info
-#define BUILD_CLASS_REFLECTION_INFO( Class ) \
-	template<> struct sk::get_type_info< Class ::class_type >{ \
-	constexpr static auto& kClass = Class ::class_type::kClass; \
-	constexpr static sType_Info kInfo = { \
-		.type = sType_Info::eType::kClass, \
-		.hash = kClass.getType(), \
-		.size = sizeof( Class ::class_type ), \
-		.name = kClass.getRawName(), \
-		.raw_name = kClass.getRawName() }; \
-	constexpr static bool kValid = true; };
-
-/**
- * HAS to be used in the global namespace (aka not within any namespace)
- * @param Class Namespace and name of class.
- */
-#define REGISTER_CLASS( Class ) \
-	BUILD_CLASS_MEMBER_EXTRACTION( Class ) \
-	/* Build Member variable getters */ \
-	BUILD_CLASS_GET_VARIABLES( Class ) \
-	BUILD_CLASS_VARIABLE_GETTER( Class ) \
-	BUILD_CLASS_BOUND_VARIABLE_GETTER( Class ) \
-	/* Build Member variable getters */ \
-	BUILD_CLASS_GET_FUNCTIONS( Class ) \
-	BUILD_CLASS_FUNCTION_GETTER( Class ) \
-	BUILD_CLASS_FUNCTION_OVERLOADS_GETTER( Class ) \
-	BUILD_CLASS_FUNCTION_OVERLOAD_RAW_GETTER( Class ) \
-	BUILD_CLASS_FUNCTION_OVERLOAD_TEMPLATE_GETTER( Class ) \
-	BUILD_CLASS_BOUND_FUNCTION_GETTER( Class ) \
-	/* Build Reflection and register */ \
-	BUILD_CLASS_REFLECTION_INFO( Class ) \
-	REGISTER_TYPE_INTERNAL( Class::class_type )
-
-#define SK_ACCESS_CREATOR( Instance, Access ) \
-	[[ no_unique_address, maybe_unused ]] access_point::point CONCAT( _xxx_sk_point_, Instance );
-	
-#define sk_public \
-	SK_ACCESS_CREATOR( __COUNTER__, kPublic ) public
-
-SK_CLASS( Test )
-{
-	SK_CLASS_BODY( Test )
-
-	template< class >
-	struct _xxx_sk_access{
-		static constexpr auto kAccess = access_point{ .m_access = sk::Reflection::cMember::eType::kNone, .m_point = nullptr };
-	};
-
-	static constexpr auto _xxx_sk_access_counter_0 = access_point::counter_t::next();
-	template< class Ty >
-	struct _xxx_sk_access< std::integral_constant< Ty, 0 > >
+	template< class Ty, class Holder >
+	struct sPartial_Member_Variable
 	{
-		static constexpr auto kAccess =
-			access_point{ .m_access = sk::Reflection::cMember::eType::kPrivate, .m_point = nullptr };
-	};
-	
-	uint64_t member_0 = 0; SK_PRIVATE_MEMBER( member_0 )
-	uint32_t member_1 = 0; SK_PRIVATE_MEMBER( member_1 )
-	uint32_t member_2 = 0; SK_PRIVATE_MEMBER( member_2 )
-
-	// TODO: Create macro for no_unique_address.
-	[[ msvc::no_unique_address, maybe_unused ]] access_point::point _xxx_sk_point_hidden_;
-	static constexpr auto _xxx_sk_access_counter_1 = access_point::counter_t::next();
-	template< class Ty >
-	struct _xxx_sk_access< std::integral_constant< Ty, 1 > >
-	{
-		static constexpr auto kAccess =
-			access_point{ .m_access = sk::Reflection::cMember::eType::kPublic, .m_point = &class_type::_xxx_sk_point_hidden_ };
+		using point_t  = typename access_point< Ty >::point;
+		const char*   name;
+		Holder*       holder;
+		point_t Ty::* point;
 	};
 
-public:
-	template< size_t Layer = 0 >
-	static consteval uint32_t _xxx_sk_get_offset_access( const int _offset, const uint32_t _previous_access = 69 )
+	template< class Ty, class Holder >
+	struct sPartial_Member_Function
 	{
-		using enum sk::Reflection::cMember::eType::eRaw;
+		using point_t  = typename access_point< Ty >::point;
+		const char*   name;
+		Holder*       holder;
+		point_t Ty::* point;
+	};
+
+	typedef const cMemberVariable*                 member_var_ptr_t;
+	typedef const cMemberFunction*                 member_func_ptr_t;
+	typedef std::pair< str_hash, cMemberVariable > member_var_pair_t;
+	typedef std::pair< str_hash, cMemberFunction > member_func_pair_t;
+	typedef std::pair< str_hash, cMemberVariable >    member_var_map_pair_t;
+	typedef std::pair< str_hash, member_func_ptr_t >  member_func_map_pair_t;
+	typedef map_ref  < str_hash, member_var_ptr_t  >  member_var_map_ref_t;
+	typedef map_ref  < str_hash, member_func_ptr_t >  member_func_map_ref_t;
+	typedef std::pair< const member_var_map_pair_t*,  const member_var_map_pair_t* >  member_var_range_t;
+	typedef std::pair< const member_func_map_pair_t*, const member_func_map_pair_t* > member_func_range_t;
+
+	template< class Ty, size_t Layer = 0 >
+	static consteval uint8_t _xxx_sk_get_offset_access( const int _offset, const uint8_t _previous_access = 0 )
+	{
 		// 0 Will always be defined. Hence, it'll never begin with there being nothing.
-		constexpr auto& point = _xxx_sk_access< std::integral_constant< int, Layer > >::kAccess;
+		constexpr auto& point = Ty::template _xxx_sk_access< std::integral_constant< int, Layer > >::kAccess;
 
-		if( _offset < offset_of< class_type, point.m_point >() )
-			return point.m_access;
+		if( _offset < offset_of< Ty, point.m_point >() )
+			return _previous_access;
 
 		if constexpr( point.m_access == 0 )
 			return _previous_access;
 		else
-			return _xxx_sk_get_offset_access< Layer + 1 >( _offset, point.m_access );
+			return _xxx_sk_get_offset_access< Ty, Layer + 1 >( _offset, point.m_access );
+
 	} // _xxx_sk_get_offset_access
 
-// sk_public:
+	template< class Ty, size_t Size, size_t Layer = Size == 0 ? 0 : Size - 1  >
+	consteval auto _xxx_process_member_functions( array< member_func_pair_t, Size >* _array = nullptr ) -> array< member_func_pair_t, Size >
+	{
+		using array_t = array< member_func_pair_t, Size >;
+		if constexpr( Size == 0 ) return array_t{};
 
-	static uint32_t member_3; SK_PUBLIC_MEMBER( member_3 )
-	static constexpr uint32_t member_4 = 10; SK_PUBLIC_MEMBER( member_4 )
-	uint32_t member_5 = 0; SK_PRIVATE_MEMBER( member_2 )
+		using extractor_t = typename Ty:: template function_extractor< Layer >;
+		constexpr auto& extraction = extractor_t::kMember;
+		if( _array )
+		{
+			auto access = _xxx_sk_get_offset_access< Ty >( offset_of< Ty, extraction.point >() );
+			( *_array )[ Layer ] = member_func_pair_t{
+				extraction.name, cMemberFunction{ extraction.name, *extraction.holder, access }
+			};
+		}
+		if constexpr( Layer == 0 )
+		{
+			if( _array ) return *_array;
+			return array_t{};
+		}
+		else
+		{
+			if( _array ) return _xxx_process_member_functions< Ty, Size, Layer - 1 >( _array );
+
+			auto access = _xxx_sk_get_offset_access< Ty >( offset_of< Ty, extraction.point >() );
+			array_t array{};
+			array[ Layer ] = member_func_pair_t{
+				extraction.name, cMemberFunction{ extraction.name, *extraction.holder, access }
+			};
+			return _xxx_process_member_functions< Ty, Size, Layer - 1 >( &array );
+		}
+
+	} // _xxx_process_member_functions
+
+	template< class Ty, size_t Size, size_t Layer = Size == 0 ? 0 : Size - 1  >
+	consteval auto _xxx_process_member_variables( array< member_var_pair_t, Size >* _array = nullptr ) -> array< member_var_pair_t, Size >
+	{
+		using array_t = array< member_var_pair_t, Size >;
+		if constexpr( Size == 0 ) return array_t{};
+
+		using extractor_t = typename Ty:: template variable_extractor< Layer >;
+		static constexpr auto& extraction = extractor_t::kMember;
+		if( _array )
+		{
+			uint8_t access;
+			if constexpr( extraction.holder->kFlags & cMember::eType::kStatic )
+				access = _xxx_sk_get_offset_access< Ty >( offset_of< Ty, extraction.point >() );
+			else
+				access = _xxx_sk_get_offset_access< Ty >( offset_of< Ty, extraction.holder->get_raw() >() );
+
+			( *_array )[ Layer ] = member_var_pair_t{
+				extraction.name, cMemberVariable{ extraction.name, *extraction.holder, access }
+			};
+		}
+		if constexpr( Layer == 0 )
+		{
+			if( _array ) return *_array;
+			return array_t{};
+		}
+		else
+		{
+			if( _array )
+				return _xxx_process_member_variables< Ty, Size, Layer - 1 >( _array );
+
+			uint8_t access;
+			if constexpr( extraction.holder->kFlags & cMember::eType::kStatic )
+				access = _xxx_sk_get_offset_access< Ty >( offset_of< Ty, extraction.point >() );
+			else
+				access = _xxx_sk_get_offset_access< Ty >( offset_of< Ty, extraction.holder->get_raw() >() );
+
+			array_t array{};
+			array[ Layer ] = member_var_pair_t{
+				extraction.name, cMemberVariable{ extraction.name, *extraction.holder, access }
+			};
+			return _xxx_process_member_variables< Ty, Size, Layer - 1 >( &array );
+		}
+	} // _xxx_process_member_variables
+
+} // sk::Reflection::
+
+namespace sk
+{
+	class iClass
+	{
+	public:
+		iClass( void ) = default;
+		virtual ~iClass( void ) = default;
+		virtual const iRuntimeClass& getClass    ( void ) const = 0;
+		virtual const type_hash&     getClassType( void ) = 0;
+		virtual       std::string    getClassName( void ) = 0;
+
+		// Virtual member reflection
+		virtual auto getVariables() const
+			-> Reflection::member_var_map_ref_t{ return {}; }
+		virtual auto getFunctions() const
+			-> Reflection::member_func_map_ref_t = 0;
+		virtual auto getVariable( const str_hash& _hash ) const
+			-> Reflection::member_var_ptr_t = 0;
+		virtual auto getFunction( const str_hash& _hash ) const
+			-> Reflection::member_func_ptr_t = 0;
+		virtual auto getFunctionOverloads( const str_hash& _hash ) const
+			-> Reflection::member_func_range_t = 0;
+		virtual auto getFunction( const str_hash& _hash, const type_hash& _args ) const
+			-> Reflection::member_func_ptr_t = 0;
+
+		// Here for placeholder and template help.
+		
+		static constexpr auto& kClass = kInvalidClass;
+		// Recommended to use Ty::kClass instead.
+		static constexpr auto& getStaticClass( void ) { return kClass; }
+		static constexpr auto& getStaticType( void ) { return kClass.getType(); }
+		static auto getStaticName( void ) { return kClass.getName(); }
+	};
+} // sk::
+
+SK_CLASS( Test )
+{
+	SK_CLASS_BODY( Test )
+	
+	uint64_t member_0 = 0; SK_VARIABLE( member_0 )
+	uint32_t member_1 = 0; SK_VARIABLE( member_1 )
+	uint32_t member_2 = 0; SK_VARIABLE( member_2 )
+
+sk_public:
+
+sk_protected:
+
+	static uint32_t member_3; SK_VARIABLE( member_3 )
+	static constexpr uint32_t member_4 = 10; SK_VARIABLE( member_4 )
+	uint32_t member_5 = 0; SK_VARIABLE( member_2 )
 
 	cTest( uint64_t _mem0, uint32_t _mem1 )
 	: member_0( _mem0 ), member_1( _mem1 )
@@ -1281,18 +1065,15 @@ public:
 	uint32_t test_func2( void ) const { return member_2; }
 	static void test_func3( const uint32_t _val ){ member_3 = _val; }
 	// TODO: Figure out how to handle virtual functions? Some custom virtual table or member functions?
-	virtual uint8_t test_func4( void ) const { return member_2; }
+
+	virtual auto test_func4( void ) -> uint8_t { return member_4; }
 
 	// TODO: Figure out a way to register virtual functions. Overridable tag?
-	SK_PUBLIC_FUNCTION( test_func )
-	SK_PUBLIC_FUNCTION( test_func2 )
-	SK_PUBLIC_FUNCTION( test_func3 )
+	SK_FUNCTION( test_func  )
+	SK_FUNCTION( test_func2 )
+	SK_FUNCTION( test_func3 )
+
+	// Future example: SK_FUNCTION( test_func, Visibility=Private )
 };
-
-static constexpr auto test_offset_0 = offset_of< cTest, &cTest::member_5 >();
-static_assert( test_offset_0 == 24, "MAaaaaan" );
-
-static constexpr auto test_access_1 = cTest::_xxx_sk_get_offset_access( test_offset_0 );
-static_assert( test_access_1 == sk::Reflection::cMember::eType::kPublic );
 
 REGISTER_CLASS( Test )

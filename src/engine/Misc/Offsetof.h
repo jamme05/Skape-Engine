@@ -31,12 +31,5 @@ constexpr int offset_of() {
 	if constexpr( MPtr == nullptr )
 		return 0;
 	else
-		return sizeof(detail::offset_helper<T, MPtr>::for_sizeof);
+		return sizeof( detail::offset_helper< T, MPtr >::for_sizeof );
 }
-
-struct my_struct
-{
-	int mem;
-};
-static constexpr auto t0 = offset_of< my_struct, &my_struct::mem >();
-static constexpr auto t1 = offset_of< my_struct, static_cast< int my_struct::* >( nullptr ) >();
