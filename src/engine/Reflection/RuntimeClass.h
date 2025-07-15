@@ -778,7 +778,7 @@ namespace sk::Reflection
 			// Const check. If getting called by a const ptr.
 			if constexpr( !std::is_const_v< Ty > )
 				SK_WARN_IF_RET( sk::Severity::kReflection,
-					!getIsReadOnly(), TEXT( "Error: Calling a non-const function with a constant instance." ), false )
+					!getIsReadOnly(), "Error: Calling a non-const function with a constant instance.", false )
 
 			// Verify class.
 			SK_WARN_IF_RET( sk::Severity::kReflection, Ty::kClass != *m_class_,

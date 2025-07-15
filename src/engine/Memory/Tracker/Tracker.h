@@ -98,6 +98,7 @@ namespace sk::Memory
 
 } // sk::Memory::
 
+// TODO: Make macros reuse the SK_NEW macro in case of future changes.
 #if !defined( SK_TRACKER_DISABLED )
 /**
  * Default tracked alloc.
@@ -130,7 +131,7 @@ namespace sk::Memory
  * 
  * Arguments: Type, Args...
  */
-#define SK_SINGLE( Ty, ... ) sk::Memory::alloc< Ty >( 1, std::source_location::current(), __VA_ARGS__ )
+#define SK_SINGLE( Ty, ... ) SK_NEW( Ty, 1, __VA_ARGS__ )
 /**
  * Single object without params tracked new.
  * 
@@ -139,10 +140,21 @@ namespace sk::Memory
 #define SK_SINGLE_EMPTY( Ty ) sk::Memory::alloc< Ty >( 1, std::source_location::current() )
 /**
  * Tracked free.
- * 
+ *
+ * NOTE: It does nullptr check for you.
+ *
  * Arguments: Address
  */
 #define SK_FREE( address ) sk::Memory::free( address )
+/**
+ * Alias for SK_FREE
+ * Tracked free.
+ * 
+ * NOTE: It does nullptr check for you.
+ * 
+ * Arguments: Address
+ */
+#define SK_DELETE( address ) SK_FREE( address )
 #else // !SK_TRACKER_DISABLED
 /**
  * Default tracked alloc.

@@ -20,6 +20,7 @@
 #define FIRST( A, ... ) A
 #define AFTER_FIRST( A, ... ) __VA_ARGS__
 #define SECOND( A, B, ... ) B
+#define THIRD( A, B, C, ... ) C
 
 #define PARENS ()
 
