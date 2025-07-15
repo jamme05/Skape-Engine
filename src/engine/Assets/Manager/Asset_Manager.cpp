@@ -11,12 +11,10 @@
 #include <Assets/Mesh.h>
 
 #include <Assets/Asset_List.h>
-#include "Assets/Model.h"
-#include "Assets/Texture.h"
-#include "Graphics/cRenderer.h"
-#include "Helpers/Mesh_Helper.h"
-#include "Platform/cPlatform.h"
-#include "Scene/Managers/CameraManager.h"
+#include <Assets/Model.h>
+#include <Assets/Texture.h>
+#include <Helpers/Mesh_Helper.h>
+#include <Scene/Managers/CameraManager.h>
 
 namespace sk
 {
@@ -181,7 +179,7 @@ namespace sk
 	auto cAssetManager::handleGltfModel( const fastgltf::Asset& _asset, fastgltf::Mesh& _mesh ) -> Assets::cAsset_List
 	{
 		Assets::cAsset_List assets;
-		auto model_asset = Assets::cModel::create_shared();
+		auto model_asset = Assets::cModel::create_shared( "Undefined" );
 		for( auto& primitive : _mesh.primitives )
 		{
 			// Check if primitive has indices, go to next if it doesn't.
@@ -237,16 +235,17 @@ namespace sk
 
 		if( target_buffer )
 		{
-			Assets::cTexture::eSourceType imageType = Assets::cTexture::eSourceType::kInvalid;
+			Assets::cTexture::eSourceType image_type;
 			switch( type )
 			{
-			case fastgltf::MimeType::PNG:  imageType = Assets::cTexture::eSourceType::kPNG; break;
-			case fastgltf::MimeType::JPEG: imageType = Assets::cTexture::eSourceType::kJPG; break;
+			case fastgltf::MimeType::PNG:  image_type = Assets::cTexture::eSourceType::kPNG; break;
+			case fastgltf::MimeType::JPEG: image_type = Assets::cTexture::eSourceType::kJPG; break;
+			default: image_type = Assets::cTexture::eSourceType::kInvalid; break;
 			}
-			if( imageType == Assets::cTexture::eSourceType::kInvalid )
+			if( image_type == Assets::cTexture::eSourceType::kInvalid )
 				return nullptr;
 
-			return make_shared< Assets::cTexture >( image.name.c_str(), target_buffer, size, imageType );
+			return make_shared< Assets::cTexture >( image.name.c_str(), target_buffer, size, image_type );
 		}
 
 		return nullptr;
@@ -260,10 +259,5 @@ namespace sk
 
 	void cAssetManager::loadEmbedded( void )
 	{
-		constexpr auto resolution = cVector2u( 16 );
-		constexpr auto byte_size  = static_cast< size_t >( resolution.x * resolution.y ) * 4ull; // x * y * RGBA
-		std::vector< uint8_t > white_texture( byte_size, 0xff );
-
-		Graphics::cRenderer::m_white_texture = createAsset< Assets::cTexture >( "White", white_texture.data(), resolution, Assets::cTexture::eFormat::kRGBA8, true );
 	} // loadEmbedded
 } // sk::
