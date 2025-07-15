@@ -13,9 +13,45 @@
 
 namespace sk
 {
-    typedef char str_type;
+    typedef char char_t;
     template< size_t Size >
-    using string = array< str_type, Size >;
+    struct string : array< char_t, Size >
+    {
+        string()
+        : array< char_t, Size >{}
+        {
+        } // string
+
+        // TODO: Use size parameter in string struct.
+        constexpr string( const char_t* _ptr )
+        : array< char_t, Size >( _ptr )
+        {} // string
+
+        // Makes this string lowercase.
+        constexpr void to_lower();
+        // Returns a copy which is lowercase.
+        constexpr string as_lower() const
+        {
+            string result = *this;
+            result.to_lower();
+            return result;
+        }
+
+        // Makes this string uppercase.
+        constexpr void to_upper();
+        // Returns a copy which is uppercase.
+        constexpr string as_upper() const
+        {
+            string result = *this;
+            result.to_upper();
+            return result;
+        }
+    };
+
+    template< size_t Size >
+    string( const char_t ( & )[ Size ] ) -> string< Size >;
+    template< size_t Size >
+    string( const string< Size >& ) -> string< Size >;
 
     template< class Ty >
     struct is_string
@@ -167,7 +203,66 @@ namespace sk
         {
             constexpr static bool kValue = find_index_of( Str.value, Find.value, true ) == Str.size() - Find.size();
         };
+
+        // Follows the c++ standard. https://en.cppreference.com/w/cpp/string/byte/tolower
+        // TODO: Fix some locale variant?
+        constexpr int to_lower( int _char )
+        {
+            using pair_t = std::pair< int, int >;
+            static constexpr auto upper = pair_t{ 'A', 'Z' };
+            static constexpr auto lower = pair_t{ 'a', 'z' };
+
+            // Check that char is within the upper range.
+            if( _char >= upper.first && _char <= upper.second )
+                _char = lower.first + _char - upper.first;
+
+            return _char;
+        }
+
+        // Follows the c++ standard. https://en.cppreference.com/w/cpp/string/byte/toupper.html
+        constexpr int to_upper( int _char )
+        {
+            using pair_t = std::pair< int, int >;
+            static constexpr auto upper = pair_t{ 'A', 'Z' };
+            static constexpr auto lower = pair_t{ 'a', 'z' };
+
+            // Check that char is within the upper range.
+            if( _char >= lower.first && _char <= lower.second )
+                _char = upper.first + _char - lower.first;
+
+            return _char;
+        } // to_lower
+
+        template< std::integral Ty >
+        constexpr Ty to_lower( Ty _char )
+        {
+            return static_cast< Ty >( to_lower( static_cast< int >( _char ) ) );
+        }
+
+        template< std::integral Ty >
+        constexpr Ty to_upper( Ty _char )
+        {
+            return static_cast< Ty >( to_upper( static_cast< int >( _char ) ) );
+        }
+
+        constexpr auto test  = to_lower( 'T' );
+        constexpr auto test2 = to_upper( 't' );
     } // sk::str::
+
+    // Define to_lower and to_upper here.
+    template< size_t Size >
+    constexpr void string< Size >::to_lower()
+    {
+        for( size_t i = 0; i < Size; ++i )
+            ( *this )[ i ] = str::to_lower( ( *this )[ i ] );
+    }
+
+    template< size_t Size >
+    constexpr void string< Size >::to_upper()
+    {
+        for( size_t i = 0; i < Size; ++i )
+            ( *this )[ i ] = str::to_upper( ( *this )[ i ] );
+    }
 
     namespace formatting
     {
@@ -213,7 +308,7 @@ namespace sk
             if( _v < 0 )
             {
                 curr = parse_uint_to_string( 0 - uv, curr );
-                *--curr = static_cast< str_type >( '-' );
+                *--curr = static_cast< char_t >( '-' );
             }
             else
                 curr = parse_uint_to_string( uv, curr );
@@ -285,7 +380,7 @@ namespace sk
         if( _v < 0 )
         {
             curr = parse_pos_floating_point_to_string( -_v, _decimals, curr );
-            *--curr = static_cast< str_type >( '-' );
+            *--curr = static_cast< char_t >( '-' );
         }
         else
         {
@@ -313,7 +408,7 @@ namespace sk
         if( _v < 0 )
         {
             curr = parse_pos_floating_point_to_string( -_v, _decimals, curr );
-            *--curr = static_cast< str_type >( '-' );
+            *--curr = static_cast< char_t >( '-' );
         }
         else
         {
@@ -328,10 +423,21 @@ namespace sk
     {
         string< 6 > buff;
         if( _v )
-            buff = string< 6 >{ "true" };
+            buff = "true";
         else
-            buff = string{ "false" };
+            buff = "false";
         return buff;
     } // to_string
 
+    template< string Str >
+    constexpr auto operator ""_lower()
+    {
+        return Str.as_lower();
+    }
+
+    template< string Str >
+    constexpr auto operator ""_upper()
+    {
+        return Str.as_upper();
+    }
 } // sk::
