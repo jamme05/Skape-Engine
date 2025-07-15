@@ -1048,11 +1048,12 @@ SK_CLASS( Test )
 
 sk_public:
 
-sk_protected:
-
-	static uint32_t member_3; SK_VARIABLE( member_3 )
-	static constexpr uint32_t member_4 = 10; SK_VARIABLE( member_4 )
-	uint32_t member_5 = 0; SK_VARIABLE( member_2 )
+	static uint32_t member_3;
+	static constexpr uint32_t member_4 = 10;
+	uint32_t member_5 = 0;
+	SK_VARIABLE( member_3 )
+	SK_VARIABLE( member_4 )
+	SK_VARIABLE( member_5 )
 
 	cTest( uint64_t _mem0, uint32_t _mem1 )
 	: member_0( _mem0 ), member_1( _mem1 )

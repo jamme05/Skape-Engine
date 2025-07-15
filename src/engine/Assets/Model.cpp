@@ -14,5 +14,9 @@ namespace sk::Assets
     : cAsset( _name )
     {
     } // cModel
-    
+
+    void cModel::Save()
+    {
+        // Does nothing for now.
+    }
 } // sk::Assets

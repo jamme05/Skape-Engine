@@ -22,13 +22,15 @@ namespace sk::Assets
 
 namespace sk::Assets
 {
-	QW_ASSET_CLASS( Model )
+	SK_ASSET_CLASS( Model )
 	{
 		SK_CLASS_BODY( Model )
 	public:
 		cModel( const std::string& _name );
 		// TODO: Model class, aka container for meshes and a name.
-		
+
+		void Save() override;
+
 		[[nodiscard]] auto& getMeshes( void ) const { return m_meshes; }
 		// SK_PUBLIC_FUNCTION( getMeshes )
 	private:

@@ -16,7 +16,7 @@ namespace sk
 		class cCamera;
 	} // Objects::Components
 
-	QW_ASSET_CLASS( Scene )
+	SK_ASSET_CLASS( Scene )
 	{
 	public:
 		explicit cScene( const std::string& _name ) : cAsset( _name ){ }

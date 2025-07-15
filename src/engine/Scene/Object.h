@@ -26,7 +26,7 @@ namespace sk::Object
 // TODO: Check if class shit is needed? Like with Assets and Components.
 	GENERATE_CLASS( iObject ), public Event::cEventListener, public cShared_from_this< iObject >
 	{
-	CREATE_CLASS_IDENTIFIERS( runtime_class_iObject )
+		CREATE_CLASS_BODY( iObject )
 	public:
 		// TODO: Create templated constructor with root type + parameters
 		explicit iObject( std::string _name )
@@ -112,16 +112,21 @@ namespace sk::Object
 		friend class cScene;
 	};
 
+	namespace Object
+	{
+		using class_type = iObject;
+	}
+
 	template< class Ty, class ClassTy, const ClassTy& ClassRef >
 	class cObject : public iObject
 	{
-		CREATE_CLASS_IDENTIFIERS( ClassRef )
-
 	public:
 		explicit cObject( std::string _name ) : iObject( std::move( _name ) ){}
 	};
 
 } // sk::Object::
+
+REGISTER_CLASS( sk::Object::Object )
 
 #define OBJECT_PARENT_CLASS( ObjectName, ... ) sk::Object::iObject
 #define OBJECT_PARENT_VALIDATOR( ObjectName, ... ) std::is_base_of_v< sk::Object::iObject, __VA_ARGS__ >

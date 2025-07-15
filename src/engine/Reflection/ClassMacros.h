@@ -6,7 +6,6 @@
 #define QW_MESSAGE_CLASS_VALID( ClassName, Parent, ... ) sk::is_valid_class_v< Parent >, "Class " #Parent " isn't in the reflection system."
 
 #define CREATE_CLASS_IDENTITY_IDENTIFIERS( RuntimeClass ) \
-	public: \
 	typedef decltype( RuntimeClass ) runtime_class_type; \
 	constexpr static auto& kClass = RuntimeClass; \
 	constexpr const sk::iRuntimeClass& getClass( void ) const override { return kClass;     } \
@@ -45,7 +44,6 @@
 	template< int N > struct function_extractor : function_registry< std::integral_constant< int, N > >{};\
 
 #define CREATE_MEMBER_REFLECTION_FUNCTIONS( RuntimeClass ) \
-	public: \
 	/* static constexpr auto getConstructors() -> sk::Reflection::member_func_map_ref_t; WIP */ \
 	auto getVariables() const -> sk::Reflection::member_var_map_ref_t override; \
 	auto getFunctions() const -> sk::Reflection::member_func_map_ref_t override; \
@@ -53,7 +51,7 @@
 	auto getFunction( const sk::str_hash& _hash ) const -> sk::Reflection::member_func_ptr_t override;\
 	auto getFunctionOverloads( const sk::str_hash& _hash ) const -> sk::Reflection::member_func_range_t override; \
 	auto getFunction( const sk::str_hash& _hash, const sk::type_hash& _args ) const -> sk::Reflection::member_func_ptr_t override; \
-	template< class... Args > auto getFunction( const sk::str_hash& _hash ) -> sk::Reflection::member_func_ptr_t; \
+	template< class Ty, class... Args > auto getFunction( const sk::str_hash& _hash ) -> sk::Reflection::member_func_ptr_t; \
 	/* static constexpr auto staticGetConstructors() -> sk::Reflection::member_func_map_ref_t; WIP */ \
 	static constexpr auto staticGetVariables() -> sk::Reflection::member_var_map_ref_t; \
 	static constexpr auto staticGetFunctions() -> sk::Reflection::member_func_map_ref_t; \
@@ -61,10 +59,9 @@
 	static constexpr auto staticGetFunction( const sk::str_hash& _hash ) -> sk::Reflection::member_func_ptr_t; \
 	static constexpr auto staticGetFunctionOverloads( const sk::str_hash& _hash ) -> sk::Reflection::member_func_range_t; \
 	static constexpr auto staticGetFunction( const sk::str_hash& _hash, const sk::type_hash& _args ) -> sk::Reflection::member_func_ptr_t; \
-	template< class... Args > static constexpr auto staticGetFunction( const sk::str_hash& _hash ) -> sk::Reflection::member_func_ptr_t; \
+	template< class Ty, class... Args > static constexpr auto staticGetFunction( const sk::str_hash& _hash ) -> sk::Reflection::member_func_ptr_t; \
 	auto getBoundVariable( const sk::str_hash& _hash ) -> std::optional< sk::Reflection::cMemberVariableInstance< class_type > >; \
 	auto getBoundFunction( const sk::str_hash& _hash ) -> std::optional< sk::Reflection::cMemberFunctionInstance< class_type > >; \
-	private:
 
 // Internal use only.
 #define CREATE_CLASS_IDENTIFIERS_0_( ClassName, RuntimeClass ) public: \
@@ -73,7 +70,8 @@
 	/* Prepare for member reflection: */ \
 	CREATE_MEMBER_REFLECTION_VALUES( ClassName, RuntimeClass ) \
 	/* Create incomplete functions so that I remember and to allow all variables to be ready upon usage. */ \
-	CREATE_MEMBER_REFLECTION_FUNCTIONS( RuntimeClass )
+	CREATE_MEMBER_REFLECTION_FUNCTIONS( RuntimeClass ) \
+	sk_private: /* Set the first access as private. */
 
 // Required to make a runtime class functional.
 #define CREATE_CLASS_IDENTIFIERS( ClassName, RuntimeClass ) \
@@ -94,7 +92,9 @@ class Class : public sk::get_inherits_t< FIRST( __VA_ARGS__ ) > \
 
 // Generates both runtime info and start of body, but removes most of your freedom. Unable to function with templated classes.
 // Deprecated
-#define GENERATE_ALL_CLASS( Class, ... ) GENERATE_CLASS( Class __VA_OPT__(,) __VA_ARGS__ ) AFTER_FIRST( __VA_ARGS__ ) { CREATE_CLASS_BODY( Class )
+#define GENERATE_ALL_CLASS( Class, ... ) \
+	GENERATE_CLASS( Class __VA_OPT__(,) __VA_ARGS__ ) AFTER_FIRST( __VA_ARGS__ ) \
+	{ CREATE_CLASS_BODY( Class ) sk_private:
 
 #define TRUE_MAC( ... ) true
 
@@ -279,10 +279,10 @@ class Class : public sk::get_inherits_t< FIRST( __VA_ARGS__ ) > \
 	return staticGetFunction( _hash, _args ); }
 
 #define BUILD_CLASS_FUNCTION_OVERLOAD_TEMPLATE_GETTER( Class ) \
-	template< class... Args > constexpr auto Class ::class_type::staticGetFunction( const sk::str_hash& _hash ) -> sk::Reflection::member_func_ptr_t{ \
-	return staticGetFunction( _hash, sk::args_hash< Args... >::kHash ); } \
-	template< class... Args > auto Class ::class_type::getFunction( const sk::str_hash& _hash ) -> sk::Reflection::member_func_ptr_t{ \
-	return getFunction( _hash, sk::args_hash< Args... >::kHash ); }
+	template< class Ty, class... Args > constexpr auto Class ::class_type::staticGetFunction( const sk::str_hash& _hash ) -> sk::Reflection::member_func_ptr_t{ \
+	return staticGetFunction( _hash, sk::args_hash< Ty, Args... >::kHash ); } \
+	template< class Ty, class... Args > auto Class ::class_type::getFunction( const sk::str_hash& _hash ) -> sk::Reflection::member_func_ptr_t{ \
+	return getFunction( _hash, sk::args_hash< Ty, Args... >::kHash ); }
 
 #define BUILD_CLASS_BOUND_FUNCTION_GETTER( Class ) \
 	inline auto Class ::class_type::getBoundFunction( const sk::str_hash& _hash ) -> std::optional< sk::Reflection::cMemberFunctionInstance< class_type > >{ \
@@ -394,4 +394,4 @@ class Class : public sk::get_inherits_t< FIRST( __VA_ARGS__ ) > \
 	public: SK_ACCESS_CREATOR( __COUNTER__, kProtected ) protected
 
 #define sk_private \
-	public: SK_ACCESS_CREATOR( __COUNTER__, kPrivate ) public
+	public: SK_ACCESS_CREATOR( __COUNTER__, kPrivate ) private

@@ -213,6 +213,7 @@ namespace sk
     {
     }
 
+    // TODO: Make a type wrapper.
     template< class Ty >
     struct get_type
     {
@@ -235,15 +236,21 @@ namespace sk
     template< class Ty >
     struct is_valid_type
     {
-        constexpr static bool value = get_type_info< Ty >::kValid;
+        static constexpr bool value = get_type_info< Ty >::kValid;
     };
     template< class Ty >
-    constexpr inline bool kValidType = is_valid_type< Ty >::value;
+    constexpr bool kValidType = is_valid_type< Ty >::value;
     template< class Ty >
-    concept reflected = is_valid_type< Ty >::value;
+    concept reflected = kValidType< Ty >;
+    // TODO: Add a reflected type without mods. Something like:
+    // concept modless_reflected = kValidType< Ty >
+    template< reflected Ty >
+    constexpr auto& kTypeInfo = get_type_info< Ty >::kInfo;
 
     template< class... Types >
-    constexpr inline bool kValidTypes = std::conjunction_v< is_valid_type< Types >... >;
+    constexpr bool kValidTypes =  ( ... || kValidType< Types > );
+    template<>
+    constexpr bool kValidTypes<> = true;
 
     consteval type_hash calculate_types_hash( const array_ref< type_hash >& _hashes, uint64_t _val );
 

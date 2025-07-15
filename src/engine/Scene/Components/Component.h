@@ -75,7 +75,7 @@ namespace sk::Object
 	};
 
 	// TODO: Check if type is necessary
-	template< class Ty, class ClassTy, const ClassTy& ClassRef, uint16_t Events >
+	template< class Ty, class ClassTy, uint16_t Events >
 	class cComponent : public iComponent, public Event::cEventListener, public cShared_from_this< Ty >
 	{
 #define HAS_EVENT( Func, Val ) if constexpr( !std::is_same_v< decltype( &Ty::Func ), decltype( &iComponent::Func ) > ) events |= (Val)
@@ -102,8 +102,6 @@ namespace sk::Object
 		{
 			register_events();
 		} // cComponent
-
-		CREATE_CLASS_IDENTIFIERS( ClassRef )
 	public:
 
 		void setEnabled( const bool _is_enabled ) override { iComponent::setEnabled( _is_enabled ); _is_enabled ? postEvent< kEnabled >() : postEvent< kDisabled >(); }
