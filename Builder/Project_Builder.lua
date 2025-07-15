@@ -42,10 +42,6 @@ workspace "Skape_Playground"
     platforms { Get_Supported_Platforms() }
     startproject "Startup"
 
-    defines {
-        "LODEPNG_NO_COMPILE_ALLOCATORS",
-    }
-
     files { "visualizers/*.natvis" }
 
     Setup_Workspace()
@@ -96,7 +92,7 @@ project "Startup"
 
     files { "src/startup/main.cpp" }
 
-    includedirs { "src/engine", "src/framework", "external/fastgltf/include", "external/lodepng", Get_Module_Includes() }
+    includedirs { "src/engine", "src/framework", "external/fastgltf/include", "external/stb", Get_Module_Includes() }
 
 group "Skape"
 
@@ -106,15 +102,14 @@ project "Engine"
     language "C++"
     targetdir "bin/Engine" 
 
-    links { "fastgltf", "lodepng", Get_Module_Links() }
+    links { "fastgltf", Get_Module_Links() }
 
     files { "src/engine/**.hpp", "src/engine/**.cpp", "src/engine/**.h" }
 
-    includedirs { "src/engine", "external/fastgltf/include", "external/lodepng", Get_Module_Includes() }
+    includedirs { "src/engine", "external/fastgltf/include", "external/stb", Get_Module_Includes() }
 
 group "Modules"
-
-CreateModules()
+    CreateModules()
 
 group "Dependencies"
 
@@ -129,14 +124,3 @@ project "fastgltf"
     includedirs { "external/fastgltf/include", "external/fastgltf/deps/simdjson/" }
 
     files { "external/fastgltf/src/**.cpp", "external/fastgltf/src/**.hpp", "external/fastgltf/deps/**.cpp", "external/fastgltf/deps/**.h" }
-    
-project "lodepng"
-    kind "StaticLib"
-    location "Build/External/lodepng"
-    language "C++"
-    targetdir "bin/external"
-    
-    includedirs { "external/lodepng" }
-    
-    files { "external/lodepng/*.cpp", "external/lodepng/*.h" }
-    removefiles { "external/lodepng/lodepng_benchmark.*", "external/lodepng/lodepng_unittest.cpp" }

@@ -21,7 +21,7 @@ function Default_Module_Setup( module_name )
     
         files { DefaultModuleFiles( "Modules/" .. module_dir .. "/src/**", { ".hpp", ".h", ".cpp", ".c" } ) }
         
-        includedirs { "src/engine", "Modules/" .. module_dir .. "/src" }
+        includedirs { "src/engine", "external/fastgltf/include", "external/stb", "Modules/" .. module_dir .. "/src" }
     end
 end
 
@@ -36,7 +36,7 @@ function Module_Setup( module_name, library_dirs, includes )
         -- TODO: Add module.extensions to decide which files.
         files { DefaultModuleFiles( "Modules/" .. module_dir .. "/src/**", { ".hpp", ".h", ".cpp", ".c" } ) }
         
-        includedirs { "src/engine", "Modules/" .. module_dir .. "/src", includes( module_dir ) }
+        includedirs { "src/engine", "external/fastgltf/include", "external/stb", "Modules/" .. module_dir .. "/src", includes( module_dir ) }
         libdirs { library_dirs( module_dir ) }
     end
 end
@@ -124,7 +124,7 @@ function Get_Module_Includes()
     local includes = {}
     ForeachModule( function( mod )
         if( mod.IncludeDirs ~= nil ) then
-            table.insert( includes, mod.IncludeDirs( "Modules/" .. mod.Dir ) )
+            table.insert( includes, mod.IncludeDirs( mod.Dir ) )
         end
         table.insert( includes, "Modules/" .. mod.Dir .. "/src" )
     end )
