@@ -131,13 +131,14 @@ namespace sk::Graphics
     template< class Ty, Buffer::eType Type >
     auto cBuffer< Ty, Type >::operator[]( size_t _index ) -> Ty&
     {
-        
-    }
+        return data()[ _index ];
+    } // operator[]
 
     template< class Ty, Buffer::eType Type >
     auto cBuffer< Ty, Type >::operator[]( size_t _index ) const -> const Ty&
     {
-    }
+        return data()[ _index ];
+    } // operator[] const
 
     template< class Ty >
     using cConstant_Buffer = cBuffer< Ty, Buffer::eType::kConstant >;

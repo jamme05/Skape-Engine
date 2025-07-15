@@ -35,7 +35,7 @@ namespace sk::Graphics
                 // kConstant
                 gl::GLenum::GL_UNIFORM_BUFFER, // https://www.khronos.org/opengl/wiki/Uniform_Buffer_Object
                 // kUniform
-                gl::GLenum::GL_UNIFORM_BUFFER,
+                gl::GLenum::GL_ELEMENT_ARRAY_BUFFER,
                 // kVertex
                 gl::GLenum::GL_ARRAY_BUFFER, // https://learnopengl.com/Getting-started/Hello-Triangle#12
                 // kStructed
@@ -60,7 +60,9 @@ namespace sk::Graphics
             cUnsafe_Buffer& operator=( cUnsafe_Buffer&& _other ) noexcept;
 
             void   Destroy() override;
+            void   Clear  () override;
 
+            // Remove the raw get due to it avoiding all safety?
             auto Get      ()       -> void* override;
             auto Get      () const -> const void* override;
             void Read     ( void* _out, size_t _max_size = 0 ) const override;
@@ -68,12 +70,17 @@ namespace sk::Graphics
             void Update   ( const void* _data, size_t _size ) override;
             void UpdateSeg( const void* _data, size_t _size, size_t _offset ) override;
             [[ nodiscard ]]
-            auto GetSize() const -> size_t override { return m_size_; }
+            auto GetSize() const -> size_t override { return m_byte_size_; }
             void Resize ( size_t _byte_size ) override;
             void Lock   () override;
             void Unlock () override;
             [[ nodiscard ]]
             bool IsLocked() const override { return m_is_locked_; }
+
+            void Copy ( const iUnsafe_Buffer& _other ) override;
+            void Steal( iUnsafe_Buffer&& _other ) noexcept override;
+
+            std::string GetName() const override { return m_name_; }
 
             // DO NOT USE ANYWHERE EXCEPT FOR INTERNAL USAGE
             [[ nodiscard ]]
@@ -83,13 +90,14 @@ namespace sk::Graphics
             void   copy( const cUnsafe_Buffer& _other );
 
             // If the backup is in use.
-            std::atomic_bool m_is_locked_ = false;
+            std::atomic_bool m_is_locked_  = false;
+            std::atomic_bool m_is_updated_ = true;
             bool m_is_static_;
             bool m_is_initialized_ = false;
 
             sRaw_Buffer m_buffer_;
 
-            size_t m_size_ = 0;
+            size_t m_byte_size_ = 0;
             void*  m_data_ = nullptr;
 
             std::string m_name_;

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 
 // Will be overriden in Module
 // The override SHOULD be at sk::Graphics::cUnsafe_Buffer
@@ -20,8 +21,8 @@ namespace sk::Graphics
     {
         enum class eType : uint8_t
         {
-            kConstant, // TODO: Delete uniform buffer as it's usually the exact same?
-            kUniform,
+            kConstant,
+            kIndex,
             kVertex,
             kStructed,
         };
@@ -40,6 +41,7 @@ namespace sk::Graphics
         virtual ~iUnsafe_Buffer( void ) = 0;
 
         virtual void Destroy() = 0;
+        virtual void Clear() = 0;
         virtual auto Get()       -> void* = 0;
         virtual auto Get() const -> const void* = 0;
         /**
@@ -71,9 +73,14 @@ namespace sk::Graphics
         virtual size_t GetSize( void ) const = 0;
         virtual void   Resize ( size_t _byte_size ) = 0;
 
+        virtual void  Copy ( const iUnsafe_Buffer& _other ) = 0;
+        virtual void  Steal( iUnsafe_Buffer&& _other ) noexcept = 0;
+
         virtual void  Lock    ( void ) = 0;
         virtual void  Unlock  ( void ) = 0;
         [[ nodiscard ]]
         virtual bool  IsLocked( void ) const = 0;
+
+        virtual std::string GetName() const = 0;
     };
 } // sk::Graphics::

@@ -17,77 +17,134 @@ namespace sk::Graphics
 {
     class cDynamic_Buffer
     {
+        // TODO: Combine the functionallity of these in some way.
+        template< class Itr >
+        cDynamic_Buffer( const std::string& _name, Buffer::eType _type, const size_t _size, Itr _begin, Itr _end )
+        : m_type_( nullptr )
+        {
+            using type = std::iter_value_t< Itr >;
+            static constexpr auto size = sizeof( type );
+            m_byte_size_ = size * _size;
+            m_type_size_ = size;
+            m_buffer_ = SK_SINGLE( cUnsafe_Buffer, _name, m_byte_size_, _type, false );
+
+            // Initialize buffer.
+            auto ptr = static_cast< type* >( m_buffer_->Get() );
+            for( size_t i = 0; _begin != _end; ++i, ++_begin, ++i )
+                ::new( ptr + i ) type( *_begin );
+        } // cDynamic_Buffer
+
+        template< class Itr >
+        requires kValidType< std::iter_value_t< Itr > >
+        cDynamic_Buffer( const std::string& _name, Buffer::eType _type, const size_t _size, Itr _begin, Itr _end )
+        {
+            using type = std::iter_value_t< Itr >;
+            static constexpr auto size = sizeof( type );
+            m_byte_size_ = size * _size;
+            m_type_size_ = size;
+            m_type_ = &kTypeInfo< type >;
+            m_buffer_ = SK_SINGLE( cUnsafe_Buffer, _name, m_byte_size_, _type, false );
+
+            // Initialize buffer.
+            auto ptr = static_cast< type* >( m_buffer_->Get() );
+            for( size_t i = 0; _begin != _end; ++i, ++_begin, ++i )
+                ::new( ptr + i ) type( *_begin );
+        } // cDynamic_Buffer
+
     public:
-        cDynamic_Buffer( const std::string& _name, const Buffer::eType _type )
-        : m_size_( 0 )
-        , m_type_size_( 0 )
-        , m_type_( nullptr )
-        , m_buffer_( _name, 0, _type, false ) // Dynamic buffer will be non-static by default.
+        cDynamic_Buffer();
+
+        cDynamic_Buffer( const std::string& _name, const Buffer::eType _type ); // cDynamic_Buffer
+
+        template< class Ty >
+        cDynamic_Buffer( const std::string& _name, const Buffer::eType _type, const size_t _size, const Ty& _element )
+        : cDynamic_Buffer( _name, _type, sizeof( Ty ), _size * sizeof( Ty ), _size, &_element )
         {} // cDynamic_Buffer
-        cDynamic_Buffer( const std::string& _name, const Buffer::eType& _type, size_t& _size );
+
+        template< class Itr >
+        cDynamic_Buffer( const std::string& _name, Buffer::eType _type, Itr _begin, Itr _end )
+        : cDynamic_Buffer( _name, _type, std::distance( _begin, _end ), _begin, _end )
+        {} // cDynamic_Buffer
+
+        template< class Ty >
+        cDynamic_Buffer( const std::string& _name, Buffer::eType _type, std::initializer_list< Ty > _list )
+        : cDynamic_Buffer( _name, _type, _list.size(), _list.size(), _list.begin() )
+        {} // cDynamic_Buffer
 
         cDynamic_Buffer( const cDynamic_Buffer& _other );
         cDynamic_Buffer( cDynamic_Buffer&& _other ) noexcept;
 
-        template< reflected Ty >
-        void AlignAs();
+        ~cDynamic_Buffer() = default;
+
+        void AlignAs( size_t _align );
 
         template< class Ty >
         void AlignAs();
 
-        void AlignAs( size_t _align );
+        template< reflected Ty > requires ( !std::is_abstract_v< Ty > )
+        void AlignAs();
 
-        ~cDynamic_Buffer();
+        // TODO: Add more ways to set data.
+        template< class Ty >
+        void Set( size_t _index, Ty&& _element );
+
+        template< reflected Ty >
+        void Set( size_t _index, Ty&& _element );
+
+        void Resize( size_t _size );
+
     private:
         // The outwards size of this buffer. Get the size from the unsafe buffer for the capacity.
-        size_t         m_size_;
+        size_t          m_byte_size_;
         // Uses both.
-        size_t         m_type_size_;
-        type_info_t    m_type_;
+        size_t          m_type_size_;
+        type_info_t     m_type_;
 
-        cUnsafe_Buffer m_buffer_;
+        iUnsafe_Buffer* m_buffer_;
     };
 
-    template< reflected Ty >
-    void cDynamic_Buffer::SetAlign()
+    template< class Ty >
+    void cDynamic_Buffer::AlignAs()
     {
-        static constexpr bool is_safe_align = Memory::get_size< Ty, Memory::eAlignment::kShaderAlign >();
-        SK_WARN_IFN( sk::Severity::kConstGraphics | 100,
-            is_safe_align, TEXT( "WARNING: The type isn't aligned by 16 bits" ) )
-
-        m_type_ = get_type_info< Ty >::kInfo;
+        m_type_ = nullptr;
+        AlignAs( sizeof( Ty ) );
     }
 
-#define BUFFER_VARIANT_CONSTRUCTOR_0( VariantEnum, VariantClass ) \
-template< class Ty > class VariantClass : public cBuffer< Ty >{ public: \
-explicit VariantClass ( const std::string& _name, const bool _is_static = false ) \
-: cBuffer< Ty >( _name, VariantEnum, _is_static ){} };
-    
-#define BUFFER_VARIANT_0( VariantEnum, VariantClass ) \
-BUFFER_VARIANT_CONSTRUCTOR_0( VariantEnum, VariantClass )
-
-#define BUFFER_VARIANT( Variant ) \
-BUFFER_VARIANT_0( CONCAT( Buffer::eType::k, Variant ), M_CLASS( CONCAT( Variant, _Buffer ) ) )
-
-    static auto cConstant_Dynamic_Buffer( const std::string& _name )
+    template< reflected Ty > requires ( !std::is_abstract_v< Ty > )
+    void cDynamic_Buffer::AlignAs()
     {
-        return cDynamic_Buffer( _name, Buffer::eType::kConstant );
-    };
+        m_type_ = &kTypeInfo< Ty >;
+        AlignAs( sizeof( Ty ) );
+    }
 
-    // BUFFER_VARIANT( Constant )
-    // BUFFER_VARIANT( Structed )
-    // BUFFER_VARIANT( Vertex )
+    template< class Ty >
+    void cDynamic_Buffer::Set( const size_t _index, Ty&& _element )
+    {
+        SK_ERR_IF( m_buffer_ == nullptr,
+            "ERROR: Trying to set element in uninitialized buffer." )
 
+        SK_BREAK_IF( sk::Severity::kGraphics | 50,
+            m_type_ != nullptr, TEXT( "WARNING: Buffer {} is currently set to use type {}. But type an unreflected type was provided instead.", m_buffer_->GetName(), m_type_->name ) )
 
-    // template< class Ty >
-    // using cConstant_Dynamic_Buffer = cDynamic_Buffer< Buffer::eType::kConstant >;
-    // template< class Ty >
-    // using cStructed_Dynamic_Buffer = cDynamic_Buffer< Buffer::eType::kStructed >;
-    // template< class Ty >
-    // using cVertex_Dynamic_Buffer = cDynamic_Buffer< Buffer::eType::kVertex >;
+        SK_BREAK_IF_RET( sk::Severity::kGraphics | 20,
+            m_type_size_ != sizeof( Ty ), TEXT( "ERROR: Buffer {} is currently set to use types with size {}. But a type with size of {} was provided instead,", m_buffer_->GetName(), m_type_size_, sizeof( Ty ) ) )
 
+        m_buffer_->UpdateSeg( std::addressof( std::forward< Ty >( _element ) ), _index * m_type_size_, m_type_size_ );
+    }
+
+    template< reflected Ty >
+    void cDynamic_Buffer::Set( const size_t _index, Ty&& _element )
+    {
+        SK_ERR_IF( m_buffer_ == nullptr,
+            "ERROR: Trying to set element in uninitialized buffer." )
+
+        SK_BREAK_IF_RET( sk::Severity::kGraphics | 50,
+            m_type_ == nullptr, TEXT( "WARNING: Buffer {} is currently set to not use reflected types.", m_buffer_->GetName() ) )
+
+        SK_BREAK_IF_RET( sk::Severity::kGraphics | 20, m_type_ != &kTypeInfo< Ty >,
+            TEXT( "ERROR: Buffer {} is currently set to use type {}. But type {} was provided instead.",
+                m_buffer_->GetName(), m_type_->name, kTypeInfo< Ty >.name ) )
+
+        m_buffer_->UpdateSeg( std::addressof( std::forward< Ty >( _element ) ), _index * m_type_size_, m_type_size_ );
+    }
 } // sk::Graphics
-
-#undef BUFFER_VARIANT_CONSTRUCTOR_0
-#undef BUFFER_VARIANT_0
-#undef BUFFER_VARIANT
