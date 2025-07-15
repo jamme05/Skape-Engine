@@ -18,7 +18,7 @@ namespace sk::Object
 		RegisterListener< cCameraFlight >( kUpdate, &cCameraFlight::update );
 	} // cCameraFlight
 
-	bool cCameraFlight::onInput( const Input::eType _type, const Input::sEvent& _event )
+	bool cCameraFlight::onInput( const Input::eInputType _type, const Input::sEvent& _event )
 	{
 		switch( _type )
 		{
@@ -66,8 +66,8 @@ namespace sk::Object
 		{
 			switch( _event.pad->button )
 			{
-			case Input::eButton::kR3:
-			case Input::eButton::kL3: m_position.y = 0.0f; break;
+			case Input::eType::kR3:
+			case Input::eType::kL3: m_position.y = 0.0f; break;
 			default: break;
 			}
 		}
@@ -75,8 +75,8 @@ namespace sk::Object
 		{
 			switch( _event.pad->button )
 			{
-			case Input::eButton::kR3: m_position.y =  1.0f; break;
-			case Input::eButton::kL3: m_position.y = -1.0f; break;
+			case Input::eType::kR3: m_position.y =  1.0f; break;
+			case Input::eType::kL3: m_position.y = -1.0f; break;
 			default: break;
 			}
 		}

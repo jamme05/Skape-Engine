@@ -6,10 +6,8 @@
 
 #pragma once
 
-#include <queue>
-
-#include "Math/Vector2.h"
-#include "Math/Math.h"
+#include <Input/Input_Keys.h>
+#include <Math/Vector2.h>
 
 namespace sk::Platform
 {
@@ -20,7 +18,7 @@ namespace sk::Input
 {
 	class iListener;
 
-	enum eType : uint32_t
+	enum eInputType : uint32_t
 	{
 		kKey_Down    = 0x00000001,
 		kKey_Up      = 0x00000002,
@@ -37,6 +35,12 @@ namespace sk::Input
 
 	}; // eType
 
+	enum class eResponse : uint8_t
+	{
+		kStop,
+		kContinue,
+	};
+
 	enum class eAnalog : uint8_t
 	{
 		kMouse,
@@ -45,38 +49,57 @@ namespace sk::Input
 
 	}; // eAnalog
 
-	enum class eButton : uint32_t
+	struct sEvent;
+	struct sRawEvent
 	{
-		kNone        = 0x00,
-		PLATFORM_BUTTONS // TODO: Make something more practical.
-	}; // eButton
+		const sEvent* current_event;
+	};
 
-	struct sPadEvent
+	struct sPadEvent : sRawEvent
 	{
-		eButton   button          = eButton::kNone;
+		uint32_t  button          = eType::kNone;
 		eAnalog   analog          = eAnalog::kMouse;
 		cVector2f current_stick   = { };
 		cVector2f previous_stick  = { };
 		float     current_analog  = { };
 		float     previous_analog = { };
-		Platform::cPad* pad             = nullptr;
+		Platform::cPad* pad       = nullptr;
+	};
 
+	struct sMouseEvent : sRawEvent
+	{
+		eAnalog analog = eAnalog::kMouse;
+		cVector2f current_position  = { };
+		cVector2f previous_position = { };
+	};
+
+	struct sKeyboardEvent : sRawEvent
+	{
+		uint32_t key    = eType::kNone;
+		uint32_t repeat = 0;
+		bool isFirst() const { return repeat == 0; }
 	};
 
 	// Only use data from event TEMPORARILY, it'll be removed after the event.
 	// Exceptions for pads, but you'd rather want to get a user for that.
 	struct sEvent
 	{
-		const sPadEvent* pad;
-
+		const sPadEvent*      pad      = nullptr;
+		const sMouseEvent*    mouse    = nullptr;
+		const sKeyboardEvent* keyboard = nullptr;
 	};
 
 	// Disabled in debug
 	extern void setLogInputs  ( const bool _log_inputs );
 	extern void addListener   (       iListener* _listener );
 	extern void removeListener( const iListener* _listener );
-	extern void event         ( const eType _type, const sPadEvent& _event );
-	extern void event         ( const eType _type, const sEvent&    _event );
+
+	// THESE HAVE TO BE DECLARED IN EITHER A WINDOW OR PLATFORM MODULE.
+	extern void input_event   ( const eInputType _type, sPadEvent&      _event );
+	extern void input_event   ( const eInputType _type, sMouseEvent&    _event );
+	extern void input_event   ( const eInputType _type, sKeyboardEvent& _event );
+
+	extern void input_event   ( const eInputType _type, const sEvent&   _event );
 
 	class iListener
 	{
@@ -96,7 +119,13 @@ namespace sk::Input
 		void setEnabled ( const bool _enabled )       { m_enabled = _enabled; }
 		void setFilter  ( const uint32_t _filter )    { m_filter = _filter;   }
 
-		virtual bool onInput( const eType _type, const sEvent& _event ) = 0;
+		// Override either only a single type of input.
+		virtual eResponse onInput( const eInputType _type, const sPadEvent&      _event ){ return onInput( _type, *_event.current_event ); }
+		virtual eResponse onInput( const eInputType _type, const sMouseEvent&    _event ){ return onInput( _type, *_event.current_event ); }
+		virtual eResponse onInput( const eInputType _type, const sKeyboardEvent& _event ){ return onInput( _type, *_event.current_event ); }
+
+		// Or all of them!
+		virtual eResponse onInput( const eInputType _type, const sEvent& _event ) = 0;
 
 	}; // iListener
 
