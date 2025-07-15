@@ -32,6 +32,7 @@ namespace sk::Graphics
 
             static constexpr gl::GLenum kTypeConverter[]
             {
+                gl::GLenum::GL_INVALID_ENUM,
                 // kConstant
                 gl::GLenum::GL_UNIFORM_BUFFER, // https://www.khronos.org/opengl/wiki/Uniform_Buffer_Object
                 // kUniform

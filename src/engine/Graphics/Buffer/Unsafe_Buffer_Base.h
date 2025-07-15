@@ -21,6 +21,7 @@ namespace sk::Graphics
     {
         enum class eType : uint8_t
         {
+            kInvalid,
             kConstant,
             kIndex,
             kVertex,
