@@ -7,11 +7,8 @@
 #pragma once
 
 #include "Component.h"
-#include "Assets/Manager/Asset_manager.h"
 #include "Graphics/cRender_context.h"
-#include "Math/Matrix4x4.h"
-#include "Types/graphics_types.h"
-#include "Assets/cMesh.h"
+#include "Assets/Mesh.h"
 
 namespace sk::Assets {
 	class cTexture;
@@ -24,8 +21,9 @@ namespace sk::Scene
 
 namespace sk::Object::Components
 {
-	QW_COMPONENT_CLASS( MeshComponent )
+	SK_COMPONENT_CLASS( MeshComponent )
 	{
+		SK_CLASS_BODY( MeshComponent )
 	public:
 		explicit cMeshComponent( const cShared_ptr< Assets::cMesh >& _mesh );
 
@@ -39,3 +37,5 @@ namespace sk::Object::Components
 		cShared_ptr< Assets::cTexture > m_texture;
 	};
 } // sk::Object::Components
+
+REGISTER_CLASS( sk::Object::Components::MeshComponent )

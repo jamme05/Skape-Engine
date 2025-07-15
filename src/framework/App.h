@@ -5,6 +5,8 @@
 #include "Scene/Scene.h"
 #include "Input/Input.h"
 
+#include <Assets/Mesh.h>
+
 #include <Reflection/RuntimeStruct.h>
 
 namespace sk::Assets {
@@ -40,7 +42,7 @@ public:
 	bool running   ( void ) const         { return m_running; }
 	void setRunning( const bool _running ){ m_running = _running; }
 
-	bool onInput( const sk::Input::eType _type, const sk::Input::sEvent& _event ) override;
+	bool onInput( const sk::Input::eInputType _type, const sk::Input::sEvent& _event ) override;
 
 	void create ( void );
 	void destroy( void );

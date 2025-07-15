@@ -8,13 +8,13 @@
 
 #include <functional>
 
-#include "Containers/map.h"
+#include "Containers/Map.h"
 #include "Containers/vector.h"
 
 #include <Misc/Hashing.h>
 #include "Misc/Singleton.h"
-#include "Misc/print.h"
-#include "Misc/Smart_ptrs.h"
+#include "Misc/Print.h"
+#include "Misc/Smart_Ptrs.h"
 
 namespace sk
 {
@@ -45,10 +45,10 @@ namespace sk
 	} // Object
 
 	template<>
-	class hash< Object::eEvents > : public Hashing::iHashed
+	struct hash< Object::eEvents > : Hashing::iHashed
 	{
 		static constexpr size_t int_offset = sizeof( uint32_t ) * 8;
-	public:
+
 		//constexpr hash( const char* _to_hash )
 		//: iHashed( Hashing::fnv1a_32( _to_hash ) )
 		//{

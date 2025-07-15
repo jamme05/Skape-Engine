@@ -7,7 +7,7 @@
 #pragma once
 
 #include "Misc/Singleton.h"
-#include "Misc/Smart_ptrs.h"
+#include "Misc/Smart_Ptrs.h"
 #include "Scene/Object.h"
 
 namespace sk::Graphics

@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include "Misc/Smart_ptrs.h"
+#include "Misc/Smart_Ptrs.h"
 
 #include <ranges>
 #include "Containers/vector.h"
-#include "Containers/map.h"
+#include "Containers/Map.h"
 
 #include "Components/Component.h"
 #include "Components/TransformComponent.h"
@@ -27,7 +27,7 @@ namespace sk::Object
 	GENERATE_CLASS( iObject ), public Event::cEventListener, public cShared_from_this< iObject >
 	{
 		CREATE_CLASS_BODY( iObject )
-	public:
+	sk_public:
 		// TODO: Create templated constructor with root type + parameters
 		explicit iObject( std::string _name )
 		: m_root( sk::make_shared< Components::cTransformComponent >() )
@@ -39,8 +39,7 @@ namespace sk::Object
 		explicit iObject( std::string _name, Args... _args )
 		: m_root( sk::make_shared< Ty >( _args... ) )
 		, m_name( std::move( _name ) )
-	{
-		} // iObject
+		{} // iObject
 
 		~iObject( void ) override
 		{
@@ -97,10 +96,10 @@ namespace sk::Object
 
 		auto& getName     ( void ) const { return m_name; }
 
-	protected:
+	sk_protected:
 		cShared_ptr< iComponent > m_root;
 
-	private:
+	sk_private:
 		// TODO: Move types to typedefs
 		vector             < cShared_ptr< iObject > >    m_children   = { };
 		multimap< type_hash, cShared_ptr< iComponent > > m_components = { };
@@ -109,7 +108,7 @@ namespace sk::Object
 
 		cScene* m_parent_scene = nullptr;
 
-		friend class cScene;
+		friend class sk::cScene;
 	};
 
 	namespace Object

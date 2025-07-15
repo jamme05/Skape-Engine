@@ -12,7 +12,7 @@
 #include "Math/Transform.h"
 #include "Reflection/RuntimeClass.h"
 #include "Misc/Hashing.h"
-#include "Misc/Smart_ptrs.h"
+#include "Misc/Smart_Ptrs.h"
 #include "Scene/Managers/EventManager.h"
 
 namespace sk::Object
@@ -147,6 +147,6 @@ namespace sk::Object
 #define COMPONENT_PARENT_CLASS( ComponentName, ... ) sk::Object::iComponent
 #define COMPONENT_PARENT_VALIDATOR( ComponentName, ... ) std::is_base_of< sk::Object::iComponent, __VA_ARGS__ >
 #define COMPONENT_PARENT_CREATOR_2( ComponentName, ... ) AFTER_FIRST( __VA_ARGS__ )
-#define COMPONENT_PARENT_CREATOR_1( ComponentName, ... ) sk::Object::cComponent< M_CLASS( ComponentName ), ComponentName::runtime_class_t, ComponentName :: CONCAT( runtime_class_, ComponentName ), sk::Object::kAll >
+#define COMPONENT_PARENT_CREATOR_1( ComponentName, ... ) sk::Object::cComponent< M_CLASS( ComponentName ), ComponentName::runtime_class_t, sk::Object::kAll >
 #define COMPONENT_PARENT_CREATOR( ComponentName, ... ) CONCAT( COMPONENT_PARENT_CREATOR_, VARGS( __VA_ARGS__ ) ) ( ComponentName, __VA_ARGS__ )
-#define QW_COMPONENT_CLASS( ComponentName, ... ) QW_RESTRICTED_CLASS( ComponentName, COMPONENT_PARENT_CLASS, COMPONENT_PARENT_CREATOR, COMPONENT_PARENT_VALIDATOR, EMPTY __VA_OPT__( , __VA_ARGS__ ) )
+#define SK_COMPONENT_CLASS( ComponentName, ... ) QW_RESTRICTED_CLASS( ComponentName, COMPONENT_PARENT_CLASS, COMPONENT_PARENT_CREATOR, COMPONENT_PARENT_VALIDATOR, EMPTY __VA_OPT__( , __VA_ARGS__ ) )

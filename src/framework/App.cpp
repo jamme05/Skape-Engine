@@ -36,7 +36,7 @@
 #include "Reflection/RuntimeStruct.h"
 
 cApp::cApp( void )
-: iListener( sk::Input::eType::kAll, 10, true )
+: iListener( sk::Input::eInputType::kAll, 10, true )
 {
 	sk::Input::setLogInputs( false );
 
@@ -48,13 +48,13 @@ cApp::~cApp( void )
 	m_scene = nullptr;
 } // ~cApp
 
-bool cApp::onInput( const sk::Input::eType _type, const sk::Input::sEvent& _event )
+bool cApp::onInput( const sk::Input::eInputType _type, const sk::Input::sEvent& _event )
 {
 	switch( _type )
 	{
 	case sk::Input::kButton_Down:
 	{
-		if( _event.pad->button == sk::Input::eButton::kOptions )
+		if( _event.pad->button == sk::Input:: )
 			m_running = false;
 	}
 	break; // sk::Input::kButton_Down
@@ -128,17 +128,6 @@ void cApp::create( void )
 
 	sk::Assets::cMaterial material{ "Test", *m_mesh_pair };
 
-	constexpr int arr1[]{ 1, 2, 3 };
-	constexpr sk::array t1{ arr1 };
-	constexpr sk::array t2{ 3, 2, 1 };
-	constexpr sk::array t3{ t2 };
-	//constexpr int* arr2 = t3;
-	constexpr auto t4 = t2 + t1;
-	constexpr auto v = sk::arr::concat< t1, { 1 } >::kValue;
-
-	constexpr auto v2 = sk::args_hash< void >::kTypes;
-	constexpr auto v3 = sk::validate_args( v2, true );
-
 	print_types();
 } // _create
 
@@ -150,17 +139,17 @@ void cApp::print_types( void )
 		{
 		case sk::sType_Info::eType::kStandard:
 		{
-			printf( "Type: %s Name: %s Size: %lu \n", val->raw_name, val->name, static_cast< uint64_t >( val->size ) );
+			std::println( "Type: {} Name: {} Size: {}", val->raw_name, val->name, static_cast< uint64_t >( val->size ) );
 		}
 		break;
 		case sk::sType_Info::eType::kStruct:
 		{
-			printf( "Struct: %s Name: %s Size: %lu \n", val->raw_name, val->name, static_cast< uint64_t >( val->size ) );
+			std::println( "Struct: {} Name: {} Size: {}", val->raw_name, val->name, static_cast< uint64_t >( val->size ) );
 			for( auto struct_info = val->as_struct_info(); const auto& member : struct_info->members | std::views::values )
 			{
 				if( auto member_type = member.get_type() )
 				{
-					printf( "   Type: %s Name: %s Size: %lu Offset: %lu \n", member_type->raw_name, member.display_name, static_cast< uint64_t >( member.size ), static_cast< uint64_t >( member.offset ) );
+					std::println( "   Type: {} Name: {} Size: {} Offset: {}", member_type->raw_name, member.display_name, static_cast< uint64_t >( member.size ), static_cast< uint64_t >( member.offset ) );
 				}
 			}
 		}

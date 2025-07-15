@@ -7,7 +7,7 @@
 #pragma once
 
 #include <type_traits>
-#include <Macros/manipulation.h>
+#include <Macros/Manipulation.h>
 
 #include "Type_Hash.h"
 
@@ -36,7 +36,7 @@ namespace sk
         };
 
         template< class Ty >
-        struct my_struct< true, Ty >
+        struct my_struct
         {
             static constexpr bool value = std::is_base_of_v< cInterface, Ty >;
         };
@@ -79,4 +79,4 @@ namespace sk
 #define SK_INTERFACE( ... ) \
     SK_INTERFACE_BODY( INTERFACE_TYPE( FIRST( __VA_ARGS__ ) ) )
 
-SK_INTERFACE( Test )
+// SK_INTERFACE( Test )

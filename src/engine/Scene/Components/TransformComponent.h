@@ -10,10 +10,11 @@
 
 namespace sk::Object::Components
 {
-	QW_COMPONENT_CLASS( TransformComponent )
+	SK_COMPONENT_CLASS( TransformComponent )
 	{
-	public:
+		SK_CLASS_BODY( TransformComponent )
+	sk_public:
 		 cTransformComponent( void ) = default;
-		~cTransformComponent( void ) = default;
+		~cTransformComponent( void ) override = default;
 	};
 } // sk::Object::Components

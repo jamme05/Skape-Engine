@@ -16,8 +16,9 @@ namespace sk::Scene
 
 namespace sk::Object::Components
 {
-	QW_COMPONENT_CLASS( CameraComponent )
+	SK_COMPONENT_CLASS( CameraComponent )
 	{
+		SK_CLASS_BODY( CameraComponent )
 	public:
 		struct sCameraSettings
 		{
@@ -33,7 +34,7 @@ namespace sk::Object::Components
 			kOrthographic,
 		};
 
-		cCameraComponent( const Graphics::sViewport& _viewport, const Graphics::sScissor& _scissors, const sCameraSettings& _settings, const eType _type );
+		cCameraComponent( const Graphics::sViewport& _viewport, const Graphics::sScissor& _scissors, const sCameraSettings& _settings, eType _type );
 
 		void renderTo( Graphics::cRender_context& _context );
 		void renderTo( Graphics::cRender_target&  _context );
@@ -77,4 +78,6 @@ namespace sk::Object::Components
 
 		friend class Scene::cCameraManager;
 	};
-} // sk::Object::Components
+} // sk::Object::Components::
+
+REGISTER_CLASS( sk::Object::Components::CameraComponent )

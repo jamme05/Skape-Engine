@@ -4,10 +4,10 @@
  *
  */
 
-#include "cCameraComponent.h"
+#include "CameraComponent.h"
 
-#include "Scene/Managers/cCameraManager.h"
-#include "Scene/Managers/cSceneManager.h"
+#include "Scene/Managers/CameraManager.h"
+#include "Scene/Managers/SceneManager.h"
 
 namespace sk::Object::Components
 {

@@ -18,14 +18,14 @@ namespace sk
         typedef Ty ( & arr_type )[ Size ];
         constexpr static auto array_size = Size;
 
-        explicit constexpr array( const Ty* _ptr )
+        constexpr array( const Ty* _ptr )
         {
             std::copy_n( _ptr, Size, value );
         } // array
 
         template< class... Args >
         requires ( std::conjunction_v< std::is_same< Ty, Args >... > && !std::is_array_v< Ty > )
-        explicit constexpr array( Args... _values )
+        constexpr array( Args... _values )
         : value{ std::move( _values )... }
         {
         } // array
