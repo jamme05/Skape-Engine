@@ -6,13 +6,25 @@
 
 #pragma once
 
+#include <Macros/Manipulation.h>
 #include <Debugging/Macros/Warning.h>
+
+#define THIS_T()
+#define THIS_T_IS_TEXT ,1
 
 #define RAW_TEXT( ... ) std::format( __VA_ARGS__ )
 #define PRINT_TEXT( ... ) std::print( __VA_ARGS__ )
 #define PRINTLN_TEXT( ... ) std::println( __VA_ARGS__ )
 #define WARN_TEXT( ... ) std::println( stderr, __VA_ARGS__ )
 #define ERR_TEXT( ... ) SK_FATAL( __VA_ARGS__ )
-#define TEXT( ... ) _TEXT( __VA_ARGS__ )
+#define TEXT( ... ) _TEXT( __VA_ARGS__ ) THIS_T
 		
 #define EXTRACT_FORMAT_TEXT( Text ) CONCAT( EXTRACT_FORMAT_TEXT_TYPE_, EXTRACT_FORMAT_TYPE( CONCAT( IS, Text ) ) ) ( Text )
+
+#define UNPACK_TEXT_1_1( Text ) Text
+#define UNPACK_TEXT_1_0( Literal ) TEXT( Literal )
+
+#define UNPACK_TEXT_0( Text, Is_Text ) CONCAT( UNPACK_TEXT_1_, SECOND( Is_Text, 0 ) )( Text )
+#define UNPACK_TEXT( Text ) UNPACK_TEXT_0( Text, CONCAT( Text, _IS_TEXT ) )
+
+#define EXTRACT_TEXT( Method, Text ) CONCAT( Method, UNPACK_TEXT( Text ) )()
