@@ -8,9 +8,17 @@ module = {
         defines( { "SK_GRAPHICS_OPENGL" } )
     end,
 
+    Init = function( module_dir )
+        CMakeBuilder( path.join( module_dir, binder_path ), "", "Release" )
+    end,
+
     IncludeLibs = function( module_dir )
-        CMakeBuilder( path.join( "Modules", module_dir, binder_path ), "", "Release" )
-        return { path.join( module_dir, binder_path, "cmake/Release/glbinding.lib" ) }
+        local dll_path = path.join( "Build/Modules", module_dir, binder_path, "cmake/Release/glbinding.dll" )
+        os.copyfile( dll_path, "game/bin/glbinding.dll" )
+
+        return {
+            path.join( "Build/Modules", module_dir, binder_path, "cmake/Release/glbinding.lib" )
+        }
     end,
 
     -- TODO: Add cache.

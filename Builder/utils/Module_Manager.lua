@@ -26,7 +26,7 @@ function Default_Module_Setup( module_name )
 end
 
 function Module_Setup( module_name, library_dirs, includes )
-    return function( module_dir )
+    return function( module_dir ) -- Make the module dir be the absolute path.
     project( module_name )
         kind "StaticLib"
         location( "Build/Modules/" .. module_name )
@@ -57,6 +57,9 @@ function Load_Module( partial_module )
     include( module_dir .. "/" .. build_file )
     module.Raw = module_json
     module.Dir = partial_module.Dir
+    if( module.Init ~= nil ) then
+        module.Init( module_dir )
+    end
     table.insert( modules, module )
 end
 
@@ -115,6 +118,9 @@ end
 function Get_Module_Links()
     local links = {}
     ForeachModule( function( mod )
+        if( mod.IncludeLibs ~= nil ) then
+            table.insert( links, mod.IncludeLibs( mod.Dir ) )
+        end
         table.insert( links, mod.Name )
     end )
     return links;

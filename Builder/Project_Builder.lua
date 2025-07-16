@@ -13,8 +13,6 @@ include( "./utils/Module_Manager.lua" )
 -- Return to root dir.
 os.chdir( "../" )
 
-Load_Modules()
-
 -- TODO: Move to external file.
 function CMakeBuilder( dependency, cmake_path, build_config )
     local dependency_path = "./Build/" .. dependency .. "/cmake"
@@ -34,6 +32,8 @@ function CMakeBuilder( dependency, cmake_path, build_config )
     print( "Build done.\n" )
     os.chdir( return_path )
 end
+
+Load_Modules()
 
 local root_build_dir = "./Build/Project/"
 
@@ -80,7 +80,7 @@ project "Framework"
 
     links { "Engine" }
     
-    includedirs { "src/engine", "src/framework", "external/fastgltf/include", Get_Module_Includes() }
+    includedirs { "src/engine", "src/framework", "external/fastgltf/include",  "external/stb", Get_Module_Includes() }
 
 project "Startup"
     kind "WindowedApp"

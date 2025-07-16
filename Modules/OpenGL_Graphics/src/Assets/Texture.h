@@ -10,7 +10,7 @@
 
 #include <glbinding/gl/types.h>
 
-#include <Helpers/stb_image_wrapper.h>
+#include <stb_image.h>
 
 namespace sk::Assets
 {
