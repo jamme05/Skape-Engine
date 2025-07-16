@@ -4,6 +4,8 @@
  *
  */
 
+#if false
+
 #include "CameraFlight.h"
 
 #include "Platform/time.h"
@@ -83,3 +85,5 @@ namespace sk::Object
 	}
 } // sk::Object::
 
+
+#endif

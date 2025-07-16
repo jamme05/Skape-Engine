@@ -18,3 +18,5 @@ namespace sk::Object::Components
 		~cTransformComponent( void ) override = default;
 	};
 } // sk::Object::Components
+
+REGISTER_CLASS( sk::Object::Components::TransformComponent )

@@ -4,6 +4,8 @@
  *
  */
 
+#if false
+
 #include "Camera.h"
 #include "Scene/Components/CameraComponent.h"
 
@@ -35,3 +37,4 @@ namespace sk::Object
 		Scene::cCameraManager::get().setMainCamera( m_camera );
 	} // setAsMain
 } // sk::Object::
+#endif

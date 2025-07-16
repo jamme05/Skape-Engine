@@ -39,7 +39,7 @@ namespace sk::Graphics
     class iUnsafe_Buffer
     {
     public:
-        virtual ~iUnsafe_Buffer( void ) = 0;
+        virtual ~iUnsafe_Buffer( void ) = default;
 
         virtual void Destroy() = 0;
         virtual void Clear() = 0;

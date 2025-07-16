@@ -10,5 +10,5 @@
 namespace sk
 {
     template< class Ty >
-    consteval Ty&& Const( Ty&& _v ){ return std::forward< Ty >( _v ); }
+    consteval Ty Const( Ty _v ){ return _v; }
 } // sk::

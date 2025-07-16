@@ -293,12 +293,12 @@ class Class : public sk::get_inherits_t< FIRST( __VA_ARGS__ ) > \
 #define BUILD_CLASS_REFLECTION_INFO( Class ) \
 	template<> struct sk::get_type_info< Class ::class_type >{ \
 	constexpr static auto& kClass = Class ::class_type::kClass; \
-	constexpr static sType_Info kInfo = { \
+	constexpr static sClass_Type_Info kInfo = { { \
 		.type = sType_Info::eType::kClass, \
 		.hash = kClass.getType(), \
 		.size = sizeof( Class ::class_type ), \
 		.name = kClass.getRawName(), \
-		.raw_name = kClass.getRawName() }; \
+		.raw_name = kClass.getRawName() }, &Class::class_type::getStaticClass() }; \
 	constexpr static bool kValid = true; };
 
 /**

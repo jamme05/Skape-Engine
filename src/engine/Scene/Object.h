@@ -57,7 +57,7 @@ namespace sk::Object
 			ptr->m_object = get_weak_this();
 			ptr->setParent( m_root );
 
-			m_components.insert( std::pair{ Ty::getStaticClassType(), ptr } );
+			m_components.insert( std::pair{ Ty::getStaticType(), ptr } );
 
 			return ptr;
 		} // addComponent

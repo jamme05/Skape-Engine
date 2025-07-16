@@ -21,7 +21,7 @@ namespace sk
 	public:
 		explicit cScene( const std::string& _name ) : cAsset( _name ){ }
 
-		~cScene( void );
+		~cScene( void ) override;
 
 		// Creates an empty object, essentially an empty
 		template< class Ty, class... Args >
@@ -35,6 +35,8 @@ namespace sk
 
 		void force_render( void );
 		void force_update( void );
+
+		void Save() override {};
 
 	private:
 		// TODO: Replace this with a map.

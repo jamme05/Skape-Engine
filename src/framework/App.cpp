@@ -2,43 +2,40 @@
 
 #include "App.h"
 
-#include "Assets/Material.h"
-#include "Assets/cMesh.h"
-#include "Assets/Shader.h"
 #include "Assets/Asset.h"
 #include "Assets/Texture.h"
-#include "Assets/Manager/Asset_manager.h"
-
-#include "Embedded/Shaders.h"
-
-#include "Graphics/cRenderer.h"
-#include "Graphics/cRender_context.h"
+#include <Assets/Manager/Asset_Manager.h>
+#include <Assets/Asset_List.h>
 
 #include "Math/Types.h"
 #include "Memory/Tracker/Tracker.h"
-#include "Platform/cPlatform.h"
 
 #include "Scene/Scene.h"
 #include "Scene/Components/MeshComponent.h"
 #include "Scene/Managers/SceneManager.h"
 #include "Scene/Objects/CameraFlight.h"
 
-#include "Graphics/cDepth_target.h"
-#include "Graphics/cRender_target.h"
-#include "Graphics/cUniforms.h"
-#include "Graphics/cWindow_context.h"
-
-#include "Containers/allocator.h"
 #include "Containers/Const/Const_Wrapper.h"
-#include "Containers/Const/String.h"
+#include "Graphics/Renderer.h"
+#include "Platform/Window/Window_Base.h"
 
 #include "Reflection/RuntimeClass.h"
 #include "Reflection/RuntimeStruct.h"
 
+cApp* cApp::m_running_instance_ = nullptr;
+
 cApp::cApp( void )
 : iListener( sk::Input::eInputType::kAll, 10, true )
 {
+	m_running_instance_ = this;
 	sk::Input::setLogInputs( false );
+
+	m_main_window = sk::Platform::create_window( "Main Window", { 1280 , 720  } );
+	m_windows.emplace( m_main_window );
+
+	SK_ERR_IFN( m_main_window->SetVisibility( true ), "Unable to show window." )
+
+	sk::Graphics::cRenderer::init();
 
 } // cApp
 
@@ -48,43 +45,18 @@ cApp::~cApp( void )
 	m_scene = nullptr;
 } // ~cApp
 
-bool cApp::onInput( const sk::Input::eInputType _type, const sk::Input::sEvent& _event )
+sk::Input::eResponse cApp::onInput( const uint32_t _type, const sk::Input::sEvent& _event )
 {
-	switch( _type )
-	{
-	case sk::Input::kButton_Down:
-	{
-		if( _event.pad->button == sk::Input:: )
-			m_running = false;
-	}
-	break; // sk::Input::kButton_Down
+	if( _type == sk::Input::kKey_Down && _event.keyboard->key == sk::Input::Keyboard::kEscape )
+		return sk::Input::eResponse::kQuit;
 
-	default:
-		break;
-	}
-
-	return false;
+	return sk::Input::eResponse::kContinue;
 } // onInput
 
 void cApp::create( void )
 {
-	sk::cPlatform::initialize();
-	sk::Graphics::cRenderer::initialize();
 	sk::cAssetManager::init();
 	sk::cSceneManager::init();
-
-	sk::Graphics::cRenderer::get().registerVertexAttribute( sk::Graphics::sBaseVertex::g_attribute_regs );
-
-	m_mesh_pair      = sk::Assets::cShader::create_shared( "Mesh Vertex", Embedded::Shaders::Deferred::Mesh::Vertex, ePrimType_t::kTriList );
-	auto temp_shader = sk::Assets::cShader::create_shared( "Mesh Pixel",  Embedded::Shaders::Deferred::Mesh::Pixel,  ePrimType_t::kTriList );
-
-	m_mesh_pair->setAttributes( sk::Graphics::sBaseVertex::g_attribute_regs );
-	m_mesh_pair->linkShader( temp_shader );
-
-	m_post_pair = sk::Assets::cShader::create_shared( "Post Vertex", Embedded::Shaders::Post_processing::Vertex, ePrimType_t::kRectList );
-	temp_shader = sk::Assets::cShader::create_shared( "Post Pixel",  Embedded::Shaders::Post_processing::Pixel,  ePrimType_t::kRectList );
-
-	m_post_pair->linkShader( temp_shader );
 
 	//auto list   = sk::cAssetManager::get().loadFolder( "data/" );
 	auto list_1 = sk::cAssetManager::get().loadFile( "data/humanforscale.glb" );
@@ -100,7 +72,7 @@ void cApp::create( void )
 	//auto mushroom      = sk::cAssetManager::get().getAssetAs< sk::Assets::cMesh >( 5 );
 
 	m_scene = sk::cScene::create_shared( "Main" );
-	m_scene->create_object< sk::Object::cCameraFlight >( "Camera Free Flight" )->setAsMain();
+	// m_scene->create_object< sk::Object::cCameraFlight >( "Camera Free Flight" )->setAsMain();
 	//auto mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 1" );
 	//mesh->getTransform().getPosition() = { -10.0f, 0.0f, 0.0f };
 	//mesh->getTransform().update();
@@ -124,9 +96,7 @@ void cApp::create( void )
 	sk::cSceneManager::get().registerScene( m_scene );
 
 	REGISTER_LISTENER( "Custom Event", &cApp::custom_event )
-	sk::Register_Event_Helper( sk::Const< sk::str_hash >( "Aaaa" ), &cApp::custom_event, this );
-
-	sk::Assets::cMaterial material{ "Test", *m_mesh_pair };
+	sk::Register_Event_Helper( sk::Const( sk::str_hash( "Aaaa" ) ), &cApp::custom_event, this );
 
 	print_types();
 } // _create
@@ -135,6 +105,7 @@ void cApp::print_types( void )
 {
 	for( const auto& val : sk::type_map | std::views::values )
 	{
+		std::println();
 		switch( val->type )
 		{
 		case sk::sType_Info::eType::kStandard:
@@ -154,6 +125,41 @@ void cApp::print_types( void )
 			}
 		}
 		break;
+		case sk::sType_Info::eType::kClass:
+		{
+			const auto class_info = val->as_class_info();
+			auto variables = class_info->runtime_class->getVariables();
+			auto functions = class_info->runtime_class->getFunctions();
+			std::println( "Class: {}, Name: {}, Size: {}, Variables: {}, Functions: {}",
+				class_info->raw_name, class_info->name, class_info->size,
+				variables.size(), functions.size() );
+
+			std::println( "Variables:" );
+			for( const auto variable : variables | std::views::values )
+			{
+				auto type        = variable->getType()->raw_name;
+				auto name        = variable->getName();
+				auto visibility  = variable->getVisibilityStr();
+				auto flags       = variable->getFlags();
+				// Example: protected int hello
+				std::println( "    {}: {} {} Flags: {}", visibility, type, name, flags );
+			}
+
+			std::println( "Functions:" );
+			for( const auto function : functions | std::views::values )
+			{
+				auto name        = function->getName();
+				auto return_type = function->getReturnType()->raw_name;
+				auto args_types  = function->getArgumentTypes()->to_raw_string();
+				auto visibility  = function->getVisibilityStr();
+				auto flags       = function->getFlags();
+				auto is_static   = function->getIsStatic() ? " static" : "";
+				// Example: static private void test_function( bool, int )
+				std::println( "    {}:{} {} {}( {} ) Flags: {}",
+					visibility, is_static, return_type, name, args_types, flags );
+			}
+		}
+		break;
 		}
 	}
 }
@@ -163,50 +169,18 @@ void cApp::custom_event( void )
 	printf( "Custom Event go brrr\n" );
 } // custom_event
 
-void cApp::destroy( void )
+void cApp::destroy( void ) const
 {
 	sk::cSceneManager::shutdown();
 	sk::cAssetManager::shutdown();
-	sk::Graphics::cRenderer::deinitialize();
-	sk::cPlatform::deinitialize();
+	for( const auto& window : m_windows )
+		SK_FREE( window );
+
+	sk::Graphics::cRenderer::shutdown();
 
 } // _destroy
 
 void cApp::run( void )
 {
-	sk::cPlatform::Update();
 	sk::cSceneManager::get().update();
-
-	auto& resolution   = sk::Graphics::cRenderer::get().getWindowResolution();
-	sk::cVector2i ires = resolution;
-
-	sk::Graphics::sViewport viewport{ 0, 0, resolution.x, resolution.y };
-	sk::Graphics::sScissor  scissor { 0, 0, ires.x, ires.y };
-
-	if( !sk::Graphics::cRenderer::get().getRenderContext().setShader( *m_mesh_pair ) )
-		__debugbreak();
-
-	// Removed due to NDA
-
-	sk::cSceneManager::render();
-
-	//auto& r_ctx = m_render_context->getBackContext();
-
-	static uint64_t counter = 0;
-	if( counter++ % 100 == 0 )
-	{
-		POST_EVENT( "Custom Event" )
-	}
-
-	auto& window_context = sk::Graphics::cRenderer::get().getWindowContext();
-
-	window_context.begin( viewport, scissor );
-	window_context.clear( sk::Graphics::eClear::kAll, sk::Color::kBlack );
-
-	auto& ctx = window_context.getBackContext();
-
-	// Removed due to NDA
-
-	window_context.end();
-
 } // run

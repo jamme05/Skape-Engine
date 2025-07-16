@@ -4,6 +4,8 @@
  *
  */
 
+#if false
+
 #include "MeshComponent.h"
 
 #include "CameraComponent.h"
@@ -31,3 +33,4 @@ namespace sk::Object::Components
 	}
 } // sk::Object::Components
 
+#endif

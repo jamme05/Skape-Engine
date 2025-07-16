@@ -36,7 +36,7 @@ namespace sk::Scene
 	};
 
 	public:
-		cCameraManager( void );
+		cCameraManager( void ){}
 
 		void registerCamera( const cShared_ptr< camera_t >& _camera );
 
@@ -45,7 +45,7 @@ namespace sk::Scene
 
 		void setCameraEnabled( const cShared_ptr< camera_t >& _camera, const bool _enable );
 
-		void render( void );
+		void render( void ){}
 
 	private:
 

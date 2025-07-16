@@ -21,7 +21,7 @@ namespace sk::Memory
 	{
 		// Decides if the memory tracker should keep track of the entire history and not just the latest modification.
 		// TODO: Check if memory history actually works.
-		constexpr bool kSaveMemoryHistory = true;
+		constexpr bool kSaveMemoryHistory = false;
 
 		struct sMem_header
 		{
@@ -94,7 +94,7 @@ namespace sk::Memory
 
 	} // free
 
-	extern void free( void* _block );
+	extern void free( void* _block, const std::source_location& = std::source_location::current() );
 
 } // sk::Memory::
 

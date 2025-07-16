@@ -92,6 +92,7 @@ private:
 		std::mutex  m_mtx;
 
 	}; // cTracker
+	size_t cTracker::m_memory_usage = 0;
 
     namespace Tracker
     {
@@ -168,7 +169,6 @@ private:
         const auto t_size = size + aligned_entry_size;
 
     	// Add statistics
-    	++m_statistics.allocation_count;
     	m_statistics.memory_allocated_exc_head += _size;
     	m_statistics.memory_allocated_inc_head += t_size;
     	m_memory_usage += t_size;
@@ -292,6 +292,7 @@ private:
 
     void cTracker::add_history( sTracker_entry& _entry, const sHistory_action& _action )
     {
+    	// TODO: Something is broken with source location. Debug later
     	// Will do nothing if save memory history is disabled.
     	if constexpr( Tracker::kSaveMemoryHistory )
     	{
@@ -352,9 +353,9 @@ private:
         return n_size + 1;
     } // realloc_fast
 
-    void free( void* _block )
+    void free( void* _block, const std::source_location& _location )
     {
-    	Tracker::free( _block );
+    	Tracker::free( _block, _location );
     } // free
 
 } // sk::Memory::

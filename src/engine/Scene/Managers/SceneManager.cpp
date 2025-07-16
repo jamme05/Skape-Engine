@@ -7,11 +7,9 @@
 
 #include "SceneManager.h"
 
-#include "Graphics/cRenderer.h"
 #include "Scene/Scene.h"
 #include "CameraManager.h"
 #include "EventManager.h"
-#include "Scene/Components/CameraComponent.h"
 
 namespace sk
 {
@@ -47,6 +45,7 @@ namespace sk
 		m_active_context = nullptr;
 	} // render
 
+#if false
 	void cSceneManager::render_with( Scene::camera_t& _camera, Graphics::cRender_context& _context, const bool _swap )
 	{
 		m_active_context = &_context;
@@ -66,4 +65,5 @@ namespace sk
 
 		_context.end( _swap );
 	} // render_with
+#endif
 } // sk::

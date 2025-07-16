@@ -4,6 +4,8 @@
  *
  */
 
+#if false
+
 #include "CameraComponent.h"
 
 #include "Scene/Managers/CameraManager.h"
@@ -66,3 +68,4 @@ namespace sk::Object::Components
 		};
 	} // calculateProjectionMatrix
 } // sk::Object::Components::
+#endif

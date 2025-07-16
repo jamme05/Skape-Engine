@@ -7,7 +7,6 @@
 #pragma once
 
 #include "Component.h"
-#include "Graphics/cRender_context.h"
 #include "Assets/Mesh.h"
 
 namespace sk::Assets {
@@ -25,9 +24,10 @@ namespace sk::Object::Components
 	{
 		SK_CLASS_BODY( MeshComponent )
 	public:
-		explicit cMeshComponent( const cShared_ptr< Assets::cMesh >& _mesh );
+		explicit cMeshComponent( const cShared_ptr< Assets::cMesh >& _mesh )
+		{}
 
-		void render( void ) override;
+		void render( void ) override{}
 
 		void setTexture( const cShared_ptr< Assets::cTexture >& _texture ){	m_texture = _texture; }
 

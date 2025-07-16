@@ -19,19 +19,24 @@
 
 #include "Type_Hash.h"
 #include "Containers/Const/Linked_Array.h"
-#include "Input/Input.h"
 #include "Misc/Counter.h"
+
+namespace sk
+{
+    class iRuntimeClass;
+} // sk
 
 namespace sk
 {
     constexpr static type_hash kInvalid_Id = static_cast< uint64_t >( 0 );
 
     struct sType_Info;
-    extern const unordered_map< type_hash, const sType_Info* > type_map;
+    extern const std::unordered_map< type_hash, const sType_Info* > type_map;
     typedef std::pair< type_hash, const sType_Info* > type_pair_t;
 
     // Forward declare to allow for simpler casting.
     struct sStruct_Type_Info;
+    struct sClass_Type_Info;
 
     struct sType_Info
     {
@@ -68,6 +73,7 @@ namespace sk
          * @return Itself as a sStruct_Type_Info if valid, or nullptr if invalid.
          */
         constexpr const sStruct_Type_Info* as_struct_info( void ) const;
+        constexpr const sClass_Type_Info*  as_class_info( void ) const;
     };
     typedef const sType_Info* type_info_t;
 
@@ -99,6 +105,11 @@ namespace sk
         map_ref< str_hash, runtime_struct::sMemberInfo > members;
     };
 
+    struct sClass_Type_Info : sType_Info
+    {
+        const iRuntimeClass* runtime_class;
+    };
+
     struct sEnum_Type_Info : sType_Info
     {
         map_ref< str_hash, runtime_struct::sMemberInfo > members;
@@ -113,6 +124,13 @@ namespace sk
         return nullptr;
     } // as_struct_info
 
+    constexpr const sClass_Type_Info* sType_Info::as_class_info() const
+    {
+        if( type == eType::kClass )
+            return static_cast< const sClass_Type_Info* >( this );
+        return nullptr;
+    } // as_class_info
+
     struct sModifier
     {
         enum class eType : uint8_t
@@ -121,7 +139,7 @@ namespace sk
             kPointer,
             kReference,
         };
-        constexpr sModifier( const eType   _type  ) : array_size( 0 ),     type( _type ){}
+        constexpr sModifier( const eType    _type ) : array_size( 0 ),     type( _type ){}
         constexpr sModifier( const uint16_t _size ) : array_size( _size ), type( eType::kArray ){}
         uint16_t array_size;
         eType    type;
@@ -248,9 +266,9 @@ namespace sk
     constexpr auto& kTypeInfo = get_type_info< Ty >::kInfo;
 
     template< class... Types >
-    constexpr bool kValidTypes =  ( ... || kValidType< Types > );
+    inline constexpr bool kValidTypes =  ( ... || kValidType< Types > );
     template<>
-    constexpr bool kValidTypes<> = true;
+    inline constexpr bool kValidTypes<> = true;
 
     consteval type_hash calculate_types_hash( const array_ref< type_hash >& _hashes, uint64_t _val );
 
@@ -267,8 +285,25 @@ namespace sk
         [[nodiscard]] std::string to_string() const
         {
             std::stringstream ss;
-            for( auto& type : types )
-                ss << type->raw_name << ", ";
+            for( size_t i = 0; i < types.size(); i++ )
+            {
+                ss << types[ i ]->name;
+                if( i == types.size() - 1 )
+                    continue;
+                ss << ", ";
+            }
+            return ss.str();
+        } // to_string
+        [[nodiscard]] std::string to_raw_string() const
+        {
+            std::stringstream ss;
+            for( size_t i = 0; i < types.size(); i++ )
+            {
+                ss << types[ i ]->raw_name;
+                if( i == types.size() - 1 )
+                    continue;
+                ss << ", ";
+            }
             return ss.str();
         } // to_string
     };

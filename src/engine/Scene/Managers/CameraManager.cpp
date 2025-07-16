@@ -4,10 +4,11 @@
  *
  */
 
+#if false
+
 #include "CameraManager.h"
 
 #include "SceneManager.h"
-#include "Graphics/cRenderer.h"
 #include "Scene/Components/CameraComponent.h"
 
 namespace sk::Scene
@@ -69,3 +70,5 @@ namespace sk::Scene
 		cSceneManager::get().render_with( *m_main_camera.m_camera, Graphics::cRenderer::get().getRenderContext() );
 	} // render
 } // sk::Scene::
+
+#endif

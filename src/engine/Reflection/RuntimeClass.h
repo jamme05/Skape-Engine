@@ -20,8 +20,28 @@
 #include <print>
 #include <functional>
 
+#include "RuntimeClass.h"
+
 namespace sk
 {
+	namespace Reflection
+	{
+		class cMemberVariable;
+		class cMemberFunction;
+
+		typedef const cMemberVariable*                 member_var_ptr_t;
+		typedef const cMemberFunction*                 member_func_ptr_t;
+		typedef std::pair< str_hash, cMemberVariable > member_var_pair_t;
+		typedef std::pair< str_hash, cMemberFunction > member_func_pair_t;
+		typedef std::pair< str_hash, cMemberVariable >    member_var_map_pair_t;
+		typedef std::pair< str_hash, member_func_ptr_t >  member_func_map_pair_t;
+		typedef map_ref  < str_hash, member_var_ptr_t  >  member_var_map_ref_t;
+		typedef map_ref  < str_hash, member_func_ptr_t >  member_func_map_ref_t;
+		typedef std::pair< const member_var_map_pair_t*,  const member_var_map_pair_t* >  member_var_range_t;
+		typedef std::pair< const member_func_map_pair_t*, const member_func_map_pair_t* > member_func_range_t;
+
+	} // Reflection::
+
 	class iClass;
 
 	class iRuntimeClass
@@ -67,6 +87,20 @@ namespace sk
 		virtual constexpr bool isBaseOf     ( const iRuntimeClass& _derived ) const { return false; } // Has to be set so iClass isn't a pure virtual
 
 		constexpr bool operator==( const iRuntimeClass& _right ) const { return m_hash == _right.m_hash; }
+
+		// Virtual member reflection
+		virtual auto getVariables() const
+			-> Reflection::member_var_map_ref_t { return {}; }
+		virtual auto getFunctions() const
+			-> Reflection::member_func_map_ref_t { return {}; }
+		virtual auto getVariable( const str_hash& _hash ) const
+			-> Reflection::member_var_ptr_t { return nullptr; }
+		virtual auto getFunction( const str_hash& _hash ) const
+			-> Reflection::member_func_ptr_t { return nullptr; }
+		virtual auto getFunctionOverloads( const str_hash& _hash ) const
+			-> Reflection::member_func_range_t { return {}; }
+		virtual auto getFunction( const str_hash& _hash, const type_hash& _args ) const
+			-> Reflection::member_func_ptr_t { return nullptr; }
 
 	private:
 		type_hash   m_hash;
@@ -185,12 +219,23 @@ namespace sk
 			return _derived.isDerivedFrom( *this );
 		} // isBaseOf
 
+		virtual auto getVariables() const
+			-> Reflection::member_var_map_ref_t override { return value_type::staticGetVariables(); }
+		virtual auto getFunctions() const
+			-> Reflection::member_func_map_ref_t override { return value_type::staticGetFunctions(); }
+		virtual auto getVariable( const str_hash& _hash ) const
+			-> Reflection::member_var_ptr_t override { return value_type::staticGetVariable( _hash ); }
+		virtual auto getFunction( const str_hash& _hash ) const
+			-> Reflection::member_func_ptr_t override { return value_type::staticGetFunction( _hash ); }
+		virtual auto getFunctionOverloads( const str_hash& _hash ) const
+			-> Reflection::member_func_range_t override { return value_type::staticGetFunctionOverloads( _hash ); }
+		virtual auto getFunction( const str_hash& _hash, const type_hash& _args ) const
+			-> Reflection::member_func_ptr_t override { return value_type::staticGetFunction( _hash, _args ); }
+
 		template< class... Args >
 		requires ( !ForceShared )
 		Ty* create( Args&&... ){ return nullptr; } // TODO: Create function
 	};
-
-	class iClass;
 
 	template< class Ty >
 	requires std::is_base_of_v< iClass, Ty >
@@ -240,9 +285,22 @@ namespace sk::Reflection
 			};
 			static constexpr auto getType      ( const uint8_t _type ){ return static_cast< eRaw >( kTypeMask & _type ); }
 			static constexpr auto getVisibility( const uint8_t _type ){ return static_cast< eRaw >( kVisibility & _type ); }
-			static constexpr bool getIsStatic  ( const uint8_t _type ){ return kStatic & _type; }
-			static constexpr bool getIsVirtual ( const uint8_t _type ){ return kVirtual & _type; }
-			static constexpr bool getIsReadOnly( const uint8_t _type ){ return kReadOnly & _type; }
+			static constexpr bool getIsStatic  ( const uint8_t _type ){ return ( _type & kStatic   ) != 0; }
+			static constexpr bool getIsVirtual ( const uint8_t _type ){ return ( _type & kVirtual  ) != 0; }
+			static constexpr bool getIsReadOnly( const uint8_t _type ){ return ( _type & kReadOnly ) != 0; }
+
+			static constexpr auto visibilityToString( uint8_t _visibility )
+			{
+				// Filter just in case
+				_visibility = getVisibility( _visibility );
+				switch( _visibility )
+				{
+				case kPublic:    return "Public";
+				case kProtected: return "Protected";
+				case kPrivate:   return "Private";
+				default:         return "Unknown";
+				}
+			}
 		};
 
 		consteval cMember( const char* _name, const uint8_t& _type )
@@ -263,6 +321,7 @@ namespace sk::Reflection
 		[[ nodiscard ]] constexpr auto getIsVirtual ( void ) const { return eType::getIsVirtual( m_flags ); }
 		[[ nodiscard ]] constexpr auto getIsReadOnly( void ) const { return eType::getIsReadOnly( m_flags ); }
 		[[ nodiscard ]] constexpr auto getVisibility( void ) const { return eType::getVisibility( m_flags ); }
+		[[ nodiscard ]] constexpr auto getVisibilityStr( void ) const { return eType::visibilityToString( eType::getVisibility( m_flags ) ); }
 
 	private:
 		const char* m_name;
@@ -408,6 +467,9 @@ namespace sk::Reflection
 		, m_class_( nullptr )
 		, m_holder_( &_holder )
 		{}
+
+		// TODO: Add some way to manually get the offset?
+		auto getType() const { return m_member_type_info_; }
 
 		template< sk_class Ty >
 		constexpr auto bind( Ty* _instance ) -> cMemberVariableInstance< Ty >;
@@ -744,6 +806,9 @@ namespace sk::Reflection
 		, m_holder_( &_holder )
 		{}
 
+		auto getReturnType   () const { return m_return_type_; }
+		auto getArgumentTypes() const { return m_args_info_; }
+
 		// Call static or Instance function. Check out calli in case an instance needs to be provided.
 		template< class Re, class... Args >
 		bool call( Re* _return, Args&&... _args ) const
@@ -967,11 +1032,7 @@ namespace sk::Reflection
 		static constexpr auto& extraction = extractor_t::kMember;
 		if( _array )
 		{
-			uint8_t access;
-			if constexpr( extraction.holder->kFlags & cMember::eType::kStatic )
-				access = _xxx_sk_get_offset_access< Ty >( offset_of< Ty, extraction.point >() );
-			else
-				access = _xxx_sk_get_offset_access< Ty >( offset_of< Ty, extraction.holder->get_raw() >() );
+			uint8_t access = _xxx_sk_get_offset_access< Ty >( offset_of< Ty, extraction.point >() );
 
 			( *_array )[ Layer ] = member_var_pair_t{
 				extraction.name, cMemberVariable{ extraction.name, *extraction.holder, access }
@@ -987,11 +1048,7 @@ namespace sk::Reflection
 			if( _array )
 				return _xxx_process_member_variables< Ty, Size, Layer - 1 >( _array );
 
-			uint8_t access;
-			if constexpr( extraction.holder->kFlags & cMember::eType::kStatic )
-				access = _xxx_sk_get_offset_access< Ty >( offset_of< Ty, extraction.point >() );
-			else
-				access = _xxx_sk_get_offset_access< Ty >( offset_of< Ty, extraction.holder->get_raw() >() );
+			uint8_t access = _xxx_sk_get_offset_access< Ty >( offset_of< Ty, extraction.point >() );
 
 			array_t array{};
 			array[ Layer ] = member_var_pair_t{
@@ -1016,7 +1073,7 @@ namespace sk
 
 		// Virtual member reflection
 		virtual auto getVariables() const
-			-> Reflection::member_var_map_ref_t{ return {}; }
+			-> Reflection::member_var_map_ref_t = 0;
 		virtual auto getFunctions() const
 			-> Reflection::member_func_map_ref_t = 0;
 		virtual auto getVariable( const str_hash& _hash ) const
@@ -1048,11 +1105,7 @@ SK_CLASS( Test )
 
 sk_public:
 
-	static uint32_t member_3;
-	static constexpr uint32_t member_4 = 10;
 	uint32_t member_5 = 0;
-	SK_VARIABLE( member_3 )
-	SK_VARIABLE( member_4 )
 	SK_VARIABLE( member_5 )
 
 	cTest( uint64_t _mem0, uint32_t _mem1 )
@@ -1063,16 +1116,15 @@ sk_public:
 	SK_CONSTRUCTOR( cTest )
 
 	void test_func( const uint32_t _val ) { member_1 = _val; }
+	static bool test_func1(){ return false; }
 	uint32_t test_func2( void ) const { return member_2; }
-	static void test_func3( const uint32_t _val ){ member_3 = _val; }
+
+	SK_FUNCTION( test_func )
+	SK_FUNCTION( test_func1 )
+	SK_FUNCTION( test_func2 )
 	// TODO: Figure out how to handle virtual functions? Some custom virtual table or member functions?
 
-	virtual auto test_func4( void ) -> uint8_t { return member_4; }
-
 	// TODO: Figure out a way to register virtual functions. Overridable tag?
-	SK_FUNCTION( test_func  )
-	SK_FUNCTION( test_func2 )
-	SK_FUNCTION( test_func3 )
 
 	// Future example: SK_FUNCTION( test_func, Visibility=Private )
 };

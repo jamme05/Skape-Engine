@@ -144,6 +144,12 @@ namespace sk::Object
 
 } // sk::Object
 
+namespace sk::Object::Component
+{
+	using class_type = iComponent;
+} // sk::Object::Component
+REGISTER_CLASS( sk::Object::Component )
+
 #define COMPONENT_PARENT_CLASS( ComponentName, ... ) sk::Object::iComponent
 #define COMPONENT_PARENT_VALIDATOR( ComponentName, ... ) std::is_base_of< sk::Object::iComponent, __VA_ARGS__ >
 #define COMPONENT_PARENT_CREATOR_2( ComponentName, ... ) AFTER_FIRST( __VA_ARGS__ )

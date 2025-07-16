@@ -8,10 +8,9 @@
 
 #include "CameraManager.h"
 
-#include "Graphics/cRender_context.h"
 #include "Math/Matrix4x4.h"
 #include "Misc/Singleton.h"
-#include "Misc/Smart_ptrs.h"
+#include "Misc/Smart_Ptrs.h"
 
 namespace sk
 {
@@ -36,7 +35,7 @@ namespace sk
 
 		static void render( void );
 
-		void render_with( sk::Object::Components::cCameraComponent& _camera, Graphics::cRender_context& _context, const bool _swap = true );
+		// void render_with( sk::Object::Components::cCameraComponent& _camera, Graphics::cRender_context& _context, const bool _swap = true );
 
 		static auto get_active_context( void ){ return m_active_context; }
 

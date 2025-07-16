@@ -64,7 +64,7 @@ namespace sk::Assets
 		{
 			std::lock_guard lock( m_mtx );
 
-			auto  range   = m_assets.equal_range( Ty::getStaticClassType() );
+			auto  range   = m_assets.equal_range( Ty::getStaticType() );
 
 			if( range.first == m_assets.end() )
 				return nullptr;
@@ -73,7 +73,7 @@ namespace sk::Assets
 			if( range.first == range.second )
 				return range.first->second;
 
-			auto& counter = m_counters[ Ty::getStaticClassType() ];
+			auto& counter = m_counters[ Ty::getStaticType() ];
 			auto  dist    = std::distance( range.first, range.second );
 
 			if( counter >= dist )

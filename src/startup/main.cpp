@@ -7,26 +7,71 @@
 #include "App.h"
 
 #include <Memory/Tracker/Tracker.h>
+#include <Skape_Main.h>
 
 namespace sk
 {
-	static_assert( registry::type_registry< 0 >::valid, "No types registered." );
-	constexpr static auto types = registry::type_registry< sk::registry::counter::next() - 1 >::registered;
-	const unordered_map< type_hash, const sType_Info* > type_map = { types.begin(), types.end() };
+	namespace
+	{
+		auto create_type_map( const cLinked_Array< type_info_t >& _array )
+		{
+			std::unordered_map< type_hash, const sType_Info* > map{ _array.size() };
+
+			for( auto& val : _array )
+				map.emplace( val->hash, val );
+
+			return map;
+		} // create_type_map
+
+		static_assert( registry::type_registry< 0 >::valid, "No types registered." );
+		constexpr static auto& types = registry::type_registry< sk::registry::counter::next() - 1 >::registered;
+	} // ::
+	// TODO: Add a handler for types.
+	const auto type_map = create_type_map( types );
 } // sk::
 
-int main( int, char** )
+namespace sk::App
 {
-	sk::Memory::Tracker::init();
-	auto& app =    cApp::init();
+	void startup( int, char** )
+	{
+		Memory::Tracker::init();
+		auto& app = cApp::init();
 
-	app.create();
+		app.create();
+	}
 
-	while( app.running() )
-		app.run();
+	void shutdown()
+	{
+		cApp::shutdown();
+		Memory::Tracker::shutdown();
+	}
 
-	cApp::shutdown();
-	sk::Memory::Tracker::shutdown();
+	/**
+	 * This is the normal startup/shutdown code for 
+	 * @return Status code
+	 */
+	int sk_main( const int _argc, char** _args )
+	{
+		startup( _argc, _args );
 
-	return 0;
+		// Alternatively
+		// while( app.running() ) app.run()
+
+		while( const auto app = cApp::getRunningInstance() )
+			app->run();
+
+		shutdown();
+
+		return 0;
+	}
+} // ::
+
+// Use normal main if no custom main provided.
+#if !defined( SK_CUSTOM_MAIN )
+
+int main( const int _argc, char** _args )
+{
+	return sk::App::sk_main( _argc, _args );
 }
+
+#endif // !SK_CUSTOM_MAIN

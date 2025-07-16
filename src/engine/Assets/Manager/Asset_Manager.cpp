@@ -13,7 +13,6 @@
 #include <Assets/Asset_List.h>
 #include <Assets/Model.h>
 #include <Assets/Texture.h>
-#include <Helpers/Mesh_Helper.h>
 #include <Scene/Managers/CameraManager.h>
 
 namespace sk
@@ -187,10 +186,6 @@ namespace sk
 				continue;
 
 			auto mesh_asset = Assets::cMesh::create_shared( std::string( _mesh.name ) );
-			if( Graphics::Helpers::cMesh_Helper::ParseGltfPrimitiveMesh( mesh_asset, _asset, primitive ) )
-			{
-				
-			}
 		} // auto& primitive : _mesh.primitives
 
 		return assets;

@@ -23,22 +23,20 @@ namespace sk
 			bool                      log_inputs = false;
 		} // Table
 
-		void setLogInputs( const bool _log_inputs )
+		void setLogInputs( [[ maybe_unused ]] const bool _log_inputs )
 		{
 #if defined( DEBUG )
 			log_inputs = _log_inputs;
-#else // DEBUG
-			( void ) _log_inputs;
-#endif // !DEBUG
+#endif // DEBUG
 		} // setLogInputs
 
 		void addListener( iListener* _listener )
 		{
 			std::lock_guard lock( mtx );
 
-			const auto itr = std::ranges::find_if( listeners , [ _listener ]( const iListener* _l )
+			const auto itr = std::ranges::find_if( listeners , [ _priority = _listener->getPriority() ]( const iListener* _l )
 			{
-				return _l->getPriority() > _listener->getPriority();
+				return _l->getPriority() > _priority;
 			} );
 
 			if( itr != listeners.end() )
@@ -57,28 +55,38 @@ namespace sk
 
 		} // addListener
 
-		void input_event( const eInputType _type, sPadEvent& _event )
+		bool input_event( const uint32_t _type, sPadEvent& _event )
 		{
 			const sEvent event{ .pad = &_event };
 			_event.current_event = &event;
-			input_event( _type, event );
+			return input_event( _type, event );
 		} // input_event
 
-		void input_event( const eInputType _type, sMouseEvent& _event )
+		bool input_event( const uint32_t _type, sMouseEvent& _event )
 		{
 			const sEvent event{ .mouse = &_event };
 			_event.current_event = &event;
-			input_event( _type, event );
+			return input_event( _type, event );
 		} // input_event
 
-		void input_event( const eInputType _type, sKeyboardEvent& _event )
+		bool input_event( const uint32_t _type, sKeyboardEvent& _event )
 		{
 			const sEvent event{ .keyboard = &_event };
 			_event.current_event = &event;
-			input_event( _type, event );
+			return input_event( _type, event );
 		} // input_event
 
-		void input_event( const eInputType _type, const sEvent& _event )
+		bool input_custom_event( const uint32_t _type, void* _event, iListener* _target )
+		{
+			const sEvent event{ .custom = _event };
+
+			if( _target )
+				return _target->onInput( _type, event ) == eResponse::kQuit;
+
+			return input_event( _type, event );
+		} // input_custom_event
+
+		bool input_event( const uint32_t _type, const sEvent& _event )
 		{
 #if defined( DEBUG )
 			if( log_inputs )
@@ -115,11 +123,12 @@ namespace sk
 			{
 				if( listener->getEnabled() && listener->getFilter() & _type )
 				{
-					if( listener->onInput( _type, _event ) == eResponse::kStop )
-						break;
+					// No need to mention consume.
+					if( const auto res = listener->onInput( _type, _event ); res != eResponse::kContinue )
+						return res == eResponse::kQuit;
 				}
 			}
-
+			return false;
 		} // event
 
 		iListener::iListener( const uint32_t _filter, const uint16_t _priority, const bool _enabled )

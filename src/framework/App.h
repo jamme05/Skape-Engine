@@ -5,9 +5,12 @@
 #include "Scene/Scene.h"
 #include "Input/Input.h"
 
-#include <Assets/Mesh.h>
-
 #include <Reflection/RuntimeStruct.h>
+
+namespace sk::Platform
+{
+	class iWindow;
+}
 
 namespace sk::Assets {
 	class cShader;
@@ -40,12 +43,11 @@ public:
 	~cApp( void ) override;
 
 	bool running   ( void ) const         { return m_running; }
-	void setRunning( const bool _running ){ m_running = _running; }
+	void setRunning( const bool _running ){ m_running = _running; m_running_instance_ = m_running ? this : nullptr; }
 
-	bool onInput( const sk::Input::eInputType _type, const sk::Input::sEvent& _event ) override;
+	sk::Input::eResponse onInput( const uint32_t _type, const sk::Input::sEvent& _event ) override;
 
 	void create ( void );
-	void destroy( void );
 	void run    ( void );
 
 	static void print_types( void );
@@ -55,5 +57,14 @@ public:
 	sk::cShared_ptr< sk::Assets::cShader > m_post_pair = nullptr;
 
 	sk::cShared_ptr< sk::cScene > m_scene = nullptr;
-	std::vector< sk::cShared_ptr< sk::Assets::cMesh > > m_meshes = {};
+
+	using window_t = sk::Platform::iWindow*;
+	std::unordered_set< window_t > m_windows;
+	static cApp* getRunningInstance(){ return m_running_instance_; }
+
+private:
+	void destroy( void ) const;
+	
+	window_t     m_main_window = nullptr;
+	static cApp* m_running_instance_;
 };

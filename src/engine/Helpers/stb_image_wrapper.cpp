@@ -4,7 +4,7 @@
  *
  */
 
-#pragma once
+#include <Memory/Tracker/Tracker.h>
 
 #define STBI_MALLOC( S )     SK_ALLOC( S )
 #define STBI_REALLOC( B, S ) SK_REALLOC( B, S )

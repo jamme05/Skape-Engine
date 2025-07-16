@@ -18,6 +18,11 @@ namespace sk
 	{
 	private:
 		static Ty* m_instance_;
+		static void quit( void )
+		{
+			if( m_instance_ )
+				shutdown();
+		}
 
 	protected:
 		         cSingleton( void ){ m_instance_ = static_cast< Ty* >( this ); }
@@ -31,7 +36,7 @@ namespace sk
 			SK_BREAK_IF( sk::Severity::kGeneral, m_instance_ != nullptr,
 				TEXT( "Error: Singleton Instance already exists." ) )
 
-			SK_ERR_IF( std::atexit( &shutdown ),
+			SK_ERR_IF( std::atexit( &quit ),
 				TEXT( "Unable to safely register singleton." ) )
 
 			m_instance_ = Memory::Internal::alloc< Ty >( std::forward< Args >( _args )... );

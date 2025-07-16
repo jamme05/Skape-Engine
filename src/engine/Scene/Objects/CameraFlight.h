@@ -4,6 +4,8 @@
  *
  */
 
+#if false
+
 #pragma once
 
 #include "Camera.h"
@@ -29,3 +31,5 @@ namespace sk::Object
 		cVector2f m_speeds;
 	};
 } // sk::Object
+
+#endif
