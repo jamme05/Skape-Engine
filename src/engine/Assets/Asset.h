@@ -34,7 +34,12 @@ namespace sk
 
 		auto getNameHash( void ) const { return m_name_hash; }
 
-		virtual void Save( void ) = 0;
+		// Saves any changes made to the asset.
+		virtual void Save  () = 0;
+		// Loads and prepares the asset for use.
+		virtual void Load  () = 0;
+		// Unloads the asset.
+		virtual void Unload() = 0;
 
 	private:
 		uint64_t m_id = kInvalid_Asset_Id;
@@ -59,17 +64,15 @@ namespace sk
 	// Base Asset class
 	template< class Ty, class RTClassTy >
 	requires std::is_base_of_v< iRuntimeClass, RTClassTy >
-	class cAsset : public iAsset
+	class cAsset : public iAsset, public cShared_from_this< Ty >
 	{
-		// CREATE_CLASS_IDENTIFIERS( Ty, RTClass )
+		explicit cAsset( std::string _name ) : iAsset( std::move( _name ) ){ }
 	public:
-		cAsset( std::string _name ) : iAsset( std::move( _name ) ){ }
+		template< class... Args >
+		static Ty* create( Args&&... _args ){ return SK_SINGLE( Ty, std::forward< Args >( _args )... ); }
 
 		template< class... Args >
-		static Ty* create( Args... _args ){ return SK_NEW( Ty, 1, _args... ); }
-
-		template< class... Args >
-		static cShared_ptr< Ty > create_shared( Args... _args ){ return sk::cShared_ptr< Ty >( SK_NEW( Ty, 1, _args... ) ); }
+		static cShared_ptr< Ty > create_shared( Args&&... _args ){ return sk::cShared_ptr< Ty >( SK_SINGLE( Ty, std::forward< Args >( _args )... ) ); }
 
 	friend Ty;
 	};
@@ -81,7 +84,7 @@ namespace sk
 
 } // sk::
 
-REGISTER_CLASS( sk::Asset )
+DECLARE_CLASS( sk::Asset )
 
 // Initializes data required for cAsset.
 // The class created by this will be using the default naming (ex: Mesh becomes cMesh).

@@ -18,10 +18,10 @@ namespace sk
 		using cVector3 = cVector<3, T>;
 	} // Math::
 
-	using cVector3f = Math::cVector3< float >;
-	using cVector3d = Math::cVector3< double >;
-	using cVector3u = Math::cVector3< uint32_t >;
-	using cVector3i = Math::cVector3< int32_t >;
+	using cVector3f   = Math::cVector3< float >;
+	using cVector3d   = Math::cVector3< double >;
+	using cVector3u32 = Math::cVector3< uint32_t >;
+	using cVector3i32 = Math::cVector3< int32_t >;
 } // sk::
 namespace sk::Math
 {
@@ -152,15 +152,20 @@ namespace sk::Math
 		template <typename T> inline	cVector3<T>	Normalized(const cVector3<T>& _v) { return Normalized(_v,Length(_v)); }
 
 	} // Vector3::
+} // sk::Math::
 
-	static constexpr auto kZero  =  cVector3f{ 0.0f, 0.0f, 0.0f };
-	static constexpr auto kOne   =  cVector3f{ 1.0f, 1.0f, 1.0f };
-	static constexpr auto kUp    =  cVector3f{ 0.0f, 1.0f, 0.0f };
-	static constexpr auto kRight =  cVector3f{ 1.0f, 0.0f, 0.0f };
-	static constexpr auto kAt    =  cVector3f{ 0.0f, 0.0f, 1.0f };
-	static constexpr auto kDown  = -cVector3f{ 0.0f, 1.0f, 0.0f };
-	static constexpr auto kLeft  = -cVector3f{ 1.0f, 0.0f, 0.0f };
-	static constexpr auto kBack  = -cVector3f{ 0.0f, 0.0f, 1.0f };
+namespace sk
+{
+	static constexpr auto kZero    = cVector3i32{ 0, 0, 0 };
+	static constexpr auto kOne     = cVector3i32{ 1, 1, 1 };
+
+	static constexpr auto kUp      = cVector3i32{ 0, 1, 0 };
+	static constexpr auto kRight   = cVector3i32{ 1, 0, 0 };
+	static constexpr auto kAt      = cVector3i32{ 0, 0, 1 };
+	static constexpr auto kForward = kAt;
+	static constexpr auto kDown    = -kUp;
+	static constexpr auto kLeft    = -kRight;
+	static constexpr auto kBack    = -kAt;
 } // sk::
 
 template< typename Ty >

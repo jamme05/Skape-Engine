@@ -121,6 +121,9 @@ namespace sk
         constexpr auto end  ( void )       { return cLinked_Iterator< Ty >{}; }
         constexpr auto end  ( void ) const { return cLinked_Iterator< Ty >{}; }
 
+        constexpr auto& get()       { return m_element; }
+        constexpr auto& get() const { return m_element; }
+
         constexpr auto size ( void ) const { return std::distance( this->begin(), this->end() ); }
 
     private:

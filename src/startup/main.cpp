@@ -9,6 +9,12 @@
 #include <Memory/Tracker/Tracker.h>
 #include <Skape_Main.h>
 
+namespace Testing
+{
+	template<>
+	int test< -1 > = -1;
+}
+
 namespace sk
 {
 	namespace
@@ -23,8 +29,7 @@ namespace sk
 			return map;
 		} // create_type_map
 
-		static_assert( registry::type_registry< 0 >::valid, "No types registered." );
-		constexpr static auto& types = registry::type_registry< sk::registry::counter::next() - 1 >::registered;
+		constexpr auto& types = registry::type_registry< registry::counter::next() - 1 >;
 	} // ::
 	// TODO: Add a handler for types.
 	const auto type_map = create_type_map( types );

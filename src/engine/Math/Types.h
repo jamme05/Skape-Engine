@@ -37,13 +37,13 @@ sk::Math::cVector4<T> operator*(T2 _i, sk::Math::cVector4<T> _v)
 
 REGISTER_TYPE( sk::cVector2f, "Vector 2 ( float )" )
 REGISTER_TYPE( sk::cVector2d, "Vector 2 ( double )" )
-REGISTER_TYPE( sk::cVector2i, "Vector 2 ( int )" )
-REGISTER_TYPE( sk::cVector2u, "Vector 2 ( unsigned int )" )
+REGISTER_TYPE( sk::cVector2i32, "Vector 2 ( int )" )
+REGISTER_TYPE( sk::cVector2u32, "Vector 2 ( unsigned int )" )
 
 REGISTER_TYPE( sk::cVector3f, "Vector 3 ( float )" )
 REGISTER_TYPE( sk::cVector3d, "Vector 3 ( double )" )
-REGISTER_TYPE( sk::cVector3i, "Vector 3 ( int )" )
-REGISTER_TYPE( sk::cVector3u, "Vector 3 ( unsigned int )" )
+REGISTER_TYPE( sk::cVector3i32, "Vector 3 ( int )" )
+REGISTER_TYPE( sk::cVector3u32, "Vector 3 ( unsigned int )" )
 
 // TODO: Create a custom color class.
 // REGISTER_TYPE( sk::cColor,    "Vector 3 ( float )" )

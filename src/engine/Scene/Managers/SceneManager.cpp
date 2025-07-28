@@ -10,10 +10,14 @@
 #include "Scene/Scene.h"
 #include "CameraManager.h"
 #include "EventManager.h"
+#include <Graphics/Rendering/Render_Context.h>
+#include <Graphics/Rendering/Frame_Buffer.h>
+
+#include <Scene/Components/CameraComponent.h>
 
 namespace sk
 {
-	Graphics::cRender_context*    cSceneManager::m_active_context = nullptr;
+	Graphics::Rendering::cRender_Context* cSceneManager::m_active_context = nullptr;
 	cSceneManager::sObjectBuffer* cSceneManager::m_out_buffer = nullptr;
 
 	cSceneManager::cSceneManager( void )
@@ -45,12 +49,11 @@ namespace sk
 		m_active_context = nullptr;
 	} // render
 
-#if false
-	void cSceneManager::render_with( Scene::camera_t& _camera, Graphics::cRender_context& _context, const bool _swap )
+	void cSceneManager::render_with( Scene::camera_t& _camera, Graphics::Rendering::cRender_Context& _context, const bool _swap )
 	{
 		m_active_context = &_context;
-		_context.begin( _camera.getViewport(), _camera.getScissor() );
-		_context.clear( Graphics::eClear::kAll, Color::kBlack );
+		_context.Begin( _camera.getViewport(), _camera.getScissor() );
+		_context.Clear( Clear::kAll );
 		
 		// Removed due to NDA
 		
@@ -63,7 +66,6 @@ namespace sk
 		cEventManager::get().postEvent( Object::kDebugRender );
 #endif // DEBUG
 
-		_context.end( _swap );
+		_context.End( _swap );
 	} // render_with
-#endif
 } // sk::

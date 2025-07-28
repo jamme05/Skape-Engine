@@ -10,17 +10,12 @@
 #include "Misc/Smart_Ptrs.h"
 #include "Scene/Object.h"
 
-namespace sk::Graphics
-{
-	class cRender_context;
-} // sk::Graphics
-
 namespace sk::Object::Components
 {
 	class cCameraComponent;
 } // sk::Object::Components
 
-#define INVALID_CAMERA_ID uint64_t( -1 )
+#define INVALID_CAMERA_ID ~uint64_t( 0 )
 
 namespace sk::Scene
 {
@@ -36,7 +31,7 @@ namespace sk::Scene
 	};
 
 	public:
-		cCameraManager( void ){}
+		cCameraManager( void );
 
 		void registerCamera( const cShared_ptr< camera_t >& _camera );
 
@@ -45,7 +40,7 @@ namespace sk::Scene
 
 		void setCameraEnabled( const cShared_ptr< camera_t >& _camera, const bool _enable );
 
-		void render( void ){}
+		void render( void );
 
 	private:
 

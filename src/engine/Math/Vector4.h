@@ -48,8 +48,8 @@ namespace sk::Math
 		constexpr cVector(const T _x, const T _y, const T _z, const T _w) : x(_x), y(_y), z(_z), w(_w) {}
 		template< typename T2 >
 		constexpr cVector(const T2 _x, const T2 _y, const T2 _z, const T2 _w) : x( T( _x ) ), y( T( _y ) ), z( T( _z ) ), w( T( _w ) ){ }
-		constexpr cVector( const cVector&  _other )          : x(_other.x), y(_other.y), z(_other.z), w(_other.w) {}
-		constexpr cVector( const cVector&& _other ) noexcept : x(_other.x), y(_other.y), z(_other.z), w(_other.w) {}
+		constexpr cVector( const cVector&  _other ) = default;
+		constexpr cVector( cVector&& _other ) = default;
 		// Sets all axis (but using multiple types you psyco)
 		template <typename T2, typename T3, typename T4, typename T5>
 		constexpr cVector(const T2 _x, const T3 _y, const T4 _z, const T5 _w) : x(T(_x)), y(T(_y)), z(T(_z)), w(T(_w)) {}
@@ -98,8 +98,8 @@ namespace sk::Math
 		// Operators:
 		constexpr cVector operator-(void) const { return { -x, -y, -z, -w }; }
 
-		constexpr cVector& operator=(const cVector& _v)         { x = _v.x; y = _v.y; z = _v.z;   w = _v.w;   return *this; }
-		constexpr cVector& operator=( cVector&& ) = default;
+		constexpr cVector& operator=( const cVector& ) = default;
+		constexpr cVector& operator=( cVector&& )      = default;
 
 		constexpr cVector operator+(const cVector& _v) const { return { x + _v.x, y + _v.y, z + _v.z, w + _v.w }; }
 		constexpr cVector operator-(const cVector& _v) const { return { x - _v.x, y - _v.y, z - _v.z, w - _v.w }; }
@@ -194,20 +194,18 @@ namespace sk::Math
 		template <typename T> inline	cVector4<T>	Normalized(const cVector4<T>& _v) { return Normalized(_v, Length(_v)); }
 
 	} // Vector4::
+} // sk::Math::
 
-	namespace Color
-	{
-		constexpr auto kWhite       = cColor{ 1.0f, 1.0f, 1.0f, 1.0f };
-		constexpr auto kBlack       = cColor{ 0.0f, 0.0f, 0.0f, 1.0f };
-		constexpr auto kTransparent = cColor{ 0.0f, 0.0f, 0.0f, 0.0f };
+namespace sk::Color
+{
+	constexpr auto kWhite       = cColor{ 1.0f, 1.0f, 1.0f, 1.0f };
+	constexpr auto kBlack       = cColor{ 0.0f, 0.0f, 0.0f, 1.0f };
+	constexpr auto kTransparent = cColor{ 0.0f, 0.0f, 0.0f, 0.0f };
 
-		constexpr auto kRed         = cColor{ 1.0f, 0.0f, 0.0f, 1.0f };
-		constexpr auto kGreen       = cColor{ 0.0f, 1.0f, 0.0f, 1.0f };
-		constexpr auto kBlue        = cColor{ 0.0f, 0.0f, 1.0f, 1.0f };
-
-	} // Color::
-
-} // sk::
+	constexpr auto kRed         = cColor{ 1.0f, 0.0f, 0.0f, 1.0f };
+	constexpr auto kGreen       = cColor{ 0.0f, 1.0f, 0.0f, 1.0f };
+	constexpr auto kBlue        = cColor{ 0.0f, 0.0f, 1.0f, 1.0f };
+} // sk::Color
 
 template< typename Ty >
 sk::Math::cVector4< Ty > operator*( const Ty& _l, const sk::Math::cVector4< Ty >& _r ){ return sk::Math::cVector4< Ty >{ _r.x * _l, _r.y * _l, _r.z * _l, _r.w * _l }; }

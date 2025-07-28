@@ -25,3 +25,4 @@ namespace sk
 	template< class Key, class Value, class Hasher = std::hash< Key >, class KeyEq = std::equal_to< Key > >
 	using unordered_multimap = std::unordered_multimap< Key, Value, Hasher, KeyEq, allocator< std::pair< const Key, Value > > >;
 } // sk::
+

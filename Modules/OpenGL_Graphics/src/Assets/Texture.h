@@ -10,12 +10,11 @@
 
 #include <glbinding/gl/types.h>
 
-#include <stb_image.h>
+#include "Math/Vector2.h"
 
 namespace sk::Assets
 {
     // TODO: Create unsafe texture.
-    // TODO: Look at https://github.com/nothings/stb/blob/master/stb_image.h for importing textures.
 
     class cUnsafe_Texture
     {
@@ -34,14 +33,62 @@ namespace sk::Assets
             kJPG
         };
 
-        cTexture( const std::string& _name, const void* _buffer, size_t _size, eSourceType _type );
+        enum eChannel : uint8_t
+        {
+            // Invalid
+            kNone  = 0,
 
-        void Save() override {}
+            // Channels
+            kRed    = 0x01,
+            kR      = kRed,
+            kGreen  = 0x02,
+            kG      = kGreen,
+            kBlue   = 0x04,
+            kB      = kBlue,
+            // Alpha in the back, example: RGBA
+            kAlpha  = 0x08,
+            // Alpha in the back, example: RGBA
+            kA      = kAlpha,
+            // Alpha in the front, example ARGB
+            kFAlpha = 0x10,
+            // Alpha in the front, example ARGB
+            kFA     = kFAlpha,
+
+
+            // Settings
+            // In case the order is reversed.
+            kReverse = 0x20,
+
+            // Types
+            kGray  = kRed,
+            kGrey  = kRed,
+
+            kGA    = kRed | kAlpha,
+            kAG    = kRed | kFAlpha,
+
+            kRG    = kRed | kGreen,
+            kRGB   = kRed | kGreen | kBlue,
+            kRGBA  = kRed | kGreen | kBlue | kAlpha,
+            kARGB  = kRed | kGreen | kBlue | kFAlpha,
+
+            kGR    = kRG  | kReverse,
+            kBGR   = kRGB | kReverse,
+            kABGR  = kRGB | kReverse,
+        };
+
+        // TODO: Texture settings/Sampler
+        cTexture( const std::string& _name, const void* _buffer, size_t _size );
+
+        void Save  () override {}
+        void Load  () override {}
+        void Unload() override {}
 
     sk_private:
+        uint8_t         m_channels_;
+        cVector2u32       m_size_;
         cUnsafe_Texture m_buffer_;
     };
     
 } // sk::Assets
 
-REGISTER_CLASS( sk::Assets::Texture )
+DECLARE_CLASS( sk::Assets::Texture )

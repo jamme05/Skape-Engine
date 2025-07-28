@@ -4,12 +4,12 @@
  *
  */
 
-#if false
-
 #include "CameraComponent.h"
 
 #include "Scene/Managers/CameraManager.h"
 #include "Scene/Managers/SceneManager.h"
+
+REGISTER_CLASS( sk::Object::Components::CameraComponent )
 
 namespace sk::Object::Components
 {
@@ -23,12 +23,12 @@ namespace sk::Object::Components
 		Scene::cCameraManager::get().registerCamera( get_shared_this() );
 	} // cCamera
 
-	void cCameraComponent::renderTo( Graphics::cRender_context& _context )
+	void cCameraComponent::renderTo( Graphics::Rendering::cRender_Context& _context )
 	{
 		cSceneManager::get().render_with( *this, _context );
 	} // begin
 
-	void cCameraComponent::renderTo( Graphics::cRender_target& _context )
+	void cCameraComponent::renderTo( Graphics::Rendering::cRender_Target& _context )
 	{
 		// TODO: Default pipeline for single render targets.
 		// renderTo( default_render_target_context )
@@ -68,4 +68,4 @@ namespace sk::Object::Components
 		};
 	} // calculateProjectionMatrix
 } // sk::Object::Components::
-#endif
+

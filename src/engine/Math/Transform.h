@@ -13,7 +13,7 @@ namespace sk
 	class cTransform
 	{
 	public:
-		cTransform( const cVector3f& _position = Math::kZero, const cVector3f& _rotation = Math::kZero, const cVector3f& _scale = Math::kOne )
+		cTransform( const cVector3f& _position = kZero, const cVector3f& _rotation = kZero, const cVector3f& _scale = kOne )
 		: m_position( _position )
 		, m_rotation( _rotation )
 		, m_scale   ( _scale )

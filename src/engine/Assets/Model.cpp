@@ -6,7 +6,9 @@
 
 #include "Model.h"
 
-#include "Reflection/Interface.h"
+#include <Assets/Mesh.h>
+
+REGISTER_CLASS( sk::Assets::Model )
 
 namespace sk::Assets
 {
@@ -14,9 +16,4 @@ namespace sk::Assets
     : cAsset( _name )
     {
     } // cModel
-
-    void cModel::Save()
-    {
-        // Does nothing for now.
-    }
 } // sk::Assets

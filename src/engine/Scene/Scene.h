@@ -36,7 +36,9 @@ namespace sk
 		void force_render( void );
 		void force_update( void );
 
-		void Save() override {};
+		void Save  () override {}
+		void Load  () override {}
+		void Unload() override {}
 
 	private:
 		// TODO: Replace this with a map.

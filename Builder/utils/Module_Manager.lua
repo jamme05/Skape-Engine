@@ -11,6 +11,38 @@ function DefaultModuleFiles( basepath, types )
     return files
 end
 
+function ForeachModule( run )
+    if modules == nil then
+        return
+    end
+
+    for _, mod in pairs( modules ) do
+        run( mod )
+    end
+end
+
+function Get_Module_Links()
+    local links = {}
+    ForeachModule( function( mod )
+        if( mod.IncludeLibs ~= nil ) then
+            table.insert( links, mod.IncludeLibs( mod.Dir ) )
+        end
+        table.insert( links, mod.Name )
+    end )
+    return links;
+end
+
+function Get_Module_Includes()
+    local includes = {}
+    ForeachModule( function( mod )
+        if( mod.IncludeDirs ~= nil ) then
+            table.insert( includes, mod.IncludeDirs( mod.Dir ) )
+        end
+        table.insert( includes, "Modules/" .. mod.Dir .. "/src" )
+    end )
+    return includes;
+end
+
 function Default_Module_Setup( module_name )
     return function( module_dir )
     project( module_name )
@@ -18,10 +50,12 @@ function Default_Module_Setup( module_name )
         location( "Build/Modules/" .. module_name )
         language "C++"
         targetdir( "bin/Modules/" .. module_name )
+
+        defines { "SK_IS_MODULE=1" }
     
         files { DefaultModuleFiles( "Modules/" .. module_dir .. "/src/**", { ".hpp", ".h", ".cpp", ".c" } ) }
         
-        includedirs { "src/engine", "external/fastgltf/include", "external/stb", "Modules/" .. module_dir .. "/src" }
+        includedirs { "src/engine", "external/fastgltf/include", "external/stb", Get_Module_Includes() }
     end
 end
 
@@ -32,11 +66,13 @@ function Module_Setup( module_name, library_dirs, includes )
         location( "Build/Modules/" .. module_name )
         language "C++"
         targetdir( "bin/Modules/" .. module_name )
+
+        defines { "SK_IS_MODULE=1" }
     
         -- TODO: Add module.extensions to decide which files.
         files { DefaultModuleFiles( "Modules/" .. module_dir .. "/src/**", { ".hpp", ".h", ".cpp", ".c" } ) }
         
-        includedirs { "src/engine", "external/fastgltf/include", "external/stb", "Modules/" .. module_dir .. "/src", includes( module_dir ) }
+        includedirs { "src/engine", "external/fastgltf/include", "external/stb", Get_Module_Includes() }
         libdirs { library_dirs( module_dir ) }
     end
 end
@@ -101,40 +137,8 @@ function Get_Supported_Platforms()
     return platforms
 end
 
-function ForeachModule( run )
-    if modules == nil then
-        return
-    end
-
-    for _, mod in pairs( modules ) do
-        run( mod )
-    end
-end
-
 function Setup_Workspace()
     ForeachModule( function( mod ) mod.Setup_Workspace() end )
-end
-
-function Get_Module_Links()
-    local links = {}
-    ForeachModule( function( mod )
-        if( mod.IncludeLibs ~= nil ) then
-            table.insert( links, mod.IncludeLibs( mod.Dir ) )
-        end
-        table.insert( links, mod.Name )
-    end )
-    return links;
-end
-
-function Get_Module_Includes()
-    local includes = {}
-    ForeachModule( function( mod )
-        if( mod.IncludeDirs ~= nil ) then
-            table.insert( includes, mod.IncludeDirs( mod.Dir ) )
-        end
-        table.insert( includes, "Modules/" .. mod.Dir .. "/src" )
-    end )
-    return includes;
 end
 
 function CreateModules()

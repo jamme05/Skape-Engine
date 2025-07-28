@@ -44,6 +44,7 @@ SDL_AppResult SDL_AppIterate( void* _app_state )
 
 SDL_AppResult SDL_AppEvent( void* _app_state, SDL_Event* _event )
 {
+    // TODO: Resize event.
     return sk::Platform::cSDL_Window::handle_event( _event );
 }
 
@@ -55,12 +56,17 @@ void SDL_AppQuit( void* _app_state, SDL_AppResult _result )
 // Window functions:
 namespace sk::Platform
 {
+    cSDL_Window* cSDL_Window::g_main_window_ = nullptr;
+
     SDL_AppResult cSDL_Window::handle_event( void* _event )
     {
         switch( const auto& event = *static_cast< SDL_Event* >( _event ); event.type )
         {
         case SDL_EVENT_KEY_UP:
         case SDL_EVENT_KEY_DOWN: return handle_event( event.key );
+        case SDL_EVENT_GAMEPAD_BUTTON_UP:
+        case SDL_EVENT_GAMEPAD_BUTTON_DOWN: return handle_event( event.gbutton );
+        case SDL_EVENT_MOUSE_MOTION: return handle_event( event.motion );
         default:
             break;
         }
@@ -70,6 +76,7 @@ namespace sk::Platform
 
     SDL_AppResult cSDL_Window::handle_event( const SDL_KeyboardEvent& _event )
     {
+        // Bit shift values required to convert the flags from SDL to my enum type.
         constexpr auto ctrl_shift   = 6;
         constexpr auto alt_shift    = 8;
         constexpr auto caps_shift   = 13;
@@ -86,7 +93,9 @@ namespace sk::Platform
             .scroll_lock = static_cast< uint8_t >( ( _event.mod & SDL_KMOD_SCROLL ) >> scroll_shift ),
             .os_down     = static_cast< uint8_t >( ( _event.mod & SDL_KMOD_GUI    ) >> os_shift     ),
         };
-        event.repeat = static_cast< bool >( event.repeat );
+        // SDL doesn't have multiple repeats so stick with one or zero. It should be enough for pretty much all use cases.
+        // In the case a user would need more they can implement something outside of this.
+        event.repeat = _event.repeat ? 1 : 0;
 
         const auto event_type = _event.down ? Input::eInputType::kKey_Down : Input::eInputType::kKey_Up;
 
@@ -94,16 +103,50 @@ namespace sk::Platform
         return ( Input::input_event( event_type, event ) ) ? SDL_APP_SUCCESS : SDL_APP_CONTINUE;
     }
 
-    iWindow* create_window( const std::string& _name, const cVector2u& _size )
+    SDL_AppResult cSDL_Window::handle_event( const SDL_GamepadButtonEvent& _event )
     {
-        return SK_SINGLE( cSDL_Window, _name, static_cast< cVector2i >( _size ) );
+        // TODO: Gamepad input events
+    } // handle_event
+
+    SDL_AppResult cSDL_Window::handle_event( const SDL_MouseMotionEvent& _event )
+    {
+        // TODO: Mouse move input event
+    } // handle_event
+
+    iWindow* CreateWindow( const std::string& _name, const cVector2u32& _size )
+    {
+        return SK_SINGLE( cSDL_Window, _name, static_cast< cVector2i32 >( _size ) );
     } // create_window
+
+    iWindow* GetMainWindow()
+    {
+        return cSDL_Window::g_main_window_;
+    } // GetMainWindow
+
+    cSDL_Window::~cSDL_Window()
+    {
+        SDL_DestroyWindow( m_window_ );
+    } // ~cSDL_Window
     
     bool cSDL_Window::SetVisibility( const bool _visible ) const
     {
         if( _visible )
             return SDL_ShowWindow( m_window_ );
         return SDL_HideWindow( m_window_ );
-    }
+    } // SetVisibility
 
+    bool cSDL_Window::GetVisibility() const
+    {
+        return m_visible_;
+    } // GetVisibility
+
+    cVector2u32 cSDL_Window::GetResolution() const
+    {
+        return m_size_;
+    } // GetSize
+
+    float cSDL_Window::GetAspectRatio() const
+    {
+        return m_aspect_ratio_;
+    } // GetAspectRatio
 } // sk::Platform::

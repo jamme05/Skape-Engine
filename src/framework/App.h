@@ -7,6 +7,16 @@
 
 #include <Reflection/RuntimeStruct.h>
 
+namespace sk::Graphics::Rendering
+{
+	class cWindow_Context;
+}
+
+namespace sk::Graphics::Rendering
+{
+	class cRender_Context;
+}
+
 namespace sk::Platform
 {
 	class iWindow;
@@ -15,16 +25,6 @@ namespace sk::Platform
 namespace sk::Assets {
 	class cShader;
 }
-
-namespace sk::Graphics::Agc
-{
-	class cWindow_context;
-} // sk::Graphics::Agc
-
-namespace sk::Graphics
-{
-	class cRender_context;
-} // sk::Graphics::
 
 MAKE_STRUCT( TestStruct, M( int32_t, wha ) );
 
@@ -53,8 +53,13 @@ public:
 	static void print_types( void );
 	static void custom_event( void );
 
+	auto GetMainWindow() const { return m_main_window; }
+
 	sk::cShared_ptr< sk::Assets::cShader > m_mesh_pair = nullptr;
 	sk::cShared_ptr< sk::Assets::cShader > m_post_pair = nullptr;
+
+	sk::cShared_ptr< sk::Graphics::Rendering::cRender_Context > m_render_context = nullptr;
+	sk::cShared_ptr< sk::Graphics::Rendering::cWindow_Context > m_window_context = nullptr;
 
 	sk::cShared_ptr< sk::cScene > m_scene = nullptr;
 
@@ -68,3 +73,4 @@ private:
 	window_t     m_main_window = nullptr;
 	static cApp* m_running_instance_;
 };
+

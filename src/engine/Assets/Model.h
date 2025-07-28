@@ -29,7 +29,9 @@ namespace sk::Assets
 		cModel( const std::string& _name );
 		// TODO: Model class, aka container for meshes and a name.
 
-		void Save() override;
+		void Save  () override {}
+		void Load  () override {}
+		void Unload() override {}
 
 		[[nodiscard]] auto& getMeshes( void ) const { return m_meshes; }
 		// SK_PUBLIC_FUNCTION( getMeshes )
@@ -39,4 +41,4 @@ namespace sk::Assets
 	};
 } // sk::Assets::
 
-REGISTER_CLASS( sk::Assets::Model )
+DECLARE_CLASS( sk::Assets::Model )

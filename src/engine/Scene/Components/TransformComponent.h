@@ -19,4 +19,4 @@ namespace sk::Object::Components
 	};
 } // sk::Object::Components
 
-REGISTER_CLASS( sk::Object::Components::TransformComponent )
+DECLARE_CLASS( sk::Object::Components::TransformComponent )

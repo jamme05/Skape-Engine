@@ -21,25 +21,30 @@ namespace sk::Assets
     {
         SK_CLASS_BODY( Mesh )
 
+        using buffer_t     = Graphics::cDynamic_Buffer*;
+        using buffer_map_t = unordered_map< str_hash, buffer_t >;
+
     sk_public:
 
         explicit cMesh( const std::string& _name );
         ~cMesh() override;
 
-        void Save() override {}
+        void Save  () override {}
+        void Load  () override {}
+        void Unload() override {}
 
-        auto& GetIndexBuffer  ()       { return m_indices_; }
-        auto& GetIndexBuffer  () const { return m_indices_; }
-        auto& GetVertexBuffers()       { return m_vertex_buffers_; }
-        auto& GetVertexBuffers() const { return m_vertex_buffers_; }
+        [[ nodiscard ]] auto GetIndexBuffer()       { return m_indices_; }
+        [[ nodiscard ]] auto GetIndexBuffer() const { return m_indices_; }
+        SK_FUNCTION_P( GetIndexBuffer )
+
+        [[ nodiscard ]] auto& GetVertexBuffers()       { return m_vertex_buffers_; }
+        [[ nodiscard ]] auto& GetVertexBuffers() const { return m_vertex_buffers_; }
+        SK_FUNCTION_P( GetVertexBuffers )
 
     sk_private:
-        using buffer_t     = Graphics::cDynamic_Buffer*;
-        using buffer_map_t = unordered_map< str_hash, buffer_t >;
-
         buffer_t     m_indices_;
         buffer_map_t m_vertex_buffers_;
     };
 } // sk::Assets
 
-REGISTER_CLASS( sk::Assets::Mesh )
+DECLARE_CLASS( sk::Assets::Mesh )

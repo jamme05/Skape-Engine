@@ -22,6 +22,12 @@
 #include "Reflection/RuntimeClass.h"
 #include "Reflection/RuntimeStruct.h"
 
+#include <print>
+
+#include <Graphics/Rendering/Render_Context.h>
+
+#include "Graphics/Rendering/Window_Context.h"
+
 cApp* cApp::m_running_instance_ = nullptr;
 
 cApp::cApp( void )
@@ -30,13 +36,19 @@ cApp::cApp( void )
 	m_running_instance_ = this;
 	sk::Input::setLogInputs( false );
 
-	m_main_window = sk::Platform::create_window( "Main Window", { 1280 , 720  } );
+	m_main_window = sk::Platform::CreateWindow( "Main Window", { 1280, 720 } );
 	m_windows.emplace( m_main_window );
 
-	SK_ERR_IFN( m_main_window->SetVisibility( true ), "Unable to show window." )
+	SK_ERR_IFN( m_main_window->SetVisibility( true ),
+		"Unable to show window." )
 
+	sk::cAssetManager::init();
 	sk::Graphics::cRenderer::init();
 
+	m_window_context = sk::make_shared< sk::Graphics::Rendering::cWindow_Context >( m_main_window->GetResolution() );
+	m_render_context = sk::make_shared< sk::Graphics::Rendering::cRender_Context >();
+
+	sk::cSceneManager::init();
 } // cApp
 
 cApp::~cApp( void )
@@ -55,8 +67,6 @@ sk::Input::eResponse cApp::onInput( const uint32_t _type, const sk::Input::sEven
 
 void cApp::create( void )
 {
-	sk::cAssetManager::init();
-	sk::cSceneManager::init();
 
 	//auto list   = sk::cAssetManager::get().loadFolder( "data/" );
 	auto list_1 = sk::cAssetManager::get().loadFile( "data/humanforscale.glb" );
@@ -72,11 +82,13 @@ void cApp::create( void )
 	//auto mushroom      = sk::cAssetManager::get().getAssetAs< sk::Assets::cMesh >( 5 );
 
 	m_scene = sk::cScene::create_shared( "Main" );
-	// m_scene->create_object< sk::Object::cCameraFlight >( "Camera Free Flight" )->setAsMain();
+	m_scene->create_object< sk::Object::cCameraFlight >( "Camera Free Flight" )->setAsMain();
 	//auto mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 1" );
 	//mesh->getTransform().getPosition() = { -10.0f, 0.0f, 0.0f };
 	//mesh->getTransform().update();
 	//mesh->addComponent< sk::Object::Components::cMesh >( cube );
+
+	sk::Assets::cMesh test_mesh{ "Whata" };
 
 	auto mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 2" );
 	mesh->getTransform().getPosition() = { -2.0f, 0.0f, 0.0f };
@@ -103,6 +115,13 @@ void cApp::create( void )
 
 void cApp::print_types( void )
 {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wundefined-var-template"
+	std::println( "Test value: {}", Testing::test< -1 > );
+	std::println( "Test value: {}", Testing::test< 5 > );
+	std::println( "Test value: {}", Testing::test< 69 > );
+#pragma clang diagnostic pop
+
 	for( const auto& val : sk::type_map | std::views::values )
 	{
 		std::println();
@@ -116,9 +135,9 @@ void cApp::print_types( void )
 		case sk::sType_Info::eType::kStruct:
 		{
 			std::println( "Struct: {} Name: {} Size: {}", val->raw_name, val->name, static_cast< uint64_t >( val->size ) );
-			for( auto struct_info = val->as_struct_info(); const auto& member : struct_info->members | std::views::values )
+			for( const auto struct_info = val->as_struct_info(); const auto& member : struct_info->members | std::views::values )
 			{
-				if( auto member_type = member.get_type() )
+				if( const auto member_type = member.get_type() )
 				{
 					std::println( "   Type: {} Name: {} Size: {} Offset: {}", member_type->raw_name, member.display_name, static_cast< uint64_t >( member.size ), static_cast< uint64_t >( member.offset ) );
 				}
@@ -140,9 +159,11 @@ void cApp::print_types( void )
 				auto type        = variable->getType()->raw_name;
 				auto name        = variable->getName();
 				auto visibility  = variable->getVisibilityStr();
+				auto is_static   = variable->getIsStatic  () ? "static " : "";
+				auto is_const    = variable->getIsReadOnly() ? "const "  : "";
 				auto flags       = variable->getFlags();
 				// Example: protected int hello
-				std::println( "    {}: {} {} Flags: {}", visibility, type, name, flags );
+				std::println( "    {}: {}{}{} {} Flags: {}", visibility, is_static, is_const, type, name, flags );
 			}
 
 			std::println( "Functions:" );
@@ -154,33 +175,39 @@ void cApp::print_types( void )
 				auto visibility  = function->getVisibilityStr();
 				auto flags       = function->getFlags();
 				auto is_static   = function->getIsStatic() ? " static" : "";
+				auto is_const    = function->getIsReadOnly() ? "const " : "";
 				// Example: static private void test_function( bool, int )
-				std::println( "    {}:{} {} {}( {} ) Flags: {}",
-					visibility, is_static, return_type, name, args_types, flags );
+				std::println( "    {}:{} {} {}( {} ) {} Flags: {}",
+					visibility, is_static, return_type, name, args_types, is_const, flags );
 			}
 		}
 		break;
+		default: break;
 		}
 	}
 }
 
 void cApp::custom_event( void )
 {
-	printf( "Custom Event go brrr\n" );
+	std::println( "Custom Event go brrr" );
 } // custom_event
 
 void cApp::destroy( void ) const
 {
 	sk::cSceneManager::shutdown();
-	sk::cAssetManager::shutdown();
 	for( const auto& window : m_windows )
 		SK_FREE( window );
 
 	sk::Graphics::cRenderer::shutdown();
 
+	sk::cAssetManager::shutdown();
+
 } // _destroy
 
 void cApp::run( void )
 {
-	sk::cSceneManager::get().update();
+	auto& scene_manager = sk::cSceneManager::get();
+	scene_manager.update();
+	scene_manager.render();
+	
 } // run

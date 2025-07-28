@@ -125,7 +125,7 @@ namespace sk::Object
 
 } // sk::Object::
 
-REGISTER_CLASS( sk::Object::Object )
+DECLARE_CLASS( sk::Object::Object )
 
 #define OBJECT_PARENT_CLASS( ObjectName, ... ) sk::Object::iObject
 #define OBJECT_PARENT_VALIDATOR( ObjectName, ... ) std::is_base_of_v< sk::Object::iObject, __VA_ARGS__ >

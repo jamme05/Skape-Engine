@@ -14,6 +14,11 @@
 
 namespace sk
 {
+	namespace Graphics::Rendering
+	{
+		class cRender_Context;
+	}
+
 	class cScene;
 
 	class cSceneManager : public cSingleton< cSceneManager >
@@ -35,7 +40,7 @@ namespace sk
 
 		static void render( void );
 
-		// void render_with( sk::Object::Components::cCameraComponent& _camera, Graphics::cRender_context& _context, const bool _swap = true );
+		void render_with( sk::Object::Components::cCameraComponent& _camera, Graphics::Rendering::cRender_Context& _context, const bool _swap = true );
 
 		static auto get_active_context( void ){ return m_active_context; }
 
@@ -45,7 +50,7 @@ namespace sk
 
 		static sObjectBuffer* m_out_buffer;
 
-		static Graphics::cRender_context* m_active_context;
+		static Graphics::Rendering::cRender_Context* m_active_context;
 
 		vector< cShared_ptr< cScene > > m_scenes;
 	};

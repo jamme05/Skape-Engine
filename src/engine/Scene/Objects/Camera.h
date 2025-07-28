@@ -21,3 +21,4 @@ namespace sk::Object
 		Components::CameraComponent::ptr_t m_camera;
 	};
 } // sk::Object
+

@@ -119,9 +119,9 @@ namespace sk
 		// It may show an error but is perfectly fine.
 		extension_loader_map_t m_load_callbacks
 		{
-			EXTENSION_ENTRY( ".glb",  loadGltfFile )
-			EXTENSION_ENTRY( ".gltf", loadGltfFile )
-			EXTENSION_ENTRY( ".png",  loadPngFile  )
+			EXTENSION_ENTRY( "glb",  loadGltfFile )
+			EXTENSION_ENTRY( "gltf", loadGltfFile )
+			EXTENSION_ENTRY( "png",  loadPngFile  )
 		};
 		// TODO: Make the asset loader multithreaded.
 		loaders_vector_t    m_loaders;

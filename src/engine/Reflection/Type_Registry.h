@@ -135,14 +135,17 @@ namespace sk
     {
         enum class eType : uint8_t
         {
+            kNone,
             kArray,
             kPointer,
             kReference,
+            kConst
         };
-        constexpr sModifier( const eType    _type ) : array_size( 0 ),     type( _type ){}
+        constexpr sModifier() = default;
+        constexpr sModifier( const eType    _type ) : type( _type ){}
         constexpr sModifier( const uint16_t _size ) : array_size( _size ), type( eType::kArray ){}
-        uint16_t array_size;
-        eType    type;
+        uint16_t array_size = 0;
+        eType    type       = eType::kNone;
     };
 
     // Maybe not required for the future?
@@ -176,8 +179,8 @@ namespace sk
     struct get_type_info< Ty* > : get_type_info< Ty >
     {
         typedef get_type_info< Ty > prev_t;
-        constexpr static sType_Info& kInfo = prev_t::kInfo;
-        constexpr static auto        kMods = array{ sModifier{ sModifier::eType::kPointer } } + prev_t::kMods;
+        constexpr static auto& kInfo = prev_t::kInfo;
+        constexpr static auto  kMods = array{ sModifier{ sModifier::eType::kPointer } } + prev_t::kMods;
     };
 
     template< class Ty >
@@ -185,8 +188,8 @@ namespace sk
     struct get_type_info< Ty& > : get_type_info< Ty >
     {
         typedef get_type_info< Ty > prev_t;
-        constexpr static sType_Info& kInfo = prev_t::kInfo;
-        constexpr static auto        kMods = array{ sModifier{ sModifier::eType::kReference } } + prev_t::kMods;
+        constexpr static auto& kInfo = prev_t::kInfo;
+        constexpr static auto  kMods = array{ sModifier{ sModifier::eType::kReference } } + prev_t::kMods;
     };
 
     template< class Ty, size_t Size >
@@ -194,9 +197,19 @@ namespace sk
     struct get_type_info< Ty[ Size ] > : get_type_info< Ty >
     {
         typedef get_type_info< Ty > prev_t;
-        constexpr static sType_Info& kInfo = prev_t::kInfo;
-        constexpr static auto        kMods = array{ sModifier{ Size } } + prev_t::kMods;
+        constexpr static auto& kInfo = prev_t::kInfo;
+        constexpr static auto  kMods = array{ sModifier{ Size } } + prev_t::kMods;
     };
+
+    template< class Ty >
+    requires get_type_info< Ty >::kValid
+    struct get_type_info< const Ty > : get_type_info< Ty >
+    {
+        typedef get_type_info< Ty > prev_t;
+        constexpr static auto& kInfo = prev_t::kInfo;
+        constexpr static auto  kMods = array{ sModifier{ sModifier::eType::kConst } } + prev_t::kMods;
+    };
+
 
     template< class Ty >
     struct get_type_info< Ty&& >
@@ -364,7 +377,6 @@ constexpr uint8_t sk::validate_args( const bool _allow_void )
                 return kVoidNotOnly; // -2 = Type void is only allowed if it's the only type.
             }
         }
-            
     }
     return kValid; // Nothing wrong.
 }
@@ -393,29 +405,30 @@ consteval sk::type_hash sk::calculate_types_hash( const array_ref< type_hash >& 
 namespace sk::registry
 {
     struct registry_tag{};
-    typedef const_counter< registry_tag > counter;
+    using counter  = const_counter< registry_tag >;
+    using linked_t = cLinked_Array< const sType_Info* >;
+
     template< int64_t Iteration >
-    struct type_registry
-    {
-        constexpr static auto registered = cLinked_Array< const sType_Info* >{};
-        constexpr static bool valid      = false;
-    };
+    extern linked_t type_registry;
+    template< int64_t Iteration >
+    linked_t type_registry = {};
 } // sk::
 
 #define REGISTER_TYPE_INTERNAL_0( Type, IdLocation ) \
 constexpr static auto IdLocation = sk::registry::counter::next(); \
-template<> struct sk::registry::type_registry< IdLocation >{ \
-    typedef type_registry< IdLocation - 1 > previous_t; \
-    constexpr static auto registered = cLinked_Array{ static_cast< const sk::sType_Info* >( &get_type_info< Type >::kInfo ), previous_t::registered }; \
-    constexpr static bool valid = true; \
-};
-#define REGISTER_TYPE_INTERNAL( Type ) REGISTER_TYPE_INTERNAL_0( Type, CONCAT( type_registry_, __COUNTER__ ) )
+    namespace sk::registry{ \
+        template<> inline linked_t type_registry< IdLocation > = \
+        cLinked_Array{ static_cast< const sk::sType_Info* >( \
+        &get_type_info< Type >::kInfo ), type_registry< IdLocation - 1 > }; \
+    }
+#define REGISTER_TYPE_INTERNAL( Type ) \
+    REGISTER_TYPE_INTERNAL_0( Type, CONCAT( type_registry_, __COUNTER__ ) )
 
 // Finally register void as everything exists.
 REGISTER_TYPE_INTERNAL( void )
 
 #define MAKE_TYPE_INFO_DIRECT( Type, Name, HashMacro, ... ) \
-template<> struct sk::get_type_info< Type >{ \
+template<> struct sk::get_type_info< Type > : sk::template_type_info{ \
 constexpr static sType_Info kInfo   = { .type = sType_Info::eType::kStandard, .hash HashMacro( __VA_ARGS__ ) , .size = sizeof( Type ), .name = Name, .raw_name = #Type }; \
 constexpr static bool      kValid = true; \
 };
@@ -427,3 +440,24 @@ constexpr static bool      kValid = true; \
 
 #define REGISTER_T_TYPE( Type, Name ) REGISTER_DEFAULT_TYPE( Type ## _t, #Type, Name )
 #define REGISTER_TYPE( Type, Name ) REGISTER_DEFAULT_TYPE( Type, #Type, Name )
+
+
+// TODO: Register more standard library classes.
+template< class Key, class Value, class Comp >
+struct sk::get_type_info< sk::map< Key, Value, Comp > > : template_type_info
+{
+    constexpr static sType_Info kInfo   = { .type = sType_Info::eType::kStandard, .hash = { "std::map" }, .size = sizeof( map< Key, Value, Comp > ), .name = "Standard Map", .raw_name = "std::map" };
+};
+
+template< class Key, class Value, class Comp >
+struct sk::get_type_info< sk::unordered_map< Key, Value, Comp > > : template_type_info
+{
+    constexpr static sType_Info kInfo   = { .type = sType_Info::eType::kStandard, .hash = { "std::unordered_map" }, .size = sizeof( unordered_map< Key, Value, Comp > ), .name = "Standard Hashmap", .raw_name = "std::unordered_map" };
+};
+
+
+namespace Testing
+{
+    template< int N >
+    extern int test;
+}

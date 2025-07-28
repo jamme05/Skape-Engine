@@ -7,7 +7,13 @@
 #pragma once
 
 #include "Component.h"
-#include "Math/Matrix4x4.h"
+
+#include <Graphics/Rendering/Scissor.h>
+#include <Graphics/Rendering/Viewport.h>
+#include <Graphics/Rendering/Render_Context.h>
+#include <Graphics/Rendering/Render_Target.h>
+
+#include <Math/Matrix4x4.h>
 
 namespace sk::Scene
 {
@@ -36,8 +42,8 @@ namespace sk::Object::Components
 
 		cCameraComponent( const Graphics::sViewport& _viewport, const Graphics::sScissor& _scissors, const sCameraSettings& _settings, eType _type );
 
-		void renderTo( Graphics::cRender_context& _context );
-		void renderTo( Graphics::cRender_target&  _context );
+		void renderTo( Graphics::Rendering::cRender_Context& _context );
+		void renderTo( Graphics::Rendering::cRender_Target&  _target );
 
 		void enabled ( void ) override;
 		void disabled( void ) override;
@@ -61,7 +67,7 @@ namespace sk::Object::Components
 		sCameraSettings m_camera_settings;
 
 		// TODO: Add support for render target, custom render pipeline in that case.
-		Graphics::cRender_target* m_render_target;
+		Graphics::Rendering::cRender_Target* m_render_target;
 
 		Graphics::sViewport m_viewport;
 		Graphics::sScissor  m_scissor;
@@ -80,4 +86,4 @@ namespace sk::Object::Components
 	};
 } // sk::Object::Components::
 
-REGISTER_CLASS( sk::Object::Components::CameraComponent )
+DECLARE_CLASS( sk::Object::Components::CameraComponent )

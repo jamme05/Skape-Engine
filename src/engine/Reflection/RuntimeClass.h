@@ -20,8 +20,6 @@
 #include <print>
 #include <functional>
 
-#include "RuntimeClass.h"
-
 namespace sk
 {
 	namespace Reflection
@@ -47,6 +45,9 @@ namespace sk
 	class iRuntimeClass
 	{
 	public:
+		typedef iClass value_type;
+		typedef void   parent_type;
+
 		[[ deprecated( "Deprecated due to source_location, use overloaded version with it as an input instead." ) ]]
 		constexpr iRuntimeClass( const char* _name, const char* _file, const uint32_t _line = 0, const uint64_t& _parent_hash = Hashing::val_64_const )
 		: m_hash( _name )
@@ -187,7 +188,11 @@ namespace sk
 	{
 	public:
 		typedef Ty                       value_type;
+		// TODO: Rename parent_type in the runtime class. It is rather confusing due to it pointing
+		// towards the runtime class rather than the actual parent.
 		typedef get_parent_class_t< Pa > parent_type;
+
+		static constexpr auto& kParent = Parent;
 
 		// TODO: Move
 		typedef typename get_parent_class< Pa >::inherits_type inherits_type;
@@ -237,14 +242,14 @@ namespace sk
 		Ty* create( Args&&... ){ return nullptr; } // TODO: Create function
 	};
 
-	template< class Ty >
-	requires std::is_base_of_v< iClass, Ty >
-	struct get_type_info< Ty >
-	{
-		constexpr static auto&     kClass  = Ty::getStaticClass();
-		constexpr static type_hash kId     = kClass.getType().getHash();
-		constexpr static char      kName[] = kClass.getRawName();
-	};
+	// template< class Ty >
+	// requires std::is_base_of_v< iClass, Ty >
+	// struct get_type_info< Ty >
+	// {
+	// 	constexpr static auto&     kClass  = Ty::getStaticClass();
+	// 	constexpr static type_hash kId     = kClass.getType().getHash();
+	// 	constexpr static char      kName[] = kClass.getRawName();
+	// };
 
 	template< class Ty >
 	constexpr static bool is_valid_class_v = std::is_base_of_v< iClass, Ty >;
@@ -635,11 +640,12 @@ namespace sk::Reflection
 	template< class Ty, class Re, class... Args >
 	class cMemberFunctionHolder : public iMemberFunctionHolder
 	{
+		using   return_type = std::remove_cvref_t< Re >;
 		typedef Re( Ty::*func_t )( Args... );
 		typedef std::tuple< Args... > tuple_t;
 		func_t m_func_;
 	public:
-		explicit consteval cMemberFunctionHolder( const func_t _func )
+		consteval cMemberFunctionHolder( const func_t _func )
 		: m_func_( _func )
 		{}
 
@@ -658,11 +664,11 @@ namespace sk::Reflection
 		void unsafe_invoke( void* _instance, void* _input, void* _return ) const override
 		{
 			Ty* inst = static_cast< Ty* >( _instance );
-			if constexpr( !std::is_same_v< Re, void > )
+			if constexpr( !std::is_same_v< return_type, void > )
 			{
 				if( _return )
 				{
-					auto ret = static_cast< Re* >( _return );
+					auto ret = static_cast< return_type* >( _return );
 					*ret = std::apply( std::bind_front( m_func_, inst ), *static_cast< tuple_t* >( _return ) );
 					return;
 				}
@@ -677,12 +683,13 @@ namespace sk::Reflection
 	template< class Ty, class Re, class... Args >
 	class cMemberFunctionHolder< const Ty, Re, Args... > : public iMemberFunctionHolder
 	{
+		using   return_type = std::remove_cvref_t< Re >;
 		typedef std::remove_const_t< Ty > class_t;
 		typedef Re( class_t::*func_t )( Args... ) const;
 		typedef std::tuple< Args... > tuple_t;
 		func_t m_func_;
 	public:
-		explicit consteval cMemberFunctionHolder( const func_t _func )
+		consteval cMemberFunctionHolder( const func_t _func )
 		: m_func_( _func )
 		{}
 
@@ -700,11 +707,11 @@ namespace sk::Reflection
 		void unsafe_invoke( void* _instance, void* _input, void* _return ) const override
 		{
 			Ty* inst = static_cast< Ty* >( _instance );
-			if constexpr( !std::is_same_v< Re, void > )
+			if constexpr( !std::is_same_v< return_type, void > )
 			{
 				if( _return )
 				{
-					auto ret = static_cast< Re* >( _return );
+					auto ret = static_cast< return_type* >( _return );
 					*ret = std::apply( std::bind_front( m_func_, inst ), *static_cast< tuple_t* >( _return ) );
 					return;
 				}
@@ -719,12 +726,13 @@ namespace sk::Reflection
 	template< class Re, class... Args >
 	class cMemberFunctionHolder< void, Re, Args... > : public iMemberFunctionHolder
 	{
+		using   return_type = std::remove_cvref_t< Re >;
 		typedef Re( *func_t )( Args... );
 		typedef std::tuple< Args... > tuple_t;
 		func_t m_func_;
 
 	public:
-		explicit consteval cMemberFunctionHolder( const func_t _func )
+		consteval cMemberFunctionHolder( const func_t _func )
 		: m_func_( _func )
 		{}
 
@@ -736,11 +744,11 @@ namespace sk::Reflection
 	protected:
 		void unsafe_invoke( void* _input, void* _return ) const override
 		{
-			if constexpr( !std::is_same_v< Re, void > )
+			if constexpr( !std::is_same_v< return_type, void > )
 			{
 				if( _return )
 				{
-					auto ret = static_cast< Re* >( _return );
+					auto ret = static_cast< return_type* >( _return );
 					*ret = std::apply( std::bind_front( m_func_ ), *static_cast< tuple_t* >( _return ) );
 					return;
 				}
@@ -806,6 +814,12 @@ namespace sk::Reflection
 		, m_holder_( &_holder )
 		{}
 
+		// constexpr cMemberFunction( const cMemberFunction& ) = default;
+		// constexpr cMemberFunction( cMemberFunction&& ) noexcept = default;
+// 
+		// constexpr cMemberFunction& operator=( const cMemberFunction& ) = default;
+		// constexpr cMemberFunction& operator=( cMemberFunction&& ) noexcept = default;
+
 		auto getReturnType   () const { return m_return_type_; }
 		auto getArgumentTypes() const { return m_args_info_; }
 
@@ -815,13 +829,13 @@ namespace sk::Reflection
 		{
 			// Verify args.
 			typedef args_hash< Args... > args_t;
-			SK_WARN_IF_RET( sk::Severity::kReflection, args_t::kHash != m_args_info_->hash,
+			SK_BREAK_IF_RET( sk::Severity::kReflection, args_t::kHash != m_args_info_->hash,
 				TEXT( "Error: Wrong types provided! Provided types: {}. Required types: {}.", args_t::kInfo.to_string(), m_args_info_->to_string() ),
 				false )
 
 			// Verify return type. But only if it's required.
 			constexpr static auto& other_type = get_type_info< Re >::kInfo;
-			SK_WARN_IF_RET( sk::Severity::kReflection, _return != nullptr && *m_return_type_ != other_type,
+			SK_BREAK_IF_RET( sk::Severity::kReflection, _return != nullptr && *m_return_type_ != other_type,
 				TEXT( "Error: Wrong return type provided. Provided type: {}. Required type: {}.", other_type.raw_name, m_return_type_->raw_name ),
 				false )
 
@@ -842,23 +856,23 @@ namespace sk::Reflection
 
 			// Const check. If getting called by a const ptr.
 			if constexpr( !std::is_const_v< Ty > )
-				SK_WARN_IF_RET( sk::Severity::kReflection,
+				SK_BREAK_IF_RET( sk::Severity::kReflection,
 					!getIsReadOnly(), "Error: Calling a non-const function with a constant instance.", false )
 
 			// Verify class.
-			SK_WARN_IF_RET( sk::Severity::kReflection, Ty::kClass != *m_class_,
+			SK_BREAK_IF_RET( sk::Severity::kReflection, Ty::kClass != *m_class_,
 				TEXT( "Error: Tried calling function through class {} when it required class {}.", Ty::getClassName(), m_class_->getName() ),
 				false )
 
 			// Verify args.
 			typedef args_hash< Args... > args_t;
-			SK_WARN_IF_RET( sk::Severity::kReflection, args_t::kHash != m_args_info_->hash,
+			SK_BREAK_IF_RET( sk::Severity::kReflection, args_t::kHash != m_args_info_->hash,
 				TEXT( "Error: Wrong types provided! Provided types: {}. Required types: {}.", args_t::kInfo.to_string(), m_args_info_->to_string() ),
 				false )
 
 			// Verify return type. But only if it's required.
 			constexpr static auto& other_type = get_type_info< Re >::kInfo;
-			SK_WARN_IF_RET( sk::Severity::kReflection, _return != nullptr && *m_return_type_ != other_type,
+			SK_BREAK_IF_RET( sk::Severity::kReflection, _return != nullptr && *m_return_type_ != other_type,
 				TEXT( "Error: Wrong return type provided. Provided type: {}. Required type: {}.", other_type.raw_name, m_return_type_->raw_name ),
 				false )
 
@@ -898,7 +912,7 @@ namespace sk::Reflection
 	};
 
 	template< class Ty >
-	class cMemberFunctionInstance : public cMemberFunction
+	class cMemberFunctionInstance final : public cMemberFunction
 	{
 		Ty* m_instance_;
 	public:
@@ -944,16 +958,7 @@ namespace sk::Reflection
 	};
 
 	template< class Ty, class Holder >
-	struct sPartial_Member_Variable
-	{
-		using point_t  = typename access_point< Ty >::point;
-		const char*   name;
-		Holder*       holder;
-		point_t Ty::* point;
-	};
-
-	template< class Ty, class Holder >
-	struct sPartial_Member_Function
+	struct sPartial_Member
 	{
 		using point_t  = typename access_point< Ty >::point;
 		const char*   name;
@@ -972,8 +977,9 @@ namespace sk::Reflection
 	typedef std::pair< const member_var_map_pair_t*,  const member_var_map_pair_t* >  member_var_range_t;
 	typedef std::pair< const member_func_map_pair_t*, const member_func_map_pair_t* > member_func_range_t;
 
+	// TODO: Rename functions as they're in the namespace and not the class itself?
 	template< class Ty, size_t Layer = 0 >
-	static consteval uint8_t _xxx_sk_get_offset_access( const int _offset, const uint8_t _previous_access = 0 )
+	static consteval uint8_t get_offset_access( const int _offset, const uint8_t _previous_access = 0 )
 	{
 		// 0 Will always be defined. Hence, it'll never begin with there being nothing.
 		constexpr auto& point = Ty::template _xxx_sk_access< std::integral_constant< int, Layer > >::kAccess;
@@ -984,46 +990,56 @@ namespace sk::Reflection
 		if constexpr( point.m_access == 0 )
 			return _previous_access;
 		else
-			return _xxx_sk_get_offset_access< Ty, Layer + 1 >( _offset, point.m_access );
+			return get_offset_access< Ty, Layer + 1 >( _offset, point.m_access );
 
-	} // _xxx_sk_get_offset_access
+	} // get_offset_access
 
 	template< class Ty, size_t Size, size_t Layer = Size == 0 ? 0 : Size - 1  >
-	consteval auto _xxx_process_member_functions( array< member_func_pair_t, Size >* _array = nullptr ) -> array< member_func_pair_t, Size >
+	consteval auto process_member_functions( array< member_func_pair_t, Size >* _array = nullptr ) -> array< member_func_pair_t, Size >
 	{
+		// This is a recursive function going through each member function in
+		// a reflected class.
+
 		using array_t = array< member_func_pair_t, Size >;
 		if constexpr( Size == 0 ) return array_t{};
 
+		// TODO: Make the member processing functions less messy.
+
+		// Get the current function. Pretty much class.functions[ Layer ]
 		using extractor_t = typename Ty:: template function_extractor< Layer >;
 		constexpr auto& extraction = extractor_t::kMember;
 		if( _array )
 		{
-			auto access = _xxx_sk_get_offset_access< Ty >( offset_of< Ty, extraction.point >() );
+			// Add the current element to the array at index Layer
+			auto access = get_offset_access< Ty >( offset_of< Ty, extraction.point >() );
 			( *_array )[ Layer ] = member_func_pair_t{
 				extraction.name, cMemberFunction{ extraction.name, *extraction.holder, access }
 			};
 		}
+
 		if constexpr( Layer == 0 )
 		{
+			// Once we've reached layer 0 we've hit the end.
 			if( _array ) return *_array;
 			return array_t{};
 		}
 		else
 		{
-			if( _array ) return _xxx_process_member_functions< Ty, Size, Layer - 1 >( _array );
+			if( _array )
+				return process_member_functions< Ty, Size, Layer - 1 >( _array );
 
-			auto access = _xxx_sk_get_offset_access< Ty >( offset_of< Ty, extraction.point >() );
+			auto access = get_offset_access< Ty >( offset_of< Ty, extraction.point >() );
 			array_t array{};
 			array[ Layer ] = member_func_pair_t{
 				extraction.name, cMemberFunction{ extraction.name, *extraction.holder, access }
 			};
-			return _xxx_process_member_functions< Ty, Size, Layer - 1 >( &array );
+			return process_member_functions< Ty, Size, Layer - 1 >( &array );
 		}
 
-	} // _xxx_process_member_functions
+	} // process_member_functions
 
 	template< class Ty, size_t Size, size_t Layer = Size == 0 ? 0 : Size - 1  >
-	consteval auto _xxx_process_member_variables( array< member_var_pair_t, Size >* _array = nullptr ) -> array< member_var_pair_t, Size >
+	consteval auto process_member_variables( array< member_var_pair_t, Size >* _array = nullptr ) -> array< member_var_pair_t, Size >
 	{
 		using array_t = array< member_var_pair_t, Size >;
 		if constexpr( Size == 0 ) return array_t{};
@@ -1032,7 +1048,7 @@ namespace sk::Reflection
 		static constexpr auto& extraction = extractor_t::kMember;
 		if( _array )
 		{
-			uint8_t access = _xxx_sk_get_offset_access< Ty >( offset_of< Ty, extraction.point >() );
+			uint8_t access = get_offset_access< Ty >( offset_of< Ty, extraction.point >() );
 
 			( *_array )[ Layer ] = member_var_pair_t{
 				extraction.name, cMemberVariable{ extraction.name, *extraction.holder, access }
@@ -1046,17 +1062,50 @@ namespace sk::Reflection
 		else
 		{
 			if( _array )
-				return _xxx_process_member_variables< Ty, Size, Layer - 1 >( _array );
+				return process_member_variables< Ty, Size, Layer - 1 >( _array );
 
-			uint8_t access = _xxx_sk_get_offset_access< Ty >( offset_of< Ty, extraction.point >() );
+			uint8_t access = get_offset_access< Ty >( offset_of< Ty, extraction.point >() );
 
 			array_t array{};
 			array[ Layer ] = member_var_pair_t{
 				extraction.name, cMemberVariable{ extraction.name, *extraction.holder, access }
 			};
-			return _xxx_process_member_variables< Ty, Size, Layer - 1 >( &array );
+			return process_member_variables< Ty, Size, Layer - 1 >( &array );
 		}
-	} // _xxx_process_member_variables
+	} // process_member_variables
+
+	template< class Fst, class Snd, size_t Size, size_t Size2 >
+	consteval auto finalize_members(
+		const array< std::pair< Fst, Snd >, Size >& _raw_members,
+		const map_ref< Fst, const Snd* >& _parent_members )
+	{
+		using array_t = array< std::pair< Fst, const Snd* >, Size + Size2 >;
+
+		array_t parsed{};
+		for( size_t i = 0; i < _raw_members.size(); i++ )
+		{
+			parsed[ i ] = std::make_pair( _raw_members[ i ].first, &_raw_members[ i ].second );
+		}
+		if constexpr( Size != 0 )
+			std::copy_n( _parent_members.begin(), Size2, parsed.begin() + Size );
+		return parsed;
+	}
+
+	template< size_t Size, size_t Size2 >
+	consteval auto finalize_member_functions( const array< member_func_pair_t, Size2 >& _raw_members,
+		const member_func_map_ref_t& _parent_members )
+	{
+		return finalize_members< str_hash, cMemberFunction, Size2, Size >(
+			_raw_members, _parent_members );
+	}
+
+	template< size_t Size, size_t Size2 >
+	consteval auto finalize_member_variables( const array< member_var_pair_t, Size2 >& _raw_members,
+		const member_var_map_ref_t& _parent_members )
+	{
+		return finalize_members< str_hash, cMemberVariable, Size2, Size >(
+			_raw_members, _parent_members );
+	}
 
 } // sk::Reflection::
 
@@ -1065,48 +1114,95 @@ namespace sk
 	class iClass
 	{
 	public:
+		using class_type = iClass;
+
 		iClass( void ) = default;
 		virtual ~iClass( void ) = default;
+		[[ nodiscard ]]
 		virtual const iRuntimeClass& getClass    ( void ) const = 0;
 		virtual const type_hash&     getClassType( void ) = 0;
 		virtual       std::string    getClassName( void ) = 0;
 
 		// Virtual member reflection
+		[[ nodiscard ]]
 		virtual auto getVariables() const
 			-> Reflection::member_var_map_ref_t = 0;
+		[[ nodiscard ]]
 		virtual auto getFunctions() const
 			-> Reflection::member_func_map_ref_t = 0;
+		[[ nodiscard ]]
 		virtual auto getVariable( const str_hash& _hash ) const
 			-> Reflection::member_var_ptr_t = 0;
+		[[ nodiscard ]]
 		virtual auto getFunction( const str_hash& _hash ) const
 			-> Reflection::member_func_ptr_t = 0;
+		[[ nodiscard ]]
 		virtual auto getFunctionOverloads( const str_hash& _hash ) const
 			-> Reflection::member_func_range_t = 0;
+		[[ nodiscard ]]
 		virtual auto getFunction( const str_hash& _hash, const type_hash& _args ) const
 			-> Reflection::member_func_ptr_t = 0;
+
+		[[ nodiscard ]] static constexpr auto staticGetVariables()
+			-> Reflection::member_var_map_ref_t{
+			return {};
+		}
+		[[ nodiscard ]] static constexpr auto staticGetFunctions()
+			-> Reflection::member_func_map_ref_t{
+			return {};
+		}
+		[[ nodiscard ]] static constexpr auto staticGetVariable( const str_hash& )
+			-> Reflection::member_var_ptr_t{
+			return nullptr;
+		}
+		[[ nodiscard ]] static constexpr auto staticGetFunction( const str_hash& )
+			-> Reflection::member_func_ptr_t{
+			return nullptr;
+		}
+		[[ nodiscard ]] static constexpr auto staticGetFunctionOverloads( const str_hash& )
+			-> Reflection::member_func_range_t{
+			return { nullptr, nullptr };
+		}
+		[[ nodiscard ]] static constexpr auto staticGetFunction( const str_hash&, const type_hash& _args )
+			-> Reflection::member_func_ptr_t{
+			return nullptr;
+		}
+		template< class, class... > [[ nodiscard ]]
+		static constexpr auto staticGetFunction( const str_hash& _hash )
+			-> Reflection::member_func_ptr_t{
+			return nullptr;
+		}
 
 		// Here for placeholder and template help.
 		
 		static constexpr auto& kClass = kInvalidClass;
 		// Recommended to use Ty::kClass instead.
 		static constexpr auto& getStaticClass( void ) { return kClass; }
-		static constexpr auto& getStaticType( void ) { return kClass.getType(); }
-		static auto getStaticName( void ) { return kClass.getName(); }
+		static constexpr auto& getStaticType ( void ) { return kClass.getType(); }
+		static auto            getStaticName ( void ) { return kClass.getName(); }
 	};
 } // sk::
 
+// TODO: Move test to it's own file.
 SK_CLASS( Test )
 {
 	SK_CLASS_BODY( Test )
 	
-	uint64_t member_0 = 0; SK_VARIABLE( member_0 )
-	uint32_t member_1 = 0; SK_VARIABLE( member_1 )
-	uint32_t member_2 = 0; SK_VARIABLE( member_2 )
+	uint64_t member_0 = 0;
+	SK_VARIABLE( member_0 )
+	uint32_t member_1 = 0;
+	SK_VARIABLE( member_1 )
+	uint32_t member_2 = 0;
+	SK_VARIABLE( member_2 )
 
 sk_public:
+	static constexpr uint32_t member_3 = 3;
+	SK_VARIABLE( member_3 )
 
 	uint32_t member_5 = 0;
 	SK_VARIABLE( member_5 )
+
+	cTest() = default;
 
 	cTest( uint64_t _mem0, uint32_t _mem1 )
 	: member_0( _mem0 ), member_1( _mem1 )
@@ -1114,14 +1210,26 @@ sk_public:
 		// Look at std::apply and std::make_index_sequence and std::index_sequence to succeed with construction reflection.
 	}
 	SK_CONSTRUCTOR( cTest )
+	SK_CONSTRUCTOR( cTest, uint64_t, uint64_t )
 
-	void test_func( const uint32_t _val ) { member_1 = _val; }
+	void test_func( const uint32_t _val ){ member_1 = _val; }
+	
 	static bool test_func1(){ return false; }
-	uint32_t test_func2( void ) const { return member_2; }
+	static int test_func1( bool _value ){ return _value; }
+	uint32_t test_func2( void )  { return member_2; }
+	uint16_t test_func2( void ) const { return member_2; }
 
 	SK_FUNCTION( test_func )
-	SK_FUNCTION( test_func1 )
-	SK_FUNCTION( test_func2 )
+
+	SK_FUNCTION( test_func1, STATIC )
+	SK_FUNCTION( test_func1, STATIC, ARG( bool ) )
+
+	SK_FUNCTION_P( test_func2 )
+
+	SK_FUNCTION_O( test_func2 )
+	SK_FUNCTION_C( test_func2 )
+	SK_FUNCTION( test_func2, CONST )
+
 	// TODO: Figure out how to handle virtual functions? Some custom virtual table or member functions?
 
 	// TODO: Figure out a way to register virtual functions. Overridable tag?
@@ -1129,4 +1237,4 @@ sk_public:
 	// Future example: SK_FUNCTION( test_func, Visibility=Private )
 };
 
-REGISTER_CLASS( Test )
+DECLARE_CLASS( Test )

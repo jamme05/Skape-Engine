@@ -4,8 +4,6 @@
  *
  */
 
-#if false
-
 #pragma once
 
 #include "Camera.h"
@@ -15,16 +13,19 @@ namespace sk::Object
 {
 	QW_OBJECT_CLASS( CameraFlight, cCamera ), public Input::iListener
 	{
-	public:
+		SK_CLASS_BODY( CameraFlight )
+	sk_public:
 		 cCameraFlight( const std::string& _name, const float _movement_speed = 5.0f, const float _rotation_speed = 40.0f );
 		~cCameraFlight( void ) = default;
 
-		bool onInput( const Input::eInputType _type, const Input::sEvent& _event ) override;
+		Input::eResponse onInput( const uint32_t _type, const Input::sEvent& _event ) override;
 
 		void update( void ) override;
 
 		void handleStickEvent ( const Input::sEvent& _event );
 		void handleButtonEvent( const Input::sEvent& _event, const bool _up );
+		void handleKeyEvent   ( const Input::sEvent& _event, const bool _up );
+		void handleMouseEvent ( const Input::sEvent& _event );
 
 		cVector3f m_position = kZero;
 		cVector2f m_rotation = kZero;
@@ -32,4 +33,4 @@ namespace sk::Object
 	};
 } // sk::Object
 
-#endif
+DECLARE_CLASS( sk::Object::CameraFlight )

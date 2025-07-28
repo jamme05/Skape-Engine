@@ -38,4 +38,4 @@ namespace sk::Object::Components
 	};
 } // sk::Object::Components
 
-REGISTER_CLASS( sk::Object::Components::MeshComponent )
+DECLARE_CLASS( sk::Object::Components::MeshComponent )

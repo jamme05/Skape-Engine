@@ -9,7 +9,9 @@
 #include <atomic>
 #include <memory>
 
-#include "Memory/Tracker/Tracker.h"
+#include <Memory/Tracker/Tracker.h>
+
+// TODO: Move shared pointers to Memory folder
 
 namespace sk
 {
@@ -42,7 +44,7 @@ namespace sk
 
 			void dec( void )
 			{
-				if( --m_ref_count <= 0 && !m_is_deleting ) // TODO: Not use the bool and only change the ref count after deletion?
+				if( --m_ref_count <= 0 && !m_is_deleting && m_is_deleting ) // TODO: Not use the bool and only change the ref count after deletion?
 				{
 					m_is_deleting = true;
 					deleteCont();
@@ -54,16 +56,23 @@ namespace sk
 
 			void dec_weak( void )
 			{
-				if( --m_weak_ref_count <= 0 && m_ref_count <= 0 && !m_is_deleting )
+				if( --m_weak_ref_count <= 0 && m_ref_count <= 0 && !m_is_deleting && m_is_deleting )
 				{
 					deleteSelf();
 				}
 			}
+
+			void completed()
+			{
+				m_is_constructed = true;
+			}
 		private:
 			std::atomic_uint32_t m_ref_count;
-			// In case weak_ptr ever happens
 			std::atomic_uint32_t m_weak_ref_count;
-			std::atomic_bool     m_is_deleting = false;
+			// Will make sure that it doesn't get deleted multiple times.
+			std::atomic_bool     m_is_deleting    = false;
+			// Will make sure that it doesn't get deleted before being constructed.
+			std::atomic_bool     m_is_constructed = false;
 		};
 
 		template< class Ty >
@@ -137,6 +146,8 @@ namespace sk
 		friend class cShared_Ref;
 		template< class Fy >
 		friend class cWeak_Ptr;
+		template< class Fy >
+		friend class cShared_from_this;
 	};
 
 	template< class Ty >
@@ -152,9 +163,7 @@ namespace sk
 		friend class cWeak_Ptr;
 
 		public:
-		cShared_ptr( void )
-		{
-		} // cShared_ptr
+		cShared_ptr( void ) = default;
 
 		explicit cShared_ptr( Ty* _ptr )
 		{
@@ -235,8 +244,8 @@ namespace sk
 		}
 
 		template< class Other >
-		std::enable_if_t< std::is_convertible_v< Other, Ty >, cShared_ptr& >
-		operator=( const cShared_ptr< Other >& _right )
+		requires std::is_convertible_v< Other, Ty >
+		cShared_ptr& operator=( const cShared_ptr< Other >& _right )
 		{
 			dec();
 			m_data = _right.m_data;
@@ -246,8 +255,8 @@ namespace sk
 		}
 
 		template< class Other >
-		std::enable_if_t< std::is_base_of_v< Ty, Other > && ! std::is_convertible_v< Other, Ty >, cShared_ptr& >
-		operator=( const cShared_ptr< Other >& _right )
+		requires ( std::is_base_of_v< Ty, Other > && ! std::is_convertible_v< Other, Ty > )
+		cShared_ptr& operator=( const cShared_ptr< Other >& _right )
 		{
 			dec();
 			m_data = _right.m_data;
@@ -275,8 +284,8 @@ namespace sk
 
 		// NOTE: USE WITH CARE, be sure that you know what you're doing.
 		template< class Ot >
-		std::enable_if_t< std::is_base_of_v< Ty, Ot > || std::is_base_of_v< Ot, Ty >,
-		cShared_ptr< Ot > > cast( void )
+		requires ( std::is_base_of_v< Ty, Ot > || std::is_base_of_v< Ot, Ty > )
+		cShared_ptr< Ot > cast( void )
 		{
 			cShared_ptr< Ot > other{};
 			other.m_data = m_data;
@@ -297,9 +306,7 @@ namespace sk
 		friend class cWeak_Ptr;
 
 		public:
-		cShared_Ref( void )
-		{
-		} // cShared_ptr
+		cShared_Ref( void ) = default;
 
 		explicit cShared_Ref( Ty* _ptr )
 		{
@@ -367,8 +374,8 @@ namespace sk
 		}
 
 		template< class Other >
-		std::enable_if_t< std::is_convertible_v< Other, Ty >, cShared_Ref& >
-		operator=( const cShared_ptr< Other >& _right )
+		requires std::is_convertible_v< Other, Ty >
+		cShared_Ref& operator=( const cShared_ptr< Other >& _right )
 		{
 			dec();
 			m_data = _right.m_data;
@@ -378,8 +385,8 @@ namespace sk
 		}
 
 		template< class Other >
-		std::enable_if_t< std::is_base_of_v< Ty, Other > && ! std::is_convertible_v< Other, Ty >, cShared_Ref& >
-		operator=( const cShared_ptr< Other >& _right )
+		requires ( std::is_base_of_v< Ty, Other > && ! std::is_convertible_v< Other, Ty > )
+		cShared_Ref& operator=( const cShared_ptr< Other >& _right )
 		{
 			dec();
 			m_data = _right.m_data;
@@ -407,10 +414,11 @@ namespace sk
 
 		// NOTE: USE WITH CARE, be sure that you know what you're doing.
 		template< class Ot >
-		std::enable_if_t< std::is_base_of_v< Ty, Ot > || std::is_base_of_v< Ot, Ty >,
-		cShared_Ref< Ot > > cast( void )
+		requires ( std::is_base_of_v< Ty, Ot > || std::is_base_of_v< Ot, Ty > )
+		cShared_Ref< Ot > cast( void )
 		{
-			Ot* op = static_cast< Ot* >( m_data->get_ptr() );
+			// Why was this here?
+			// Ot* op = static_cast< Ot* >( m_data->get_ptr() );
 
 			cShared_ptr< Ot > other{};
 			other.m_data = m_data;
@@ -513,7 +521,7 @@ namespace sk
 		auto& operator=( cShared_ptr< Ty >&& _right ) noexcept
 		{
 			dec_weak(); // TODO: Make sure that it's counting correctly.
-			m_data = _right.m_data;
+			m_data = std::move( _right ).m_data;
 			_right.m_data = nullptr;
 			dec(); // Decrease due to stealing shared ptr
 
@@ -598,20 +606,25 @@ namespace sk
 	{
 	public:
 		// Warning, don't run this in the constructor.
-		cShared_ptr< Ty > get_shared_this( void )       { return m_self; }
+		cShared_ptr< Ty > get_shared_this( void )       { return m_self_; }
 		// Warning, don't run this in the constructor.
-		cShared_ptr< Ty > get_shared_this( void ) const { return m_self; }
-		cWeak_Ptr  < Ty > get_weak_this  ( void )       { return m_self; }
-		cWeak_Ptr  < Ty > get_weak_this  ( void ) const { return m_self; }
+		cShared_ptr< Ty > get_shared_this( void ) const { return m_self_; }
+		cWeak_Ptr  < Ty > get_weak_this  ( void )       { return m_self_; }
+		cWeak_Ptr  < Ty > get_weak_this  ( void ) const { return m_self_; }
 
 	protected:
 		cShared_from_this( void )
-		: m_self( cPtr_base( SK_SINGLE( Ptr_logic::cData< Ty >, static_cast< Ty* >( this ) ) ) )
+		: m_self_( cPtr_base( SK_SINGLE( Ptr_logic::cData< Ty >, static_cast< Ty* >( this ) ) ) )
 		{
 		} // cShared_from_this
 
 	private:
-		cPtr_base m_self;
+		template< class Ty2, class ...Args >
+		friend auto make_shared( Args&&... ) -> cShared_ptr< Ty2 >;
+
+		void complete() const { m_self_.m_data->completed(); }
+
+		cPtr_base m_self_;
 	};
 
 	template< class Ty, class... Args >
@@ -621,7 +634,10 @@ namespace sk
 		Ty* ptr = SK_SINGLE( Ty, std::forward< Args >( _args )... );
 
 		if constexpr( std::is_base_of_v< cShared_from_this< Ty >, Ty > )
+		{
+			static_cast< cShared_from_this< Ty >* >( ptr )->complete();
 			return ptr->get_shared_this();
+		}
 		else
 			return cShared_ptr< Ty >( ptr );
 	}

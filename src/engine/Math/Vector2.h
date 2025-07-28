@@ -24,6 +24,8 @@ namespace sk::Math
 
 		// Constructors:
 
+		// TODO: Give the vector default constructors.
+
 		// Default constructor
 		constexpr cVector( void ) = default;
 		// Sets all axis to x
@@ -31,9 +33,9 @@ namespace sk::Math
 		// Sets all axis
 		constexpr cVector( const T _x, const T _y )							: x(_x),y(_y) {}
 		// Copy constructor
-		constexpr cVector( const cVector& _other )							: x( _other.x ),y( _other.y ) {}
-		// Copy constructor
-		constexpr cVector( const cVector&& _other )	noexcept				: x( _other.x ),y( _other.y ) {}
+		constexpr cVector( const cVector& _other ) = default;
+		// Move constructor
+		constexpr cVector( cVector&& _other ) = default;
 		// Sets all axis (but using multiple types you psyco)
 		template <typename T2, typename T3> constexpr cVector(const T2 _x, const T3 _y) : x(_x), y(_y) {}
 
@@ -49,23 +51,34 @@ namespace sk::Math
 		template <typename T2>
 		constexpr          cVector( const cVector<4, T2>& _v )	: x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {}
 		// Construct from numbers in array/pointer
-		constexpr explicit cVector( const T* _p[2]) : x(_p[0]), y(_p[1]) {}
+		constexpr explicit cVector( const T _p[2]) : x(_p[0]), y(_p[1]) {}
 
 		~cVector( void ) = default;
 
 		// Cast to other Vectors:
-		template <typename T2> operator cVector< 2, T2>() { return cVector< 2, T2>(*this); }
-		template <typename T2> operator cVector< 3, T2>() { return cVector< 3, T2>(*this); }
+		template <typename T2> operator cVector< 2, T2>() { return cVector< 2, T2 >(*this); }
+		template <typename T2> operator cVector< 3, T2>() { return cVector< 3, T2 >(*this); }
 		template <typename T2> explicit operator cVector< 4, T2>() { return cVector< 4, T2>(*this); }
 
 		// Operators:
 		constexpr cVector operator-(void) const { return { -x, -y }; }
-		constexpr cVector& operator=(const cVector& _v) { x = _v.x; y = _v.y; return *this; }
+		constexpr cVector& operator=( const cVector& ) = default;
+		constexpr cVector& operator=( cVector&& ) = default;
 
 		constexpr cVector operator+(const cVector& _v) const { return { x + _v.x, y + _v.y }; }
 		constexpr cVector operator-(const cVector& _v) const { return { x - _v.x, y - _v.y }; }
 		constexpr cVector operator*(const cVector& _v) const { return { x * _v.x, y * _v.y }; }
 		constexpr cVector operator/(const cVector& _v) const { return { x / _v.x, y / _v.y }; }
+
+		template <typename T2> requires std::is_integral_v< T2 >
+		constexpr cVector operator/(const cVector2< T2 >& _v) const { return { x / _v.x, y / _v.y }; }
+		template <typename T2>
+		constexpr cVector operator/(const cVector2< T2 >& _v) const { return { x / static_cast< T >( _v.x ), y / static_cast< T >( _v.y ) }; }
+
+		template <typename T2> requires std::is_integral_v< T2 >
+		cVector operator*(const T2 _t) const { return { x * _t, y * _t }; }
+		template <typename T2> requires std::is_integral_v< T2 >
+		cVector operator/(const T2 _t) const { return { x / _t, y / _t }; }
 
 		template <typename T2> cVector operator*(const T2 _t) const { return { static_cast<T>(x * _t), static_cast<T>(y * _t) }; }
 		template <typename T2> cVector operator/(const T2 _t) const { return { static_cast<T>(x / _t), static_cast<T>(y / _t) }; }
@@ -86,12 +99,12 @@ namespace sk::Math
 		constexpr T& operator[](const size_t _i) { return (&x)[_i]; }
 		constexpr const T& operator[](const size_t _i) const { return (&x)[_i]; }
 
-		operator float()
+		explicit operator float()
 		{
 			return length<float>();
 		}
 
-		operator double()
+		explicit operator double()
 		{
 			return length<double>();
 		}
@@ -107,7 +120,7 @@ namespace sk::Math
 		// Returns the length
 		inline		T				length		(void)					{ return Math::sqrt(dot()); }
 		// Returns the length
-		template <typename T2> inline T2 length	(void)					{ return (T2)Math::sqrt(dot<T2>()); }
+		template< class T2 > T2 length(){ return static_cast< T2 >( Math::sqrt( dot< T2 >() ) ); }
 		// Normalizes and returns the vector
 		// (Original will be modified)
 		inline		cVector&			normalize	(void)					{ return normalize(length()); }
@@ -124,9 +137,13 @@ namespace sk::Math
 		SWIZZLE_ALL_VEC2
 
 	};
+} // sk::Math::
 
+namespace sk
+{
 	namespace Vector2
 	{
+		using namespace sk::Math;
 		// Returns the dot product of two vectors
 		template <typename T> constexpr	T			Dot(const cVector2<T>& _v, const cVector2<T>& _u)			{ return (_v.x * _u.x) + (_v.y * _u.y); }
 		// Returns the distance between two positions
@@ -141,17 +158,16 @@ namespace sk::Math
 		template <typename T> inline	cVector2<T>	Normalized(const cVector2<T>& _v, const T _l)				{ return _v * (_l > T(0) ? (T(1) / _l) : T(0)); }
 		// Returns a normalized version of vector
 		template <typename T> inline	cVector2<T>	Normalized(const cVector2<T>& _v)							{ return Normalized(_v, Length(_v)); }
-	}
-}
+		template< class Ty > float Aspect( const cVector2< Ty >& _v ){ return static_cast< float >( _v.x ) / static_cast< float >( _v.y ); }
+	} // sk::Vector2::
 
-namespace sk
-{
 	typedef Math::cVector2< float >    cVector2f;
 	typedef Math::cVector2< double >   cVector2d;
-	typedef Math::cVector2< int32_t >  cVector2i;
-	typedef Math::cVector2< uint32_t > cVector2u;
-
-}
+	typedef Math::cVector2< int32_t >  cVector2i32;
+	typedef Math::cVector2< uint32_t > cVector2u32;
+	typedef Math::cVector2< uint32_t > cVector2i8;
+	typedef Math::cVector2< uint32_t > cVector2u8;
+} // sk::
 
 template< typename Ty >
 sk::Math::cVector2< Ty > operator*( const Ty& _l, const sk::Math::cVector2< Ty >& _r ){ return sk::Math::cVector2< Ty >{ _r.x * _l, _r.y * _l }; }

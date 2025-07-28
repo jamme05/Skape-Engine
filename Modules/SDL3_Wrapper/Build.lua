@@ -26,7 +26,7 @@ module = {
 
     -- TODO: Add cache.
     IncludeDirs = function( module_dir )
-        return { path.join( "Modules", module_dir, SDL_Path, "include" ) }
+        return { path.join( "Modules", module_dir, SDL_Path, "include" ), "src/framework" }
     end,
 }
 module.Module_Project = Module_Setup( "SDL3",

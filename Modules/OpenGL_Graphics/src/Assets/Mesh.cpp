@@ -10,6 +10,8 @@
 
 #include <ranges>
 
+REGISTER_CLASS( sk::Assets::Mesh )
+
 namespace sk::Assets
 {
     cMesh::cMesh( const std::string& _name )

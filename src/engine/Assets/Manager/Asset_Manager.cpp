@@ -114,6 +114,7 @@ namespace sk
 			return {};
 
 		const auto absolute_path = getAbsolutePath( _path );
+		// TODO: Full path asset search. (aka find asset with path)
 		const auto path_hash     = str_hash( absolute_path );
 
 		auto assets = callback_pair->second( absolute_path );
@@ -161,6 +162,10 @@ namespace sk
 
 		Assets::cAsset_List assets;
 
+		for( auto& node : asset.nodes )
+		{
+			// TODO: Models
+		}
 		for( auto& texture : asset.textures )
 		{
 			if( auto texture_asset = handleGltfTexture( asset, texture ) )
@@ -178,7 +183,7 @@ namespace sk
 	auto cAssetManager::handleGltfModel( const fastgltf::Asset& _asset, fastgltf::Mesh& _mesh ) -> Assets::cAsset_List
 	{
 		Assets::cAsset_List assets;
-		auto model_asset = Assets::cModel::create_shared( "Undefined" );
+		auto model_asset = Assets::cModel::create_shared( std::string{} );
 		for( auto& primitive : _mesh.primitives )
 		{
 			// Check if primitive has indices, go to next if it doesn't.
@@ -229,22 +234,10 @@ namespace sk
 		}, image.data);
 
 		if( target_buffer )
-		{
-			Assets::cTexture::eSourceType image_type;
-			switch( type )
-			{
-			case fastgltf::MimeType::PNG:  image_type = Assets::cTexture::eSourceType::kPNG; break;
-			case fastgltf::MimeType::JPEG: image_type = Assets::cTexture::eSourceType::kJPG; break;
-			default: image_type = Assets::cTexture::eSourceType::kInvalid; break;
-			}
-			if( image_type == Assets::cTexture::eSourceType::kInvalid )
-				return nullptr;
-
-			return make_shared< Assets::cTexture >( image.name.c_str(), target_buffer, size, image_type );
-		}
+			return make_shared< Assets::cTexture >( image.name.c_str(), target_buffer, size );
 
 		return nullptr;
-	}
+	} // handleGltfTexture
 
 	auto cAssetManager::loadPngFile( const std::filesystem::path& _path ) -> Assets::cAsset_List
 	{

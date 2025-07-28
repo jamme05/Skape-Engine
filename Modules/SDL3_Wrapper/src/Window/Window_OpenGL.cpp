@@ -11,7 +11,10 @@
 
 namespace sk::Platform
 {
-    cSDL_Window::cSDL_Window( const std::string& _name, const cVector2i& _size, uint8_t _flags )
+    cSDL_Window::cSDL_Window( const std::string& _name, const cVector2u32& _resolution, const uint8_t _flags )
+    : m_visible_( false )
+    , m_size_( _resolution )
+    , m_aspect_ratio_( Vector2::Aspect( _resolution ) )
     {
         SDL_GL_SetAttribute( SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG );
         SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
@@ -19,21 +22,17 @@ namespace sk::Platform
         SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 5 );
 
         const SDL_WindowFlags flags = _flags | SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY;
-        m_window_ = SDL_CreateWindow( _name.c_str(), _size.x, _size.y, flags );
-        SK_ERR_IF( m_window_ == nullptr, "Unable to create a window." )
+        m_window_ = SDL_CreateWindow( _name.c_str(), static_cast< int >( _resolution.x ), static_cast< int >( _resolution.y ), flags );
+        SK_ERR_IF( m_window_ == nullptr,
+            TEXT( "ERROR: Unable to create a window.\n Reason: {}", SDL_GetError() ) )
     } // cSDL_Window
-
-    cSDL_Window::~cSDL_Window()
-    {
-        SDL_DestroyWindow( m_window_ );
-    } // ~cSDL_Window
 
     void* cSDL_Window::create_context()
     {
         return SDL_GL_CreateContext( m_window_ );
     } // create_context
 
-    function_ptr_t getProcAddress( const char* _name )
+    function_ptr_t get_proc_address( const char* _name )
     {
         return SDL_GL_GetProcAddress( _name );
     } // getProcAddress

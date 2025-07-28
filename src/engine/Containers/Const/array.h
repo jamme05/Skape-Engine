@@ -82,9 +82,7 @@ namespace sk
         template< size_t Size2 >
         constexpr array< Ty, Size2 > operator+( const array< Ty, Size2 >& _other ) const
         {
-            array< Ty, Size2 > result;
-            std::copy_n( _other.value, Size2, result.value );
-            return result;
+            return _other;
         }
 
         constexpr Ty& operator[]( const size_t _index ) const { return get()[ _index ]; }
@@ -206,7 +204,7 @@ namespace sk
     constexpr static bool is_string_v = is_array< Ty >::kIsString;
 
     template< class Fst, class Snd, size_t Size >
-    constexpr auto make_ptr_array_pair( const sk::array< std::pair< Fst, Snd >, Size >& _val )
+    constexpr auto make_ptr_array_pair( const array< std::pair< Fst, Snd >, Size >& _val )
     {
         using NewSnd = std::add_pointer_t< std::add_const_t< Snd > >;
         array< std::pair< Fst, NewSnd >, Size > new_val{};

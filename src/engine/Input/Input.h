@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Input/Input_Keys.h>
+#include <Input/Keyboard.h>
 #include <Math/Vector2.h>
 
 namespace sk::Platform
@@ -49,7 +49,7 @@ namespace sk::Input
 		kAll         = 0xffffffff,
 	}; // eType
 
-	enum class eResponse : uint8_t
+	enum eResponse : uint8_t
 	{
 		// Prevets other input listener with less priority from getting the event.
 		kConsume,

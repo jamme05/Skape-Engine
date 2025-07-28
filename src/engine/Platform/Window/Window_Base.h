@@ -16,8 +16,15 @@ namespace sk::Platform
     public:
         virtual ~iWindow() = default;
         virtual void* create_context() = 0;
+        [[ nodiscard ]]
+        virtual bool GetVisibility() const = 0;
+        [[ nodiscard ]]
         virtual bool SetVisibility( bool _visible ) const = 0;
+        [[ nodiscard ]]
+        virtual cVector2u32 GetResolution() const = 0;
+        virtual float       GetAspectRatio() const = 0;
     };
 
-    extern iWindow* create_window( const std::string& _name, const cVector2u& _size = {} );
+    extern iWindow* CreateWindow ( const std::string& _name, const cVector2u32& _size = {} );
+    extern iWindow* GetMainWindow();
 } // sk::Platform

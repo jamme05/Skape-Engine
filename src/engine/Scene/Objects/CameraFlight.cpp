@@ -4,11 +4,11 @@
  *
  */
 
-#if false
-
 #include "CameraFlight.h"
 
-#include "Platform/time.h"
+#include <Input/Gamepad.h>
+
+#include "Platform/Time.h"
 
 namespace sk::Object
 {
@@ -20,17 +20,19 @@ namespace sk::Object
 		RegisterListener< cCameraFlight >( kUpdate, &cCameraFlight::update );
 	} // cCameraFlight
 
-	bool cCameraFlight::onInput( const Input::eInputType _type, const Input::sEvent& _event )
+	Input::eResponse cCameraFlight::onInput( const uint32_t _type, const Input::sEvent& _event )
 	{
 		switch( _type )
 		{
 		case Input::kStick:       handleStickEvent ( _event );        break;
 		case Input::kButton_Down: handleButtonEvent( _event, false ); break;
 		case Input::kButton_Up:   handleButtonEvent( _event, true  ); break;
+		case Input::kKey_Down:    handleKeyEvent   ( _event, false ); break;
+		case Input::kKey_Up:      handleKeyEvent   ( _event, true  ); break;
 		default: break;
 		}
 
-		return false;
+		return Input::kContinue;
 	} // onInput
 
 	void cCameraFlight::update( void )
@@ -68,8 +70,8 @@ namespace sk::Object
 		{
 			switch( _event.pad->button )
 			{
-			case Input::eType::kR3:
-			case Input::eType::kL3: m_position.y = 0.0f; break;
+			case Input::Gamepad::kRStick:
+			case Input::Gamepad::kLStick: m_position.y = 0.0f; break;
 			default: break;
 			}
 		}
@@ -77,13 +79,35 @@ namespace sk::Object
 		{
 			switch( _event.pad->button )
 			{
-			case Input::eType::kR3: m_position.y =  1.0f; break;
-			case Input::eType::kL3: m_position.y = -1.0f; break;
+			case Input::Gamepad::kRStick: m_position.y =  1.0f; break;
+			case Input::Gamepad::kLStick: m_position.y = -1.0f; break;
 			default: break;
 			}
 		}
 	}
+
+	void cCameraFlight::handleKeyEvent( const Input::sEvent& _event, const bool _up )
+	{
+		const float val = _up ? 0.0f : 1.0f;
+		switch( _event.keyboard->key )
+		{
+		// Forward
+		case Input::Keyboard::kW: m_position.z =  val; break;
+		// Back
+		case Input::Keyboard::kS: m_position.z = -val; break;
+		// Left
+		case Input::Keyboard::kA: m_position.x = -val; break;
+		// Right
+		case Input::Keyboard::kD: m_position.x =  val; break;
+		// Up
+		case Input::Keyboard::kE: m_position.y =  val; break;
+		// Down
+		case Input::Keyboard::kQ: m_position.y = -val; break;
+		default: break;
+		}
+	}
+
+	void cCameraFlight::handleMouseEvent( const Input::sEvent& _event )
+	{
+	}
 } // sk::Object::
-
-
-#endif

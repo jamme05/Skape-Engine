@@ -10,7 +10,6 @@
 
 namespace sk::Platform
 {
-    
     typedef void( *function_ptr_t )();
-    extern function_ptr_t getProcAddress( const char* _name );
+    extern function_ptr_t get_proc_address( const char* _name );
 } // sk::Platform

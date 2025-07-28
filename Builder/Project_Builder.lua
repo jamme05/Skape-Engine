@@ -55,7 +55,7 @@ filter { "configurations:Debug" }
 
 filter { "configurations:Release" }
     defines {
-        "NDEBUG", "RELEASE", "SK_TRACKER_DISABLED"
+        "NDEBUG", "RELEASE"
     }
     symbols "On"
     optimize "Debug"
@@ -69,17 +69,18 @@ filter { "configurations:Final" }
     optimize "Full"
 
 group "Game"
-
 project "Framework"
     kind "StaticLib"
     location( root_build_dir .. "framework" )
     language "C++"
     targetdir "bin/Framework"
 
+    defines { "SK_IS_MODULE=0" }
+
     files { "src/framework/**.hpp", "src/framework/**.cpp", "src/framework/**.h" }
 
     links { "Engine" }
-    
+
     includedirs { "src/engine", "src/framework", "external/fastgltf/include",  "external/stb", Get_Module_Includes() }
 
 project "Startup"
@@ -88,6 +89,8 @@ project "Startup"
     language "C++"
     targetdir "game/bin"
 
+    defines { "SK_IS_MODULE=0" }
+
     links { "Engine", "Framework" }
 
     files { "src/startup/main.cpp" }
@@ -95,7 +98,6 @@ project "Startup"
     includedirs { "src/engine", "src/framework", "external/fastgltf/include", "external/stb", Get_Module_Includes() }
 
 group "Skape"
-
 project "Engine"
     kind "StaticLib"
     location( root_build_dir .. "engine" )
@@ -111,6 +113,7 @@ project "Engine"
 group "Modules"
     CreateModules()
 
+-- Rename to external?
 group "Dependencies"
 
 CMakeBuilder( "External/fastgltf", "" )

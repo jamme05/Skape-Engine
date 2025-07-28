@@ -4,11 +4,10 @@
  *
  */
 
-#if false
-
 #include "CameraManager.h"
 
 #include "SceneManager.h"
+#include "Graphics/Renderer.h"
 #include "Scene/Components/CameraComponent.h"
 
 namespace sk::Scene
@@ -32,7 +31,9 @@ namespace sk::Scene
 
 		if( _camera->m_camera_id == INVALID_CAMERA_ID )
 		{
-			printf( "WARNING: Camera isn't registered. You won't be stopped for doing this. But it isn't recommended." );
+			SK_WARNING( sk::Severity::kGeneral | 2000,
+				"WARNING: Camera isn't registered. You won't be stopped for doing this. But it isn't recommended." )
+
 			m_main_camera.m_enabled = false;
 		}
 		else
@@ -46,11 +47,8 @@ namespace sk::Scene
 
 	void cCameraManager::setCameraEnabled( const cShared_ptr< camera_t >& _camera, const bool _enable )
 	{
-		if( _camera->m_camera_id == INVALID_CAMERA_ID )
-		{
-			printf( "WARNING: Camera isn't registered. Register it before you add it to the list." );
-			return;
-		}
+		SK_WARN_IF_RET( sk::Severity::kGeneral | 2000, _camera->m_camera_id == INVALID_CAMERA_ID,
+			"WARNING: Camera isn't registered. Register it before you add it to the list." )
 
 		if( _enable )
 			m_enabled_cameras[ _camera->m_camera_id ] = _camera;
@@ -61,14 +59,7 @@ namespace sk::Scene
 
 	void cCameraManager::render( void )
 	{
-		for( auto& camera : m_enabled_cameras )
-		{
-			camera.second->renderAuto();
-		}
-
-		m_main_camera.m_camera->update(); // TODO: Get rid of force update.
-		cSceneManager::get().render_with( *m_main_camera.m_camera, Graphics::cRenderer::get().getRenderContext() );
+		for( auto& camera : m_enabled_cameras | std::views::values )
+			camera->renderAuto();
 	} // render
 } // sk::Scene::
-
-#endif
