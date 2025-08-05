@@ -29,6 +29,7 @@ namespace sk
 	public:
 		virtual ~cSingleton( void ) = default;
 
+		// Causes error in case the singleton is already initialized good in case the timing is required.
 		template< typename... Args >
 		static Ty&   init    ( Args&&... _args )
 		{
@@ -41,6 +42,16 @@ namespace sk
 
 			m_instance_ = Memory::Internal::alloc< Ty >( std::forward< Args >( _args )... );
 			return *m_instance_;
+		}
+
+		// Safely request the singleton to be initialized multiple times.
+		template< typename... Args >
+		static Ty& try_init( Args&&... _args )
+		{
+			if( m_instance_ )
+				return *m_instance_;
+
+			return init( std::forward< Args >( _args )... );
 		}
 
 		static void shutdown( void )

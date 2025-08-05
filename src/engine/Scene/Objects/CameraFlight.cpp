@@ -20,7 +20,7 @@ namespace sk::Object
 		RegisterListener< cCameraFlight >( kUpdate, &cCameraFlight::update );
 	} // cCameraFlight
 
-	Input::eResponse cCameraFlight::onInput( const uint32_t _type, const Input::sEvent& _event )
+	Input::response_t cCameraFlight::onInput( const uint32_t _type, const Input::sEvent& _event )
 	{
 		switch( _type )
 		{
@@ -32,7 +32,7 @@ namespace sk::Object
 		default: break;
 		}
 
-		return Input::kContinue;
+		return false;
 	} // onInput
 
 	void cCameraFlight::update( void )

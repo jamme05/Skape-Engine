@@ -8,7 +8,3 @@
 
 #include <Reflection/Types.h>
 
-namespace Testing
-{
-    template<> int test< 69 > = 420;
-}

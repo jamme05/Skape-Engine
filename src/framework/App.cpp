@@ -23,10 +23,12 @@
 #include "Reflection/RuntimeStruct.h"
 
 #include <print>
+#include <random>
 
 #include <Graphics/Rendering/Render_Context.h>
 
 #include "Graphics/Rendering/Window_Context.h"
+#include "Misc/UUID.h"
 
 cApp* cApp::m_running_instance_ = nullptr;
 
@@ -57,17 +59,16 @@ cApp::~cApp( void )
 	m_scene = nullptr;
 } // ~cApp
 
-sk::Input::eResponse cApp::onInput( const uint32_t _type, const sk::Input::sEvent& _event )
+sk::Input::response_t cApp::onInput( const uint32_t _type, const sk::Input::sEvent& _event )
 {
 	if( _type == sk::Input::kKey_Down && _event.keyboard->key == sk::Input::Keyboard::kEscape )
 		return sk::Input::eResponse::kQuit;
 
-	return sk::Input::eResponse::kContinue;
+	return false;
 } // onInput
 
 void cApp::create( void )
 {
-
 	//auto list   = sk::cAssetManager::get().loadFolder( "data/" );
 	auto list_1 = sk::cAssetManager::get().loadFile( "data/humanforscale.glb" );
 	auto list_2 = sk::cAssetManager::get().loadFile( "data/heheToiletwithtextures.glb" );
@@ -115,12 +116,12 @@ void cApp::create( void )
 
 void cApp::print_types( void )
 {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wundefined-var-template"
-	std::println( "Test value: {}", Testing::test< -1 > );
-	std::println( "Test value: {}", Testing::test< 5 > );
-	std::println( "Test value: {}", Testing::test< 69 > );
-#pragma clang diagnostic pop
+	std::vector< sk::cUUID > uuids{ 1024 };
+	for( auto& uuid : uuids )
+		uuid = sk::GenerateRandomUUID();
+
+	for( auto& uuid : uuids )
+		std::println( "{} {}", uuid.to_string(), uuid.to_string( false ) );
 
 	for( const auto& val : sk::type_map | std::views::values )
 	{

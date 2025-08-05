@@ -106,16 +106,18 @@ namespace sk::Platform
     SDL_AppResult cSDL_Window::handle_event( const SDL_GamepadButtonEvent& _event )
     {
         // TODO: Gamepad input events
+        return SDL_APP_CONTINUE;
     } // handle_event
 
     SDL_AppResult cSDL_Window::handle_event( const SDL_MouseMotionEvent& _event )
     {
         // TODO: Mouse move input event
+        return SDL_APP_CONTINUE;
     } // handle_event
 
     iWindow* CreateWindow( const std::string& _name, const cVector2u32& _size )
     {
-        return SK_SINGLE( cSDL_Window, _name, static_cast< cVector2i32 >( _size ) );
+        return SK_SINGLE( cSDL_Window, _name, _size );
     } // create_window
 
     iWindow* GetMainWindow()

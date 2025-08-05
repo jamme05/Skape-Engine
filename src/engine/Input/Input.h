@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <variant>
 #include <Input/Keyboard.h>
 #include <Math/Vector2.h>
 
@@ -20,7 +21,7 @@ namespace sk::Input
 
 	enum eInput
 	{
-		kNone = 0,
+		kNone,
 	};
 
 	enum eInputType : uint32_t
@@ -53,11 +54,20 @@ namespace sk::Input
 	{
 		// Prevets other input listener with less priority from getting the event.
 		kConsume,
-		// The other listeners gets this event as well.
+		// Send the event to the next listener.
 		kContinue,
 		// Tells the application to shut down.
 		kQuit
 	};
+
+	/**
+	 * Variant with bool and eResponse.
+	 * 
+	 * Bool is if it will continue. So true = eResponse::kContinue and false = eResponse::kConsume.
+	 * 
+	 * See sk::Input::eResponse for its control.
+	 */
+	using response_t = std::variant< bool, eResponse >;
 
 	enum class eAnalog : uint8_t
 	{
@@ -133,22 +143,29 @@ namespace sk::Input
 	extern bool input_event   ( uint32_t _type, sMouseEvent&    _event );
 	extern bool input_event   ( uint32_t _type, sKeyboardEvent& _event );
 
-	// Will call the custom event. If target is provided the event will only be called on that object.
-	extern bool input_custom_event( uint32_t _type, void* _event, iListener* _target );
+	// Will call the custom event on the listeners.
+	extern bool input_custom_event( uint32_t _type, void* _event );
 
 	// Returns if the application should shut down or not.
-	extern bool input_event( uint32_t _type, const sEvent&   _event );
+	extern bool input_event( uint32_t _type, const sEvent& _event );
 
 	class iListener
 	{
+		// Could this be combined in some way?
 		uint32_t m_filter;
 		uint16_t m_priority;
-		bool     m_enabled  = false;
-
+		bool     m_enabled;
 	public:
 
-		         iListener( uint32_t _filter, uint16_t _priority, bool _enabled = false );
+		         iListener( uint32_t _filter, uint16_t _priority, bool _enabled = true );
 		virtual ~iListener( void );
+
+		// We don't expect this to be copied or moved.
+		iListener( const iListener& ) = delete;
+		iListener( iListener&& ) = delete;
+
+		iListener& operator=( const iListener& ) = delete;
+		iListener& operator=( iListener&& ) = delete;
 
 		// No setting the priority after creation... For now
 		auto getPriority( void ) const                { return m_priority;    }
@@ -158,13 +175,18 @@ namespace sk::Input
 		void setFilter  ( const uint32_t _filter )    { m_filter = _filter;   }
 
 		// Override either only a single type of input.
-		virtual eResponse onInput( const uint32_t _type, const sPadEvent&      _event ){ return onInput( _type, *_event.current_event ); }
-		virtual eResponse onInput( const uint32_t _type, const sMouseEvent&    _event ){ return onInput( _type, *_event.current_event ); }
-		virtual eResponse onInput( const uint32_t _type, const sKeyboardEvent& _event ){ return onInput( _type, *_event.current_event ); }
+		virtual response_t onInput( const uint32_t _type, const sPadEvent&      _event ){ return onInput( _type, *_event.current_event ); }
+		virtual response_t onInput( const uint32_t _type, const sMouseEvent&    _event ){ return onInput( _type, *_event.current_event ); }
+		virtual response_t onInput( const uint32_t _type, const sKeyboardEvent& _event ){ return onInput( _type, *_event.current_event ); }
 
 		// Or all of them!
-		virtual eResponse onInput( const uint32_t _type, const sEvent& _event ) = 0;
-
+		/**
+		 * 
+		 * @param _type The type of event. See sk::Input::eInputType
+		 * @param _event Information about the event.
+		 * @return True/sk::Input::kContinue to send the event to the next listener. False/sk::Input::kConsume to consume the input. Or sk::Input::kQuit to quit the application.
+		 */
+		virtual response_t onInput( const uint32_t _type, const sEvent& _event ) = 0;
 	}; // iListener
 
 } // sk::Input::

@@ -74,6 +74,7 @@ constexpr bool   operator<=( const Class & _other ) const { return m_hash <= _ot
 constexpr bool   operator>=( const Class & _other ) const { return m_hash >= _other.m_hash; }
 
 
+	// TODO: Rename to something like BaseHash as it isn't an interface
 	struct iHashed
 	{
 	protected:
@@ -148,6 +149,8 @@ namespace sk
 	{
 		constexpr hash( const Ty& _to_hash )
 		: iHashed( fnv1a_64( _to_hash ) ){}
+
+		HASH_REQUIREMENTS( hash )
 	};
 
 	// TODO: Make name class like unreal

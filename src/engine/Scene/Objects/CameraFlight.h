@@ -18,7 +18,7 @@ namespace sk::Object
 		 cCameraFlight( const std::string& _name, const float _movement_speed = 5.0f, const float _rotation_speed = 40.0f );
 		~cCameraFlight( void ) = default;
 
-		Input::eResponse onInput( const uint32_t _type, const Input::sEvent& _event ) override;
+		Input::response_t onInput( const uint32_t _type, const Input::sEvent& _event ) override;
 
 		void update( void ) override;
 

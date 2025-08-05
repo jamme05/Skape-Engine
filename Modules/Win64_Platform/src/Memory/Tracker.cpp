@@ -65,7 +65,7 @@ namespace sk::Memory
 			size_t reallocation_count        = 0u;
 		};
 
-		typedef std::unordered_set< void* > block_set_t;
+		typedef std::unordered_set< sTracker_entry* > block_set_t;
 		typedef std::vector< sHistory_action* >  history_t;  
 
 		void* alloc  ( const size_t _size, const std::source_location& _location = std::source_location::current() );
@@ -73,7 +73,7 @@ namespace sk::Memory
 		void* realloc( void* _block, const size_t _size, const std::source_location& _location = std::source_location::current() );
 
 		 cTracker( void );
-		~cTracker( void );
+		~cTracker( void ) override;
 
 		static void* Alloc( const size_t _size, const auto& _location = std::source_location::current() ){ return get().alloc( _size, _location ); }
 		static void  Free ( void*  _block ){ get().free( _block ); }
@@ -188,14 +188,10 @@ private:
     	// Remember to lock whilst working with containers.
         m_mtx.lock();
         if constexpr( Tracker::kSaveMemoryHistory )
-        {
             add_history( *entry, { _location, eAction::kAllocate, _size } );
-        }
     	else
-    	{
     		entry->last = static_cast< sHistory_action* >( alloc_fast( t_size, kB32Align ) );
-    		
-    	}
+
         m_block_set.insert( entry );
         m_mtx.unlock();
 
@@ -216,9 +212,10 @@ private:
 
         m_mtx.lock();
         if constexpr( Tracker::kSaveMemoryHistory )
-        {
             add_history( *entry, { _location, eAction::kFree, 0 } );
-        }
+    	else
+    		free_fast( entry->last );
+
         m_block_set.erase( entry );
         m_mtx.unlock();
 
@@ -274,7 +271,8 @@ private:
         for( auto& entry : m_block_set )
         {
         	// TODO Printer for memory leaks.
-        	::free( static_cast< sTracker_entry* >( entry )->last );
+			// https://en.cppreference.com/w/cpp/utility/format/spec.html
+        	free_fast( entry->last );
             ::free( entry );
         }
         m_block_set.clear();

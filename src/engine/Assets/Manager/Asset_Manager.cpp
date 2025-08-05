@@ -6,20 +6,23 @@
 
 #include "Asset_Manager.h"
 
-#include "fastgltf/tools.hpp"
-
-#include <Assets/Mesh.h>
-
 #include <Assets/Asset_List.h>
+#include <Assets/Mesh.h>
 #include <Assets/Model.h>
 #include <Assets/Texture.h>
+
 #include <Scene/Managers/CameraManager.h>
+
+#include <Misc/UUID_Helper.h>
+
+#include <fastgltf/tools.hpp>
 
 namespace sk
 {
 	cAssetManager::cAssetManager( void )
 	{
 		loadEmbedded();
+		cUUID_Helper::try_init();
 	} // cAssetManager
 
 	cAssetManager::~cAssetManager( void )
@@ -88,12 +91,15 @@ namespace sk
 	{
 		Assets::cAsset_List assets;
 
+		// TODO: Implament loading folders.
 		if( _recursive )
 		{
 			std::filesystem::recursive_directory_iterator iter( _path );
 			for( const auto& file : iter )
 			{
-				assets += loadFile( file.path(), _reload );
+				// Look into making it safe. https://en.cppreference.com/w/cpp/filesystem/directory_entry.html
+				if( file.is_regular_file() )
+					assets += loadFile( file.path(), _reload );
 			}
 		}
 		else

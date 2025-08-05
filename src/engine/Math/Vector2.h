@@ -29,9 +29,9 @@ namespace sk::Math
 		// Default constructor
 		constexpr cVector( void ) = default;
 		// Sets all axis to x
-		constexpr explicit cVector( const T _x )								: x(_x),y(_x) {}
+		constexpr explicit cVector( const T _x ) : x(_x),y(_x) {}
 		// Sets all axis
-		constexpr cVector( const T _x, const T _y )							: x(_x),y(_y) {}
+		constexpr cVector( const T _x, const T _y ) : x(_x),y(_y) {}
 		// Copy constructor
 		constexpr cVector( const cVector& _other ) = default;
 		// Move constructor
@@ -56,9 +56,11 @@ namespace sk::Math
 		~cVector( void ) = default;
 
 		// Cast to other Vectors:
-		template <typename T2> operator cVector< 2, T2>() { return cVector< 2, T2 >(*this); }
+		template <typename T2>
+		requires ( !std::is_same_v< T, T2 > )
+		operator cVector< 2, T2>() { return cVector< 2, T2 >(*this); }
 		template <typename T2> operator cVector< 3, T2>() { return cVector< 3, T2 >(*this); }
-		template <typename T2> explicit operator cVector< 4, T2>() { return cVector< 4, T2>(*this); }
+		template <typename T2> explicit operator cVector< 4, T2>() { return cVector< 4, T2 >(*this); }
 
 		// Operators:
 		constexpr cVector operator-(void) const { return { -x, -y }; }

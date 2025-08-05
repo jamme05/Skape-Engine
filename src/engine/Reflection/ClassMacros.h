@@ -300,8 +300,12 @@ class Class : public sk::get_inherits_t< FIRST( __VA_ARGS__ ) > \
 	if( const auto member = getFunction( _hash ); member == nullptr ) return {}; \
 	else return sk::Reflection::cMemberFunctionInstance{ *member, this }; }
 
+// TODO: Create a macro that checks if it's included or not.
 #define REGISTER_CLASS( Class ) \
-	REGISTER_TYPE_INTERNAL( Class::class_type )
+	REGISTER_TYPE_INTERNAL( Class::class_type, false )
+
+#define REGISTER_CLASS_INLINE( Class ) \
+	REGISTER_TYPE_INTERNAL( Class::class_type, true )
 
 // Build type_info
 #define BUILD_CLASS_REFLECTION_INFO( Class ) \

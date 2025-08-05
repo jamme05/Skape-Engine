@@ -9,12 +9,6 @@
 #include <Memory/Tracker/Tracker.h>
 #include <Skape_Main.h>
 
-namespace Testing
-{
-	template<>
-	int test< -1 > = -1;
-}
-
 namespace sk
 {
 	namespace
@@ -29,6 +23,7 @@ namespace sk
 			return map;
 		} // create_type_map
 
+		// Why did this stop working?
 		constexpr auto& types = registry::type_registry< registry::counter::next() - 1 >;
 	} // ::
 	// TODO: Add a handler for types.

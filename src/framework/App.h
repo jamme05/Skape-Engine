@@ -45,7 +45,7 @@ public:
 	bool running   ( void ) const         { return m_running; }
 	void setRunning( const bool _running ){ m_running = _running; m_running_instance_ = m_running ? this : nullptr; }
 
-	sk::Input::eResponse onInput( const uint32_t _type, const sk::Input::sEvent& _event ) override;
+	sk::Input::response_t onInput( const uint32_t _type, const sk::Input::sEvent& _event ) override;
 
 	void create ( void );
 	void run    ( void );

@@ -48,3 +48,21 @@
 #endif // !IN_EDITOR
 
 #define NOT( ... ) !( __VA_ARGS__ )
+
+#define VALUE_true  1
+#define VALID_VALUE_true ,1
+#define VALUE_false 0
+#define VALID_VALUE_false ,1
+
+// It's valid
+#define VALUE_OF_1_1( Param ) CONCAT( VALUE_, Param )
+// It's invalid
+#define VALUE_OF_1_0( Param ) Param
+
+// Select macro depending on if it's valid or not.
+#define VALUE_OF_0( Param, IsValidPack ) \
+    CONCAT( VALUE_OF_1_, SECOND( IsValidPack, 0 ) )( Param )
+
+// Compute if it's valid and send it to the next.
+#define VALUE_OF( Param ) \
+    VALUE_OF_0( Param, CONCAT( VALID_VALUE_, Param ) )

@@ -45,7 +45,7 @@ template<> struct sk::get_type_info< Type > : sk::template_type_info{ \
 
 #define REGISTER_STRUCT( Type, Types, Name, ... ) \
 	MAKE_STRUCT_TYPE_INFO( Type, Name, GET_ARGS_HASH, PACK( Types ), __VA_ARGS__ ) \
-	REGISTER_TYPE_INTERNAL( Type )
+	REGISTER_TYPE_INTERNAL( Type, true )
 
 #define BUILD_TYPE_INFO( Name, ... )  \
 	REGISTER_STRUCT( Name, GET_MEMBER_TYPES( __VA_ARGS__ ), #Name, __VA_ARGS__ )

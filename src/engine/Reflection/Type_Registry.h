@@ -414,18 +414,24 @@ namespace sk::registry
     linked_t type_registry = {};
 } // sk::
 
-#define REGISTER_TYPE_INTERNAL_0( Type, IdLocation ) \
+#define REGISTER_TYPE_INTERNAL_0( Type, IdLocation, Inline ) \
 constexpr static auto IdLocation = sk::registry::counter::next(); \
     namespace sk::registry{ \
-        template<> inline linked_t type_registry< IdLocation > = \
+        template<> Inline linked_t type_registry< IdLocation > = \
         cLinked_Array{ static_cast< const sk::sType_Info* >( \
         &get_type_info< Type >::kInfo ), type_registry< IdLocation - 1 > }; \
     }
-#define REGISTER_TYPE_INTERNAL( Type ) \
-    REGISTER_TYPE_INTERNAL_0( Type, CONCAT( type_registry_, __COUNTER__ ) )
+
+// TODO: Add some way to automatically detect if the current file is a cpp/source file.
+// Probably using some build system.
+#define IS_INLINE_1 inline
+#define IS_INLINE_0
+
+#define REGISTER_TYPE_INTERNAL( Type, IsInline ) \
+    REGISTER_TYPE_INTERNAL_0( Type, CONCAT( type_registry_, __COUNTER__ ), CONCAT( IS_INLINE_, VALUE_OF( IsInline ) ) )
 
 // Finally register void as everything exists.
-REGISTER_TYPE_INTERNAL( void )
+REGISTER_TYPE_INTERNAL( void, true )
 
 #define MAKE_TYPE_INFO_DIRECT( Type, Name, HashMacro, ... ) \
 template<> struct sk::get_type_info< Type > : sk::template_type_info{ \
@@ -434,13 +440,15 @@ constexpr static bool      kValid = true; \
 };
 
 #define MAKE_DEFAULT_HASH( HashName, ... ) { HashName }
-#define REGISTER_DEFAULT_TYPE( Type, InternalName, Name ) \
+#define REGISTER_DEFAULT_TYPE( Type, InternalName, Name, IsInline ) \
     MAKE_TYPE_INFO_DIRECT( Type, Name, MAKE_DEFAULT_HASH, Name ) \
-    REGISTER_TYPE_INTERNAL( Type )
+    REGISTER_TYPE_INTERNAL( Type, IsInline )
 
-#define REGISTER_T_TYPE( Type, Name ) REGISTER_DEFAULT_TYPE( Type ## _t, #Type, Name )
-#define REGISTER_TYPE( Type, Name ) REGISTER_DEFAULT_TYPE( Type, #Type, Name )
+#define REGISTER_T_TYPE( Type, Name ) REGISTER_DEFAULT_TYPE( Type ## _t, #Type, Name, false )
+#define REGISTER_TYPE( Type, Name ) REGISTER_DEFAULT_TYPE( Type, #Type, Name, false )
 
+#define REGISTER_T_TYPE_INLINE( Type, Name ) REGISTER_DEFAULT_TYPE( Type ## _t, #Type, Name, true )
+#define REGISTER_TYPE_INLINE( Type, Name ) REGISTER_DEFAULT_TYPE( Type, #Type, Name, true )
 
 // TODO: Register more standard library classes.
 template< class Key, class Value, class Comp >
@@ -454,10 +462,3 @@ struct sk::get_type_info< sk::unordered_map< Key, Value, Comp > > : template_typ
 {
     constexpr static sType_Info kInfo   = { .type = sType_Info::eType::kStandard, .hash = { "std::unordered_map" }, .size = sizeof( unordered_map< Key, Value, Comp > ), .name = "Standard Hashmap", .raw_name = "std::unordered_map" };
 };
-
-
-namespace Testing
-{
-    template< int N >
-    extern int test;
-}

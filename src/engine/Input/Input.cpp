@@ -76,18 +76,16 @@ namespace sk
 			return input_event( _type, event );
 		} // input_event
 
-		bool input_custom_event( const uint32_t _type, void* _event, iListener* _target )
+		bool input_custom_event( const uint32_t _type, void* _event )
 		{
 			const sEvent event{ .custom = _event };
-
-			if( _target )
-				return _target->onInput( _type, event ) == eResponse::kQuit;
 
 			return input_event( _type, event );
 		} // input_custom_event
 
 		bool input_event( const uint32_t _type, const sEvent& _event )
 		{
+			// Replace with `if constexpr( DEBUG )`?
 #if defined( DEBUG )
 			if( log_inputs )
 			{
@@ -123,9 +121,11 @@ namespace sk
 			{
 				if( listener->getEnabled() && listener->getFilter() & _type )
 				{
-					// No need to mention consume.
-					if( const auto res = listener->onInput( _type, _event ); res != eResponse::kContinue )
-						return res == eResponse::kQuit;
+					// In case the variant is a bool we only care if it's going to consume the input. Aka if it's false.
+					if( const auto response = listener->onInput( _type, _event ); response.index() == 0 && !std::get< 0 >( response ) )
+						return false;
+					else if( const auto res = std::get< 1 >( response ); res != kContinue )
+						return res == kQuit;
 				}
 			}
 			return false;
