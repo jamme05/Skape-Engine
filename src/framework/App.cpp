@@ -123,7 +123,9 @@ void cApp::print_types( void )
 	for( auto& uuid : uuids )
 		std::println( "{} {}", uuid.to_string(), uuid.to_string( false ) );
 
-	for( const auto& val : sk::type_map | std::views::values )
+	auto& types = sk::Reflection::cType_Manager::get().GetTypes();
+
+	for( const auto& val : types | std::views::values )
 	{
 		std::println();
 		switch( val->type )
@@ -138,10 +140,8 @@ void cApp::print_types( void )
 			std::println( "Struct: {} Name: {} Size: {}", val->raw_name, val->name, static_cast< uint64_t >( val->size ) );
 			for( const auto struct_info = val->as_struct_info(); const auto& member : struct_info->members | std::views::values )
 			{
-				if( const auto member_type = member.get_type() )
-				{
-					std::println( "   Type: {} Name: {} Size: {} Offset: {}", member_type->raw_name, member.display_name, static_cast< uint64_t >( member.size ), static_cast< uint64_t >( member.offset ) );
-				}
+				const auto member_type = member.type;
+				std::println( "   Type: {} Name: {} Size: {} Offset: {}", member_type->raw_name, member.display_name, static_cast< uint64_t >( member.size ), static_cast< uint64_t >( member.offset ) );
 			}
 		}
 		break;

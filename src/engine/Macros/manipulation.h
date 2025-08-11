@@ -1,5 +1,11 @@
 #pragma once
 
+#if 1
+#define PRAGMA( ... ) _Pragma( #__VA_ARGS__ )
+#else
+#define PRAGMA( ... )
+#endif
+
 // Use if instead?
 #if defined( __INTELLISENSE__ ) || defined( __RESHARPER__ )
 #define IN_EDITOR 1

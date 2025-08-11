@@ -9,31 +9,11 @@
 #include <Memory/Tracker/Tracker.h>
 #include <Skape_Main.h>
 
-namespace sk
-{
-	namespace
-	{
-		auto create_type_map( const cLinked_Array< type_info_t >& _array )
-		{
-			std::unordered_map< type_hash, const sType_Info* > map{ _array.size() };
-
-			for( auto& val : _array )
-				map.emplace( val->hash, val );
-
-			return map;
-		} // create_type_map
-
-		// Why did this stop working?
-		constexpr auto& types = registry::type_registry< registry::counter::next() - 1 >;
-	} // ::
-	// TODO: Add a handler for types.
-	const auto type_map = create_type_map( types );
-} // sk::
-
 namespace sk::App
 {
 	void startup( int, char** )
 	{
+		Reflection::cType_Manager::init();
 		Memory::Tracker::init();
 		auto& app = cApp::init();
 
@@ -44,6 +24,7 @@ namespace sk::App
 	{
 		cApp::shutdown();
 		Memory::Tracker::shutdown();
+		Reflection::cType_Manager::shutdown();
 	}
 
 	/**

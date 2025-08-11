@@ -9,8 +9,6 @@
 #include "Scene/Managers/CameraManager.h"
 #include "Scene/Managers/SceneManager.h"
 
-REGISTER_CLASS( sk::Object::Components::CameraComponent )
-
 namespace sk::Object::Components
 {
 	cCameraComponent::cCameraComponent( const Graphics::sViewport& _viewport, const Graphics::sScissor& _scissors, const sCameraSettings& _settings, const eType _type )

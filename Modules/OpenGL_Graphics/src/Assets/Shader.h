@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <glbinding/gl/types.h>
-
 #include <Assets/Asset.h>
+
+#include <glbinding/gl/types.h>
 #include <glbinding/gl/enum.h>
 
 namespace sk::Shader
@@ -26,6 +26,7 @@ namespace sk::Assets
 {
     SK_ASSET_CLASS( Shader )
     {
+        SK_CLASS_BODY( Shader )
     public:
         using eType = sk::Shader::eType;
 
@@ -55,3 +56,5 @@ namespace sk::Assets
         gl::GLuint m_program_;
     };
 } // sk::Assets::
+
+DECLARE_CLASS( sk::Assets::Shader )

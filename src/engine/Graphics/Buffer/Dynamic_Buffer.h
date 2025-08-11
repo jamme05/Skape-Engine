@@ -9,7 +9,6 @@
 #include <Graphics/Buffer/Unsafe_Buffer.h>
 
 #include <Reflection/Types.h>
-#include <Math/Types.h>
 
 // TYPE UNSAFE BUFFER
 

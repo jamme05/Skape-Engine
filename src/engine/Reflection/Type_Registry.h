@@ -31,7 +31,6 @@ namespace sk
     constexpr static type_hash kInvalid_Id = static_cast< uint64_t >( 0 );
 
     struct sType_Info;
-    extern const std::unordered_map< type_hash, const sType_Info* > type_map;
     typedef std::pair< type_hash, const sType_Info* > type_pair_t;
 
     // Forward declare to allow for simpler casting.
@@ -75,6 +74,8 @@ namespace sk
         constexpr const sStruct_Type_Info* as_struct_info( void ) const;
         constexpr const sClass_Type_Info*  as_class_info( void ) const;
     };
+
+    // TODO: Remove const pointer?
     typedef const sType_Info* type_info_t;
 
     // TODO: Move individual types to their own spaces.
@@ -83,21 +84,12 @@ namespace sk
         struct sMemberInfo
         {
             // TODO: Use sType_Info ptr instead of hash?
-            type_hash   type;
+            type_info_t type;
             str_hash    name_hash; // Original name shouldn't be required to be accessed?
             const char* display_name;
             size_t      size;
             size_t      offset;
-
-            [[nodiscard]] const sType_Info* get_type( void ) const;
         };
-
-        inline const sType_Info* sMemberInfo::get_type( void ) const
-        {
-            if( const auto it = type_map.find( type ); it != type_map.end() )
-                return it->second;
-            return nullptr;
-        } // get_type
     } // runtime_struct::
 
     struct sStruct_Type_Info : sType_Info
@@ -410,28 +402,20 @@ namespace sk::registry
 
     template< int64_t Iteration >
     extern linked_t type_registry;
-    template< int64_t Iteration >
-    linked_t type_registry = {};
+    // template< int64_t Iteration >
+    // linked_t type_registry = {};
 } // sk::
 
-#define REGISTER_TYPE_INTERNAL_0( Type, IdLocation, Inline ) \
-constexpr static auto IdLocation = sk::registry::counter::next(); \
-    namespace sk::registry{ \
-        template<> Inline linked_t type_registry< IdLocation > = \
-        cLinked_Array{ static_cast< const sk::sType_Info* >( \
-        &get_type_info< Type >::kInfo ), type_registry< IdLocation - 1 > }; \
-    }
+#define REGISTER_TYPE_INTERNAL_0( Type, IdLocation, Deprecated ) \
+    inline auto IdLocation = sk::Reflection::cType_Manager::RegisterType< Type >();
 
 // TODO: Add some way to automatically detect if the current file is a cpp/source file.
 // Probably using some build system.
 #define IS_INLINE_1 inline
 #define IS_INLINE_0
 
-#define REGISTER_TYPE_INTERNAL( Type, IsInline ) \
-    REGISTER_TYPE_INTERNAL_0( Type, CONCAT( type_registry_, __COUNTER__ ), CONCAT( IS_INLINE_, VALUE_OF( IsInline ) ) )
-
-// Finally register void as everything exists.
-REGISTER_TYPE_INTERNAL( void, true )
+#define REGISTER_TYPE_INTERNAL( Type, Deprecated ) \
+    REGISTER_TYPE_INTERNAL_0( Type, CONCAT( type_registry_, __COUNTER__ ), Deprecated )
 
 #define MAKE_TYPE_INFO_DIRECT( Type, Name, HashMacro, ... ) \
 template<> struct sk::get_type_info< Type > : sk::template_type_info{ \
@@ -462,3 +446,10 @@ struct sk::get_type_info< sk::unordered_map< Key, Value, Comp > > : template_typ
 {
     constexpr static sType_Info kInfo   = { .type = sType_Info::eType::kStandard, .hash = { "std::unordered_map" }, .size = sizeof( unordered_map< Key, Value, Comp > ), .name = "Standard Hashmap", .raw_name = "std::unordered_map" };
 };
+
+constexpr static auto type_registry_580449325 = sk::registry::counter::next();
+namespace sk::registry
+{
+    template<> inline linked_t type_registry< type_registry_580449325 >
+        = linked_t{ &get_type_info< void >::kInfo, nullptr };
+} // sk::registry::

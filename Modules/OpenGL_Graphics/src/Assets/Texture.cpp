@@ -13,8 +13,6 @@
 // TODO: Look at https://github.com/nothings/stb/blob/master/stb_image.h for importing textures.
 #include <stb_image.h>
 
-REGISTER_CLASS( sk::Assets::Texture )
-
 namespace sk::Assets
 {
     cTexture::cTexture( const std::string& _name, const void* _buffer, const size_t _size )
@@ -33,6 +31,7 @@ namespace sk::Assets
         m_size_  = { width, height };
         m_channels_ = static_cast< uint8_t >( channels );
 
+        // As per the info from stb this will be the range used.
         __builtin_assume( m_channels_ <= 4 && m_channels_ > 0 );
 
         gl::GLenum format;

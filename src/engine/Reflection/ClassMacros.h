@@ -15,7 +15,7 @@
 	static constexpr auto&  getStaticType( void ){ return kClass.getType(); } \
 	static auto             getStaticName( void ){ return kClass.getName(); } \
 
-#define CREATE_MEMBER_REFLECTION_VALUES( ClassName, RuntimeClass ) \
+#define CREATE_MEMBER_REFLECTION_VALUES( ClassName, RuntimeClass, Counter ) \
 	using class_type  = runtime_class_type::value_type; \
 	using parent_type = runtime_class_type::parent_type::value_type; \
 	private: \
@@ -25,8 +25,8 @@
 	public: \
 	template< class > struct _xxx_sk_access{ \
 		static constexpr auto kAccess = access_point{ .m_access = sk::Reflection::cMember::eType::kNone, .m_point = nullptr }; }; \
-	static constexpr auto _xxx_sk_access_counter_0 = access_point::counter_t::next(); \
-	template< class Ty > struct _xxx_sk_access< std::integral_constant< Ty, _xxx_sk_access_counter_0 > >{ \
+	static constexpr auto CONCAT( _xxx_sk_access_counter_, Counter ) = access_point::counter_t::next(); \
+	template< class Ty > struct _xxx_sk_access< std::integral_constant< Ty, CONCAT( _xxx_sk_access_counter_, Counter ) > >{ \
 		static constexpr auto kAccess = access_point{ \
 			.m_access = sk::Reflection::cMember::eType::kPrivate, .m_point = nullptr }; }; \
 	[[ msvc::no_unique_address, maybe_unused ]] access_point::point _xxx_sk_point_placeholder; \
@@ -69,7 +69,7 @@
 	/* Prepare function to get information about which class it is. */ \
 	CREATE_CLASS_IDENTITY_IDENTIFIERS( RuntimeClass ) \
 	/* Prepare for member reflection: */ \
-	CREATE_MEMBER_REFLECTION_VALUES( ClassName, RuntimeClass ) \
+	CREATE_MEMBER_REFLECTION_VALUES( ClassName, RuntimeClass, __COUNTER__ ) \
 	/* Create incomplete functions so that I remember and to allow all variables to be ready upon usage. */ \
 	CREATE_MEMBER_REFLECTION_FUNCTIONS( RuntimeClass ) \
 	sk_private: /* Set the first access as private. */
@@ -254,7 +254,7 @@ class Class : public sk::get_inherits_t< FIRST( __VA_ARGS__ ) > \
 
 #define BUILD_CLASS_VARIABLE_GETTER( Class ) \
 	constexpr auto Class ::class_type::staticGetVariable( const sk::str_hash& _hash ) -> sk::Reflection::member_var_ptr_t{ \
-	const auto itr = Test ::kVariables.find( _hash ); return itr == nullptr ? nullptr : itr->second; } \
+	const auto itr = Class ::kVariables.find( _hash ); return itr == nullptr ? nullptr : itr->second; } \
 	inline auto Class ::class_type::getVariable( const sk::str_hash& _hash ) const -> sk::Reflection::member_var_ptr_t{ \
 	return staticGetVariable( _hash ); }
 
@@ -272,7 +272,7 @@ class Class : public sk::get_inherits_t< FIRST( __VA_ARGS__ ) > \
 
 #define BUILD_CLASS_FUNCTION_GETTER( Class ) \
 	constexpr auto Class ::class_type::staticGetFunction( const sk::str_hash& _hash ) -> sk::Reflection::member_func_ptr_t{ \
-	const auto itr = Test ::kFunctions.find( _hash ); return itr == nullptr ? nullptr : itr->second; } \
+	const auto itr = Class ::kFunctions.find( _hash ); return itr == nullptr ? nullptr : itr->second; } \
 	inline auto Class ::class_type::getFunction( const sk::str_hash& _hash ) const -> sk::Reflection::member_func_ptr_t{ \
 	return staticGetFunction( _hash ); }
 
@@ -284,7 +284,7 @@ class Class : public sk::get_inherits_t< FIRST( __VA_ARGS__ ) > \
 
 #define BUILD_CLASS_FUNCTION_OVERLOAD_RAW_GETTER( Class ) \
 	constexpr auto Class ::class_type::staticGetFunction( const sk::str_hash& _hash, const sk::type_hash& _args ) -> sk::Reflection::member_func_ptr_t{ \
-	for( auto [ fst, lst ] = Test ::kFunctions.range( _hash ); fst != lst; ++fst ) \
+	for( auto [ fst, lst ] = Class ::kFunctions.range( _hash ); fst != lst; ++fst ) \
 	{ if( fst->second->hasArgs( _args ) ) return fst->second; } return nullptr; } \
 	inline auto Class ::class_type::getFunction( const sk::str_hash& _hash, const sk::type_hash& _args ) const -> sk::Reflection::member_func_ptr_t{ \
 	return staticGetFunction( _hash, _args ); }
@@ -300,9 +300,13 @@ class Class : public sk::get_inherits_t< FIRST( __VA_ARGS__ ) > \
 	if( const auto member = getFunction( _hash ); member == nullptr ) return {}; \
 	else return sk::Reflection::cMemberFunctionInstance{ *member, this }; }
 
+#define REGISTER_CLASS_0( ... ) \
+	PRAGMA( message( #__VA_ARGS__ ) )
+
 // TODO: Create a macro that checks if it's included or not.
 #define REGISTER_CLASS( Class ) \
-	REGISTER_TYPE_INTERNAL( Class::class_type, false )
+	REGISTER_CLASS_0( The "REGISTER_CLASS" macro is deprecated )
+	/* REGISTER_TYPE_INTERNAL( Class::class_type, true ) */
 
 #define REGISTER_CLASS_INLINE( Class ) \
 	REGISTER_TYPE_INTERNAL( Class::class_type, true )
@@ -337,7 +341,8 @@ class Class : public sk::get_inherits_t< FIRST( __VA_ARGS__ ) > \
 	BUILD_CLASS_FUNCTION_OVERLOAD_TEMPLATE_GETTER( Class ) \
 	BUILD_CLASS_BOUND_FUNCTION_GETTER( Class ) \
 	/* Build Reflection and register */ \
-	BUILD_CLASS_REFLECTION_INFO( Class )
+	BUILD_CLASS_REFLECTION_INFO( Class ) \
+	REGISTER_TYPE_INTERNAL( Class::class_type, false )
 
 #define REGISTER_MEMBER_DIRECT_2_( Member, Registry, CounterVar, CounterValue, Point, HolderPack, ... ) \
 		static constexpr auto CounterVar = CounterValue; \

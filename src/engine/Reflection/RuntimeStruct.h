@@ -23,7 +23,7 @@
 
 #define BUILD_STRUCT_MEMBERS( ... ) FOR_EACH( BUILD_STRUCT_MEMBER, __VA_ARGS__ )
 
-#define GET_MEMBER_INFO( Struct, Type, Name, ... ) runtime_struct::sMemberInfo{ sk::get_type_hash_v< Type >, #Name, #Name, sizeof( Type ), offsetof( Struct, Name ) }
+#define GET_MEMBER_INFO( Struct, Type, Name, ... ) runtime_struct::sMemberInfo{ &sk::kTypeInfo< Type >, #Name, #Name, sizeof( Type ), offsetof( Struct, Name ) }
 #define GET_MEMBER_REFLECTION_0( Struct, Type, Name, ... ) std::pair{ str_hash{ #Name }, GET_MEMBER_INFO( Struct, Type, Name, __VA_ARGS__ ) }
 #define GET_MEMBER_REFLECTION( ... ) GET_MEMBER_REFLECTION_0( __VA_ARGS__ )
 #define BUILD_STRUCT_REFLECTED_MEMBER( Struct, Arg, ... ) GET_MEMBER_REFLECTION( Struct, UNWRAP_ ## Arg )  __VA_OPT__(,)
