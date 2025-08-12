@@ -14,6 +14,10 @@ module = {
 
     IncludeLibs = function( module_dir )
         local dll_path = path.join( "Modules", module_dir, SDL_Path, "lib/x64/SDL3.dll" )
+
+        -- Make sure game/bin exists. Without it we'll get an error.
+        os.mkdir( "game/bin" )
+
         local ok, err = os.copyfile( dll_path, "game/bin/SDL3.dll" )
         if( not ok ) then
             print( err )
