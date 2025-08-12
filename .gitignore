@@ -21,8 +21,12 @@ mono_crash.*
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/
-x64/
-x86/
+
+# Commented to allow SDL3 module. As the build location is custom this should be fine.
+# Could look at a more practical option. Such as making the modules actual submodules.
+# x64/
+# x86/
+
 [Ww][Ii][Nn]32/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
