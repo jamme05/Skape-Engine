@@ -139,7 +139,7 @@ namespace sk::Graphics
     {
         return data()[ _index ];
     } // operator[] const
-
+    
     template< class Ty >
     using cConstant_Buffer = cBuffer< Ty, Buffer::eType::kConstant >;
     template< class Ty >

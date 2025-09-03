@@ -64,7 +64,7 @@ sk::Input::response_t cApp::onInput( const uint32_t _type, const sk::Input::sEve
 	if( _type == sk::Input::kKey_Down && _event.keyboard->key == sk::Input::Keyboard::kEscape )
 		return sk::Input::eResponse::kQuit;
 
-	return false;
+	return true;
 } // onInput
 
 void cApp::create( void )

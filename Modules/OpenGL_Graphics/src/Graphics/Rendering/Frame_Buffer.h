@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Containers/vector.h>
+#include <Containers/Vector.h>
 #include <glbinding/gl/types.h>
 
 #include <Misc/Smart_Ptrs.h>

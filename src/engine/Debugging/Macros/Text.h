@@ -8,17 +8,18 @@
 
 #include <Macros/Manipulation.h>
 #include <Debugging/Macros/Warning.h>
+#include <Misc/Print.h>
 
 #define THIS_T()
 #define THIS_T_IS_TEXT ,1
 
 #define RAW_TEXT( ... ) std::format( __VA_ARGS__ )
-#define PRINT_TEXT( ... ) std::print( __VA_ARGS__ )
-#define PRINTLN_TEXT( ... ) std::println( __VA_ARGS__ )
-#define WARN_TEXT( ... ) std::println( stderr, __VA_ARGS__ )
+#define PRINT_TEXT( ... ) sk::print( __VA_ARGS__ )
+#define PRINTLN_TEXT( ... ) sk::println( __VA_ARGS__ )
+#define WARN_TEXT( ... ) sk::println( stderr, __VA_ARGS__ )
 #define ERR_TEXT( ... ) SK_FATAL( __VA_ARGS__ )
 #define TEXT( ... ) _TEXT( __VA_ARGS__ ) THIS_T
-		
+
 #define EXTRACT_FORMAT_TEXT( Text ) CONCAT( EXTRACT_FORMAT_TEXT_TYPE_, EXTRACT_FORMAT_TYPE( CONCAT( IS, Text ) ) ) ( Text )
 
 #define UNPACK_TEXT_1_1( Text ) Text

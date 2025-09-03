@@ -16,7 +16,9 @@ namespace sk
 {
     class cUUID_Helper : public cSingleton< cUUID_Helper >
     {
-        std::mt19937_64 m_random_generator_;
+        std::random_device m_random_device_;
+        std::mt19937_64    m_random_generator_;
+
     public:
         cUUID_Helper();
 

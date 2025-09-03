@@ -10,7 +10,7 @@
 
 #include "Assets/Asset.h"
 
-#include "Containers/vector.h"
+#include "Containers/Vector.h"
 
 #include "Math/Transform.h"
 #include "Math/Vector4.h"

@@ -24,7 +24,7 @@ namespace sk
     } // ::
 
     cUUID_Helper::cUUID_Helper()
-    : m_random_generator_( reinterpret_cast< uint64_t >( __TIME__ ) )
+    : m_random_generator_( m_random_device_() )
     {
     } // cUUID_Helper
 

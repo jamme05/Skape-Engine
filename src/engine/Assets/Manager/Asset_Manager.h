@@ -10,7 +10,7 @@
 #include "Assets/Asset.h"
 
 #include "Containers/Map.h"
-#include "Containers/vector.h"
+#include "Containers/Vector.h"
 
 #include "Misc/Singleton.h"
 #include "Misc/Smart_Ptrs.h"

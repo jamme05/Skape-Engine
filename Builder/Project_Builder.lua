@@ -13,6 +13,9 @@ include( "./utils/Module_Manager.lua" )
 -- Return to root dir.
 os.chdir( "../" )
 
+-- Make sure game/bin exists. Without it we'll get an error.
+os.mkdir( "game/bin" )
+
 -- TODO: Move to external file.
 function CMakeBuilder( dependency, cmake_path, build_config )
     local dependency_path = "./Build/" .. dependency .. "/cmake"

@@ -9,7 +9,7 @@
 #include <functional>
 
 #include "Containers/Map.h"
-#include "Containers/vector.h"
+#include "Containers/Vector.h"
 
 #include <Misc/Hashing.h>
 #include "Misc/Singleton.h"
