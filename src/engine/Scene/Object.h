@@ -54,7 +54,7 @@ namespace sk::Object
 		{
 			auto ptr = sk::make_shared< Ty >( std::forward< Args >( _args )... );
 
-			ptr->m_object = get_weak_this();
+			ptr->m_object = get_weak();
 			ptr->setParent( m_root );
 
 			m_components.insert( std::pair{ Ty::getStaticType(), ptr } );
@@ -106,7 +106,12 @@ namespace sk::Object
 
 		std::string m_name;
 
+		// TODO: Make this into a weak ptr.
 		cScene* m_parent_scene = nullptr;
+
+		// TODO: Actually implament these. Follow Unity's design when it comes to layers. But do allow multiple tags.
+		std::vector< str_hash > m_tags_;
+		uint32_t m_layer_ = 0;
 
 		friend class sk::cScene;
 	};

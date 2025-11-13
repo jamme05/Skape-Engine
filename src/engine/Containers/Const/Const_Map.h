@@ -19,7 +19,7 @@ namespace sk
     {
     private:
         template< class Ty2 >
-        static uint8_t  test( decltype( &Ty2::getHash ) );
+        static uint8_t  test( decltype( &Ty2::value ) );
         template< class >
         static uint16_t test( ... );
     public:

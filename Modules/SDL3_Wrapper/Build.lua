@@ -5,7 +5,8 @@ local SDL_Path = "SDL3-3.2.16"
 
 module = {
     Name = "SDL3",
-    Setup_Workspace = function()
+    Setup_Workspace = function( mod )
+        filter( mod.Filter )
         defines( { "SK_WINDOW_SDL3", "SK_WINDOW_SDL=3" } )
     end,
 

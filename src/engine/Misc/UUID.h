@@ -43,13 +43,15 @@ namespace sk
 
         [[ nodiscard ]]
         std::string to_string( bool _dashed = true ) const;
+
+        static constexpr cUUID kInvalid;
     };
 
     template<>
-    struct hash< cUUID > : Hashing::iHashed
+    struct hash< cUUID >
     {
         constexpr hash( const cUUID& _uuid ) // Might be safe enough?
-        : iHashed( ( ( ( Hashing::val_64_const ^ _uuid.get_low() ) * Hashing::prime_64_const ) ^ _uuid.get_high() ) * Hashing::prime_64_const )
+        : m_hash_( ( ( ( Hashing::val_64_const ^ _uuid.get_low() ) * Hashing::prime_64_const ) ^ _uuid.get_high() ) * Hashing::prime_64_const )
         {}
 
         HASH_REQUIREMENTS( hash )

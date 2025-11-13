@@ -84,7 +84,8 @@ project "Framework"
 
     links { "Engine" }
 
-    includedirs { "src/engine", "src/framework", "external/fastgltf/include",  "external/stb", Get_Module_Includes() }
+    Get_Module_Includes()
+    includedirs { "src/engine", "src/framework", "external/fastgltf/include",  "external/stb" }
 
 project "Startup"
     kind "WindowedApp"
@@ -98,7 +99,8 @@ project "Startup"
 
     files { "src/startup/main.cpp" }
 
-    includedirs { "src/engine", "src/framework", "external/fastgltf/include", "external/stb", Get_Module_Includes() }
+    Get_Module_Includes()
+    includedirs { "src/engine", "src/framework", "external/fastgltf/include", "external/stb" }
 
 group "Skape"
 project "Engine"
@@ -107,11 +109,13 @@ project "Engine"
     language "C++"
     targetdir "bin/Engine" 
 
-    links { "fastgltf", Get_Module_Links() }
+    Get_Module_Links()
+    links { "fastgltf" }
 
     files { "src/engine/**.hpp", "src/engine/**.cpp", "src/engine/**.h" }
 
-    includedirs { "src/engine", "external/fastgltf/include", "external/stb", Get_Module_Includes() }
+    Get_Module_Includes()
+    includedirs { "src/engine", "external/fastgltf/include", "external/stb" }
 
 group "Modules"
     CreateModules()

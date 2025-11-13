@@ -60,168 +60,109 @@ namespace Hashing
 	constexpr uint64_t fnv1a_64( const Ty& _in, const uint64_t _v = val_64_const ) noexcept {
 		return fnv1a_64s( reinterpret_cast< const char* >( &_in ), sizeof( _in ), _v );
 	}
+	template< class Ty >
+	constexpr uint32_t fnv1a_32( const Ty* _in, const uint32_t _v = val_32_const ) noexcept {
+		return fnv1a_32s( reinterpret_cast< const char* >( _in ), sizeof( _in ), _v );
+	}
+
+	template< class Ty >
+	constexpr uint64_t fnv1a_64( const Ty* _in, const uint64_t _v = val_64_const ) noexcept {
+		return fnv1a_64s( reinterpret_cast< const char* >( _in ), sizeof( _in ), _v );
+	}
 
 #define HASH_REQUIREMENTS( Class ) \
-constexpr Class( const Class& _other ) : Hashing::iHashed( _other.m_hash ){}; \
-constexpr Class( Class&& _other ) noexcept : Hashing::iHashed( _other.m_hash ){} \
+constexpr Class( const Class& _other ) : m_hash_( _other.m_hash_ ){}; \
+constexpr Class( Class&& _other ) noexcept : m_hash_( std::move( _other.m_hash_ ) ){} \
 ~Class( void ) = default; \
+auto value() const { return m_hash_; } \
 constexpr Class& operator=( const Class& ) = default; \
-constexpr Class& operator=( Class&& _other ) noexcept { m_hash = _other.m_hash;  return *this; } \
-constexpr bool   operator==( const Class& _other ) const { return m_hash == _other.m_hash; } \
-constexpr bool   operator<( const Class & _other ) const { return m_hash < _other.m_hash; } \
-constexpr bool   operator>( const Class & _other ) const { return m_hash > _other.m_hash; } \
-constexpr bool   operator<=( const Class & _other ) const { return m_hash <= _other.m_hash; } \
-constexpr bool   operator>=( const Class & _other ) const { return m_hash >= _other.m_hash; }
-
-
-	// TODO: Rename to something like BaseHash as it isn't an interface
-	struct iHashed
-	{
-	protected:
-		explicit constexpr iHashed( const uint64_t _hash )
-		: m_hash( _hash ){}
-	public:
-		constexpr iHashed( const iHashed& _other ) = default;
-
-		constexpr iHashed( iHashed&& _other ) noexcept
-		: m_hash( _other.m_hash ){}
-
-		~iHashed( void ) = default;
-
-		constexpr iHashed& operator=( const iHashed& ) = default;
-
-		constexpr iHashed& operator=( iHashed&& _other ) noexcept {
-			m_hash = _other.m_hash;
-			return *this;
-		}
-
-		constexpr bool operator==( const iHashed& _other ) const { return m_hash == _other.m_hash; }
-		constexpr bool operator!=( const iHashed& _other ) const { return m_hash != _other.m_hash; }
-		constexpr bool operator<=( const iHashed& _other ) const { return m_hash <= _other.m_hash; }
-		constexpr bool operator>=( const iHashed& _other ) const { return m_hash >= _other.m_hash; }
-		constexpr bool operator< ( const iHashed& _other ) const { return m_hash <  _other.m_hash; }
-		constexpr bool operator> ( const iHashed& _other ) const { return m_hash >  _other.m_hash; }
-
-		[[ nodiscard ]] constexpr auto getValue( void ) const { return m_hash; }
-
-	protected:
-		uint64_t m_hash;
-	};
+constexpr Class& operator=( Class&& _other ) noexcept = default; \
+constexpr bool   operator==( const Class& _other ) const { return m_hash_ == _other.m_hash_; } \
+constexpr bool   operator!=( const Class& _other ) const { return m_hash_ != _other.m_hash_; } \
+constexpr auto   operator<=>( const Class & _other ) const { return m_hash_ <=> _other.m_hash_; } \
+private: \
+uint64_t m_hash_;
 
 } // Hashing
-
-#if !defined( FINAL )
-#define STRING_HASH_MEMORY \
-constexpr auto& get_string( void ){ return m_raw; }; \
-private: \
-const char* m_raw = nullptr; \
-public:
-// Used with const char* that won't move
-#define SAVE_STRING( Str ) m_raw = Str;
-// Used with std::string, which can move
-#define COPY_STRING( Str, Length ) m_raw = Str;
-// To allow copying over the saved string.
-#define STRING_HASH_REQUIREMENTS( Class ) \
-constexpr Class( const Class& _other ) : Hashing::iHashed( _other.m_hash ), m_raw( _other.m_raw ){}; \
-constexpr Class( Class && _other ) noexcept : Hashing::iHashed( _other.m_hash ), m_raw( _other.m_raw ){} \
-~Class( void ) = default; \
-constexpr Class & operator=( const Class& _other ){ m_hash = _other.m_hash; m_raw = _other.m_raw; return *this; } \
-constexpr Class & operator=( Class && _other ) noexcept { m_hash = _other.m_hash; m_raw = _other.m_raw; return *this; } \
-constexpr bool   operator==( const Class & _other ) const { return m_hash == _other.m_hash; } \
-constexpr bool   operator<( const Class & _other ) const { return m_hash < _other.m_hash; } \
-constexpr bool   operator>( const Class & _other ) const { return m_hash > _other.m_hash; } \
-constexpr bool   operator<=( const Class & _other ) const { return m_hash <= _other.m_hash; } \
-constexpr bool   operator>=( const Class & _other ) const { return m_hash >= _other.m_hash; }
-#else // !FINAL
-// Disable saving the raw string, but allow the function to exist
-#define STRING_HASH_MEMORY constexpr const char* get_string( void ){ return nullptr; }
-#define SAVE_STRING( ... )
-#define COPY_STRING( ... )
-#define STRING_HASH_REQUIREMENTS( Class ) HASH_REQUIREMENTS( Class )
-#endif // FINAL
-
-// TODO: Copy string if not std::is_constant_evaluated()
 
 namespace sk
 {
 	template< class Ty >
-	struct hash : Hashing::iHashed
+	struct hash
 	{
 		constexpr hash( const Ty& _to_hash )
-		: iHashed( fnv1a_64( _to_hash ) ){}
+		: m_hash_( fnv1a_64< Ty >( _to_hash ) ){}
 
 		HASH_REQUIREMENTS( hash )
 	};
 
 	// TODO: Make name class like unreal
 	template<>
-	struct hash< char > : Hashing::iHashed
+	struct hash< char >
 	{
-		constexpr hash( void ) : iHashed( 0 ){}
+		constexpr hash( void ) : m_hash_( 0 ){}
 
-		constexpr hash( const std::string& _to_hash )
-		: iHashed( Hashing::fnv1a_64( _to_hash.c_str() ) )
+		constexpr hash( const std::string_view& _to_hash )
+		: hash( _to_hash.data(), _to_hash.size() )
 		{
-			COPY_STRING( _to_hash.c_str(), _to_hash.size() )
 		} // hash
+		
+		constexpr hash( const std::string& _to_hash )
+		: hash( _to_hash.data(), _to_hash.size() )
+		{
+ 		} // hash
 
 		hash( const std::filesystem::path& _to_hash )
-		: iHashed( Hashing::fnv1a_64( _to_hash.c_str() ) )
+		: m_hash_( Hashing::fnv1a_64( _to_hash.c_str() ) )
 		{
-			const auto str = _to_hash.string();
-			COPY_STRING( str.c_str(), str.size() )
 		} // hash
 
 		constexpr hash( const std::pmr::string& _to_hash )
-		: iHashed( Hashing::fnv1a_64( _to_hash.c_str() ) )
+		: hash( _to_hash.c_str(), _to_hash.size() )
 		{
-			COPY_STRING( _to_hash.c_str(), _to_hash.size() )
 		}
 
 		constexpr hash( const char* _to_hash )
-		: iHashed( _to_hash ? Hashing::fnv1a_64( _to_hash ) : 0 )
+		: m_hash_( _to_hash ? Hashing::fnv1a_64( _to_hash ) : 0 )
 		{
-			COPY_STRING( _to_hash, 128 )
 		}
 
 		constexpr hash( const char* _to_hash, const size_t _c )
-		: iHashed( Hashing::fnv1a_64s( _to_hash, _c ) )
+		: m_hash_( Hashing::fnv1a_64s( _to_hash, _c ) )
 		{
-			COPY_STRING( _to_hash, _c )
 		}
 
 		constexpr hash( const char* _to_hash, const int64_t _c )
-		: iHashed( 0 )
+		: m_hash_( 0 )
 		{
 			if( _c < 0 )
 				Hashing::fnv1a_64( _to_hash );
 			else
 				Hashing::fnv1a_64s( _to_hash, _c );
-			COPY_STRING( _to_hash, _c )
 		}
 
-		STRING_HASH_REQUIREMENTS( hash )
-		STRING_HASH_MEMORY
+		static constexpr hash kEmpty;
+
+		HASH_REQUIREMENTS( hash )
 	};
 
+	// TODO: Rename to str_hash_t
 	typedef hash< char > str_hash;
 
-	constexpr static str_hash string_hash_none{ "" };
-
 	template<>
-	struct hash< uint32_t > : Hashing::iHashed
+	struct hash< uint32_t >
 	{
 		constexpr hash( const uint32_t& _to_hash )
-		: iHashed( static_cast< uint64_t >( _to_hash ) ){}
+		: m_hash_( static_cast< uint64_t >( _to_hash ) ){}
 
 		HASH_REQUIREMENTS( hash )
 	};
 
 	template<>
-	struct hash< uint64_t > : Hashing::iHashed
+	struct hash< uint64_t >
 	{
 		constexpr hash( const uint64_t& _to_hash )
-		: iHashed( _to_hash ){}
+		: m_hash_( _to_hash ){}
 
 		HASH_REQUIREMENTS( hash )
 	};

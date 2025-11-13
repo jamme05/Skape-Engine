@@ -66,6 +66,7 @@ namespace sk::Object::Components
 
 		sCameraSettings m_camera_settings;
 
+		// TODO: Create a generic camera class
 		// TODO: Add support for render target, custom render pipeline in that case.
 		Graphics::Rendering::cRender_Target* m_render_target;
 

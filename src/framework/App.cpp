@@ -3,9 +3,9 @@
 #include "App.h"
 
 #include "Assets/Asset.h"
-#include "Assets/Texture.h"
-#include <Assets/Manager/Asset_Manager.h>
 #include <Assets/Asset_List.h>
+#include <Assets/Management/Asset_Manager.h>
+#include "Assets/Texture.h"
 
 #include "Math/Types.h"
 #include "Memory/Tracker/Tracker.h"
@@ -44,7 +44,7 @@ cApp::cApp( void )
 	SK_ERR_IFN( m_main_window->SetVisibility( true ),
 		"Unable to show window." )
 
-	sk::cAssetManager::init();
+	sk::cAsset_Manager::init();
 	sk::Graphics::cRenderer::init();
 
 	m_window_context = sk::make_shared< sk::Graphics::Rendering::cWindow_Context >( m_main_window->GetResolution() );
@@ -70,8 +70,8 @@ sk::Input::response_t cApp::onInput( const uint32_t _type, const sk::Input::sEve
 void cApp::create( void )
 {
 	//auto list   = sk::cAssetManager::get().loadFolder( "data/" );
-	auto list_1 = sk::cAssetManager::get().loadFile( "data/humanforscale.glb" );
-	auto list_2 = sk::cAssetManager::get().loadFile( "data/heheToiletwithtextures.glb" );
+	auto list_1 = sk::cAsset_Manager::get().loadFile( "data/humanforscale.glb" );
+	auto list_2 = sk::cAsset_Manager::get().loadFile( "data/heheToiletwithtextures.glb" );
 
 	//sk::cAssetManager::get().loadFile( "data/mushroom.glb" );
 	
@@ -201,7 +201,7 @@ void cApp::destroy( void ) const
 
 	sk::Graphics::cRenderer::shutdown();
 
-	sk::cAssetManager::shutdown();
+	sk::cAsset_Manager::shutdown();
 
 } // _destroy
 

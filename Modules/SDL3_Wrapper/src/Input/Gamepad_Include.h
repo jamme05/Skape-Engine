@@ -50,4 +50,4 @@ namespace sk::Input::Gamepad
         kGuide = SDL_GAMEPAD_BUTTON_GUIDE,
         kStart = SDL_GAMEPAD_BUTTON_START,
     };
-} // sk::Input
+} // sk::Input::Gamepad

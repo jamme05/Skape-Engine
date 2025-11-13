@@ -4,7 +4,8 @@ local binder_src = path.join( binder_path, "source" )
 
 module = {
     Name = "OpenGL",
-    Setup_Workspace = function()
+    Setup_Workspace = function( mod )
+        filter( mod.Filter )
         defines( { "SK_GRAPHICS_OPENGL" } )
     end,
 

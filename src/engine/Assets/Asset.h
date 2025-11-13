@@ -13,24 +13,25 @@
 #include "Reflection/RuntimeClass.h"
 #include "Misc/Hashing.h"
 #include "Misc/Smart_Ptrs.h"
+#include "Misc/UUID.h"
 
 namespace sk
 {
-	class cAssetManager;
+	class cAsset_Manager;
 
 	// Remember to update macro if changing this.
 	constexpr auto kInvalid_Asset_Id = std::numeric_limits< uint64_t >::max();
 
 	// Base Asset interface
-	GENERATE_ALL_CLASS( iAsset )
+	GENERATE_ALL_CLASS( cPartialAsset )
 	public:
-		explicit iAsset( std::string _name )
+		explicit cPartialAsset( std::string _name )
 		: m_name( std::move( _name ) )
 		, m_name_hash( m_name )
 		{ }
-		~iAsset( void ) override = default;
+		~cPartialAsset( void ) override = default;
 
-		auto&     getPath ( void ) const { return m_path; }
+		auto&   getPath ( void ) const { return m_path; }
 
 		auto getNameHash( void ) const { return m_name_hash; }
 
@@ -42,7 +43,7 @@ namespace sk
 		virtual void Unload() = 0;
 
 	private:
-		uint64_t m_id = kInvalid_Asset_Id;
+		cUUID m_uuid_ = cUUID::kInvalid;
 
 		void set_path( const std::filesystem::path& _path ){ m_path = _path; m_path_hash = m_path; }
 
@@ -50,23 +51,22 @@ namespace sk
 		std::string           m_name;
 		str_hash              m_name_hash;
 		std::filesystem::path m_path      = {};
-		str_hash              m_path_hash = string_hash_none;
+		str_hash              m_path_hash = {};
 
-	friend class cAssetManager;
+	friend class cAsset_Manager;
 	};
 
-// TODO: Find a more convenient way for custom class names.
 	namespace Asset
 	{
-		using class_type = iAsset;
+		using class_type = cPartialAsset;
 	} // Asset
 
 	// Base Asset class
 	template< class Ty, class RTClassTy >
 	requires std::is_base_of_v< iRuntimeClass, RTClassTy >
-	class cAsset : public iAsset, public cShared_from_this< Ty >
+	class cAsset : public cPartialAsset, public cShared_from_this< Ty >
 	{
-		explicit cAsset( std::string _name ) : iAsset( std::move( _name ) ){ }
+		explicit cAsset( std::string _name ) : cPartialAsset( std::move( _name ) ){ }
 	public:
 		template< class... Args >
 		static Ty* create( Args&&... _args ){ return SK_SINGLE( Ty, std::forward< Args >( _args )... ); }
@@ -78,9 +78,9 @@ namespace sk
 	};
 
 	template< class In, class Out >
-	using enable_if_asset_t = std::enable_if_t< std::is_base_of_v< iAsset, In >, Out >;
+	using enable_if_asset_t = std::enable_if_t< std::is_base_of_v< cPartialAsset, In >, Out >;
 	template< class Ty >
-	static constexpr bool is_valid_asset_v = std::is_base_of_v< iAsset, Ty >;
+	static constexpr bool is_valid_asset_v = std::is_base_of_v< cPartialAsset, Ty >;
 
 } // sk::
 

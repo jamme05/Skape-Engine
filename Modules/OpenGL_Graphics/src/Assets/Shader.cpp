@@ -16,8 +16,8 @@ namespace sk::Assets
         m_type_ = gl::GL_INVALID_VALUE;
         switch( _type )
         {
-        case eType::kVertex:   m_type_ = gl::GL_VERTEX_SHADER;   m_vertex_shader_   = get_shared_this(); break;
-        case eType::kFragment: m_type_ = gl::GL_FRAGMENT_SHADER; m_fragment_shader_ = get_shared_this(); break;
+        case eType::kVertex:   m_type_ = gl::GL_VERTEX_SHADER;   m_vertex_shader_   = get_shared(); break;
+        case eType::kFragment: m_type_ = gl::GL_FRAGMENT_SHADER; m_fragment_shader_ = get_shared(); break;
         case eType::kGeometry: m_type_ = gl::GL_GEOMETRY_SHADER; break;
         }
 

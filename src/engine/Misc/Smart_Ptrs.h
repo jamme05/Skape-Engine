@@ -168,6 +168,7 @@ namespace sk
 		explicit cShared_ptr( Ty* _ptr )
 		{
 			m_data = SK_SINGLE( Ptr_logic::cData< Ty >, _ptr );
+			m_data->completed();
 			inc();
 		} // cShared_ptr
 
@@ -606,11 +607,11 @@ namespace sk
 	{
 	public:
 		// Warning, don't run this in the constructor.
-		cShared_ptr< Ty > get_shared_this( void )       { return m_self_; }
+		[[ nodiscard ]] auto get_shared( void )       -> cShared_ptr< Ty > { return m_self_; }
 		// Warning, don't run this in the constructor.
-		cShared_ptr< Ty > get_shared_this( void ) const { return m_self_; }
-		cWeak_Ptr  < Ty > get_weak_this  ( void )       { return m_self_; }
-		cWeak_Ptr  < Ty > get_weak_this  ( void ) const { return m_self_; }
+		[[ nodiscard ]] auto get_shared( void ) const -> cShared_ptr< Ty > { return m_self_; }
+		[[ nodiscard ]] auto get_weak  ( void )       -> cWeak_Ptr  < Ty > { return m_self_; }
+		[[ nodiscard ]] auto get_weak  ( void ) const -> cWeak_Ptr  < Ty > { return m_self_; }
 
 	protected:
 		cShared_from_this( void )
@@ -636,7 +637,7 @@ namespace sk
 		if constexpr( std::is_base_of_v< cShared_from_this< Ty >, Ty > )
 		{
 			static_cast< cShared_from_this< Ty >* >( ptr )->complete();
-			return ptr->get_shared_this();
+			return ptr->get_shared();
 		}
 		else
 			return cShared_ptr< Ty >( ptr );

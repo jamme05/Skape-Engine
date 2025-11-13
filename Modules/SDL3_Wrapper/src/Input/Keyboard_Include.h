@@ -173,4 +173,4 @@ namespace sk::Input::Keyboard
         kF11 = SDLK_F11,
         kF12 = SDLK_F12,
     };
-}
+} // sk::Input::Keyboard

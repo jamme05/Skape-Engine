@@ -10,7 +10,7 @@
 
 #include <Platform/Platform_Base.h>
 
-#include "Assets/Manager/Asset_Manager.h"
+#include "Assets/Management/Asset_Manager.h"
 #include "Rendering/Render_Context.h"
 
 namespace sk::Graphics
@@ -19,7 +19,7 @@ namespace sk::Graphics
     {
         glbinding::initialize( &Platform::get_proc_address );
 
-        cAssetManager::get().AddFileLoader( { "glsl" }, &loadGLSL );
+        cAsset_Manager::get().AddFileLoader( { "glsl" }, &loadGLSL );
     } // cRenderer
 
     bool cRenderer::Render( Rendering::cRender_Context& _render_context, const Assets::cMesh& _mesh )

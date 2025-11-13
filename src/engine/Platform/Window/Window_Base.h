@@ -14,6 +14,11 @@ namespace sk::Platform
     class iWindow
     {
     public:
+        iWindow( const iWindow& ) = delete;
+        iWindow( iWindow&& other) = delete;
+        iWindow& operator=( const iWindow& ) = delete;
+        iWindow& operator=( iWindow&& other) = delete;
+        
         virtual ~iWindow() = default;
         virtual void* create_context() = 0;
         [[ nodiscard ]]
@@ -21,7 +26,7 @@ namespace sk::Platform
         [[ nodiscard ]]
         virtual bool SetVisibility( bool _visible ) const = 0;
         [[ nodiscard ]]
-        virtual cVector2u32 GetResolution() const = 0;
+        virtual cVector2u32 GetResolution () const = 0;
         virtual float       GetAspectRatio() const = 0;
     };
 

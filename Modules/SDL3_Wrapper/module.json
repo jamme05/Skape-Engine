@@ -9,6 +9,10 @@
         "Platforms" : [
             "Win64",
             "Android"
+        ],
+        "Features": [
+            "INPUT_KEYBOARD",
+            "INPUT_GAMEPAD"
         ]
     },
     "Dependencies" : [

@@ -48,7 +48,7 @@ namespace sk
 
     cUUID GenerateRandomUUID()
     {
-        return cUUID_Helper::get().GenerateRandomUUID();
+        return cUUID_Helper::try_init().GenerateRandomUUID();
     } // GenerateRandomUUID
 
 } // sk::

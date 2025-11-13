@@ -16,7 +16,6 @@ namespace sk
 	template< class Ty >
 	class cSingleton
 	{
-	private:
 		static Ty* m_instance_;
 		static void quit( void )
 		{
@@ -44,7 +43,8 @@ namespace sk
 			return *m_instance_;
 		}
 
-		// Safely request the singleton to be initialized multiple times.
+		// Safely request the singleton to be initialized. This can allow you to call it multiple times without triggering an error.
+		// Useful if multiple systems want to ensure that an optional manager is active.
 		template< typename... Args >
 		static Ty& try_init( Args&&... _args )
 		{

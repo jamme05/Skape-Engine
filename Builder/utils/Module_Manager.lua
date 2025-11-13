@@ -22,32 +22,39 @@ function ForeachModule( run )
 end
 
 function Get_Module_Links()
-    local links = {}
     ForeachModule( function( mod )
+        local _links = {}
+        filter( mod.Filter )
+
         if( mod.IncludeLibs ~= nil ) then
-            table.insert( links, mod.IncludeLibs( mod.Dir ) )
+            table.insert( _links, mod.IncludeLibs( mod.Dir ) )
         end
-        table.insert( links, mod.Name )
+        table.insert( _links, mod.Name )
+        links( _links )
     end )
-    return links;
+    filter()
 end
 
 function Get_Module_Includes()
-    local includes = {}
     ForeachModule( function( mod )
+        filter( mod.Filter )
+        includes = {}
         if( mod.IncludeDirs ~= nil ) then
             table.insert( includes, mod.IncludeDirs( mod.Dir ) )
         end
         table.insert( includes, "Modules/" .. mod.Dir .. "/src" )
+
+        includedirs( includes )
     end )
-    return includes;
+    filter()
 end
 
 function Default_Module_Setup( module_name )
-    return function( module_dir )
+    return function( module, module_dir )
     project( module_name )
-        kind "StaticLib"
         location( "Build/Modules/" .. module_name )
+        filter( module.Filter )
+        kind "StaticLib"
         language "C++"
         targetdir( "bin/Modules/" .. module_name )
 
@@ -60,10 +67,11 @@ function Default_Module_Setup( module_name )
 end
 
 function Module_Setup( module_name, library_dirs, includes )
-    return function( module_dir ) -- Make the module dir be the absolute path.
+    return function( module, module_dir ) -- Make the module dir be the absolute path.
     project( module_name )
-        kind "StaticLib"
         location( "Build/Modules/" .. module_name )
+        filter( module.Filter )
+        kind "StaticLib"
         language "C++"
         targetdir( "bin/Modules/" .. module_name )
 
@@ -91,8 +99,16 @@ function Load_Module( partial_module )
 
 
     include( module_dir .. "/" .. build_file )
-    module.Raw = module_json
-    module.Dir = partial_module.Dir
+    module.Raw    = module_json
+    module.Dir    = partial_module.Dir
+    module.Filter = ""
+    for i, platform in pairs( module_json[ "Supports" ][ "Platforms" ] ) do
+        if( i == 1 ) then
+            module.Filter = "platforms:" .. platform
+        else
+            module.Filter = module.Filter .. " or " .. platform
+        end
+    end
     if( module.Init ~= nil ) then
         module.Init( module_dir )
     end
@@ -138,10 +154,12 @@ function Get_Supported_Platforms()
 end
 
 function Setup_Workspace()
-    ForeachModule( function( mod ) mod.Setup_Workspace() end )
+    ForeachModule( function( mod ) mod.Setup_Workspace( mod ) end )
+    filter()
 end
 
 function CreateModules()
     includedirs( Get_Module_Includes() )
-    ForeachModule( function( mod ) mod.Module_Project( mod.Dir ) end )
+    ForeachModule( function( mod ) mod.Module_Project( mod, mod.Dir ) end )
+    filter()
 end

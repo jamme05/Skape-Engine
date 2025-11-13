@@ -7,30 +7,28 @@
 #include "Asset_Manager.h"
 
 #include <Assets/Asset_List.h>
+#include <Assets/Management/Asset_Loader.h>
 #include <Assets/Mesh.h>
 #include <Assets/Model.h>
 #include <Assets/Texture.h>
 
 #include <Scene/Managers/CameraManager.h>
 
-#include <Misc/UUID_Helper.h>
-
 #include <fastgltf/tools.hpp>
 
 namespace sk
 {
-	cAssetManager::cAssetManager( void )
+	cAsset_Manager::cAsset_Manager( void )
 	{
 		loadEmbedded();
-		cUUID_Helper::try_init();
 	} // cAssetManager
 
-	cAssetManager::~cAssetManager( void )
+	cAsset_Manager::~cAsset_Manager( void )
 	{
 		m_assets.clear();
 	} // ~cAssetManager
 
-	auto cAssetManager::getAsset( const uint64_t _id ) -> cShared_ptr< iAsset >
+	auto cAsset_Manager::getAsset( const cUUID _id ) -> cShared_ptr< cPartialAsset >
 	{
 		if( const auto asset_itr = m_assets.find( _id ); asset_itr != m_assets.end() )
 			return asset_itr->second;
@@ -38,14 +36,14 @@ namespace sk
 		return nullptr;
 	} // getAsset
 
-	auto cAssetManager::getAssetByName( const str_hash& _name_hash ) -> cShared_ptr< iAsset >
+	auto cAsset_Manager::getAssetByName( const str_hash& _name_hash ) -> cShared_ptr< cPartialAsset >
 	{
 		if( const auto itr = m_asset_name_map.find( _name_hash ); itr != m_asset_name_map.end() )
 			return itr->second;
 
 		return nullptr;
 	} // getAssetByName
-	auto cAssetManager::getAssetsByName( const str_hash& _name_hash ) -> Assets::cAsset_List
+	auto cAsset_Manager::getAssetsByName( const str_hash& _name_hash ) -> Assets::cAsset_List
 	{
 		Assets::cAsset_List assets;
 		const auto range = m_asset_name_map.equal_range( _name_hash );
@@ -55,7 +53,7 @@ namespace sk
 		return assets;
 	} // getAssetsByName
 
-	auto cAssetManager::getAssetByPath( const str_hash& _path_hash ) -> cShared_ptr< iAsset >
+	auto cAsset_Manager::getAssetByPath( const str_hash& _path_hash ) -> cShared_ptr< cPartialAsset >
 	{
 		if( const auto itr = m_asset_path_map.find( _path_hash ); itr != m_asset_path_map.end() )
 			return itr->second;
@@ -63,7 +61,7 @@ namespace sk
 		return nullptr;
 	} // getAssetByPath
 
-	auto cAssetManager::getAssetsByPath( const str_hash& _path_hash ) -> Assets::cAsset_List
+	auto cAsset_Manager::getAssetsByPath( const str_hash& _path_hash ) -> Assets::cAsset_List
 	{
 		Assets::cAsset_List assets;
 		const auto range = m_asset_path_map.equal_range( _path_hash );
@@ -73,21 +71,20 @@ namespace sk
 		return assets;
 	} // getAssetsByPath
 
-	uint64_t cAssetManager::registerAsset( const cShared_ptr< iAsset >& _asset, const bool _reload )
+	cUUID cAsset_Manager::registerAsset( const cShared_ptr< cPartialAsset >& _asset, const bool _reload )
 	{
 		// TODO: Add check if asset already exists.
-
-		// TODO: Maybe make a new way to generate ids.
-		const uint64_t id  = m_assets.size();
-		m_assets[ id ]       = _asset;
-		_asset->m_id         = id;
+		
+		const auto id = GenerateRandomUUID();
+		m_assets[ id ]  = _asset;
+		_asset->m_uuid_   = id;
 		m_asset_name_map.insert( { _asset->getNameHash(), _asset } );
 		m_asset_path_map.insert( { _asset->getPath(),     _asset } );
 
 		return id;
 	} // registerAsset
 
-	auto cAssetManager::loadFolder( const std::filesystem::path& _path, const bool _recursive, const bool _reload ) -> Assets::cAsset_List
+	auto cAsset_Manager::loadFolder( const std::filesystem::path& _path, const bool _recursive, const bool _reload ) -> Assets::cAsset_List
 	{
 		Assets::cAsset_List assets;
 
@@ -110,7 +107,7 @@ namespace sk
 		return assets;
 	} // loadFolder
 
-	auto cAssetManager::loadFile( const std::filesystem::path& _path, const bool _reload ) -> Assets::cAsset_List
+	auto cAsset_Manager::loadFile( const std::filesystem::path& _path, const bool _reload ) -> Assets::cAsset_List
 	{
 		const auto extension_hash = str_hash( _path.extension() );
 
@@ -136,23 +133,23 @@ namespace sk
 		return assets;
 	} // loadFile
 
-	auto cAssetManager::getAbsolutePath( const std::filesystem::path& _path ) -> std::filesystem::path
+	auto cAsset_Manager::getAbsolutePath( const std::filesystem::path& _path ) -> std::filesystem::path
 	{
 		return std::filesystem::path( SK_GAME_DIR ) /= _path;
 	} // getAbsolutePath
 
-	void cAssetManager::makeAbsolutePath( std::filesystem::path& _path )
+	void cAsset_Manager::makeAbsolutePath( std::filesystem::path& _path )
 	{
 		_path = getAbsolutePath( _path );
 	} // makeAbsolutePath
 
-	void cAssetManager::AddFileLoader( const std::vector< str_hash >& _extensions, load_file_func_t _function )
+	void cAsset_Manager::AddFileLoader( const std::vector< str_hash >& _extensions, load_file_func_t _function )
 	{
 		for( const auto& extension : _extensions )
 			m_load_callbacks.emplace( extension, _function );
 	} // AddFileLoader
 
-	auto cAssetManager::loadGltfFile( const std::filesystem::path& _path ) -> Assets::cAsset_List
+	auto cAsset_Manager::loadGltfFile( const std::filesystem::path& _path ) -> Assets::cAsset_List
 	{
 		fastgltf::Parser parser;
 
@@ -186,7 +183,7 @@ namespace sk
 		return assets;
 	} // loadGltfFile
 
-	auto cAssetManager::handleGltfModel( const fastgltf::Asset& _asset, fastgltf::Mesh& _mesh ) -> Assets::cAsset_List
+	auto cAsset_Manager::handleGltfModel( const fastgltf::Asset& _asset, fastgltf::Mesh& _mesh ) -> Assets::cAsset_List
 	{
 		Assets::cAsset_List assets;
 		auto model_asset = Assets::cModel::create_shared( std::string{} );
@@ -202,7 +199,7 @@ namespace sk
 		return assets;
 	} // handleGltfMesh
 
-	auto cAssetManager::handleGltfTexture( const fastgltf::Asset& _asset, fastgltf::Texture& _texture ) -> cShared_ptr< iAsset >
+	auto cAsset_Manager::handleGltfTexture( const fastgltf::Asset& _asset, fastgltf::Texture& _texture ) -> cShared_ptr< cPartialAsset >
 	{
 		if( !_texture.imageIndex.has_value() )
 			return nullptr;
@@ -245,13 +242,13 @@ namespace sk
 		return nullptr;
 	} // handleGltfTexture
 
-	auto cAssetManager::loadPngFile( const std::filesystem::path& _path ) -> Assets::cAsset_List
+	auto cAsset_Manager::loadPngFile( const std::filesystem::path& _path ) -> Assets::cAsset_List
 	{
 		// TODO: Standalone Png file loader.
 		return {};
 	} // loadPNGFile
 
-	void cAssetManager::loadEmbedded( void )
+	void cAsset_Manager::loadEmbedded( void )
 	{
 	} // loadEmbedded
 } // sk::

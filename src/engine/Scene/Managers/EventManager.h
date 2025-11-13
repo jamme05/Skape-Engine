@@ -58,6 +58,7 @@ namespace sk
 		: iHashed( _other.getValue() )
 		{
 		} // hash
+		static constexpr auto tmp = 1ull << 32;
 
 		constexpr hash( const Object::eEvents _event )
 		: iHashed( ( 1ull << 32 ) | static_cast< uint32_t >( _event ) )
@@ -211,11 +212,10 @@ namespace sk
 
 	class cEventManager : public cSingleton< cEventManager >
 	{
-
 	public:
 		// TODO: Logic?
 		 cEventManager( void );
-		~cEventManager( void );
+		~cEventManager( void ) override;
 
 	template< class... Args >
 	std::pair< bool, size_t > registerLister( const hash< Object::eEvents >& _identity, void( *_function )( Args... ) )
@@ -325,6 +325,8 @@ namespace sk
 			virtual ~cEventListener( void );
 
 		protected:
+			// TODO: Add a function to create an event. The event will be a struct with a lambda (similar to the raw registration) and some additional info.
+			// This will make registering and validation it easier.
 			template< class Ty, class... Args >
 			size_t RegisterListener( const hash< Object::eEvents >& _identity, void( Ty::*_function )( Args... ) )
 			{

@@ -1,8 +1,8 @@
 
 module = {
     Name = "Windows",
-    Setup_Workspace = function()
-        filter{ "platforms:Win64" }
+    Setup_Workspace = function( mod )
+        filter{ mod.Filter }
             toolset( "clang" )
             cppdialect( "c++23" ) -- Add something like Maximum Cpp version/dialect?
             defines( { "SK_TARGET_WIN64", "SK_CPP20", "SK_GAME_DIR=\"./\"" } )
