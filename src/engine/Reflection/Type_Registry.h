@@ -389,7 +389,7 @@ consteval sk::type_hash sk::calculate_types_hash( const array_ref< type_hash >& 
         return sk::get_type_hash_v< void >;
 
     for( const auto& hash : _hashes )
-        _val = ( _val ^ hash.getValue() ) * Hashing::prime_64_const;
+        _val = ( _val ^ hash.value() ) * Hashing::prime_64_const;
 
     return type_hash{ _val };
 } // calculate_types_hash

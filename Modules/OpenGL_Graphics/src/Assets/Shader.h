@@ -41,10 +41,6 @@ namespace sk::Assets
         // Internal
         auto get_shader() const { return m_shader_; }
 
-        void Save  () override {}
-        void Load  () override {}
-        void Unload() override {}
-
     private:
         void link_shaders();
 

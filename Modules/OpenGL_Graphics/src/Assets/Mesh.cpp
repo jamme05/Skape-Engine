@@ -12,9 +12,8 @@
 
 namespace sk::Assets
 {
-    cMesh::cMesh( const std::string& _name )
-    : cAsset( _name )
-    , m_indices_( SK_SINGLE( Graphics::cDynamic_Buffer,  ) )
+    cMesh::cMesh()
+    : m_indices_( SK_SINGLE( Graphics::cDynamic_Buffer,  ) )
     {} // cMesh
 
     cMesh::~cMesh()

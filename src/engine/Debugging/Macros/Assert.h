@@ -92,11 +92,11 @@
 #define SK_BREAK_IFN( Severity, Condition, Text ) \
     SK_BREAK_IF( Severity, NOT( Condition ), Text )
 
-#define SK_BREAK_IF_RET( Severity, Condition, Text, ... ) \
+#define SK_BREAK_RET_IF( Severity, Condition, Text, ... ) \
     SK_ASSERT_TEMPLATE_IF_RET( WARN, Condition, Severity, Text, SK_BREAK return __VA_ARGS__ )
 
-#define SK_BREAK_IFN_RET( Severity, Condition, Text, ... ) \
-    SK_BREAK_IF_RET( Severity, NOT( Condition ), Text )
+#define SK_BREAK_RET_IFN( Severity, Condition, Text, ... ) \
+    SK_BREAK_RET_IF( Severity, NOT( Condition ), Text )
 
 // Errors
 

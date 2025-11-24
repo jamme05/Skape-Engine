@@ -10,26 +10,31 @@
 #include "Scene/Scene.h"
 #include "CameraManager.h"
 #include "EventManager.h"
+#include "cLayer_Manager.h"
+
 #include <Graphics/Rendering/Render_Context.h>
 #include <Graphics/Rendering/Frame_Buffer.h>
 
 #include <Scene/Components/CameraComponent.h>
+
 
 namespace sk
 {
 	Graphics::Rendering::cRender_Context* cSceneManager::m_active_context = nullptr;
 	cSceneManager::sObjectBuffer* cSceneManager::m_out_buffer = nullptr;
 
-	cSceneManager::cSceneManager( void )
+	cSceneManager::cSceneManager()
 	{
 		cEventManager::init();
 		Scene::cCameraManager::init();
+		Scene::cLayer_Manager::init();
 	}
-	cSceneManager::~cSceneManager( void )
+	cSceneManager::~cSceneManager()
 	{
 		m_scenes.clear();
 		cEventManager::shutdown();
 		Scene::cCameraManager::shutdown();
+		Scene::cLayer_Manager::shutdown();
 	} // ~cSceneManager
 
 	void cSceneManager::registerScene( const cShared_ptr< cScene >& _scene )
@@ -37,12 +42,12 @@ namespace sk
 		m_scenes.push_back( _scene );
 	} // registerScene
 
-	void cSceneManager::update( void )
+	void cSceneManager::update()
 	{
 		cEventManager::get().postEvent( Object::kUpdate );
 	} // update
 
-	void cSceneManager::render( void )
+	void cSceneManager::render()
 	{
 		// TODO: Add logic to prepare for render.
 		Scene::cCameraManager::get().render();
@@ -62,7 +67,7 @@ namespace sk
 		// The closer to the camera the more layers the bounding boxes can have.
 		cEventManager::get().postEvent( Object::kRender );
 
-#if defined( DEBUG )
+#ifdef DEBUG
 		cEventManager::get().postEvent( Object::kDebugRender );
 #endif // DEBUG
 

@@ -24,45 +24,62 @@ namespace sk::Object
 {
 	typedef uint64_t hash_t;
 
-	GENERATE_ALL_CLASS( iComponent )
+	GENERATE_CLASS( iComponent )
+	{
+		CREATE_CLASS_IDENTIFIERS( iComponent, runtime_class_iComponent )
 	protected:
-		iComponent( void ) = default;
+		iComponent() = default;
 	public:
 
 		iComponent( iComponent const& ) = delete;
 
-		virtual ~iComponent( void )
+		~iComponent() override
 		{
 			m_object = nullptr;
 			m_children.clear();
 		}
 
 		// Event bases
-		virtual void update      ( void ){}
-		virtual void render      ( void ){}
-		virtual void enabled     ( void ){}
-		virtual void disabled    ( void ){}
-		virtual void debug_render( void ){}
+		virtual void update      (){}
+		virtual void render      (){}
+		virtual void enabled     (){}
+		virtual void disabled    (){}
+		virtual void debug_render(){}
 
-		virtual void setEnabled( const bool _is_enabled ){ m_enabled = _is_enabled; }
+		[[ nodiscard ]]
+		bool         GetEnabled() const { return m_enabled; }
+		virtual void SetEnabled( bool _is_enabled ) = 0;
 
-		virtual void postEvent( uint16_t _event ) = 0;
+		[[ nodiscard ]]
+		bool         GetIsInternal() const { return m_internal; }
 
-		auto& getPosition ( void )       { return m_transform.getPosition(); }
-		auto& getPosition ( void ) const { return m_transform.getPosition(); }
+		virtual void PostEvent( uint16_t _event ) = 0;
 
-		auto& getRotation ( void )       { return m_transform.getRotation(); }
-		auto& getRotation ( void ) const { return m_transform.getRotation(); }
+		[[ nodiscard ]]
+		auto& GetPosition()       { return m_transform.getPosition(); }
+		[[ nodiscard ]]
+		auto& GetPosition() const { return m_transform.getPosition(); }
 
-		auto& getScale    ( void )       { return m_transform.getScale(); }
-		auto& getScale    ( void ) const { return m_transform.getScale(); }
+		[[ nodiscard ]]
+		auto& GetRotation()       { return m_transform.getRotation(); }
+		[[ nodiscard ]]
+		auto& GetRotation() const { return m_transform.getRotation(); }
 
-		auto& getTransform( void )       { return m_transform; }
-		auto& getTransform( void ) const { return m_transform; }
+		[[ nodiscard ]]
+		auto& GetScale()       { return m_transform.getScale(); }
+		[[ nodiscard ]]
+		auto& GetScale() const { return m_transform.getScale(); }
 
-		void setParent( const cShared_ptr< iComponent >& _component ){ m_parent = _component; m_transform.setParent( ( _component ) ? &_component->getTransform() : nullptr ); }
+		[[ nodiscard ]]
+		auto& GetTransform()       { return m_transform; }
+		[[ nodiscard ]]
+		auto& GetTransform() const { return m_transform; }
+
+		void SetParent( const cShared_ptr< iComponent >& _component ){ m_parent = _component; m_transform.setParent( ( _component ) ? &_component->GetTransform() : nullptr ); }
 
 	protected:
+		virtual void setEnabled( const bool _is_enabled ){ m_enabled = _is_enabled; }
+		
 		cTransform                               m_transform = {};
 		cWeak_Ptr< iComponent >                  m_parent    = nullptr;
 		cWeak_Ptr< iObject >                     m_object    = nullptr;
@@ -70,7 +87,9 @@ namespace sk::Object
 		std::vector< cShared_ptr< iComponent > > m_children = { }; // TODO: Add get children function
 
 	private: // TODO: Move parts to cpp, find way to make actual constexpr
-		bool               m_enabled = true;
+		bool m_enabled  = true;
+		// Internal will hide it from the editor.
+		bool m_internal = false;
 		friend class iObject;
 	};
 
@@ -97,17 +116,17 @@ namespace sk::Object
 
 		// Used to disable events not finished yet overriden.
 		// Registers all overriden events as callable events.
-		cComponent( void )
+		cComponent()
 		: iComponent()
 		{
 			register_events();
 		} // cComponent
 	public:
 
-		void setEnabled( const bool _is_enabled ) override { iComponent::setEnabled( _is_enabled ); _is_enabled ? postEvent< kEnabled >() : postEvent< kDisabled >(); }
-
+		void SetEnabled( const bool _is_enabled ) final { setEnabled( _is_enabled ); _is_enabled ? postEvent< kEnabled >() : postEvent< kDisabled >(); }
+		
 		// Runtime postEvent
-		void postEvent( const uint16_t _event ) override
+		void PostEvent( const uint16_t _event ) override
 		{
 			switch( _event )
 			{

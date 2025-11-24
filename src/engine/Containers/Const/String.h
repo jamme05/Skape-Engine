@@ -440,4 +440,7 @@ namespace sk
     {
         return Str.as_upper();
     }
+    
 } // sk::
+
+    

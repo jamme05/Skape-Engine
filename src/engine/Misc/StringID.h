@@ -15,67 +15,90 @@ namespace sk
     public:
         struct sStringRegistry
         {
+            sStringRegistry() = default;
+            sStringRegistry( const sStringRegistry& _other );
+            sStringRegistry( sStringRegistry&& _other ) noexcept;
+            sStringRegistry& operator=( const sStringRegistry& _other );
+            sStringRegistry& operator=( sStringRegistry&& _other ) noexcept;
+            ~sStringRegistry() = default;
+            
             std::atomic_uint64_t ref_count;
-            str_hash             hash;
             std::string          string;
+            str_hash             hash;
             size_t               index;
         };
         
         class cStringRegistry
         {
         public:
+            cStringRegistry() = default;
             explicit cStringRegistry( sStringRegistry* _registry );
-            cStringRegistry( const cStringRegistry& _other );
-            cStringRegistry( cStringRegistry&& _other ) noexcept;
+            cStringRegistry( const cStringRegistry&  _other );
+            cStringRegistry(       cStringRegistry&& _other ) noexcept;
             ~cStringRegistry();
             
-            auto operator=( const cStringRegistry&  _other ) -> cStringRegistry&;
-            auto operator=( cStringRegistry&& _other ) noexcept -> cStringRegistry&;
+            auto operator=( const cStringRegistry&  _other )          -> cStringRegistry&;
+            auto operator=(       cStringRegistry&& _other ) noexcept -> cStringRegistry&;
 
-            auto& string() const { return m_registry_->string; }
+            [[ nodiscard ]] auto string() const -> const std::string&; 
 
         private:
             void inc() const;
             void dec() const;
             
-            sStringRegistry* m_registry_;
+            sStringRegistry* m_registry_ = nullptr;
         };
 
     private:
-        auto getRegistry    ( std::string_view _str ) -> cStringRegistry;
-        auto destroyRegistry( const str_hash& _registry ) -> void;
+        auto getRegistry    ( std::string_view _str      ) -> cStringRegistry;
+        void destroyRegistry( const str_hash&  _registry );
 
-        std::vector< size_t >                            m_available_spots_;
-        std::vector< sStringRegistry >                   m_registries_;
-        std::unordered_map< str_hash, sStringRegistry* > m_registry_lookup_;
+        using index_vec_t    = std::vector< size_t >;
+        using registry_vec_t = std::vector< sStringRegistry >;
+        using registry_map_t = std::unordered_map< str_hash, sStringRegistry* >;
+        
+        index_vec_t    m_available_spots_;
+        registry_vec_t m_registries_;
+        registry_map_t m_registry_lookup_;
     };
+
+////////////////////////////////////////////////
     
     class cStringID
     {
     public:
-        explicit cStringID( const std::string_view _str )
-        : m_hash_( _str )
-        , m_registry_( cStringIDManager::try_init().getRegistry( _str ) )
+        cStringID() = default;
+        cStringID( std::string_view _str );
+        template< size_t N >
+        cStringID( const char( &_str )[ N ] )
+        : cStringID( std::string_view{ _str, N } )
         {
         } // cStringID
 
-        constexpr cStringID( const cStringID& _other ) = default;
-        constexpr cStringID( cStringID&& _other ) noexcept = default;
+        constexpr cStringID( const cStringID&  _other )          = default;
+        constexpr cStringID(       cStringID&& _other ) noexcept = default;
 
-        ~cStringID( void ) = default;
+        ~cStringID() = default;
+
+        // TODO: Rename to follow more closely to the naming convention
+        [[ nodiscard ]] auto  hash  () const { return m_hash_; }
+        [[ nodiscard ]] auto& string() const { return m_registry_.string(); }
         
-        auto  value () const { return m_hash_; }
-        auto& string() const { return m_registry_.string(); }
+        cStringID& operator=( const cStringID& ) = default;
+        cStringID& operator=( cStringID&& _other ) noexcept = default;
+        cStringID& operator=( const std::string_view& _str );
         
-        constexpr cStringID& operator=( const cStringID& ) = default;
-        constexpr cStringID& operator=( cStringID&& _other ) noexcept = default;
-        constexpr bool operator==( const cStringID& _other ) const { return m_hash_ == _other.m_hash_; }
-        constexpr bool operator!=( const cStringID& _other ) const { return m_hash_ != _other.m_hash_; }
-        constexpr auto operator<=>( const cStringID& _other ) const { return m_hash_ <=> _other.m_hash_; }
+        bool operator== ( const cStringID& _other ) const { return m_hash_ ==  _other.m_hash_; }
+        bool operator!= ( const cStringID& _other ) const { return m_hash_ !=  _other.m_hash_; }
+        auto operator<=>( const cStringID& _other ) const { return m_hash_ <=> _other.m_hash_; }
+
+        auto operator<<( std::ostream& _os ) const -> std::ostream&;
 
     private:
-        str_hash m_hash_;
-        cStringIDManager::cStringRegistry m_registry_;
+        using registry_t = cStringIDManager::cStringRegistry;
+        
+        str_hash   m_hash_     = {};
+        registry_t m_registry_ = {};
         
     };
 } // sk

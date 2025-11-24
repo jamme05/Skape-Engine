@@ -9,7 +9,7 @@
 #include <memory>
 #include <Memory/Tracker/Tracker.h>
 
-// TODO: Move allocator file to Memory folder.
+// TODO: Move allocator file to the Memory folder.
 
 namespace sk
 {

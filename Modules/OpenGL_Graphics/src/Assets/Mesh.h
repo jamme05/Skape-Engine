@@ -26,12 +26,8 @@ namespace sk::Assets
 
     sk_public:
 
-        explicit cMesh( const std::string& _name );
+        cMesh();
         ~cMesh() override;
-
-        void Save  () override {}
-        void Load  () override {}
-        void Unload() override {}
 
         [[ nodiscard ]] auto GetIndexBuffer()       { return m_indices_; }
         [[ nodiscard ]] auto GetIndexBuffer() const { return m_indices_; }

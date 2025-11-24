@@ -16,7 +16,7 @@
 #include "Scene/Objects/CameraFlight.h"
 
 #include "Containers/Const/Const_Wrapper.h"
-#include "Graphics/Renderer.h"
+#include "Graphics/Renderer_Impl.h"
 #include "Platform/Window/Window_Base.h"
 
 #include "Reflection/RuntimeClass.h"
@@ -29,6 +29,8 @@
 
 #include "Graphics/Rendering/Window_Context.h"
 #include "Misc/UUID.h"
+
+#include <Graphics/Renderer.h>
 
 cApp* cApp::m_running_instance_ = nullptr;
 
@@ -45,7 +47,9 @@ cApp::cApp( void )
 		"Unable to show window." )
 
 	sk::cAsset_Manager::init();
-	sk::Graphics::cRenderer::init();
+	// TODO: Move renderer initialization elsewhere.
+	sk::Graphics::cVKRenderer::init();
+	sk::Graphics::InitRenderer();
 
 	m_window_context = sk::make_shared< sk::Graphics::Rendering::cWindow_Context >( m_main_window->GetResolution() );
 	m_render_context = sk::make_shared< sk::Graphics::Rendering::cRender_Context >();
@@ -82,24 +86,24 @@ void cApp::create( void )
 	auto toilet_m      = list_2.Get_Asset_Of_Type< sk::Assets::cMesh    >();
 	//auto mushroom      = sk::cAssetManager::get().getAssetAs< sk::Assets::cMesh >( 5 );
 
-	m_scene = sk::cScene::create_shared( "Main" );
+	m_scene = sk::make_shared< sk::cScene >();
 	m_scene->create_object< sk::Object::cCameraFlight >( "Camera Free Flight" )->setAsMain();
 	//auto mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 1" );
 	//mesh->getTransform().getPosition() = { -10.0f, 0.0f, 0.0f };
 	//mesh->getTransform().update();
 	//mesh->addComponent< sk::Object::Components::cMesh >( cube );
 
-	sk::Assets::cMesh test_mesh{ "Whata" };
+	sk::Assets::cMesh test_mesh{};
 
 	auto mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 2" );
-	mesh->getTransform().getPosition() = { -2.0f, 0.0f, 0.0f };
-	mesh->getTransform().update();
-	mesh->addComponent< sk::Object::Components::cMeshComponent >( christopher_m )->setTexture( christopher_t );
+	mesh->GetTransform().getPosition() = { -2.0f, 0.0f, 0.0f };
+	mesh->GetTransform().update();
+	mesh->AddComponent< sk::Object::Components::cMeshComponent >( christopher_m )->setTexture( christopher_t );
 
 	mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 3" );
-	mesh->getTransform().getPosition() = { 2.0f, 0.0f, 0.0f };
-	mesh->getTransform().update();
-	mesh->addComponent< sk::Object::Components::cMeshComponent >( toilet_m )->setTexture( toilet_t );
+	mesh->GetTransform().getPosition() = { 2.0f, 0.0f, 0.0f };
+	mesh->GetTransform().update();
+	mesh->AddComponent< sk::Object::Components::cMeshComponent >( toilet_m )->setTexture( toilet_t );
 
 	//mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 4" );
 	//mesh->getTransform().getPosition() = { 10.0f, 0.0f, 0.0f };

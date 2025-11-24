@@ -197,7 +197,7 @@ namespace sk
 		// TODO: Move
 		typedef typename get_parent_class< Pa >::inherits_type inherits_type;
 
-		constexpr cRuntimeClass( const char* _name, const std::source_location& _location = std::source_location::current(), const uint64_t& _parent_hash = Parent.getType().getValue() )
+		constexpr cRuntimeClass( const char* _name, const std::source_location& _location = std::source_location::current(), const uint64_t& _parent_hash = Parent.getType().value() )
 		: parent_type( _name, _location, _parent_hash )
 		{} // cRuntimeClass
 
@@ -829,13 +829,13 @@ namespace sk::Reflection
 		{
 			// Verify args.
 			typedef args_hash< Args... > args_t;
-			SK_BREAK_IF_RET( sk::Severity::kReflection, args_t::kHash != m_args_info_->hash,
+			SK_BREAK_RET_IF( sk::Severity::kReflection, args_t::kHash != m_args_info_->hash,
 				TEXT( "Error: Wrong types provided! Provided types: {}. Required types: {}.", args_t::kInfo.to_string(), m_args_info_->to_string() ),
 				false )
 
 			// Verify return type. But only if it's required.
 			constexpr static auto& other_type = get_type_info< Re >::kInfo;
-			SK_BREAK_IF_RET( sk::Severity::kReflection, _return != nullptr && *m_return_type_ != other_type,
+			SK_BREAK_RET_IF( sk::Severity::kReflection, _return != nullptr && *m_return_type_ != other_type,
 				TEXT( "Error: Wrong return type provided. Provided type: {}. Required type: {}.", other_type.raw_name, m_return_type_->raw_name ),
 				false )
 
@@ -856,23 +856,23 @@ namespace sk::Reflection
 
 			// Const check. If getting called by a const ptr.
 			if constexpr( !std::is_const_v< Ty > )
-				SK_BREAK_IF_RET( sk::Severity::kReflection,
+				SK_BREAK_RET_IF( sk::Severity::kReflection,
 					!getIsReadOnly(), "Error: Calling a non-const function with a constant instance.", false )
 
 			// Verify class.
-			SK_BREAK_IF_RET( sk::Severity::kReflection, Ty::kClass != *m_class_,
+			SK_BREAK_RET_IF( sk::Severity::kReflection, Ty::kClass != *m_class_,
 				TEXT( "Error: Tried calling function through class {} when it required class {}.", Ty::getClassName(), m_class_->getName() ),
 				false )
 
 			// Verify args.
 			typedef args_hash< Args... > args_t;
-			SK_BREAK_IF_RET( sk::Severity::kReflection, args_t::kHash != m_args_info_->hash,
+			SK_BREAK_RET_IF( sk::Severity::kReflection, args_t::kHash != m_args_info_->hash,
 				TEXT( "Error: Wrong types provided! Provided types: {}. Required types: {}.", args_t::kInfo.to_string(), m_args_info_->to_string() ),
 				false )
 
 			// Verify return type. But only if it's required.
 			constexpr static auto& other_type = get_type_info< Re >::kInfo;
-			SK_BREAK_IF_RET( sk::Severity::kReflection, _return != nullptr && *m_return_type_ != other_type,
+			SK_BREAK_RET_IF( sk::Severity::kReflection, _return != nullptr && *m_return_type_ != other_type,
 				TEXT( "Error: Wrong return type provided. Provided type: {}. Required type: {}.", other_type.raw_name, m_return_type_->raw_name ),
 				false )
 

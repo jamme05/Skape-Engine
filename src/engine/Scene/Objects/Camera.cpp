@@ -7,7 +7,7 @@
 #include "Camera.h"
 #include "Scene/Components/CameraComponent.h"
 
-#include <Graphics/Renderer.h>
+#include <Graphics/Renderer_Impl.h>
 #include <Window/Window.h>
 #include <Scene/Managers/CameraManager.h> 
 
@@ -28,10 +28,10 @@ namespace sk::Object
 
 		Components::cCameraComponent::sCameraSettings settings{ 70.0f, aspect, 0.1f, 2000.0f };
 
-		m_camera = addComponent< Components::cCameraComponent >( viewport, scissor, settings, Components::cCameraComponent::eType::kPerspective );
+		m_camera = AddComponent< Components::cCameraComponent >( viewport, scissor, settings, Components::cCameraComponent::eType::kPerspective );
 		m_root   = m_camera;
 		// Update root as old root has been deleted.
-		m_camera->setParent( nullptr );
+		m_camera->SetParent( nullptr );
 	}
 
 	void cCamera::setAsMain( void ) const

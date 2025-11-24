@@ -26,12 +26,8 @@ namespace sk::Assets
 	{
 		SK_CLASS_BODY( Model )
 	public:
-		cModel( const std::string& _name );
+		cModel();
 		// TODO: Model class, aka container for meshes and a name.
-
-		void Save  () override {}
-		void Load  () override {}
-		void Unload() override {}
 
 		[[nodiscard]] auto& getMeshes( void ) const { return m_meshes; }
 		// SK_PUBLIC_FUNCTION( getMeshes )

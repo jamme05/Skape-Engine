@@ -44,8 +44,11 @@ namespace sk
         [[ nodiscard ]]
         std::string to_string( bool _dashed = true ) const;
 
-        static constexpr cUUID kInvalid;
+        static const cUUID kInvalid;
+        static const cUUID kMax;
     };
+    constexpr cUUID cUUID::kInvalid = {};
+    constexpr cUUID cUUID::kMax     = { std::numeric_limits< uint64_t >::max(), std::numeric_limits< uint64_t >::max() };
 
     template<>
     struct hash< cUUID >

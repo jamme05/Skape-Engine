@@ -84,7 +84,7 @@
 #define CREATE_RUNTIME_CLASS_TYPE( Class, Name, ... ) sk::cRuntimeClass< Class __VA_OPT__(, FORWARD( __VA_ARGS__ ) ) >
 #define CREATE_RUNTIME_CLASS_VALUE( Class, Name, ... ) static constexpr auto CONCAT( runtime_class_, Name ) = CREATE_RUNTIME_CLASS_TYPE( Class, Name __VA_OPT__(, __VA_ARGS__) ) ( #Name );
 
-// Requires you to manually add CREATE_CLASS_IDENTIFIERS inside the body. But gives greater freedom. First inheritance will always have to be public. Unable to function with templated classes.
+// Requires you to manually add CREATE_CLASS_BODY inside the body. But provides greater freedom. First inheritance will always have to be public. Unable to function with templated classes.
 // Deprecated
 #define GENERATE_CLASS( Class, ... ) \
 class Class ; \

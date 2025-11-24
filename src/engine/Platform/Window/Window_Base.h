@@ -14,13 +14,13 @@ namespace sk::Platform
     class iWindow
     {
     public:
+        iWindow() = default;
         iWindow( const iWindow& ) = delete;
         iWindow( iWindow&& other) = delete;
         iWindow& operator=( const iWindow& ) = delete;
         iWindow& operator=( iWindow&& other) = delete;
         
         virtual ~iWindow() = default;
-        virtual void* create_context() = 0;
         [[ nodiscard ]]
         virtual bool GetVisibility() const = 0;
         [[ nodiscard ]]

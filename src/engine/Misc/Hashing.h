@@ -74,7 +74,7 @@ namespace Hashing
 constexpr Class( const Class& _other ) : m_hash_( _other.m_hash_ ){}; \
 constexpr Class( Class&& _other ) noexcept : m_hash_( std::move( _other.m_hash_ ) ){} \
 ~Class( void ) = default; \
-auto value() const { return m_hash_; } \
+constexpr auto value() const { return m_hash_; } \
 constexpr Class& operator=( const Class& ) = default; \
 constexpr Class& operator=( Class&& _other ) noexcept = default; \
 constexpr bool   operator==( const Class& _other ) const { return m_hash_ == _other.m_hash_; } \
@@ -96,11 +96,10 @@ namespace sk
 		HASH_REQUIREMENTS( hash )
 	};
 
-	// TODO: Make name class like unreal
 	template<>
 	struct hash< char >
 	{
-		constexpr hash( void ) : m_hash_( 0 ){}
+		constexpr hash() : m_hash_( 0 ){}
 
 		constexpr hash( const std::string_view& _to_hash )
 		: hash( _to_hash.data(), _to_hash.size() )
@@ -141,10 +140,11 @@ namespace sk
 				Hashing::fnv1a_64s( _to_hash, _c );
 		}
 
-		static constexpr hash kEmpty;
+		static const hash kEmpty;
 
 		HASH_REQUIREMENTS( hash )
 	};
+	constexpr hash< char > hash< char >::kEmpty = {};
 
 	// TODO: Rename to str_hash_t
 	typedef hash< char > str_hash;
@@ -173,6 +173,6 @@ struct std::hash< sk::hash< Ty > >
 {
 	uint64_t operator()( const sk::hash< Ty >& _hash ) const
 	{
-		return _hash.getValue();
+		return _hash.value();
 	}
 };

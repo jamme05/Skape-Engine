@@ -40,6 +40,8 @@ namespace sk::Memory
 
 	} // Tracker::
 
+	// TODO: Move the extern functions to a different include to not have them be depending on the memory tracker.
+	// This will also allow the singletons to be tracked.
 	extern void* alloc_fast  ( size_t _size, eAlignment _alignment = default_alignment );
 	extern void  free_fast   ( void*  _block );
 	extern void* realloc_fast( void* _block, size_t _size, eAlignment _alignment = default_alignment );

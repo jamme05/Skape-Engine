@@ -7,15 +7,17 @@
 
 #pragma once
 
-#include "Assets/Asset.h"
+#include <Assets/Asset.h>
 
-#include "Containers/Map.h"
-#include "Containers/Vector.h"
+#include <Containers/Map.h>
+#include <Containers/Vector.h>
 
-#include "Misc/Singleton.h"
-#include "Misc/Smart_Ptrs.h"
+#include <Misc/Singleton.h>
+#include <Misc/Smart_Ptrs.h>
 
-#include "fastgltf/core.hpp"
+#include <fastgltf/core.hpp>
+
+#include <Assets/Asset_List.h>
 
 namespace sk
 {

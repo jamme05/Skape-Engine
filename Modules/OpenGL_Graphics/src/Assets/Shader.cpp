@@ -11,13 +11,12 @@
 namespace sk::Assets
 {
     cShader::cShader( const std::string& _name, const eType _type, const void* _buffer, const size_t _size )
-    : cAsset( _name )
     {
         m_type_ = gl::GL_INVALID_VALUE;
         switch( _type )
         {
-        case eType::kVertex:   m_type_ = gl::GL_VERTEX_SHADER;   m_vertex_shader_   = get_shared(); break;
-        case eType::kFragment: m_type_ = gl::GL_FRAGMENT_SHADER; m_fragment_shader_ = get_shared(); break;
+        case eType::kVertex:   m_type_ = gl::GL_VERTEX_SHADER;   m_vertex_shader_   = get_weak().cast< cShader >(); break;
+        case eType::kFragment: m_type_ = gl::GL_FRAGMENT_SHADER; m_fragment_shader_ = get_weak().cast< cShader >(); break;
         case eType::kGeometry: m_type_ = gl::GL_GEOMETRY_SHADER; break;
         }
 

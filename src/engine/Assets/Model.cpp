@@ -10,8 +10,7 @@
 
 namespace sk::Assets
 {
-    cModel::cModel( const std::string& _name )
-    : cAsset( _name )
+    cModel::cModel()
     {
     } // cModel
 } // sk::Assets

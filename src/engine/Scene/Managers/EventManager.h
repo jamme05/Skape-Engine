@@ -45,7 +45,7 @@ namespace sk
 	} // Object
 
 	template<>
-	struct hash< Object::eEvents > : Hashing::iHashed
+	struct hash< Object::eEvents >
 	{
 		static constexpr size_t int_offset = sizeof( uint32_t ) * 8;
 
@@ -55,13 +55,13 @@ namespace sk
 		//} // hash
 
 		constexpr hash( const str_hash& _other )
-		: iHashed( _other.getValue() )
+		: m_hash_( _other.value() )
 		{
 		} // hash
 		static constexpr auto tmp = 1ull << 32;
 
 		constexpr hash( const Object::eEvents _event )
-		: iHashed( ( 1ull << 32 ) | static_cast< uint32_t >( _event ) )
+		: m_hash_( ( 1ull << 32 ) | static_cast< uint32_t >( _event ) )
 		{
 		} // hash
 
@@ -339,7 +339,7 @@ namespace sk
 				cWeak_Ptr< Ty > weak_ptr;
 
 				if constexpr( std::is_base_of_v< cShared_from_this< Ty >, Ty > )
-					weak_ptr = static_cast< Ty* >( this )->get_weak_this();
+					weak_ptr = static_cast< Ty* >( this )->get_weak();
 				else // Thanks to it unregistering all events, this is a safe option.
 					weak_ptr = cWeak_Ptr< Ty >::make_unsafe( static_cast< Ty* >( this ) );
 

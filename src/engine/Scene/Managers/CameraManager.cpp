@@ -7,7 +7,7 @@
 #include "CameraManager.h"
 
 #include "SceneManager.h"
-#include "Graphics/Renderer.h"
+#include "Graphics/Renderer_Impl.h"
 #include "Scene/Components/CameraComponent.h"
 
 namespace sk::Scene

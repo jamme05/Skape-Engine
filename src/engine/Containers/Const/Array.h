@@ -14,7 +14,19 @@ namespace sk
     template< class Ty, size_t Size >
     struct array
     {
-        typedef Ty value_type;
+        using value_type      = Ty;
+        using pointer         = Ty*;
+        using const_pointer   = const Ty*;
+        using reference       = Ty&;
+        using const_reference = const Ty&;
+        using size_type       = size_t;
+        using difference_type = std::ptrdiff_t;
+        
+        using iterator               = pointer;
+        using const_iterator         = const_pointer;
+        using reverse_iterator       = std::reverse_iterator<iterator>;
+        using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
         typedef Ty ( & arr_type )[ Size ];
         constexpr static auto array_size = Size;
 
@@ -46,18 +58,19 @@ namespace sk
             }
         }
 
-        constexpr       Ty* begin( void )       { return value; }
-        constexpr const Ty* begin( void ) const { return value; }
-        constexpr       Ty* end  ( void )       { return value + Size; }
-        constexpr const Ty* end  ( void ) const { return value + Size; }
+        constexpr       Ty* begin()       { return value; }
+        constexpr const Ty* begin() const { return value; }
+        constexpr       Ty* end  ()       { return value + Size; }
+        constexpr const Ty* end  () const { return value + Size; }
 
-        constexpr       Ty* get  ( void )       { return value + offset; }
-        constexpr const Ty* get  ( void ) const { return value + offset; }
+        constexpr       Ty* get  ()       { return value + offset; }
+        constexpr const Ty* get  () const { return value + offset; }
 
         constexpr const Ty& operator[]( const size_t _index ) const { return value[ _index ]; }
         constexpr       Ty& operator[]( const size_t _index )       { return value[ _index ]; }
 
-        constexpr size_t size( void ) const { return array_size - offset; }
+        constexpr size_t size () const { return array_size - offset; }
+        constexpr bool   empty() const { return false; }
 
         // TODO: Remove offset in the array in the future. Was just a quick cheat that shouldn't exist.
         size_t offset = 0;
@@ -70,14 +83,14 @@ namespace sk
         typedef Ty value_type;
         constexpr static auto array_size = 0;
 
-        constexpr array( void ) = default; // array
+        constexpr array() = default; // array
 
-        constexpr auto begin( void ) const { return get(); }
-        constexpr auto begin( void )       { return get(); }
-        constexpr auto end  ( void ) const { return get(); }
-        constexpr auto end  ( void )       { return get(); }
+        constexpr auto begin() const { return get(); }
+        constexpr auto begin()       { return get(); }
+        constexpr auto end  () const { return get(); }
+        constexpr auto end  ()       { return get(); }
 
-        constexpr Ty* get  ( void ) const { return nullptr; }
+        constexpr Ty* get  () const { return nullptr; }
 
         template< size_t Size2 >
         constexpr array< Ty, Size2 > operator+( const array< Ty, Size2 >& _other ) const
@@ -87,7 +100,8 @@ namespace sk
 
         constexpr Ty& operator[]( const size_t _index ) const { return get()[ _index ]; }
 
-        constexpr size_t size( void ) const { return array_size; }
+        constexpr size_t size () const { return array_size; }
+        constexpr bool   empty() const { return true; }
     };
 
     template< class Ty >
@@ -183,6 +197,7 @@ namespace sk
     requires std::conjunction_v< std::is_same< Ty, Ty2 >... >
     array( Ty, Ty2... ) -> array< Ty, 1 + sizeof...( Ty2 ) >;
     template< class Ty, size_t Size >
+    requires ( !std::is_same_v< Ty, char > )
     array( const Ty ( & )[ Size ] ) -> array< Ty, Size >;
     template< class Ty, size_t Size >
     array( const array< Ty, Size >& ) -> array< Ty, Size >;

@@ -16,7 +16,6 @@
 namespace sk::Assets
 {
     cTexture::cTexture( const std::string& _name, const void* _buffer, const size_t _size )
-    : cAsset( _name )
     {
         // TODO: Add load/destroy functions to assets.
 

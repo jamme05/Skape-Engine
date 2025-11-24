@@ -3,7 +3,7 @@
 #include <Debugging/Debugging.h>
 #include <Graphics/Passes/Render_Pass.h>
 
-#include "Graphics/Renderer.h"
+#include "Graphics/Renderer_Impl.h"
 #include "Scene/Managers/EventManager.h"
 #include "Scene/Managers/SceneManager.h"
 
@@ -43,7 +43,7 @@ void sk::Graphics::cPipeline::Destroy()
 void sk::Graphics::cPipeline::AddPass( std::unique_ptr< Passes::iPass >&& _pass )
 {
     SK_ERR_IF( _pass == nullptr, "Render Pass is null" )
-    SK_BREAK_IF_RET( sk::Severity::kGraphics, m_initialized_,
+    SK_BREAK_RET_IF( sk::Severity::kGraphics, m_initialized_,
         "Unable to add a new pass once initialized." )
     
     m_passes_.push_back( std::move( _pass ) );

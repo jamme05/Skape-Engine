@@ -109,6 +109,12 @@ namespace sk
 		{
 			return static_cast< Ty >( 0x1 << _exp );
 		}
+		
+		template< std::integral Ty >
+		constexpr Ty roundToPow2( const Ty _val )
+		{
+			
+		}
 
 		template< class T >
 		requires enable_artimetic_c< T >

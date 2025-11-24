@@ -98,6 +98,7 @@ namespace sk::Graphics
     {
         std::lock_guard lock( m_write_mtx_ );
 
+        // TODO: Warning message
         SK_WARN_IF( sk::Severity::kGraphics | 100,
             m_byte_size_ != _other.m_byte_size_, TEXT( "WARNING: " ) )
 
@@ -159,10 +160,10 @@ namespace sk::Graphics
 
     void cUnsafe_Buffer::Read( void* _out, size_t _max_size ) const
     {
-        SK_BREAK_IF_RET( sk::Severity::kGraphics | 10,
+        SK_BREAK_RET_IF( sk::Severity::kGraphics | 10,
             m_data_ == nullptr, TEXT( "ERROR: Trying to read from empty buffer." ) )
 
-        SK_BREAK_IF_RET( sk::Severity::kGraphics | 10,
+        SK_BREAK_RET_IF( sk::Severity::kGraphics | 10,
             m_is_static_, TEXT( "ERROR: Trying to read from empty buffer." ) )
 
         if( _max_size == 0 )
@@ -187,7 +188,7 @@ namespace sk::Graphics
 
     void cUnsafe_Buffer::Update( const void* _data, const size_t _size )
     {
-        SK_BREAK_IF_RET( sk::Severity::kGraphics | 100,
+        SK_BREAK_RET_IF( sk::Severity::kGraphics | 100,
             m_is_static_ && m_byte_size_ > 0, TEXT( "ERROR: The buffer is static." ) )
 
         std::lock_guard lock( m_write_mtx_ );
@@ -201,17 +202,17 @@ namespace sk::Graphics
 
     void cUnsafe_Buffer::UpdateSeg( const void* _data, const size_t _size, const size_t _offset )
     {
-        SK_BREAK_IF_RET( sk::Severity::kGraphics | 10,
+        SK_BREAK_RET_IF( sk::Severity::kGraphics | 10,
             m_byte_size_ == 0, TEXT( "ERROR: Trying to set segment on empty Buffer." ) )
 
-        SK_BREAK_IF_RET( sk::Severity::kGraphics | 100,
+        SK_BREAK_RET_IF( sk::Severity::kGraphics | 100,
             m_is_static_, TEXT( "ERROR: The buffer is static." ) )
 
         // These are separated to ease development.
-        SK_BREAK_IF_RET( sk::Severity::kGraphics | 100, m_byte_size_ < _size,
+        SK_BREAK_RET_IF( sk::Severity::kGraphics | 100, m_byte_size_ < _size,
             TEXT( "ERROR: The segment size is larger than the buffers size." ) )
 
-        SK_BREAK_IF_RET( sk::Severity::kGraphics | 100, m_byte_size_ < ( _size + _offset ),
+        SK_BREAK_RET_IF( sk::Severity::kGraphics | 100, m_byte_size_ < ( _size + _offset ),
             TEXT( "ERROR: The segment reaches outside of the buffer." ) )
 
         std::lock_guard lock( m_write_mtx_ );
@@ -221,7 +222,7 @@ namespace sk::Graphics
 
     void cUnsafe_Buffer::Resize( const size_t _byte_size )
     {
-        SK_BREAK_IF_RET( sk::Severity::kGraphics | 100,
+        SK_BREAK_RET_IF( sk::Severity::kGraphics | 100,
             m_is_static_, TEXT( "ERROR: The buffer is static." ) )
 
         std::lock_guard lock( m_write_mtx_ );
@@ -240,7 +241,7 @@ namespace sk::Graphics
             throw std::runtime_error( "The buffer is already locked." );
         }
 
-        SK_BREAK_IF_RET( sk::Severity::kConstGraphics | 10,
+        SK_BREAK_RET_IF( sk::Severity::kConstGraphics | 10,
             m_byte_size_ == 0, TEXT( "ERROR: Trying to lock empty buffer." ) )
 
         if( m_is_locked_ )

@@ -7,8 +7,7 @@
 #pragma once
 
 #include <Assets/Asset_List.h>
-
-#include <Misc/Singleton.h>
+#include <Graphics/Renderer.h>
 
 namespace sk::Assets
 {
@@ -22,11 +21,12 @@ namespace sk::Graphics
         class cRender_Context;
     } // Rendering
 
-    class cRenderer final : public cSingleton< cRenderer >
+    class cGLRenderer final : public cRenderer::Derived< cGLRenderer >
     {
     public:
-        cRenderer();
+        cGLRenderer();
 
+        // TODO: Move the rendering function and make it use a more abstracted API
         bool Render( Rendering::cRender_Context& _render_context, const Assets::cMesh& _mesh );
     private:
     };

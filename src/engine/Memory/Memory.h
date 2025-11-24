@@ -15,26 +15,27 @@ namespace sk::Memory
 	enum eAlignment : uint16_t
 	{
 		kDisableAlign = 1,
-		kB16Align     = 16,  // 16-byte aka Vector 4 aligned.
+		kB16Align     = 16,   // 16-byte aka Vector 4 aligned.
 		kShaderAlign  = kB16Align, // 16-byte aka Vector 4 aligned.
-		kB32Align     = 32,  // 32-byte aligned
-		kB64Align     = 64,  // 64-byte aligned
-		kB128Align    = 128, // 128-byte aligned
-		kB256Align    = 256,
-		kB512Align    = 512,
-		kB1024Align   = 1024,
-		kB2048Align   = 2048,
-		kB4096Align   = 4096,
+		kB32Align     = 32,   // 32-byte aligned
+		kB64Align     = 64,   // 64-byte aligned
+		kB128Align    = 128,  // 128-byte aligned
+		kB256Align    = 256,  // 256-byte aligned
+		kB512Align    = 512,  // 512-byte aligned
+		kB1024Align   = 1024, // 1024-byte aligned
+		kB2048Align   = 2048, // 2048-byte aligned
+		kB4096Align   = 4096, // 4096-byte aligned
 	};
 
+	// TODO: Rename default_alignment to something more fitting the naming convention.
 	/* Allows changing the engines running alignment. But the general default will still be named Default.
-	 * NOTE: SHOULD be a power of 2
+	 * NOTE: NEEDS TO BE a power of 2
 	 */
 	constexpr static eAlignment default_alignment = kB64Align;
 
 	constexpr bool   is_power_of_two( const size_t _value ){ return ( _value & ( _value - 1 ) ) == 0; }
 	// Returns the size ( in bytes ) aligned.
-	constexpr size_t get_aligned ( const size_t _size, const uint32_t _align = default_alignment )
+	constexpr size_t get_aligned( const size_t _size, const uint32_t _align = default_alignment )
 	{
 		if( is_power_of_two( _size ) )
 		{

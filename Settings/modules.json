@@ -4,8 +4,8 @@
         "Dir" : "Win64_Platform"
     },
     {
-        "Id"  : "e4f5a45b-c3b3-461f-91bb-f4069569370c",
-        "Dir" : "OpenGL_Graphics"
+        "Id"  : "c895cc22-aa64-46d2-badc-2a4c233b0989",
+        "Dir" : "Vulkan_Graphics"
     },
     {
         "Id"  : "7bf87c8a-27fe-4368-be9e-7026145d4ff0",

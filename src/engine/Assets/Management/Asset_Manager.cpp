@@ -76,10 +76,10 @@ namespace sk
 		// TODO: Add check if asset already exists.
 		
 		const auto id = GenerateRandomUUID();
-		m_assets[ id ]  = _asset;
+		m_assets[ id ] = _asset;
 		_asset->m_uuid_   = id;
-		m_asset_name_map.insert( { _asset->getNameHash(), _asset } );
-		m_asset_path_map.insert( { _asset->getPath(),     _asset } );
+		m_asset_name_map.insert( { _asset->GetName().hash(), _asset } );
+		m_asset_path_map.insert( { _asset->GetPath().hash(), _asset } );
 
 		return id;
 	} // registerAsset
@@ -186,14 +186,14 @@ namespace sk
 	auto cAsset_Manager::handleGltfModel( const fastgltf::Asset& _asset, fastgltf::Mesh& _mesh ) -> Assets::cAsset_List
 	{
 		Assets::cAsset_List assets;
-		auto model_asset = Assets::cModel::create_shared( std::string{} );
+		auto model_asset = sk::make_shared< Assets::cModel >();
 		for( auto& primitive : _mesh.primitives )
 		{
 			// Check if primitive has indices, go to next if it doesn't.
 			if( !primitive.indicesAccessor.has_value() )
 				continue;
 
-			auto mesh_asset = Assets::cMesh::create_shared( std::string( _mesh.name ) );
+			auto mesh_asset = sk::make_shared< Assets::cMesh >();
 		} // auto& primitive : _mesh.primitives
 
 		return assets;

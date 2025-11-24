@@ -18,10 +18,11 @@ namespace sk
 
 	SK_ASSET_CLASS( Scene )
 	{
+		SK_CLASS_BODY( Scene )
 	public:
-		explicit cScene( const std::string& _name ) : cAsset( _name ){ }
+		cScene() = default;
 
-		~cScene( void ) override;
+		~cScene() override;
 
 		// Creates an empty object, essentially an empty
 		template< class Ty, class... Args >
@@ -36,13 +37,11 @@ namespace sk
 		void force_render( void );
 		void force_update( void );
 
-		void Save  () override {}
-		void Load  () override {}
-		void Unload() override {}
-
 	private:
 		// TODO: Replace this with a map.
 		vector< cShared_ptr< Object::iObject > > m_objects = {};
 	};
 
 } // sk::
+
+DECLARE_CLASS( sk::Scene )

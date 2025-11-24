@@ -12,10 +12,10 @@
 namespace sk
 {
     template< class Base, class Ty >
-    class cDerivedSingleton
+    class cDerivedSingleton : public Base
     {
     public:
-        // Causes error in case the singleton is already initialized good in case the timing is required.
+        // Causes error in case the singleton is already initialized good in case the timing of initialization is important.
         template< typename... Args >
         static Ty&   init    ( Args&&... _args )
         {
@@ -26,8 +26,9 @@ namespace sk
             SK_ERR_IF( std::atexit( &Base::quit ),
                 TEXT( "Unable to safely register singleton." ) )
 
-            Base::m_instance_ = Memory::Internal::alloc< Ty >( std::forward< Args >( _args )... );
-            return *Base::m_instance_;
+            Ty* instance;
+            Base::m_instance_ = instance = Memory::Internal::alloc< Ty >( std::forward< Args >( _args )... );
+            return *instance;
         }
 
         // Safely request the singleton to be initialized. This can allow you to call it multiple times without triggering an error.
@@ -36,7 +37,7 @@ namespace sk
         static Ty& try_init( Args&&... _args )
         {
             if( Base::m_instance_ )
-                return *Base::m_instance_;
+                return static_cast< Ty& >( *Base::m_instance_ );
 
             return init( std::forward< Args >( _args )... );
         }
@@ -61,7 +62,7 @@ namespace sk
         virtual ~cBaseSingleton() = default;
 
         template< class De >
-        using Derived = cDerivedSingleton< cBaseSingleton, De >;
+        using Derived = cDerivedSingleton< Ty, De >;
         
         static void shutdown()
         {

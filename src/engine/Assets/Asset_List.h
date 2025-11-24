@@ -6,16 +6,17 @@
 
 #pragma once
 
-#include "Containers/Map.h"
+#include <Containers/Map.h>
 
-#include "Reflection/Type_Hash.h"
+#include <Reflection/Type_Hash.h>
 
-#include "Misc/Smart_Ptrs.h"
+#include <Misc/Smart_Ptrs.h>
 
-#include "fastgltf/core.hpp"
+#include <fastgltf/core.hpp>
 
 namespace sk
 {
+	class cAsset;
 	class cPartialAsset;
 	class cAsset_Manager;
 } // sk::
@@ -59,10 +60,10 @@ namespace sk::Assets
 		cAsset_List& operator+=( cAsset_List&& _other );
 
 		template< class Ty >
-		requires std::is_base_of_v< cPartialAsset, Ty >
+		requires std::is_base_of_v< cAsset, Ty >
 		cShared_ptr< Ty > Get_Asset_Of_Type( void )
 		{
-			std::lock_guard lock( m_mtx );
+			std::scoped_lock lock( m_mtx );
 
 			auto  range   = m_assets.equal_range( Ty::getStaticType() );
 
@@ -90,7 +91,7 @@ namespace sk::Assets
 		requires std::is_base_of_v< cPartialAsset, Ty >
 		std::vector< cShared_ptr< Ty > > Get_Assets_Of_Type( const int32_t _max_count = 0 )
 		{
-			std::lock_guard lock( m_mtx );
+			std::scoped_lock lock( m_mtx );
 
 			auto range = m_assets.equal_range( Ty::getStaticClassType() );
 			std::vector< cShared_ptr< Ty > > assets;

@@ -307,6 +307,7 @@ private:
     		case eAction::kReallocate:
     		case eAction::kFree:
     		{
+    			// TODO: Store the history to disk once freed.
     			const auto history_action_size = get_size< sHistory_action, kB32Align >( ++_entry.history_length );
     			*_entry.history = static_cast< sHistory_action* >( realloc_fast( *_entry.history, history_action_size, kB32Align ) );
     			_entry.last = *_entry.history + ( _entry.history_length - 1 );

@@ -128,7 +128,7 @@ namespace sk::Graphics
         SK_BREAK_IF( sk::Severity::kGraphics | 50,
             m_item_type_ != nullptr, TEXT( "WARNING: Buffer {} is currently set to use type {}. But type an unreflected type was provided instead.", m_buffer_->GetName(), m_item_type_->name ) )
 
-        SK_BREAK_IF_RET( sk::Severity::kGraphics | 20,
+        SK_BREAK_RET_IF( sk::Severity::kGraphics | 20,
             m_type_size_ != sizeof( Ty ), TEXT( "ERROR: Buffer {} is currently set to use types with size {}. But a type with size of {} was provided instead,", m_buffer_->GetName(), m_type_size_, sizeof( Ty ) ) )
 
         m_buffer_->UpdateSeg( std::addressof( std::forward< Ty >( _element ) ), _index * m_type_size_, m_type_size_ );
@@ -140,10 +140,10 @@ namespace sk::Graphics
         SK_ERR_IF( m_buffer_ == nullptr,
             "ERROR: Trying to set element in uninitialized buffer." )
 
-        SK_BREAK_IF_RET( sk::Severity::kGraphics | 50,
+        SK_BREAK_RET_IF( sk::Severity::kGraphics | 50,
             m_item_type_ == nullptr, TEXT( "WARNING: Buffer {} is currently set to not use reflected types.", m_buffer_->GetName() ) )
 
-        SK_BREAK_IF_RET( sk::Severity::kGraphics | 20, m_item_type_ != &kTypeInfo< Ty >,
+        SK_BREAK_RET_IF( sk::Severity::kGraphics | 20, m_item_type_ != &kTypeInfo< Ty >,
             TEXT( "ERROR: Buffer {} is currently set to use type {}. But type {} was provided instead.",
                 m_buffer_->GetName(), m_item_type_->name, kTypeInfo< Ty >.name ) )
 

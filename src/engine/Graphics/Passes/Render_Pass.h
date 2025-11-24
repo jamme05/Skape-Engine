@@ -4,11 +4,16 @@
 
 #include <string>
 
+namespace sk::Graphics
+{
+    class cPipeline;
+} // sk::Graphics
+
 namespace sk::Graphics::Passes
 {
     class iPass
     {
-        friend class cPipeline;
+        friend class sk::Graphics::cPipeline;
         cPipeline*  m_current_pipeline_;
         
     protected:

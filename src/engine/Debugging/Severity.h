@@ -101,8 +101,8 @@ namespace sk::Severity
     { \
     static auto res = [&](){ __VA_ARGS__ }; \
     /* If the severity is to be decided at compile time */\
-    if constexpr( constexpr auto enabled = sk::Severity::IsEnabled( SeverityValue ); sk::Severity::IsConst( SeverityValue ) )\
-    { if constexpr( enabled ) res(); } \
+    if constexpr( sk::Severity::IsConst( SeverityValue ) )\
+    { if constexpr( sk::Severity::IsEnabled( SeverityValue ) ) res(); } \
     else if( sk::Severity::IsEnabled( SeverityValue ) ) res(); \
     }
 

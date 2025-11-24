@@ -79,10 +79,6 @@ namespace sk::Assets
         // TODO: Texture settings/Sampler
         cTexture( const std::string& _name, const void* _buffer, size_t _size );
 
-        void Save  () override {}
-        void Load  () override {}
-        void Unload() override {}
-
     sk_private:
         uint8_t         m_channels_;
         cVector2u32       m_size_;

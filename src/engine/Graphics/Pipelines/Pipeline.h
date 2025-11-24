@@ -39,9 +39,9 @@ namespace sk::Graphics
     template< class Ty, class ... Args >
     Ty& cPipeline::AddPass( Args&&... _args )
     {
-        auto pass = std::make_unique< Passes::iPass >( std::forward< Args >( _args )... );
+        auto pass = std::make_unique< Ty >( std::forward< Args >( _args )... );
         auto& pass_ref = *pass;
-        AddPass( pass );
+        AddPass( std::move( pass ) );
             
         return pass_ref;
     }

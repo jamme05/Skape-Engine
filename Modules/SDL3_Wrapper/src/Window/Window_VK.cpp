@@ -1,12 +1,13 @@
 ﻿// Window functions:
 
-#ifdef SK_GRAPHICS_OPENGL
+#ifdef SK_GRAPHICS_VULKAN
 
 #include "Window.h"
 
 #include <Memory/Tracker/Tracker.h>
 #include <Platform/Platform_Base.h>
 
+#include <SDL3/SDL_vulkan.h>
 #include <SDL3/SDL.h>
 
 namespace sk::Platform
@@ -16,27 +17,29 @@ namespace sk::Platform
     , m_size_( _resolution )
     , m_aspect_ratio_( Vector2::Aspect( _resolution ) )
     {
-        SDL_GL_SetAttribute( SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG );
-        SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
-        SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 4 );
-        SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 5 );
-
-        const SDL_WindowFlags flags = _flags | SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY;
+        const SDL_WindowFlags flags = _flags | SDL_WINDOW_VULKAN | SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY;
         m_window_ = SDL_CreateWindow( _name.c_str(), static_cast< int >( _resolution.x ), static_cast< int >( _resolution.y ), flags );
         SK_ERR_IF( m_window_ == nullptr,
             TEXT( "ERROR: Unable to create a window.\n Reason: {}", SDL_GetError() ) )
     } // cSDL_Window
 
-    // TODO: Move to namespace instead of inside of class.
-    void* cSDL_Window::create_context()
-    {
-        return SDL_GL_CreateContext( m_window_ );
-    } // create_context
-
     function_ptr_t get_proc_address( const char* _name )
     {
         return SDL_GL_GetProcAddress( _name );
     } // getProcAddress
+    
+    std::pair< uint32_t, const char* const* > get_extensions()
+    {
+        Uint32 extension_count;
+        auto names = SDL_Vulkan_GetInstanceExtensions( &extension_count );
+        
+        return std::make_pair( extension_count, names );
+    }
+    
+    void create_surface( cSDL_Window* _window )
+    {
+        // SDL_Vulkan_CreateSurface(  )
+    }
     
 } // sk::Platform::
 

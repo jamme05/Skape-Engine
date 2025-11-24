@@ -581,7 +581,7 @@ namespace sk
 
 		// NOTE: USE WITH CARE, be sure that you know what you're doing.
 		template< class Ot >
-		requires std::is_convertible_v< Ty, Ot >
+		requires std::is_base_of_v< Ty, Ot >
 		cWeak_Ptr< Ot > cast( void )
 		{
 			cShared_ptr< Ot > other{};
@@ -628,6 +628,7 @@ namespace sk
 		cPtr_base m_self_;
 	};
 
+	// TODO: Replace cShared_ptr with std::shared_ptr to allow for optimizations.
 	template< class Ty, class... Args >
 	auto make_shared( Args&&... _args ) -> cShared_ptr< Ty >
 	{
@@ -643,3 +644,4 @@ namespace sk
 			return cShared_ptr< Ty >( ptr );
 	}
 } // sk::
+

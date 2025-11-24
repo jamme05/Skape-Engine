@@ -16,6 +16,13 @@
 #include "Components/TransformComponent.h"
 #include <Reflection/RuntimeClass.h>
 
+#include "Misc/StringID.h"
+
+namespace sk::Object::Components
+{
+	class cMeshComponent;
+}
+
 namespace sk
 {
 	class cScene;
@@ -29,89 +36,149 @@ namespace sk::Object
 		CREATE_CLASS_BODY( iObject )
 	sk_public:
 		// TODO: Create templated constructor with root type + parameters
-		explicit iObject( std::string _name )
+		explicit iObject( const std::string& _name )
 		: m_root( sk::make_shared< Components::cTransformComponent >() )
-		, m_name( std::move( _name ) )
+		, m_name( _name )
 		{
+			SetLayer( 0 );
 		} // iObject
 
 		template< class Ty = iComponent, class... Args >
-		explicit iObject( std::string _name, Args... _args )
+		explicit iObject( const std::string& _name, Args... _args )
 		: m_root( sk::make_shared< Ty >( _args... ) )
-		, m_name( std::move( _name ) )
+		, m_name( _name )
 		{} // iObject
 
-		~iObject( void ) override
+		~iObject() override
 		{
-			m_children.clear();
-			m_components.clear();
+			m_children_.clear();
+			m_components_.clear();
 			m_root = nullptr;
 		}
 
 		template< class Ty, class... Args >
 		requires std::is_base_of_v< iComponent, Ty >
-		cShared_ptr< Ty > addComponent( Args&&... _args )
+		auto AddComponent( Args&&... _args ) -> cShared_ptr< Ty >
 		{
-			auto ptr = sk::make_shared< Ty >( std::forward< Args >( _args )... );
+			auto component = sk::make_shared< Ty >( std::forward< Args >( _args )... );
 
-			ptr->m_object = get_weak();
-			ptr->setParent( m_root );
+			component->m_object = get_weak();
+			component->SetParent( m_root );
 
-			m_components.insert( std::pair{ Ty::getStaticType(), ptr } );
+			if constexpr( std::is_base_of_v< Components::cMeshComponent, Ty > )
+				m_mesh_components_.emplace_back( component );
+			else
+				m_components_.insert( std::pair{ Ty::getStaticType(), component } );
 
-			return ptr;
+			return component;
+		} // addComponent
+
+		template< class Ty, class... Args >
+		requires std::is_base_of_v< iComponent, Ty >
+		auto GetComponent( Args&&... _args ) -> cShared_ptr< Ty >
+		{
+			auto component = sk::make_shared< Ty >( std::forward< Args >( _args )... );
+
+			component->m_object = get_weak();
+			component->setParent( m_root );
+
+			if constexpr( std::is_base_of_v< Components::cMeshComponent, Ty > )
+				m_mesh_components_.emplace_back( component );
+			else
+				m_components_.insert( std::pair{ Ty::getStaticType(), component } );
+
+			return component;
+		} // addComponent
+		
+		// TODO: Add a way to remove the component
+
+		// TODO: Reformat this comment.
+		// Internal components are hidden by the editor and are mainly used to contain additional data on the object for systems.
+		// You are only allowed to have a single internal component of a type at a time.
+		// Due to being able to get the component without reconstructing it, it will be limited to using the default constructor.
+		// Along with this you will have to verify that all values are valid.
+		// ALSO, it isn't recommended to reuse the same internal component between multiple systems as it can cause collisions.
+		// Boolean value says if it was created during this call or not.
+		template< class Ty >
+		requires ( std::is_base_of_v< iComponent, Ty > && std::is_default_constructible_v< Ty >)
+		auto AddOrGetInternalComponent() -> std::pair< bool, cShared_ptr< Ty > >
+		{
+			if( const auto itr = m_internal_components_.find( Ty::getStaticType() ); itr != m_internal_components_.end() )
+				return { false, itr->second };
+			
+			auto component = sk::make_shared< Ty >();
+
+			component->m_object = get_weak();
+			component->SetParent( m_root );
+			component->m_internal = true;
+			
+			m_internal_components_.insert( std::pair{ Ty::getStaticType(), component } );
+
+			return { true, component };
 		} // addComponent
 
 		// TODO: Deprecate?
-		virtual void render( void )
+		virtual void render()
 		{
 			// TODO: Add actual event vector or something.
-			for( auto& val : m_components | std::views::values )
+			for( auto& val : m_components_ | std::views::values )
 			{
-				val->postEvent( kRender );
-				val->postEvent( kDebugRender );
+				val->PostEvent( kRender );
+				val->PostEvent( kDebugRender );
 			}
 		} // render
 
-		virtual void update( void )
+		virtual void update()
 		{
-			for( auto& val : m_components | std::views::values )
-				val->postEvent( kUpdate );
+			for( auto& val : m_components_ | std::views::values )
+				val->PostEvent( kUpdate );
 		} // update
 
-		auto& getRoot( void )       { return m_root; }
-		auto& getRoot( void ) const { return m_root; }
+		void SetLayer( uint64_t _layer );
+		[[ nodiscard ]]
+		auto  GetLayer() const { return m_layer_; }
 
-		auto& getPosition ( void )       { return m_root->getPosition(); }
-		auto& getPosition ( void ) const { return m_root->getPosition(); }
+		[[ nodiscard ]] auto& GetRoot()       { return m_root; }
+		[[ nodiscard ]] auto& GetRoot() const { return m_root; }
 
-		auto& getRotation ( void )       { return m_root->getRotation(); }
-		auto& getRotation ( void ) const { return m_root->getRotation(); }
+		[[ nodiscard ]] auto& GetMeshComponents() const { return m_mesh_components_; }
 
-		auto& getScale    ( void )       { return m_root->getScale(); }
-		auto& getScale    ( void ) const { return m_root->getScale(); }
+		[[ nodiscard ]] auto& GetPosition()       { return m_root->GetPosition(); }
+		[[ nodiscard ]] auto& GetPosition() const { return m_root->GetPosition(); }
 
-		auto& getTransform( void )       { return m_root->getTransform(); }
-		auto& getTransform( void ) const { return m_root->getTransform(); }
+		[[ nodiscard ]] auto& GetRotation()       { return m_root->GetRotation(); }
+		[[ nodiscard ]] auto& GetRotation() const { return m_root->GetRotation(); }
 
-		auto& getName     ( void ) const { return m_name; }
+		[[ nodiscard ]] auto& GetScale()       { return m_root->GetScale(); }
+		[[ nodiscard ]] auto& GetScale() const { return m_root->GetScale(); }
+
+		[[ nodiscard ]] auto& GetTransform()       { return m_root->GetTransform(); }
+		[[ nodiscard ]] auto& GetTransform() const { return m_root->GetTransform(); }
+
+		[[ nodiscard ]] auto& GetName() const { return m_name; }
+		
 
 	sk_protected:
 		cShared_ptr< iComponent > m_root;
 
 	sk_private:
-		// TODO: Move types to typedefs
-		vector             < cShared_ptr< iObject > >    m_children   = { };
-		multimap< type_hash, cShared_ptr< iComponent > > m_components = { };
+		
+		// TODO: Use typedefs/using
+		vector             < cShared_ptr< iObject > >              m_children_   = { };
+		unordered_multimap< type_hash, cShared_ptr< iComponent > > m_components_ = { };
+		// Internal components are stored separately as there can only be one of a type.
+		unordered_map< type_hash, cShared_ptr< iComponent >  >     m_internal_components_ = { };
+		// We have the mesh components separately to allow for a faster lookup.
+		vector< cShared_ptr< Components::cMeshComponent > >        m_mesh_components_;
 
-		std::string m_name;
+		cStringID m_name;
 
 		// TODO: Make this into a weak ptr.
 		cScene* m_parent_scene = nullptr;
 
 		// TODO: Actually implament these. Follow Unity's design when it comes to layers. But do allow multiple tags.
 		std::vector< str_hash > m_tags_;
-		uint32_t m_layer_ = 0;
+		uint64_t                m_layer_ = 1;
 
 		friend class sk::cScene;
 	};
