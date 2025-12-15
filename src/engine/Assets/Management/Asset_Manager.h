@@ -55,7 +55,7 @@ namespace sk
 		auto getAssetAs( const cUUID _id ) -> cShared_ptr< Ty >
 		{
 			if( auto asset = getAsset( _id ); asset && asset->getClass().isDerivedFrom( Ty::GetStaticClass() ) )
-				return asset.cast< Ty >();
+				return asset.Cast< Ty >();
 
 			return nullptr;
 		} // getAsset

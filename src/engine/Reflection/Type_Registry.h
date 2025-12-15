@@ -269,6 +269,9 @@ namespace sk
     // concept modless_reflected = kValidType< Ty >
     template< reflected Ty >
     constexpr auto& kTypeInfo = get_type_info< Ty >::kInfo;
+    
+    template< reflected Ty >
+    constexpr auto kTypeInfoP = &kTypeInfo< Ty >;
 
     template< class... Types >
     inline constexpr bool kValidTypes =  ( ... || kValidType< Types > );

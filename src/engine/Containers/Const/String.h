@@ -17,15 +17,19 @@ namespace sk
     template< size_t Size >
     struct string : array< char_t, Size >
     {
-        string()
+        constexpr string()
         : array< char_t, Size >{}
+        , m_size( Size )
         {
         } // string
 
         // TODO: Use size parameter in string struct.
         constexpr string( const char_t* _ptr )
-        : array< char_t, Size >( _ptr )
-        {} // string
+        : array< char_t, Size >{}
+        , m_size( std::char_traits< char_t >::length( _ptr ) )
+        {
+            std::copy_n( _ptr, m_size, array< char_t, Size >::begin() );
+        } // string
 
         // Makes this string lowercase.
         constexpr void to_lower();
@@ -46,6 +50,12 @@ namespace sk
             result.to_upper();
             return result;
         }
+
+        constexpr size_t size () const override { return m_size; }
+        constexpr bool   empty() const override { return m_size == 0; }
+
+        // Size not counting the null terminator.
+        size_t m_size;
     };
 
     template< size_t Size >
@@ -245,8 +255,39 @@ namespace sk
             return static_cast< Ty >( to_upper( static_cast< int >( _char ) ) );
         }
 
-        constexpr auto test  = to_lower( 'T' );
-        constexpr auto test2 = to_upper( 't' );
+        template< size_t... Sizes >
+        struct string_concat_size_helper
+        {
+            static constexpr size_t kSize = 1;
+        };
+
+        template< size_t FSize, size_t... Sizes >
+        struct string_concat_size_helper< FSize, Sizes... >
+        {
+            static constexpr size_t kSize = FSize + string_concat_size_helper< Sizes... >::kSize;
+        };
+        
+        template< string Current, string... Strings >
+        consteval void string_concat_helper( char* _out )
+        {
+            std::copy_n( Current.begin(), Current.m_size, _out );
+            
+            if constexpr( sizeof...( Strings ) != 0 )
+            {
+                string_concat_helper< Strings... >( _out + Current.m_size );
+            }
+        }
+
+        template< string FStr, string... Strings >
+        consteval auto concat()
+        {
+            string< string_concat_size_helper< FStr.m_size, Strings.m_size... >::kSize > result;
+            
+            string_concat_helper< FStr, Strings... >( result.get() );
+            //std::copy_n( FStr.begin(), FStr.m_size, result.begin() );
+            
+            return result;
+        }
     } // sk::str::
 
     // Define to_lower and to_upper here.
@@ -317,10 +358,13 @@ namespace sk
         {
             curr = parse_uint_to_string( _v, curr );
         }
+        
+        auto offset = curr - buff.begin();
+        string< size > output;
+        std::copy_n( buff.begin() + offset, size - offset, output.begin() );
+        output.m_size = size - offset - 1;
 
-        buff.offset = curr - buff.begin();
-
-        return buff;
+        return output;
     } // to_string
 
     template< class Ty, class Ta >
@@ -372,7 +416,8 @@ namespace sk
 
     static constexpr auto to_string( const float _v, int_fast8_t _decimals = -1 )
     {
-        string< 57 > buff;
+        static constexpr size_t size = 57;
+        string< size > buff;
         auto curr  = buff.end() - 1;
 
         _decimals = ( _decimals < 0 ) ? std::numeric_limits< int_fast8_t >::max() : _decimals;
@@ -386,9 +431,13 @@ namespace sk
         {
             curr = parse_pos_floating_point_to_string( _v, _decimals, curr );
         }
-        buff.offset = curr - buff.begin();
 
-        return buff;
+        const auto offset = curr - buff.begin();
+        string< size > output;
+        std::copy_n( buff.begin() + offset, size - offset, output.begin() );
+        output.m_size = size - offset - 1;
+
+        return output;
     } // to_string
 
     /**
@@ -400,6 +449,7 @@ namespace sk
      */
     static constexpr auto to_string( const double _v, int_fast8_t _decimals = -1 )
     {
+        static constexpr size_t size = 400;
         string< 400 > buff;
         auto curr   = buff.end() - 1;
 
@@ -414,9 +464,13 @@ namespace sk
         {
             curr = parse_pos_floating_point_to_string( _v, _decimals, curr );
         }
-        buff.offset = curr - buff.begin();
+        
+        const auto offset = curr - buff.begin();
+        string< size > output;
+        std::copy_n( buff.begin() + offset, size - offset, output.begin() );
+        output.m_size = size - offset - 1;
 
-        return buff;
+        return output;
     } // to_string
 
     static constexpr auto to_string( const bool _v )

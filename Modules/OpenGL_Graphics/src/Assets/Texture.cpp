@@ -17,34 +17,32 @@ namespace sk::Assets
 {
     cTexture::cTexture( const std::string& _name, const void* _buffer, const size_t _size )
     {
-        // TODO: Add load/destroy functions to assets.
-
         // TODO: Maybe move the texture creation to it's own file? As a texture loader ish, like tengine does it.
         // https://learnopengl.com/Getting-started/Textures
         int width, height, channels;
         const auto data = stbi_load_from_memory( static_cast< const stbi_uc* >( _buffer ), static_cast< int >( _size ), &width, &height, &channels, 0 );
 
+        __builtin_assume( channels > 0 && channels <= 4 );
+        
         SK_ERR_IF( data == nullptr,
             TEXT( "ERROR: Failed to load texture with name", _name ) )
 
         m_size_  = { width, height };
-        m_channels_ = static_cast< uint8_t >( channels );
-
-        // As per the info from stb this will be the range used.
-        __builtin_assume( m_channels_ <= 4 && m_channels_ > 0 );
 
         gl::GLenum format;
-        switch( m_channels_ )
+        switch( channels )
         {
-        case kR:    format = gl::GLenum::GL_R;    break;
-        case kRG:   format = gl::GLenum::GL_RG;   break;
-        case kRGB:  format = gl::GLenum::GL_RGB;  break;
-        case kRGBA: format = gl::GLenum::GL_RGBA; break;
-        default:    format = gl::GLenum::GL_INVALID_VALUE; break;
+        case 1:  m_channels_ = kR;    format = gl::GLenum::GL_R;    break;
+        case 2:  m_channels_ = kRG;   format = gl::GLenum::GL_RG;   break;
+        case 3:  m_channels_ = kRGB;  format = gl::GLenum::GL_RGB;  break;
+        case 4:  m_channels_ = kRGBA; format = gl::GLenum::GL_RGBA; break;
+        default: m_channels_ = kNone; format = gl::GLenum::GL_INVALID_VALUE; break;
         }
 
+        // As per the info from stb this will be the range used.
+
         SK_ERR_IF( format == gl::GLenum::GL_INVALID_VALUE,
-            TEXT( "ERROR: Texture with name {} does not have a valid ", _name ) )
+            TEXT( "ERROR: Texture with name {} does not have a valid number of channels", _name ) )
 
         gl::glGenTextures( 1, &m_buffer_.m_buffer_ );
         gl::glBindTexture( gl::GL_TEXTURE_2D, m_buffer_.m_buffer_ );

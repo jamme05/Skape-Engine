@@ -109,36 +109,36 @@ namespace sk
 		cPtr_base( const cPtr_base& _other )
 		{
 			if( this != &_other )
-				m_data = _other.m_data;
+				m_data_ = _other.m_data_;
 		} // cPtr_base
 
 		explicit cPtr_base( Ptr_logic::cData_base* _data )
 		{
-			m_data = _data;
+			m_data_ = _data;
 		} // cPtr_base
 
 		auto& operator=( const cPtr_base& _right )
 		{
 			if( this != &_right )
-				m_data = _right.m_data;
+				m_data_ = _right.m_data_;
 
 			return *this;
 		}
 
-		operator bool ( void ) const { return m_data != nullptr; }
+		operator bool ( void ) const { return m_data_ != nullptr; }
 
-		bool operator!=( const void*      _other ) const { return m_data->get_ptr() != _other; }
-		bool operator==( const void*      _other ) const { return m_data->get_ptr() == _other; }
-		bool operator!=( const cPtr_base& _other ) const { return m_data != _other.m_data; }
-		bool operator==( const cPtr_base& _other ) const { return m_data == _other.m_data; }
+		bool operator!=( const void*      _other ) const { return m_data_->get_ptr() != _other; }
+		bool operator==( const void*      _other ) const { return m_data_->get_ptr() == _other; }
+		bool operator!=( const cPtr_base& _other ) const { return m_data_ != _other.m_data_; }
+		bool operator==( const cPtr_base& _other ) const { return m_data_ == _other.m_data_; }
 
 	protected:
-		void inc     ( void ) const { if( m_data ) m_data->inc(); }
-		void dec     ( void ) const { if( m_data ) m_data->dec(); }
-		void inc_weak( void ) const { if( m_data ) m_data->inc_weak(); }
-		void dec_weak( void ) const { if( m_data ) m_data->dec_weak(); }
+		void inc     ( void ) const { if( m_data_ ) m_data_->inc(); }
+		void dec     ( void ) const { if( m_data_ ) m_data_->dec(); }
+		void inc_weak( void ) const { if( m_data_ ) m_data_->inc_weak(); }
+		void dec_weak( void ) const { if( m_data_ ) m_data_->dec_weak(); }
 
-		Ptr_logic::cData_base* m_data = nullptr;
+		Ptr_logic::cData_base* m_data_ = nullptr;
 
 		template< class Fy >
 		friend class cShared_ptr;
@@ -162,47 +162,56 @@ namespace sk
 		template< class Fy >
 		friend class cWeak_Ptr;
 
-		public:
+		Ty* m_ptr_ = nullptr;
+	public:
 		cShared_ptr( void ) = default;
 
 		explicit cShared_ptr( Ty* _ptr )
 		{
-			m_data = SK_SINGLE( Ptr_logic::cData< Ty >, _ptr );
-			m_data->completed();
+			m_data_ = SK_SINGLE( Ptr_logic::cData< Ty >, _ptr );
+			m_data_->completed();
+			m_ptr_ = _ptr;
 			inc();
 		} // cShared_ptr
 
 		cShared_ptr( nullptr_t )
 		{
-			m_data = nullptr;
+			m_data_ = nullptr;
+			m_ptr_  = nullptr;
 		} // cShared_ptr
 
 		cShared_ptr( const cShared_ptr& _right )
 		{
-			m_data = _right.m_data;
+			m_data_ = _right.m_data_;
+			m_ptr_  = _right.m_ptr_;
 			inc();
 
 		} // cShared_ptr
 
 		cShared_ptr( cShared_ptr&& _right ) noexcept
 		{
-			m_data = _right.m_data;
-			_right.m_data = nullptr;
+			m_data_ = _right.m_data_;
+			m_ptr_  = _right.m_ptr_;
+			_right.m_data_ = nullptr;
+			_right.m_ptr_  = nullptr;
 		} // cShared_ptr
 
 		template< class Other, std::enable_if_t< std::is_base_of_v< Ty, Other > >... >
 		cShared_ptr( const cShared_ptr< Other >& _right )
 		{
-			m_data = _right.m_data;
+			m_data_ = _right.m_data_;
+			m_ptr_  = static_cast< Ty* >( _right.m_ptr_ );
 			inc();
 		} // cShared_ptr
 
 		cShared_ptr( const cPtr_base& _right )
 		{
-			m_data = _right.m_data;
+			m_data_ = _right.m_data_;
+			m_ptr_  = nullptr;
 
-			if( m_data )
+			if( m_data_ )
 			{
+				m_ptr_  = static_cast< Ty* >( m_data_->get_ptr() );
 				inc();
 			}
 		} // cShared_ptr
@@ -214,10 +223,11 @@ namespace sk
 
 		auto& operator=( const cShared_ptr& _right )
 		{
-			if( m_data != _right.m_data && this != &_right )
+			if( m_data_ != _right.m_data_ && this != &_right )
 			{
 				dec();
-				m_data = _right.m_data;
+				m_data_ = _right.m_data_;
+				m_ptr_  = _right.m_ptr_;
 				inc();
 			}
 
@@ -226,12 +236,14 @@ namespace sk
 
 		auto& operator=( cShared_ptr&& _right ) noexcept
 		{
-			if( m_data != _right.m_data )
+			if( m_data_ != _right.m_data_ )
 			{
 				dec();
-				m_data = _right.m_data;
+				m_data_ = _right.m_data_;
+				m_ptr_  = _right.m_ptr_;
 			}
-			_right.m_data = nullptr;
+			_right.m_data_ = nullptr;
+			_right.m_ptr_  = nullptr;
 
 			return *this;
 		}
@@ -239,34 +251,37 @@ namespace sk
 		auto& operator=( std::nullptr_t )
 		{
 			dec();
-			m_data = nullptr;
+			m_data_ = nullptr;
+			m_ptr_  = nullptr;
 
 			return *this;
 		}
 
 		template< class Other >
-		requires std::is_convertible_v< Other, Ty >
+		requires std::is_convertible_v< Other*, Ty* >
 		cShared_ptr& operator=( const cShared_ptr< Other >& _right )
 		{
 			dec();
-			m_data = _right.m_data;
+			m_data_ = _right.m_data_;
+			m_ptr_  = _right.m_ptr_;
 			inc();
 
 			return *this;
 		}
 
 		template< class Other >
-		requires ( std::is_base_of_v< Ty, Other > && ! std::is_convertible_v< Other, Ty > )
+		requires ( std::is_base_of_v< Ty, Other > && ! std::is_convertible_v< Other*, Ty* > )
 		cShared_ptr& operator=( const cShared_ptr< Other >& _right )
 		{
 			dec();
-			m_data = _right.m_data;
+			m_data_ = _right.m_data;
+			m_ptr_  = _right.m_ptr_;
 			inc();
 
 			return *this;
 		}
 
-		operator bool( void ) const { return ( m_data != nullptr ); }
+		operator bool( void ) const { return ( m_data_ != nullptr ); }
 
 		Ty& operator  *( void ){ return *get(); }
 		Ty* operator ->( void ){ return  get(); }
@@ -277,8 +292,8 @@ namespace sk
 		operator Ty*   ( void )       { return get(); }
 		operator Ty*   ( void ) const { return get(); }
 
-		Ty* get( void )       { return static_cast< Ty* >( m_data ? m_data->get_ptr() : nullptr ); }
-		Ty* get( void ) const { return static_cast< Ty* >( m_data ? m_data->get_ptr() : nullptr ); }
+		Ty* get( void )       { return m_ptr_; }
+		Ty* get( void ) const { return m_ptr_; }
 
 		// TODO: Make safer version.
 		// Safe enough? You can go up/down in the polymorphic family tree?
@@ -286,10 +301,11 @@ namespace sk
 		// NOTE: USE WITH CARE, be sure that you know what you're doing.
 		template< class Ot >
 		requires ( std::is_base_of_v< Ty, Ot > || std::is_base_of_v< Ot, Ty > )
-		cShared_ptr< Ot > cast( void )
+		cShared_ptr< Ot > Cast( void )
 		{
 			cShared_ptr< Ot > other{};
-			other.m_data = m_data;
+			other.m_data = m_data_;
+			other.m_ptr_ = static_cast< Ot* >( m_ptr_ );
 			inc();
 
 			return other;
@@ -311,35 +327,35 @@ namespace sk
 
 		explicit cShared_Ref( Ty* _ptr )
 		{
-			m_data = SK_SINGLE( Ptr_logic::cData< Ty >, _ptr );
+			m_data_ = SK_SINGLE( Ptr_logic::cData< Ty >, _ptr );
 			inc();
 		} // cShared_ptr
 
 		cShared_Ref( const cShared_Ref& _right )
 		{
-			m_data = _right.m_data;
+			m_data_ = _right.m_data_;
 			inc();
 
 		} // cShared_ptr
 
 		cShared_Ref( cShared_Ref&& _right ) noexcept
 		{
-			m_data = _right.m_data;
-			_right.m_data = nullptr;
+			m_data_ = _right.m_data_;
+			_right.m_data_ = nullptr;
 		} // cShared_ptr
 
 		template< class Other, std::enable_if_t< std::is_base_of_v< Ty, Other > >... >
 		cShared_Ref( const cShared_ptr< Other >& _right )
 		{
-			m_data = _right.m_data;
+			m_data_ = _right.m_data;
 			inc();
 		} // cShared_ptr
 
 		cShared_Ref( const cPtr_base& _right )
 		{
-			m_data = _right.m_data;
+			m_data_ = _right.m_data_;
 
-			if( m_data )
+			if( m_data_ )
 			{
 				inc();
 			}
@@ -352,10 +368,10 @@ namespace sk
 
 		auto& operator=( const cShared_Ref& _right )
 		{
-			if( m_data != _right.m_data && this != &_right )
+			if( m_data_ != _right.m_data_ && this != &_right )
 			{
 				dec();
-				m_data = _right.m_data;
+				m_data_ = _right.m_data_;
 				inc();
 			}
 
@@ -364,39 +380,39 @@ namespace sk
 
 		auto& operator=( cShared_Ref&& _right ) noexcept
 		{
-			if( m_data != _right.m_data )
+			if( m_data_ != _right.m_data_ )
 			{
 				dec();
-				m_data = _right.m_data;
+				m_data_ = _right.m_data_;
 			}
-			_right.m_data = nullptr;
+			_right.m_data_ = nullptr;
 
 			return *this;
 		}
 
 		template< class Other >
-		requires std::is_convertible_v< Other, Ty >
+		requires std::is_convertible_v< Other*, Ty* >
 		cShared_Ref& operator=( const cShared_ptr< Other >& _right )
 		{
 			dec();
-			m_data = _right.m_data;
+			m_data_ = _right.m_data;
 			inc();
 
 			return *this;
 		}
 
 		template< class Other >
-		requires ( std::is_base_of_v< Ty, Other > && ! std::is_convertible_v< Other, Ty > )
+		requires ( std::is_base_of_v< Ty, Other > && ! std::is_convertible_v< Other*, Ty* > )
 		cShared_Ref& operator=( const cShared_ptr< Other >& _right )
 		{
 			dec();
-			m_data = _right.m_data;
+			m_data_ = _right.m_data;
 			inc();
 
 			return *this;
 		}
 
-		operator bool( void ) const { return ( m_data != nullptr ); }
+		operator bool( void ) const { return ( m_data_ != nullptr ); }
 
 		Ty& operator  *( void ){ return *get(); }
 		Ty* operator ->( void ){ return  get(); }
@@ -407,8 +423,8 @@ namespace sk
 		operator Ty*   ( void )       { return get(); }
 		operator Ty*   ( void ) const { return get(); }
 
-		Ty* get( void )       { return static_cast< Ty* >( m_data->get_ptr() ); }
-		Ty* get( void ) const { return static_cast< Ty* >( m_data->get_ptr() ); }
+		Ty* get( void )       { return static_cast< Ty* >( m_data_->get_ptr() ); }
+		Ty* get( void ) const { return static_cast< Ty* >( m_data_->get_ptr() ); }
 
 		// TODO: Make safer version.
 		// Safe enough? You can go up/down in the polymorphic family tree?
@@ -422,7 +438,7 @@ namespace sk
 			// Ot* op = static_cast< Ot* >( m_data->get_ptr() );
 
 			cShared_ptr< Ot > other{};
-			other.m_data = m_data;
+			other.m_data = m_data_;
 			inc();
 
 			return other;
@@ -440,39 +456,39 @@ namespace sk
 		public:
 		cWeak_Ptr( void )
 		{
-			m_data = nullptr;
+			m_data_ = nullptr;
 		} // cShared_ptr
 
 		cWeak_Ptr( nullptr_t )
 		{
-			m_data = nullptr;
+			m_data_ = nullptr;
 		} // cShared_ptr
 
 		cWeak_Ptr( const cWeak_Ptr& _right )
 		{
-			m_data = _right.m_data;
+			m_data_ = _right.m_data_;
 			inc_weak();
 
 		} // cShared_ptr
 
 		cWeak_Ptr( cWeak_Ptr&& _right ) noexcept
 		{
-			m_data = _right.m_data;
-			_right.m_data = nullptr;
+			m_data_ = _right.m_data_;
+			_right.m_data_ = nullptr;
 		} // cShared_ptr
 
 		template< class Other, std::enable_if_t< std::is_base_of_v< Ty, Other > >... >
 		cWeak_Ptr( const cWeak_Ptr< Other >& _right )
 		{
-			m_data = _right.m_data;
+			m_data_ = _right.m_data;
 			inc_weak();
 		} // cShared_ptr
 
 		cWeak_Ptr( const cPtr_base& _right )
 		{
-			m_data = _right.m_data;
+			m_data_ = _right.m_data_;
 
-			if( m_data )
+			if( m_data_ )
 			{
 				inc_weak();
 			}
@@ -485,10 +501,10 @@ namespace sk
 
 		auto& operator=( const cWeak_Ptr& _right )
 		{
-			if( m_data != _right.m_data && this != &_right )
+			if( m_data_ != _right.m_data_ && this != &_right )
 			{
 				dec_weak();
-				m_data = _right.m_data;
+				m_data_ = _right.m_data_;
 				inc_weak();
 			}
 
@@ -497,22 +513,22 @@ namespace sk
 
 		auto& operator=( cWeak_Ptr&& _right ) noexcept
 		{
-			if( m_data != _right.m_data )
+			if( m_data_ != _right.m_data_ )
 			{
 				dec_weak();
-				m_data = _right.m_data;
+				m_data_ = _right.m_data_;
 			}
-			_right.m_data = nullptr;
+			_right.m_data_ = nullptr;
 
 			return *this;
 		}
 
 		auto& operator=( const cShared_ptr< Ty >& _right )
 		{
-			if( m_data != _right.m_data )
+			if( m_data_ != _right.m_data_ )
 			{
 				dec_weak();
-				m_data = _right.m_data;
+				m_data_ = _right.m_data_;
 				inc_weak();
 			}
 
@@ -522,7 +538,7 @@ namespace sk
 		auto& operator=( cShared_ptr< Ty >&& _right ) noexcept
 		{
 			dec_weak(); // TODO: Make sure that it's counting correctly.
-			m_data = std::move( _right ).m_data;
+			m_data_ = std::move( _right ).m_data;
 			_right.m_data = nullptr;
 			dec(); // Decrease due to stealing shared ptr
 
@@ -533,28 +549,28 @@ namespace sk
 		auto& operator=( std::nullptr_t )
 		{
 			dec_weak();
-			m_data = nullptr;
+			m_data_ = nullptr;
 
 			return *this;
 		}
 
 		template< class Other >
-		requires std::is_convertible_v< Other, Ty >
+		requires std::is_convertible_v< Other*, Ty* >
 		auto& operator=( const cShared_ptr< Other >& _right )
 		{
 			dec_weak();
-			m_data = _right.m_data;
+			m_data_ = _right.m_data;
 			inc_weak();
 
 			return *this;
 		} // operator= (Copy Shared)
 
 		template< class Other >
-		requires ( std::is_base_of_v< Ty, Other > && ! std::is_convertible_v< Other, Ty > )
+		requires ( std::is_base_of_v< Ty, Other > && std::is_convertible_v< Other*, Ty* > )
 		auto& operator=( const cShared_ptr< Other >& _right )
 		{
 			dec_weak();
-			m_data = _right.m_data;
+			m_data_ = _right.m_data;
 			inc_weak();
 
 			return *this;
@@ -571,10 +587,10 @@ namespace sk
 		operator Ty*   ( void )       { return get(); }
 		operator Ty*   ( void ) const { return get(); }
 
-		Ty* get( void )       { return static_cast< Ty* >( m_data->get_ptr() ); }
-		Ty* get( void ) const { return static_cast< Ty* >( m_data->get_ptr() ); }
+		Ty* get( void )       { return static_cast< Ty* >( m_data_->get_ptr() ); }
+		Ty* get( void ) const { return static_cast< Ty* >( m_data_->get_ptr() ); }
 
-		bool is_valid( void ) const { return m_data != nullptr && m_data->get_ptr(); }
+		bool is_valid( void ) const { return m_data_ != nullptr && m_data_->get_ptr(); }
 
 		// TODO: Make safer version.
 		// Safe enough? You can go up/down in the polymorphic family tree?
@@ -585,7 +601,7 @@ namespace sk
 		cWeak_Ptr< Ot > cast( void )
 		{
 			cShared_ptr< Ot > other{};
-			other.m_data = m_data;
+			other.m_data_ = m_data_;
 			inc_weak();
 
 			return other;
@@ -595,7 +611,7 @@ namespace sk
 		static auto make_unsafe( Ty* _ptr )
 		{
 			cWeak_Ptr unsafe;
-			unsafe.m_data = SK_SINGLE( Ptr_logic::cData< Ty >, _ptr );
+			unsafe.m_data_ = SK_SINGLE( Ptr_logic::cData< Ty >, _ptr );
 			unsafe.inc_weak();
 
 			return unsafe;
@@ -623,7 +639,7 @@ namespace sk
 		template< class Ty2, class ...Args >
 		friend auto make_shared( Args&&... ) -> cShared_ptr< Ty2 >;
 
-		void complete() const { m_self_.m_data->completed(); }
+		void complete() const { m_self_.m_data_->completed(); }
 
 		cPtr_base m_self_;
 	};

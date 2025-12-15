@@ -23,8 +23,8 @@ namespace sk
 	using cColor    = Math::cVector4< float >;
 	using cVector4f = Math::cVector4< float >;
 	using cVector4d = Math::cVector4< double >;
-	using cVector4i = Math::cVector4< int32_t >;
-	using cVector4u = Math::cVector4< uint32_t >;
+	using cVector4i32 = Math::cVector4< int32_t >;
+	using cVector4u32 = Math::cVector4< uint32_t >;
 } // sk::
 namespace sk::Math
 {

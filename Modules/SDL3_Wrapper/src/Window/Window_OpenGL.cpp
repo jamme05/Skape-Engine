@@ -28,9 +28,9 @@ namespace sk::Platform
     } // cSDL_Window
 
     // TODO: Move to namespace instead of inside of class.
-    void* cSDL_Window::create_context()
+    void* create_context( const cSDL_Window& _window )
     {
-        return SDL_GL_CreateContext( m_window_ );
+        return SDL_GL_CreateContext( _window.GetWindow() );
     } // create_context
 
     function_ptr_t get_proc_address( const char* _name )

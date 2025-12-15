@@ -15,7 +15,7 @@ namespace sk::Graphics
 {
     cDynamic_Buffer::cDynamic_Buffer()
     : m_byte_size_( 0 )
-    , m_buffer_type_( Buffer::eType::kConstant )
+    , m_buffer_type_( Buffer::eType::kInvalid )
     , m_type_size_( 0 )
     , m_item_type_( nullptr )
     , m_buffer_( nullptr )
@@ -26,7 +26,7 @@ namespace sk::Graphics
     , m_buffer_type_( _type )
     , m_type_size_( 0 )
     , m_item_type_( nullptr )
-    , m_buffer_( SK_SINGLE( cUnsafe_Buffer, _name, 0, _type, false ) )
+    , m_buffer_( std::make_unique< cUnsafe_Buffer >( _name, 0, _type, false ) )
     {} // cDynamic_Buffer
 
     cDynamic_Buffer::cDynamic_Buffer( const cDynamic_Buffer& _other )
@@ -34,7 +34,7 @@ namespace sk::Graphics
     , m_buffer_type_( _other.m_buffer_type_ )
     , m_type_size_( _other.m_type_size_ )
     , m_item_type_( _other.m_item_type_ )
-    , m_buffer_{ SK_SINGLE( cUnsafe_Buffer, _other.m_buffer_->GetName(), m_byte_size_,  m_buffer_type_, false ) }
+    , m_buffer_{ std::make_unique< cUnsafe_Buffer >( _other.m_buffer_->GetName(), m_byte_size_,  m_buffer_type_, false ) }
     {
         m_buffer_->Copy( *_other.m_buffer_ );
     }
@@ -44,10 +44,43 @@ namespace sk::Graphics
     , m_buffer_type_( _other.m_buffer_type_ )
     , m_type_size_( _other.m_type_size_ )
     , m_item_type_( _other.m_item_type_ )
-    , m_buffer_{ _other.m_buffer_ }
+    , m_buffer_{ std::move( _other.m_buffer_ ) }
     {
         _other.m_buffer_    = nullptr;
         _other.m_byte_size_ = 0;
+    }
+
+    cDynamic_Buffer::~cDynamic_Buffer()
+    {
+        m_buffer_ = nullptr;
+    }
+
+    cDynamic_Buffer& cDynamic_Buffer::operator=( const cDynamic_Buffer& _other )
+    {
+        if( this == &_other )
+            return *this;
+        
+        m_byte_size_   = _other.m_byte_size_;
+        m_buffer_type_ = _other.m_buffer_type_;
+        m_type_size_   = _other.m_type_size_;
+        m_item_type_   = _other.m_item_type_;
+        
+        m_buffer_ = std::make_unique< cUnsafe_Buffer >( _other.m_buffer_->GetName(), m_byte_size_,  m_buffer_type_, false );
+        m_buffer_->Copy( *_other.m_buffer_ );
+        
+        return *this;
+    }
+
+    cDynamic_Buffer& cDynamic_Buffer::operator=( cDynamic_Buffer&& _other ) noexcept
+    {
+        m_byte_size_   = _other.m_byte_size_;
+        m_buffer_type_ = _other.m_buffer_type_;
+        m_type_size_   = _other.m_type_size_;
+        m_item_type_   = _other.m_item_type_;
+        
+        m_buffer_ = std::move( _other.m_buffer_ );
+        
+        return *this;
     }
 
     void cDynamic_Buffer::AlignAs( const size_t _align )
@@ -64,4 +97,9 @@ namespace sk::Graphics
         m_byte_size_ = m_type_size_ * _size;
         m_buffer_->Resize( m_byte_size_ );
     } // Resize
+    
+    auto cDynamic_Buffer::Size() const->size_t
+    {
+        return m_byte_size_ / m_type_size_;
+    }
 } // sk::Graphics

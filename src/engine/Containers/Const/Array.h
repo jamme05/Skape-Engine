@@ -41,6 +41,7 @@ namespace sk
         : value{ std::move( _values )... }
         {
         } // array
+        virtual ~array() = default;
 
         template< size_t Size2 >
         constexpr array< Ty, Size + Size2 > operator+( const array< Ty, Size2 >& _other ) const
@@ -60,20 +61,18 @@ namespace sk
 
         constexpr       Ty* begin()       { return value; }
         constexpr const Ty* begin() const { return value; }
-        constexpr       Ty* end  ()       { return value + Size; }
-        constexpr const Ty* end  () const { return value + Size; }
+        constexpr       Ty* end  ()       { return value + size(); }
+        constexpr const Ty* end  () const { return value + size(); }
 
-        constexpr       Ty* get  ()       { return value + offset; }
-        constexpr const Ty* get  () const { return value + offset; }
+        constexpr       Ty* get  ()       { return value; }
+        constexpr const Ty* get  () const { return value; }
 
         constexpr const Ty& operator[]( const size_t _index ) const { return value[ _index ]; }
         constexpr       Ty& operator[]( const size_t _index )       { return value[ _index ]; }
 
-        constexpr size_t size () const { return array_size - offset; }
-        constexpr bool   empty() const { return false; }
+        virtual constexpr size_t size () const { return array_size; }
+        virtual constexpr bool   empty() const { return false; }
 
-        // TODO: Remove offset in the array in the future. Was just a quick cheat that shouldn't exist.
-        size_t offset = 0;
         Ty value[ Size ];
     };
 
@@ -84,7 +83,8 @@ namespace sk
         constexpr static auto array_size = 0;
 
         constexpr array() = default; // array
-
+        virtual ~array() = default;
+        
         constexpr auto begin() const { return get(); }
         constexpr auto begin()       { return get(); }
         constexpr auto end  () const { return get(); }
@@ -100,8 +100,8 @@ namespace sk
 
         constexpr Ty& operator[]( const size_t _index ) const { return get()[ _index ]; }
 
-        constexpr size_t size () const { return array_size; }
-        constexpr bool   empty() const { return true; }
+        virtual constexpr size_t size () const { return array_size; }
+        virtual constexpr bool   empty() const { return true; }
     };
 
     template< class Ty >

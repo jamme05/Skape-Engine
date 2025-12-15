@@ -16,7 +16,7 @@ namespace sk::Graphics
 {
     class cDynamic_Buffer
     {
-        // TODO: Combine the functionallity of these in some way.
+        // TODO: Combine the functionality of these in some way.
         template< class Itr >
         cDynamic_Buffer( const std::string& _name, Buffer::eType _type, const size_t _size, Itr _begin, Itr _end )
         : m_buffer_type_( _type )
@@ -26,7 +26,7 @@ namespace sk::Graphics
             static constexpr auto size = sizeof( type );
             m_byte_size_ = size * _size;
             m_type_size_ = size;
-            m_buffer_ = SK_SINGLE( cUnsafe_Buffer, _name, m_byte_size_, _type, false );
+            m_buffer_ = std::make_unique< cUnsafe_Buffer >( _name, m_byte_size_, _type, false );
 
             // Initialize buffer.
             auto ptr = static_cast< type* >( m_buffer_->Get() );
@@ -44,7 +44,7 @@ namespace sk::Graphics
             m_byte_size_ = size * _size;
             m_type_size_ = size;
             m_item_type_ = &kTypeInfo< type >;
-            m_buffer_ = SK_SINGLE( cUnsafe_Buffer, _name, m_byte_size_, _type, false );
+            m_buffer_ = std::make_unique< cUnsafe_Buffer >( _name, m_byte_size_, _type, false );
 
             // Initialize buffer.
             auto ptr = static_cast< type* >( m_buffer_->Get() );
@@ -75,16 +75,19 @@ namespace sk::Graphics
         cDynamic_Buffer( const cDynamic_Buffer& _other );
         cDynamic_Buffer( cDynamic_Buffer&& _other ) noexcept;
 
-        ~cDynamic_Buffer() = default;
+        ~cDynamic_Buffer();
+        
+        cDynamic_Buffer& operator=( const cDynamic_Buffer& _other );
+        cDynamic_Buffer& operator=( cDynamic_Buffer&& _other ) noexcept;
 
         void AlignAs( size_t _align );
 
         template< class Ty >
         void AlignAs();
 
-        template< reflected Ty > requires ( !std::is_abstract_v< Ty > )
+        template< reflected Ty > requires ( !std::is_polymorphic_v< Ty > )
         void AlignAs();
-
+        
         // TODO: Add more ways to set data.
         template< class Ty >
         void Set( size_t _index, Ty&& _element );
@@ -93,26 +96,29 @@ namespace sk::Graphics
         void Set( size_t _index, Ty&& _element );
 
         void Resize( size_t _size );
+        auto Size() const -> size_t;
 
     private:
+        using buffer_t = std::unique_ptr< iUnsafe_Buffer >;
         // The outwards size of this buffer. Get the size from the unsafe buffer for the capacity.
-        size_t          m_byte_size_;
+        size_t         m_byte_size_;
         // Uses both.
-        Buffer::eType   m_buffer_type_;
-        size_t          m_type_size_;
-        type_info_t     m_item_type_;
-
-        iUnsafe_Buffer* m_buffer_;
+        Buffer::eType  m_buffer_type_;
+        size_t         m_type_size_;
+        type_info_t    m_item_type_;
+        
+        buffer_t       m_buffer_;
     };
 
     template< class Ty >
     void cDynamic_Buffer::AlignAs()
     {
+        SK_WARNING( sk::Severity::kGraphics | 50, "Warning: Setting a non reflected alignment is unsafe." )
         m_item_type_ = nullptr;
         AlignAs( sizeof( Ty ) );
     }
 
-    template< reflected Ty > requires ( !std::is_abstract_v< Ty > )
+    template< reflected Ty > requires ( !std::is_polymorphic_v< Ty > )
     void cDynamic_Buffer::AlignAs()
     {
         m_item_type_ = &kTypeInfo< Ty >;
@@ -125,11 +131,13 @@ namespace sk::Graphics
         SK_ERR_IF( m_buffer_ == nullptr,
             "ERROR: Trying to set element in uninitialized buffer." )
 
-        SK_BREAK_IF( sk::Severity::kGraphics | 50,
-            m_item_type_ != nullptr, TEXT( "WARNING: Buffer {} is currently set to use type {}. But type an unreflected type was provided instead.", m_buffer_->GetName(), m_item_type_->name ) )
+        SK_BREAK_IF( sk::Severity::kGraphics | 50, m_item_type_ != nullptr,
+            TEXT( "WARNING: Buffer {} is currently set to use type {}. But type an unreflected type was provided instead.",
+                m_buffer_->GetName(), m_item_type_->name ) )
 
-        SK_BREAK_RET_IF( sk::Severity::kGraphics | 20,
-            m_type_size_ != sizeof( Ty ), TEXT( "ERROR: Buffer {} is currently set to use types with size {}. But a type with size of {} was provided instead,", m_buffer_->GetName(), m_type_size_, sizeof( Ty ) ) )
+        SK_BREAK_RET_IF( sk::Severity::kGraphics | 20, m_type_size_ != sizeof( Ty ),
+            TEXT( "ERROR: Buffer {} is currently set to use types with size {}. But a type with size of {} was provided instead.",
+                m_buffer_->GetName(), m_type_size_, sizeof( Ty ) ) )
 
         m_buffer_->UpdateSeg( std::addressof( std::forward< Ty >( _element ) ), _index * m_type_size_, m_type_size_ );
     }
@@ -140,10 +148,7 @@ namespace sk::Graphics
         SK_ERR_IF( m_buffer_ == nullptr,
             "ERROR: Trying to set element in uninitialized buffer." )
 
-        SK_BREAK_RET_IF( sk::Severity::kGraphics | 50,
-            m_item_type_ == nullptr, TEXT( "WARNING: Buffer {} is currently set to not use reflected types.", m_buffer_->GetName() ) )
-
-        SK_BREAK_RET_IF( sk::Severity::kGraphics | 20, m_item_type_ != &kTypeInfo< Ty >,
+        SK_ERR_IF( m_item_type_ != nullptr && m_item_type_ != kTypeInfoP< Ty >,
             TEXT( "ERROR: Buffer {} is currently set to use type {}. But type {} was provided instead.",
                 m_buffer_->GetName(), m_item_type_->name, kTypeInfo< Ty >.name ) )
 

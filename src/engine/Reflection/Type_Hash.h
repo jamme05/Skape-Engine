@@ -16,6 +16,7 @@ namespace sk
         constexpr hash( void )
         : m_hash_( 0 )
         {} // Invalid type
+        
         constexpr hash( const str_hash& _str_hash )
         : m_hash_( _str_hash.value() )
         {

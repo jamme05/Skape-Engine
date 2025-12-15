@@ -36,6 +36,8 @@ namespace sk::Platform
         [[ nodiscard ]]
         cVector2u32 GetResolution () const override;
         float       GetAspectRatio() const override;
+        
+        auto GetWindow() const { return m_window_; }
 
         // Void type to skip include I guess
         static SDL_AppResult handle_event( void* _event );

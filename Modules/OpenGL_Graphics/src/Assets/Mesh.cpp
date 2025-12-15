@@ -13,7 +13,7 @@
 namespace sk::Assets
 {
     cMesh::cMesh()
-    : m_indices_( SK_SINGLE( Graphics::cDynamic_Buffer,  ) )
+    : m_indices_( sk::make_shared< Graphics::cDynamic_Buffer >() )
     {} // cMesh
 
     cMesh::~cMesh()
@@ -22,5 +22,10 @@ namespace sk::Assets
 
         for( const auto& buffer : m_vertex_buffers_ | std::views::values )
             SK_FREE( buffer );
+    }
+
+    bool cMesh::IsValid() const
+    {
+        
     }
 } // sk::Assets::

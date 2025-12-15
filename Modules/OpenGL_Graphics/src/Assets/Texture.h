@@ -14,8 +14,9 @@
 
 namespace sk::Assets
 {
-    // TODO: Create unsafe texture.
-
+    // TODO: Create a full unsafe texture class.
+    // The features of the unsafe texture will allow for pixel manipulations
+    // as well as uploading and downloading the texture
     class cUnsafe_Texture
     {
     public:
@@ -81,7 +82,7 @@ namespace sk::Assets
 
     sk_private:
         uint8_t         m_channels_;
-        cVector2u32       m_size_;
+        cVector2u32     m_size_;
         cUnsafe_Texture m_buffer_;
     };
     

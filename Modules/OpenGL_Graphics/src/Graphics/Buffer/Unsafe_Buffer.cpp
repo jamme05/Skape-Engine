@@ -127,10 +127,10 @@ namespace sk::Graphics
 
     void cUnsafe_Buffer::Clear()
     {
-        memset( m_data_, 0, m_byte_size_ );
+        std::memset( m_data_, 0, m_byte_size_ );
     } // Clear
 
-    void* cUnsafe_Buffer::Get()
+    auto cUnsafe_Buffer::Get() -> void*
     {
         return m_data_;
     } // Get
@@ -191,7 +191,7 @@ namespace sk::Graphics
         SK_BREAK_RET_IF( sk::Severity::kGraphics | 100,
             m_is_static_ && m_byte_size_ > 0, TEXT( "ERROR: The buffer is static." ) )
 
-        std::lock_guard lock( m_write_mtx_ );
+        std::scoped_lock lock( m_write_mtx_ );
 
         m_data_ = Memory::Tracker::realloc( m_data_, _size );
         m_byte_size_ = _size;
@@ -215,7 +215,7 @@ namespace sk::Graphics
         SK_BREAK_RET_IF( sk::Severity::kGraphics | 100, m_byte_size_ < ( _size + _offset ),
             TEXT( "ERROR: The segment reaches outside of the buffer." ) )
 
-        std::lock_guard lock( m_write_mtx_ );
+        std::scoped_lock lock( m_write_mtx_ );
         m_is_updated_.store( true );
         memcpy( static_cast< std::byte* >( m_data_ ) + _offset, _data, _size );
     } // UpdateSeg
@@ -225,7 +225,7 @@ namespace sk::Graphics
         SK_BREAK_RET_IF( sk::Severity::kGraphics | 100,
             m_is_static_, TEXT( "ERROR: The buffer is static." ) )
 
-        std::lock_guard lock( m_write_mtx_ );
+        std::scoped_lock lock( m_write_mtx_ );
         if( m_byte_size_ == _byte_size )
             return;
 
@@ -251,7 +251,7 @@ namespace sk::Graphics
         }
         else if( m_is_updated_ )
         {
-            std::lock_guard lock( m_write_mtx_ );
+            std::scoped_lock lock( m_write_mtx_ );
             if( m_byte_size_ == m_buffer_.size )
                 gl::glNamedBufferSubData( m_buffer_.buffer, 0,
                 static_cast< gl::GLsizeiptr >( m_byte_size_ ), m_data_ );
