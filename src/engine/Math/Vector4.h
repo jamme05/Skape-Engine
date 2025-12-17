@@ -207,5 +207,22 @@ namespace sk::Color
 	constexpr auto kBlue        = cColor{ 0.0f, 0.0f, 1.0f, 1.0f };
 } // sk::Color
 
+
+namespace sk
+{
+	// For a matrix multiplication valid vector4 use kSafeZero
+	static constexpr auto kZero     = cVector4f{ 0, 0, 0, 0 };
+	static constexpr auto kSafeZero = cVector4f{ 0, 0, 0, 1 };
+	static constexpr auto kOne      = cVector4f{ 1, 1, 1, 1 };
+
+	static constexpr auto kUp      = cVector4f{ 0, 1, 0, 1 };
+	static constexpr auto kRight   = cVector4f{ 1, 0, 0, 1 };
+	static constexpr auto kAt      = cVector4f{ 0, 0, 1, 1 };
+	static constexpr auto kForward = kAt;
+	static constexpr auto kDown    = -kUp;
+	static constexpr auto kLeft    = -kRight;
+	static constexpr auto kBack    = -kAt;
+} // sk::
+
 template< typename Ty >
 sk::Math::cVector4< Ty > operator*( const Ty& _l, const sk::Math::cVector4< Ty >& _r ){ return sk::Math::cVector4< Ty >{ _r.x * _l, _r.y * _l, _r.z * _l, _r.w * _l }; }

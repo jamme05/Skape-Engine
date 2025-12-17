@@ -22,12 +22,22 @@ namespace sk::Assets
         SK_CLASS_BODY( Mesh )
 
     public:
+        enum class eIndexType : uint8_t
+        {
+            k16,
+            k32
+        };
+        
         using buffer_t     = cShared_ptr< Graphics::cDynamic_Buffer >;
         using buffer_map_t = unordered_map< str_hash, buffer_t >;
 
-        cMesh();
+        cMesh( const std::string& _name );
         ~cMesh() override;
 
+        void CreateIndexBufferFrom( eIndexType _type, const void* _data, size_t _item_count );
+
+        [[ nodiscard ]] auto& GetName() const { return m_name_; }
+        
         [[ nodiscard ]] auto& GetIndexBuffer()       { return m_indices_; }
         [[ nodiscard ]] auto& GetIndexBuffer() const { return m_indices_; }
 
@@ -35,8 +45,11 @@ namespace sk::Assets
         [[ nodiscard ]] auto& GetVertexBuffers() const { return m_vertex_buffers_; }
 
         [[ nodiscard ]] bool  IsValid() const;
+
+        void test( int ){}
         
     private:
+        std::string  m_name_;
         buffer_t     m_indices_;
         buffer_map_t m_vertex_buffers_;
     };

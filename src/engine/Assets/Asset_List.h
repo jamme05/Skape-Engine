@@ -17,7 +17,7 @@
 namespace sk
 {
 	class cAsset;
-	class cPartialAsset;
+	class cAsset_Meta;
 	class cAsset_Manager;
 } // sk::
 
@@ -26,7 +26,7 @@ namespace sk::Assets
 	// A container for the newly imported assets.
 	class cAsset_List
 	{
-		typedef multimap< type_hash, cShared_ptr< cPartialAsset > > asset_map_t;
+		typedef multimap< type_hash, cShared_ptr< cAsset_Meta > > asset_map_t;
 		typedef map< type_hash, size_t >                     asset_counter_map_t;
 
 		class asset_iterator
@@ -34,8 +34,8 @@ namespace sk::Assets
 		public:
 			asset_iterator( const asset_map_t::const_iterator& _it ) : m_it( _it ){}
 
-			const cShared_ptr< cPartialAsset >& operator*() const { return m_it->second; }
-			operator cShared_ptr< cPartialAsset >        () const { return m_it->second; }
+			const cShared_ptr< cAsset_Meta >& operator*() const { return m_it->second; }
+			operator cShared_ptr< cAsset_Meta >        () const { return m_it->second; }
 
 			bool operator!=( const asset_iterator& _other ) const { return m_it != _other.m_it; }
 			bool operator==( const asset_iterator& _other ) const { return m_it == _other.m_it; }
@@ -88,7 +88,7 @@ namespace sk::Assets
 		} // Get_Asset_Of_Type
 
 		template< class Ty >
-		requires std::is_base_of_v< cPartialAsset, Ty >
+		requires std::is_base_of_v< cAsset_Meta, Ty >
 		std::vector< cShared_ptr< Ty > > Get_Assets_Of_Type( const int32_t _max_count = 0 )
 		{
 			std::scoped_lock lock( m_mtx );
@@ -118,8 +118,8 @@ namespace sk::Assets
 
 	protected:
 
-		void add_asset   ( const cShared_ptr< cPartialAsset >& _asset );
-		void remove_asset( const cShared_ptr< cPartialAsset >& _asset );
+		void add_asset   ( const cShared_ptr< cAsset_Meta >& _asset );
+		void remove_asset( const cShared_ptr< cAsset_Meta >& _asset );
 
 	private:
 		friend class sk::cAsset_Manager;

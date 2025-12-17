@@ -22,12 +22,14 @@ namespace sk::Graphics
         enum class eType : uint8_t
         {
             kInvalid,
+            
             kConstant,
             kIndex,
             kVertex,
-            kStructed,
+            kStructured,
         };
 
+        // TODO: Remove?
         enum class eAccess : uint8_t
         {
             kRead,
@@ -39,24 +41,41 @@ namespace sk::Graphics
     class iUnsafe_Buffer
     {
     public:
-        virtual ~iUnsafe_Buffer( void ) = default;
+        enum eFlags : uint8_t
+        {
+            kNone = 0,
+
+            kInitialized = 1 << 0,
+            kStatic      = 1 << 1,
+            kNormalized  = 1 << 2,
+        };
+
+        virtual ~iUnsafe_Buffer() = default;
+
+        virtual bool IsInitialized() const = 0;
+        virtual bool IsNormalized () const = 0;
+        virtual bool IsStatic     () const = 0;
 
         virtual void Destroy() = 0;
-        virtual void Clear() = 0;
-        virtual auto Get()       -> void* = 0;
-        virtual auto Get() const -> const void* = 0;
+        virtual void Clear  () = 0;
+
+        [[ nodiscard ]]
+        virtual auto Data() -> void * = 0;
+        [[ nodiscard ]]
+        virtual auto Data() const -> void * = 0;
+        
         /**
          * Will copy the active version of data from the Buffer to specified pointer.
          * @param _out Pointer to copy the data to.
          * @param _max_size Maximum allowed size. If 0 it'll use the buffers size. Default: 0
          */
-        virtual void   Read   ( void* _out,  size_t _max_size = 0 ) const = 0;
+        virtual void   Read   ( void* _out, size_t _max_size = 0 ) const = 0;
         /**
          * Will copy the data from the gpu to specified pointer.
          * @param _out Pointer to copy the data to.
          * @param _max_size Maximum allowed size. If 0 it'll use the buffers size. Default: 0
          */
-        virtual void   ReadRaw( void* _out,  size_t _max_size = 0 ) const = 0;
+        virtual void   ReadRaw( void* _out, size_t _max_size = 0 ) const = 0;
         /**
          * Update the data on the buffer.
          * @param _data Pointer to the data that is going to be copied to the buffer.
@@ -77,11 +96,9 @@ namespace sk::Graphics
         virtual void  Copy ( const iUnsafe_Buffer& _other ) = 0;
         virtual void  Steal( iUnsafe_Buffer&& _other ) noexcept = 0;
 
-        virtual void  Lock    ( void ) = 0;
-        virtual void  Unlock  ( void ) = 0;
-        [[ nodiscard ]]
-        virtual bool  IsLocked( void ) const = 0;
+        virtual void  Upload() = 0;
 
+        [[ nodiscard ]]
         virtual std::string GetName() const = 0;
     };
 } // sk::Graphics::

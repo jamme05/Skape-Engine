@@ -33,7 +33,7 @@ MAKE_STRUCT( TestStructNested,
 	M( TestStruct, Val2 ),
 )
 
-class cApp : public sk::cSingleton< cApp >, sk::Input::iListener
+class cApp : public sk::cSingleton< cApp >, public sk::Input::iListener, public sk::cShared_from_this< cApp >, public sk::Event::cHelper< cApp >
 {
 	bool m_running = true;
 
@@ -46,9 +46,11 @@ public:
 	void setRunning( const bool _running ){ m_running = _running; m_running_instance_ = m_running ? this : nullptr; }
 
 	sk::Input::response_t onInput( const uint32_t _type, const sk::Input::sEvent& _event ) override;
-
+	
 	void create ( void );
 	void run    ( void );
+	void test( sk::cAsset& ) const {}
+	void test1( int ) const {}
 
 	static void print_types( void );
 	static void custom_event( void );

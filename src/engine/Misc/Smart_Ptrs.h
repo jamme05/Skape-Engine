@@ -155,7 +155,7 @@ namespace sk
 
 	// Shared ptr using itself of the tracker. Use in case the class is humongous.
 	template< class Ty >
-	class cShared_ptr : public cPtr_base
+	class cShared_ptr : cPtr_base
 	{
 		template< class Fy >
 		friend class cShared_ptr;
@@ -300,7 +300,7 @@ namespace sk
 
 		// NOTE: USE WITH CARE, be sure that you know what you're doing.
 		template< class Ot >
-		requires ( std::is_base_of_v< Ty, Ot > || std::is_base_of_v< Ot, Ty > )
+		requires ( std::is_base_of_v< Ty, Ot > || std::is_base_of_v< Ot, Ty > || std::is_same_v< Ty, void > )
 		cShared_ptr< Ot > Cast( void )
 		{
 			cShared_ptr< Ot > other{};
@@ -313,7 +313,7 @@ namespace sk
 	};
 
 	template< class Ty >
-	class cShared_Ref : public cPtr_base // TODO: add usages.
+	class cShared_Ref : cPtr_base // TODO: add usages.
 	{
 		template< class Fy >
 		friend class cShared_ptr;
@@ -446,7 +446,7 @@ namespace sk
 	};
 
 	template< class Ty >
-	class cWeak_Ptr : public cPtr_base
+	class cWeak_Ptr : cPtr_base
 	{
 		template< class Fy >
 		friend class cShared_ptr;
@@ -476,13 +476,31 @@ namespace sk
 			m_data_ = _right.m_data_;
 			_right.m_data_ = nullptr;
 		} // cShared_ptr
-
+		
 		template< class Other, std::enable_if_t< std::is_base_of_v< Ty, Other > >... >
 		cWeak_Ptr( const cWeak_Ptr< Other >& _right )
 		{
 			m_data_ = _right.m_data;
 			inc_weak();
 		} // cShared_ptr
+
+		cWeak_Ptr( const cShared_ptr< Ty >& _right )
+		{
+			m_data_ = _right.m_data_;
+
+			if( m_data_ )
+				inc_weak();
+		}
+
+		template< class Ot >
+		requires std::is_base_of_v< Ty, Ot >
+		cWeak_Ptr( const cShared_ptr< Ot >& _right )
+		{
+			m_data_ = _right.m_data_;
+
+			if( m_data_ )
+				inc_weak();
+		}
 
 		cWeak_Ptr( const cPtr_base& _right )
 		{
@@ -575,6 +593,11 @@ namespace sk
 
 			return *this;
 		} // operator= (Copy)
+
+		[[ nodiscard ]] auto Lock() const
+		{
+			return cShared_ptr< Ty >( static_cast< const cPtr_base& >( this ) );
+		}
 
 		operator bool( void ) const { return is_valid(); }
 

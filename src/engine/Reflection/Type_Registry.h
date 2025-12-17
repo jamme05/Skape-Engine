@@ -10,16 +10,16 @@
 #error You aren't allowed to access the type registry directly. Include <Reflection/Types.h> instead.
 #endif // !SK_ALLOW_DIRECT_REGISTRY_ACCESS
 
-#include "Containers/Const/Array.h"
+#include <Containers/Const/Array.h>
 #include <Containers/Map.h>
 
-#include "Misc/Hashing.h"
-#include "Macros/Enum_Builder.h"
+#include <Misc/Hashing.h>
+#include <Macros/Enum_Builder.h>
 #include <Macros/Manipulation.h>
 
-#include "Type_Hash.h"
-#include "Containers/Const/Linked_Array.h"
-#include "Misc/Counter.h"
+#include <Reflection/Type_Hash.h>
+#include <Containers/Const/Linked_Array.h>
+#include <Misc/Counter.h>
 
 namespace sk
 {
@@ -244,9 +244,6 @@ namespace sk
         
     };
 
-    template< class Ty >
-    constexpr static auto& kTypeId = get_type_info< Ty >::kInfo;
-
     enum eArgumentError : uint8_t
     {
         kValid = 0, // The argument types are valid.
@@ -269,9 +266,6 @@ namespace sk
     // concept modless_reflected = kValidType< Ty >
     template< reflected Ty >
     constexpr auto& kTypeInfo = get_type_info< Ty >::kInfo;
-    
-    template< reflected Ty >
-    constexpr auto kTypeInfoP = &kTypeInfo< Ty >;
 
     template< class... Types >
     inline constexpr bool kValidTypes =  ( ... || kValidType< Types > );

@@ -42,6 +42,7 @@ namespace sk::Graphics
                 // kStructed
                 gl::GLenum::GL_SHADER_STORAGE_BUFFER, // https://www.khronos.org/opengl/wiki/Shader_Storage_Buffer_Object
             };
+            
             static constexpr gl::GLenum kAccessConverter[]
             {
                 gl::GLenum::GL_READ_ONLY,
@@ -50,8 +51,8 @@ namespace sk::Graphics
             };
         public:
             cUnsafe_Buffer();
-            cUnsafe_Buffer( std::string _name, size_t _byte_size, Buffer::eType _type, bool _is_static );
-            cUnsafe_Buffer( std::string _name, size_t _byte_size, gl::GLenum _type, bool _is_static );
+            cUnsafe_Buffer( std::string _name, size_t _byte_size, Buffer::eType _type, bool _is_normalized, bool _is_static );
+            cUnsafe_Buffer( std::string _name, size_t _byte_size, gl::GLenum _type, bool _is_normalized, bool _is_static );
             cUnsafe_Buffer( const cUnsafe_Buffer& _other );
             cUnsafe_Buffer( cUnsafe_Buffer&& _other ) noexcept;
 
@@ -60,12 +61,17 @@ namespace sk::Graphics
             cUnsafe_Buffer& operator=( const cUnsafe_Buffer& _other );
             cUnsafe_Buffer& operator=( cUnsafe_Buffer&& _other ) noexcept;
 
-            void   Destroy() override;
-            void   Clear  () override;
+            bool IsInitialized() const override;
+            bool IsNormalized () const override;
+            bool IsStatic     () const override;
+
+            void Destroy() override;
+            void Clear  () override;
 
             // Remove the raw get due to it avoiding all safety?
-            auto Get      ()       -> void* override;
-            auto Get      () const -> const void* override;
+            auto Data() -> void* override;
+            auto Data() const -> void* override;
+            
             void Read     ( void* _out, size_t _max_size = 0 ) const override;
             void ReadRaw  ( void* _out, size_t _max_size = 0 ) const override;
             void Update   ( const void* _data, size_t _size ) override;
@@ -73,10 +79,8 @@ namespace sk::Graphics
             [[ nodiscard ]]
             auto GetSize() const -> size_t override { return m_byte_size_; }
             void Resize ( size_t _byte_size ) override;
-            void Lock   () override;
-            void Unlock () override;
-            [[ nodiscard ]]
-            bool IsLocked() const override { return m_is_locked_; }
+            
+            void Upload  () override;
 
             void Copy ( const iUnsafe_Buffer& _other ) override;
             void Steal( iUnsafe_Buffer&& _other ) noexcept override;
@@ -87,14 +91,12 @@ namespace sk::Graphics
             [[ nodiscard ]]
             auto get_buffer() const { return m_buffer_; }
         private:
-            void   create();
-            void   copy( const cUnsafe_Buffer& _other );
+            void create();
+            void copy( const cUnsafe_Buffer& _other );
 
             // If the backup is in use.
-            std::atomic_bool m_is_locked_  = false;
+            uint16_t         m_flags_      = 0;
             std::atomic_bool m_is_updated_ = true;
-            bool m_is_static_;
-            bool m_is_initialized_ = false;
 
             sRaw_Buffer m_buffer_;
 
@@ -102,8 +104,6 @@ namespace sk::Graphics
             void*  m_data_ = nullptr;
 
             std::string m_name_;
-
-            std::mutex m_write_mtx_;
         };
     } // OpenGL::
 

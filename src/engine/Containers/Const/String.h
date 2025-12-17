@@ -284,7 +284,6 @@ namespace sk
             string< string_concat_size_helper< FStr.m_size, Strings.m_size... >::kSize > result;
             
             string_concat_helper< FStr, Strings... >( result.get() );
-            //std::copy_n( FStr.begin(), FStr.m_size, result.begin() );
             
             return result;
         }

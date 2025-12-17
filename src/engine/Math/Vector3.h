@@ -154,19 +154,5 @@ namespace sk::Math
 	} // Vector3::
 } // sk::Math::
 
-namespace sk
-{
-	static constexpr auto kZero    = cVector3i32{ 0, 0, 0 };
-	static constexpr auto kOne     = cVector3i32{ 1, 1, 1 };
-
-	static constexpr auto kUp      = cVector3i32{ 0, 1, 0 };
-	static constexpr auto kRight   = cVector3i32{ 1, 0, 0 };
-	static constexpr auto kAt      = cVector3i32{ 0, 0, 1 };
-	static constexpr auto kForward = kAt;
-	static constexpr auto kDown    = -kUp;
-	static constexpr auto kLeft    = -kRight;
-	static constexpr auto kBack    = -kAt;
-} // sk::
-
 template< typename Ty >
 sk::Math::cVector3< Ty > operator*( const Ty& _l, const sk::Math::cVector3< Ty >& _r ){ return sk::Math::cVector3< Ty >{ _r.x * _l, _r.y * _l, _r.z * _l }; }

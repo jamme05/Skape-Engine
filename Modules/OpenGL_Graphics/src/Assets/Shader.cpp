@@ -10,6 +10,7 @@
 
 #include <glbinding/gl/functions.h>
 
+#include "Graphics/Buffer/Dynamic_Buffer.h"
 #include "Math/Matrix3x3.h"
 
 namespace sk::Assets
@@ -67,25 +68,26 @@ namespace sk::Assets
             type_info_t sk_type;
             switch( type )
             {
-            case gl::GL_FLOAT:      sk_type = kTypeInfoP< float >;
-            case gl::GL_FLOAT_VEC2: sk_type = kTypeInfoP< cVector2f >;
-            case gl::GL_FLOAT_VEC3: sk_type = kTypeInfoP< cVector3f >;
-            case gl::GL_FLOAT_VEC4: sk_type = kTypeInfoP< cVector4f >;
+            case gl::GL_FLOAT:      sk_type = &kTypeInfo< float >;     break;
+            case gl::GL_FLOAT_VEC2: sk_type = &kTypeInfo< cVector2f >; break;
+            case gl::GL_FLOAT_VEC3: sk_type = &kTypeInfo< cVector3f >; break;
+            case gl::GL_FLOAT_VEC4: sk_type = &kTypeInfo< cVector4f >; break;
                 
-            case gl::GL_INT:       sk_type = kTypeInfoP< int32_t >;
-            case gl::GL_INT_VEC2:  sk_type = kTypeInfoP< cVector2i32 >;
-            case gl::GL_INT_VEC3:  sk_type = kTypeInfoP< cVector3i32 >;
-            case gl::GL_INT_VEC4:  sk_type = kTypeInfoP< cVector4i32 >;
+            case gl::GL_INT:       sk_type = &kTypeInfo< int32_t >;     break;
+            case gl::GL_INT_VEC2:  sk_type = &kTypeInfo< cVector2i32 >; break;
+            case gl::GL_INT_VEC3:  sk_type = &kTypeInfo< cVector3i32 >; break;
+            case gl::GL_INT_VEC4:  sk_type = &kTypeInfo< cVector4i32 >; break;
                 
-            case gl::GL_UNSIGNED_INT:      sk_type = kTypeInfoP< uint32_t >;
-            case gl::GL_UNSIGNED_INT_VEC2: sk_type = kTypeInfoP< cVector2u32 >;
-            case gl::GL_UNSIGNED_INT_VEC3: sk_type = kTypeInfoP< cVector3u32 >;
-            case gl::GL_UNSIGNED_INT_VEC4: sk_type = kTypeInfoP< cVector4u32 >;
+            case gl::GL_UNSIGNED_INT:      sk_type = &kTypeInfo< uint32_t >;    break;
+            case gl::GL_UNSIGNED_INT_VEC2: sk_type = &kTypeInfo< cVector2u32 >; break;
+            case gl::GL_UNSIGNED_INT_VEC3: sk_type = &kTypeInfo< cVector3u32 >; break;
+            case gl::GL_UNSIGNED_INT_VEC4: sk_type = &kTypeInfo< cVector4u32 >; break;
                 
-            case gl::GL_FLOAT_MAT2: sk_type = kTypeInfoP< Math::cMatrix< 2, 2, float > >;
-            case gl::GL_FLOAT_MAT3: sk_type = kTypeInfoP< Math::cMatrix3x3f >;
-            case gl::GL_FLOAT_MAT4: sk_type = kTypeInfoP< cMatrix4x4f >;
-            default: sk_type = nullptr;
+            case gl::GL_FLOAT_MAT2: sk_type = &kTypeInfo< Math::cMatrix< 2, 2, float > >; break;
+            case gl::GL_FLOAT_MAT3: sk_type = &kTypeInfo< Math::cMatrix3x3f >;            break;
+            case gl::GL_FLOAT_MAT4: sk_type = &kTypeInfo< cMatrix4x4f >;                  break;
+                
+            default: sk_type = nullptr; break;
             }
             
             SK_ERR_IF( sk_type == nullptr,
@@ -159,7 +161,7 @@ namespace sk::Assets
         SK_FREE( b_name_buffer );
     }
 
-    cShader::cShader_Reflection::sUniform cShader::cShader_Reflection::get_uniform( const gl::GLuint _index )
+    cShader::cShader_Reflection::sUniform cShader::cShader_Reflection::get_uniform( const gl::GLuint _index ) const
     {
         gl::GLsizei name_length;
         gl::GLsizei size;

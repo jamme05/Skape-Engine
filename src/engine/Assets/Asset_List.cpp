@@ -8,7 +8,7 @@
 
 #include "Assets/Asset.h"
 
-#define GUARD std::lock_guard lock( m_mtx );
+#define GUARD std::scoped_lock lock( m_mtx );
 
 namespace sk::Assets
 {
@@ -60,13 +60,13 @@ namespace sk::Assets
 		return *this;
 	} // operator+= ( Move )
 
-	void cAsset_List::add_asset( const cShared_ptr< cPartialAsset >& _asset )
+	void cAsset_List::add_asset( const cShared_ptr< cAsset_Meta >& _asset )
 	{
 		GUARD
 		m_assets.insert( { _asset->getClassType(), _asset } );
 	} // add_asset
 
-	void cAsset_List::remove_asset( const cShared_ptr<cPartialAsset>& _asset )
+	void cAsset_List::remove_asset( const cShared_ptr<cAsset_Meta>& _asset )
 	{
 		GUARD
 		auto [ fst, snd ] = m_assets.equal_range( _asset->getClassType() );

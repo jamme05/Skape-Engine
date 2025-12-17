@@ -9,70 +9,135 @@
 #include <unordered_map>
 #include <filesystem>
 
-#include "Memory/Tracker/Tracker.h"
-#include "Reflection/RuntimeClass.h"
-#include "Misc/Hashing.h"
-#include "Misc/Smart_Ptrs.h"
-#include "Misc/StringID.h"
-#include "Misc/UUID.h"
+#include <Memory/Tracker/Tracker.h>
+#include <Reflection/RuntimeClass.h>
+#include <Misc/Hashing.h>
+#include <Misc/Smart_Ptrs.h>
+#include <Misc/StringID.h>
+#include <Misc/UUID.h>
+
+#include <Scene/Managers/EventManager.h>
 
 namespace sk
 {
 	class cAsset_Manager;
+	class cAsset_Worker;
+	class cAsset;
 
 	// Remember to update macro if changing this.
 	constexpr auto kInvalid_Asset_Id = std::numeric_limits< uint64_t >::max();
 
 	// Base Asset interface
-	SK_CLASS( PartialAsset )
+	SK_CLASS( Asset_Meta ), public cShared_from_this< cAsset_Meta >
 	{
-		SK_CLASS_BODY( PartialAsset )
+		SK_CLASS_BODY( Asset_Meta )
+
+		friend class cAsset_Manager;
+		friend class cAsset_Worker;
+		friend class cAsset_Ref;
 	public:
+		enum class eEventType : uint8_t
+		{
+			kUnload,
+			kLoaded,
+			kUpdated
+		};
+
+		enum eFlags : uint8_t
+		{
+			kNone     = 0,
+			
+			// If the asset is loaded.
+			kLoaded   = 1 << 0,
+			// If the asset is currently loading
+			kLoading  = 1 << 1,
+			// If the asset has a metadata file associated with it.
+			kMetadata = 1 << 2,
+		};
+
+		using dispatcher_t = Event::cEventDispatcher< cAsset_Meta&, void*, eEventType >;
 		
-		explicit cPartialAsset( std::string _name )
-		: m_name_( std::move( _name ) )
+		explicit cAsset_Meta( const std::string_view _name )
+		: m_name_{ _name }
 		{ }
-		~cPartialAsset() override = default;
+		~cAsset_Meta() override = default;
 
 		auto& GetName() const { return m_name_; }
 		auto& GetPath() const { return m_path_; }
-
+		
 		// Saves any changes made to the asset.
-		virtual void Save  () = 0;
-		// Loads and prepares the asset for use.
-		virtual void Load  () = 0;
-		// Unloads the asset.
-		virtual void Unload() = 0;
+		void Save  ();
+		// Gets weather or not the asset is currently loading
+		bool IsLoading() const;
+		// Gets weather or not the asset is loaded
+		bool IsLoaded() const;
+		// Gets weather or not the asset has metadata
+		bool HasMetadata() const;
+		
+		// Gets the asset
+		auto GetAsset() const -> cAsset*;
+		// Gets the asset if it is of a certain type
+		template< reflected Ty >
+		auto GetAsset() -> Ty*;
+		// Gets the flags this asset has. Check eFlags for details.
+		auto GetFlags() const { return m_flags_; }
+
+		// Adds a listener to get events on when the asset changes.
+		// NOTE: Listeners do not load or unload the asset, and are only used to receive information.
+		size_t AddListener( const dispatcher_t::event_t& _listener );
+
+		// Adds a listener to get events on when the asset changes.
+		// NOTE: Listeners do not load or unload the asset, and are only used to receive information.
+		size_t AddListener( const dispatcher_t::weak_event_t& _listener );
+
+		// Removes a listener from getting events on when the asset changes.
+		// NOTE: Listeners do not load or unload the asset, and are only used to receive information.
+		void RemoveListener( const size_t _listener_id );
+
+		// Removes a listener from getting events on when the asset changes.
+		// NOTE: Listeners do not load or unload the asset, and are only used to receive information.
+		void RemoveListener( const dispatcher_t::event_t& _listener );
+
+		// Removes a listener from getting events on when the asset changes.
+		// NOTE: Listeners do not load or unload the asset, and are only used to receive information.
+		void RemoveListener( const dispatcher_t::weak_event_t& _listener );
 
 	private:
-		cUUID m_uuid_ = cUUID::kInvalid;
+		// Requests a asset loader to post a asset loaded event to the specified listener.
+		void dispatch_if_loaded( const dispatcher_t::listener_t& _listener );
 
-		void setPath( const std::filesystem::path& _path ){ m_path_ = _path.string(); }
-
-	protected:
+		cUUID     m_uuid_ = cUUID::kInvalid;
 		cStringID m_name_ = {};
 		cStringID m_path_ = {};
+		
+		cAsset*   m_asset_ = nullptr;
 
-	friend class cAsset_Manager;
+		std::atomic_uint32_t m_asset_refs_;
+		uint32_t             m_flags_ = 0;
+
+		std::mutex   m_dispatcher_mutex_;
+		dispatcher_t m_dispatcher_;
+
+		void setPath( const std::filesystem::path& _path );
 	};
 
-	namespace PartialAsset
+	namespace Asset_Meta
 	{
-		using class_type = cPartialAsset;
+		using class_type = cAsset_Meta;
 	} // Asset
 	
 	SK_CLASS( Asset ), public cShared_from_this< cAsset >
 	{
 		SK_CLASS_BODY( Asset )
 	public:
-		auto& GetAsset() const
+		auto& GetMeta() const
 		{
 			return m_asset_;
 		}
 	protected:
 		cAsset() = default;
 	private:
-		cWeak_Ptr< cPartialAsset > m_asset_;
+		cWeak_Ptr< cAsset_Meta > m_asset_;
 	};
 
 	template< class In, class Out >
@@ -80,9 +145,18 @@ namespace sk
 	template< class Ty >
 	static constexpr bool is_valid_asset_v = std::is_base_of_v< cAsset, Ty >;
 
+	template< reflected Ty >
+	auto cAsset_Meta::GetAsset() -> Ty*
+	{
+		if( m_asset_->getClass().isDerivedFrom( Ty::getStaticClass() ) )
+			return m_asset_;
+
+		return nullptr;
+	}
+
 } // sk::
 
-DECLARE_CLASS( sk::PartialAsset )
+DECLARE_CLASS( sk::Asset_Meta )
 DECLARE_CLASS( sk::Asset )
 
 // Initializes data required for cAsset.

@@ -33,14 +33,6 @@ REGISTER_TYPE( sk::cVector4u32, "Vector 4 ( unsigned int )" )
 REGISTER_TYPE( sk::cMatrix4x4f, "Matrix 4x4 ( float )" )
 REGISTER_TYPE( sk::cMatrix4x4d, "Matrix 4x4 ( double )" )
 
-void t()
-{
-	static constexpr auto t0 = sk::to_string( -1 );
-	static constexpr auto t1 = sk::string( " is less than than " );
-	static constexpr auto t2 = sk::to_string( 11 );
-	static constexpr auto e0 = sk::str::concat< t0, t1, t2 >();
-}
-
 template< class Ty, size_t R, size_t C >
 struct sk::get_type_info< sk::Math::cMatrix< R, C, Ty > > : sk::template_type_info
 {

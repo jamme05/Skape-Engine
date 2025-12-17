@@ -95,7 +95,7 @@ namespace sk::Assets
             void get_uniforms();
             void get_blocks();
             
-            sUniform get_uniform( gl::GLuint _index );
+            sUniform get_uniform( gl::GLuint _index ) const;
             
             void cleanup();
             

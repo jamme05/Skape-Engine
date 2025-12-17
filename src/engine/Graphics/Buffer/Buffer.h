@@ -101,13 +101,13 @@ namespace sk::Graphics
     template< class Ty, Buffer::eType Type >
     auto cBuffer< Ty, Type >::data()->Ty*
     {
-        return static_cast< Ty* >( m_buffer_.Get() );
+        return static_cast< Ty* >( m_buffer_.Data() );
     } // data
 
     template< class Ty, Buffer::eType Type >
     auto cBuffer< Ty, Type >::data() const -> const Ty*
     {
-        return static_cast< const Ty* >( m_buffer_.Get() );
+        return static_cast< const Ty* >( m_buffer_.LockData() );
     } // data
 
     template< class Ty, Buffer::eType Type >

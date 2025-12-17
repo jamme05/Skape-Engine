@@ -32,6 +32,8 @@
 
 #include <Graphics/Renderer.h>
 
+#include "Assets/AssetRef.h"
+
 cApp* cApp::m_running_instance_ = nullptr;
 
 cApp::cApp( void )
@@ -48,7 +50,12 @@ cApp::cApp( void )
 
 	sk::cAsset_Manager::init();
 	// TODO: Move renderer initialization elsewhere.
+#if defined( SK_GRAPHICS_OPENGL )
+	sk::Graphics::cGLRenderer::init();
+#elif defined( SK_GRAPHICS_VULKAN ) // SK_GRAPHICS_OPENGL
 	sk::Graphics::cVKRenderer::init();
+#endif // SK_GRAPHICS_VULKAN
+	
 	sk::Graphics::InitRenderer();
 
 	m_window_context = sk::make_shared< sk::Graphics::Rendering::cWindow_Context >( m_main_window->GetResolution() );
@@ -74,8 +81,8 @@ sk::Input::response_t cApp::onInput( const uint32_t _type, const sk::Input::sEve
 void cApp::create( void )
 {
 	//auto list   = sk::cAssetManager::get().loadFolder( "data/" );
-	auto list_1 = sk::cAsset_Manager::get().loadFile( "data/humanforscale.glb" );
-	auto list_2 = sk::cAsset_Manager::get().loadFile( "data/heheToiletwithtextures.glb" );
+	auto list_1 = sk::cAsset_Manager::get().loadFileMeta( "data/humanforscale.glb" );
+	auto list_2 = sk::cAsset_Manager::get().loadFileMeta( "data/heheToiletwithtextures.glb" );
 
 	//sk::cAssetManager::get().loadFile( "data/mushroom.glb" );
 	
@@ -88,12 +95,66 @@ void cApp::create( void )
 
 	m_scene = sk::make_shared< sk::cScene >();
 	m_scene->create_object< sk::Object::cCameraFlight >( "Camera Free Flight" )->setAsMain();
+
+	sk::cAsset_Ref test = sk::cAsset_Manager::get().GetAssetRefByName( "Mesh", nullptr );
+
+	std::function< void( int ) > test69 = []( int ){ return true; };
+	
+	// Don't use lambdas for this. Here it's only shown as a quick example and would probably break in practice
+	test.on_asset_loaded += CreateEvent( []( bool, const sk::cAsset& _asset )
+	{
+		std::println( "Asset: {} loaded", _asset.GetMeta()->GetName() );
+	} );
+
+	auto event = CreateEvent( []( const sk::cAsset& _asset )
+	{
+		std::println( "Asset: {} loaded", _asset.GetMeta()->GetName() );
+	} );
+
+	auto test_asset = sk::make_shared< sk::Assets::cMesh >( "Some name" );
+
+	sk::Event::cEventDispatcher< int > example_dispatcher { test_asset };
+	example_dispatcher += sk::Assets::cMesh::test;
+	example_dispatcher -= sk::Assets::cMesh::test;
+	example_dispatcher.add_listener( CreateEvent( sk::Assets::cMesh::test ) );
+	example_dispatcher.remove_listener( CreateEvent( sk::Assets::cMesh::test ) );
+	
+	auto t = []( const sk::cAsset& _asset )
+	{
+		std::println( "Asset: {} loaded", _asset.GetMeta()->GetName() );
+	};
+	auto t3 = sk::Event::sEvent{ []( const sk::cAsset& _asset )
+	{
+		std::println( "Asset: {} loaded", _asset.GetMeta()->GetName() );
+	} };
+	
+	auto test7 = sk::Event::sEvent( t );
+	using test5 = sk::Event::function_type_t< &decltype(t)::operator() >;
+	auto t2 = std::bind_front( t );
+	
+	test.on_asset_updated += sk::CreateEvent( this, []( const sk::cAsset& _asset )
+	{
+		std::println( "Asset: {} updated", _asset.GetMeta()->GetName() );
+	} );
+	test.on_asset_unloaded += []( bool, const sk::cAsset_Meta& _meta )
+	{
+		std::println( "Asset: {} unloaded", _meta.GetName() );
+	};
+
+	test.on_asset_unloaded += CreateEvent( []( bool, const sk::cAsset_Meta& _meta )
+	{
+		
+	} );
+
+	auto test4 = std::function< void() >{ std::bind_front( &create, this ) };
+	sk::Event::sEvent test3 = test4;
+
+	auto test2 = sk::CreateEvent( this, create );
+	
 	//auto mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 1" );
 	//mesh->getTransform().getPosition() = { -10.0f, 0.0f, 0.0f };
 	//mesh->getTransform().update();
 	//mesh->addComponent< sk::Object::Components::cMesh >( cube );
-
-	sk::Assets::cMesh test_mesh{};
 
 	auto mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 2" );
 	mesh->GetTransform().getPosition() = { -2.0f, 0.0f, 0.0f };
