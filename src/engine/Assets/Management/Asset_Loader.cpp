@@ -6,132 +6,70 @@
 
 #include "Asset_Loader.h"
 
-sk::cAsset_Worker::cAsset_Worker()
+#include "Asset_Job_Manager.h"
+
+namespace
 {
-    
+    sk::Assets::Jobs::cAsset_Job_Manager* manager = nullptr;
+} // ::
+
+sk::Assets::Jobs::cAsset_Worker::cAsset_Worker()
+{
+    if( manager == nullptr )
+        manager = cAsset_Job_Manager::getPtr();
 }
 
-void sk::cAsset_Worker::worker( cAsset_Worker* _loader )
+void sk::Assets::Jobs::cAsset_Worker::worker( const cAsset_Worker* _loader )
 {
     auto& self = *_loader;
 
-    std::list< sTask > tasks;
     while( self.m_working_ )
     {
-        std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) );
-
-        if( self.m_queue_size_.load() == 0 )
-            continue;
-
-        self.m_queue_locked_.wait( true );
-        self.m_queue_locked_.store( true );
-
-        tasks.swap( self.m_queue_ );
-
-        self.m_queue_locked_.store( false );
-        self.m_queue_locked_.notify_one();
-
-        for( auto& task : tasks )
-            do_work( self, task );
-        
-        tasks.clear();
+        if( auto task = manager->WaitForTask(); task.type != eJobType::kNone )
+            do_work( task );
     }
 }
 
-void sk::cAsset_Worker::do_work( cAsset_Worker& _self, sTask& _task )
+void sk::Assets::Jobs::cAsset_Worker::do_work( const sTask& _work )
 {
-    switch( _task.type )
-    {
+    switch( _work.type ) {
+    case eJobType::kNone: break;
     case eJobType::kLoad:
-    {
-        auto partial_asset = _task.info.asset_task.partial.Cast< cAssetMeta >();
-        auto path_to_load = partial_asset->GetPath();
-
-        const auto extension_hash = str_hash( std::filesystem::path{ path_to_load.string() }.extension() );
-
-        const auto callback_pair = _self.m_extension_map_.find( extension_hash );
-
-        callback_pair->second( *partial_asset, cAsset_Manager::eLoadTask::kLoadAsset );
-    }
-    break;
+        load_asset( *reinterpret_cast< sAssetTask* >( _work.data ), false );
+        break;
     case eJobType::kUnload:
-    {
-        auto partial_asset = _task.info.asset_task.partial.Cast< cAssetMeta >();
-
-        SK_FREE( partial_asset->m_asset_ );
-        partial_asset->m_asset_ = nullptr;
-    }
-    break;
+        unload_asset( *reinterpret_cast< sAssetTask* >( _work.data ) );
+        break;
     case eJobType::kRefresh:
-    {
-        
-    }
-    break;
+        load_asset( *reinterpret_cast< sAssetTask* >( _work.data ), true );
+        break;
     case eJobType::kPushEvent:
+        push_event( *reinterpret_cast< sListenerTask* >( _work.data ) );
+        break;
+    }
+}
+
+void sk::Assets::Jobs::cAsset_Worker::load_asset( sAssetTask& _task, const bool _refresh )
+{
+    const auto loader_task = _refresh ? cAsset_Manager::eAssetTask::kRefreshAsset : cAsset_Manager::eAssetTask::kLoadAsset;
+    auto assets = _task.loader( *_task.partial, loader_task );
+
+    
+}
+
+void sk::Assets::Jobs::cAsset_Worker::unload_asset( sAssetTask& _task )
+{
+    _task.affected_assets += _task.loader( *_task.partial, cAsset_Manager::eAssetTask::kUnloadAsset );
+
+    for( auto& asset : _task.affected_assets )
     {
-        
-    }
-    break;
-    case eJobType::kUpdateExtensions:
-    {
-        _self.m_extension_map_.swap( _self.m_new_extension_map_ );
-    }
-    break;
-case eJobType::kPushEventWeak:
-    break;
+        SK_FREE( asset->m_asset_ );
+        asset->m_asset_ = nullptr;
     }
 }
 
-
-void sk::cAsset_Worker::AddAssetTask( const eJobType _type, const cShared_ptr< cAssetMeta >& _asset )
+void sk::Assets::Jobs::cAsset_Worker::push_event( sListenerTask& _task )
 {
-    auto new_task = sTask{};
-    new_task.type = _type;
-    
-    new_task.info.asset_task.partial = _asset;
-
-    push_task( std::move( new_task ) );
+    _task.event( *_task.partial, cAsset_Meta::eEventType::kLoaded );
 }
 
-void sk::cAsset_Worker::AddListenerEvent( const partial_t& _asset, const listener_t& _listener )
-{
-    auto new_task = sTask{};
-    new_task.type = eJobType::kPushEvent;
-    
-    new_task.info.listener_task.partial          = _asset;
-    new_task.info.listener_task.event.void_event = _listener;
-
-    push_task( std::move( new_task ) );
-}
-
-void sk::cAsset_Worker::AddListenerEvent( const partial_t& _asset, const bool_listener_t& _listener )
-{
-    auto new_task = sTask{};
-    new_task.type = eJobType::kPushEventWeak;
-    
-    new_task.info.listener_task.partial          = _asset;
-    new_task.info.listener_task.event.void_event = _listener;
-
-    push_task( std::move( new_task ) );
-}
-
-void sk::cAsset_Worker::UpdateExtensions( const unordered_map< str_hash, cAsset_Manager::load_file_func_t >& _new_map )
-{
-    auto new_task = sTask{};
-    new_task.type = eJobType::kUpdateExtensions;
-
-    m_new_extension_map_ = _new_map;
-
-    push_task( std::move( new_task ) );
-}
-
-void sk::cAsset_Worker::push_task( sTask&& _task )
-{
-    m_queue_locked_.wait( true );
-    
-    m_queue_locked_.store( true );
-    m_queue_.emplace_back( std::move( _task ) );
-    
-    m_queue_locked_.store( false );
-    m_queue_locked_.notify_one();
-}

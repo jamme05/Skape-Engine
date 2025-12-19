@@ -20,7 +20,8 @@ namespace sk
 
 namespace sk
 {
-    class cAsset_Ref: Event::cHelper< cAsset_Ref >
+    // Allows manual loading and unloading of the asset.
+    class cAsset_Ptr : Event::cHelper< cAsset_Ptr >
     {
         friend class cAsset_Manager;
         
@@ -31,14 +32,14 @@ namespace sk
         using update_dispatcher_t = Event::cDispatcherProxy< cAsset& >;
         using unload_dispatcher_t = Event::cDispatcherProxy< bool, cAsset_Meta& >;
 
-        cAsset_Ref() = default;
-        explicit cAsset_Ref( const cShared_ptr< cAsset_Meta >& _meta, const cWeak_Ptr< iClass >& _self = nullptr );
-        cAsset_Ref( const cAsset_Ref& _other, const cWeak_Ptr< iClass >& _self = nullptr );
-        cAsset_Ref( cAsset_Ref&& _other ) noexcept;
-        ~cAsset_Ref();
+        cAsset_Ptr() = default;
+        explicit cAsset_Ptr( const cShared_ptr< cAsset_Meta >& _meta, const cWeak_Ptr< iClass >& _self = nullptr );
+        cAsset_Ptr( const cAsset_Ptr& _other, const cWeak_Ptr< iClass >& _self = nullptr );
+        cAsset_Ptr( cAsset_Ptr&& _other ) noexcept;
+        ~cAsset_Ptr();
 
-        cAsset_Ref& operator=( const cAsset_Ref& _other );
-        cAsset_Ref& operator=( cAsset_Ref&& _other ) noexcept;
+        cAsset_Ptr& operator=( const cAsset_Ptr& _other );
+        cAsset_Ptr& operator=( cAsset_Ptr&& _other ) noexcept;
 
         [[ nodiscard ]] auto GetAsset() const -> cAsset*;
         [[ nodiscard ]] bool IsLoaded() const;
@@ -60,12 +61,11 @@ namespace sk
     private:
         using meta_t = cWeak_Ptr< cAsset_Meta >;
         using self_t = cWeak_Ptr< iClass >;
-
-        auto get_source() const -> const void*;
         
         void validate   () const;
         void subscribe  ();
         void unsubscribe();
+        
         void on_asset_event( cAsset_Meta& _meta, const void* _source, cAsset_Meta::eEventType _event );
 
         self_t  m_self_        = nullptr;

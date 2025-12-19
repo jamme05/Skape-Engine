@@ -55,6 +55,10 @@ function CMakeBuilder( dependency, cmake_path, build_config )
     os.chdir( return_path )
 end
 
+function CommonEngineIncludeDirs()
+    return { "src/engine", "external/fastgltf/include", "external/stb", "external/fastgltf/deps/" }
+end
+
 Load_Modules()
 
 local root_build_dir = "./Build/Project/"
@@ -104,7 +108,7 @@ project "Framework"
     links { "Engine" }
 
     Get_Module_Includes()
-    includedirs { "src/engine", "src/framework", "external/fastgltf/include",  "external/stb" }
+    includedirs { "src/framework", CommonEngineIncludeDirs() }
 
 project "Startup"
     kind "WindowedApp"
@@ -119,7 +123,7 @@ project "Startup"
     files { "src/startup/main.cpp" }
 
     Get_Module_Includes()
-    includedirs { "src/engine", "src/framework", "external/fastgltf/include", "external/stb" }
+    includedirs { "src/framework", CommonEngineIncludeDirs() }
 
 group "Skape"
 project "Engine"
@@ -134,7 +138,7 @@ project "Engine"
     files { "src/engine/**.hpp", "src/engine/**.cpp", "src/engine/**.h" }
 
     Get_Module_Includes()
-    includedirs { "src/engine", "external/fastgltf/include", "external/stb" }
+    includedirs { CommonEngineIncludeDirs() }
 
 group "Modules"
     CreateModules()

@@ -7,7 +7,10 @@
 
 #pragma once
 
+#include <fastgltf/core.hpp>
+
 #include <Assets/Asset.h>
+#include <Assets/Asset_List.h>
 
 #include <Containers/Map.h>
 #include <Containers/Vector.h>
@@ -15,9 +18,6 @@
 #include <Misc/Singleton.h>
 #include <Misc/Smart_Ptrs.h>
 
-#include <fastgltf/core.hpp>
-
-#include <Assets/Asset_List.h>
 
 namespace sk
 {
@@ -92,65 +92,76 @@ namespace sk
 		  * @param _reload 
 		  * @return 
 		  */
-		auto loadFolderMeta( const std::filesystem::path& _path, const bool _recursive = true, const bool _reload = false ) -> Assets::cAsset_List;
-		auto loadFileMeta  ( const std::filesystem::path& _path, const bool _reload = false ) -> Assets::cAsset_List;
+		auto loadFolder( const std::filesystem::path& _path, const bool _recursive = true, const bool _reload = false ) -> Assets::cAsset_List;
+		auto loadFile  ( const std::filesystem::path& _path, const bool _reload = false ) -> Assets::cAsset_List;
 
 		void RequestLoadAsset  ( const cAsset_Meta& _partial );
 		void RequestUnloadAsset( const cAsset_Meta& _partial, bool _force = false );
-		auto GetAssetRefByName ( const str_hash& _name_hash, const cShared_ptr< iClass >& _self, bool _load_asset = true )
-			-> cAsset_Ref;
-		auto GetAssetRefByPath ( const str_hash& _path_hash, const cShared_ptr< iClass >& _self, bool _load_asset = true )
-			-> cAsset_Ref;
-		auto GetAssetRef       ( const cAsset_Meta& _partial, const cShared_ptr< iClass >& _self, bool _load_asset = true )
-			-> cAsset_Ref;
+		auto GetAssetPtrByName ( const str_hash& _name_hash, const cShared_ptr< iClass >& _self, bool _load_asset = true )
+			-> cAsset_Ptr;
+		auto GetAssetPtrByPath ( const str_hash& _path_hash, const cShared_ptr< iClass >& _self, bool _load_asset = true )
+			-> cAsset_Ptr;
+		auto GetAssetPtr       ( const cAsset_Meta& _partial, const cShared_ptr< iClass >& _self, bool _load_asset = true )
+			-> cAsset_Ptr;
 
 		static auto getAbsolutePath ( const std::filesystem::path& _path ) -> std::filesystem::path;
 		static void makeAbsolutePath(       std::filesystem::path& _path );
 
-		enum class eLoadTask : uint8_t
+		enum class eAssetTask : uint8_t
 		{
-			kLoadPartial,
-			kLoadAsset
+			kLoadMeta,
+			kLoadAsset,
+			kRefreshAsset,
+			kUnloadAsset,
 		};
 
-		using load_file_func_t = std::function< Assets::cAsset_List( const cAsset_Meta&, eLoadTask ) >;
+		using load_file_func_t = std::function< void( const std::filesystem::path&, Assets::cAsset_List&, eAssetTask ) >;
 
 		void AddFileLoader( const std::vector< str_hash >& _extensions, const load_file_func_t& _function );
 	
 	private:
-		typedef unordered_map< hash< cUUID >, cShared_ptr< cAsset_Meta > > id_to_asset_map_t;
-		typedef multimap< str_hash, cShared_ptr< cAsset_Meta > >           str_to_asset_map_t;
-		typedef unordered_map< str_hash, load_file_func_t >               extension_loader_map_t;
-		typedef extension_loader_map_t::value_type                        extension_map_entry_t;
-		typedef vector< cAsset_Worker >                                   loaders_vector_t;
+		struct sRef_Info
+		{
+			using referrer_set_t = std::unordered_multiset< const void* >;
+			referrer_set_t referrers;
+			
+		};
+
+		using id_to_asset_map_t      = unordered_map< hash< cUUID >, cShared_ptr< cAsset_Meta > >;
+		using str_to_asset_map_t     = unordered_multimap< str_hash, cShared_ptr< cAsset_Meta > >;
+		using path_to_ref_map_t      = unordered_map< str_hash, sRef_Info >;
+		using extension_loader_map_t = unordered_map< str_hash, load_file_func_t >;
+		using extension_map_entry_t  = extension_loader_map_t::value_type;
+
+		void addPathReferrer   ( const str_hash& _path_hash, const void* _referrer );
+		void removePathReferrer( const str_hash& _path_hash, const void* _referrer );
 		
-		static auto loadGltfFile     ( const cAsset_Meta& _partial_asset, eLoadTask _load_task     ) -> Assets::cAsset_List;
-		static auto handleGltfMesh   ( const fastgltf::Asset& _asset, fastgltf::Mesh& _mesh       ) -> Assets::cAsset_List;
-		static auto handleGltfTexture( const fastgltf::Asset& _asset, fastgltf::Texture& _texture ) -> cShared_ptr< cAsset_Meta >;
+		static void loadGltfFile     ( const std::filesystem::path& _path, Assets::cAsset_List& _asset_metas, eAssetTask _load_task );
+		static auto loadGltfMeshMeta ( const fastgltf::Mesh& _mesh, size_t _index ) -> cShared_ptr< cAsset_Meta >;
+		static auto loadGltfMesh     ( const cAsset_Meta& _meta, const fastgltf::Asset& _asset, fastgltf::Mesh& _mesh,       eAssetTask _task ) -> cShared_ptr< cAsset_Meta >;
+		static auto handleGltfTexture( const fastgltf::Asset& _asset, fastgltf::Texture& _texture, eAssetTask _task ) -> cShared_ptr< cAsset_Meta >;
 
-		static auto loadPngFile      ( const cAsset_Meta& _path, eLoadTask _load_task ) -> Assets::cAsset_List;
+		static void loadPngFile      ( const std::filesystem::path& _path, Assets::cAsset_List& _assets, eAssetTask _load_task );
 
-		void pushAssetLoadJob  ( const cShared_ptr< cAsset_Meta >& _meta, bool _reload );
-		void pushAssetUnloadJob( const cShared_ptr< cAsset_Meta >& _meta );
-		void pushNewListenerJob( const cShared_ptr< cAsset_Meta >& _meta, const cAsset_Meta::dispatcher_t::listener_t& _listener );
+		void requestAssetLoadJob  ( const cShared_ptr< cAsset_Meta >& _meta, void* _referrer, bool _reload );
+		void requestAssetUnloadJob( const cShared_ptr< cAsset_Meta >& _meta, void* _referrer );
 		
 		void loadEmbedded( void );
 
 #define EXTENSION_ENTRY( Ext, Func ) extension_map_entry_t{ str_hash( Ext ), Func },
 
 		// It may show an error but is perfectly fine.
-		extension_loader_map_t m_load_callbacks
+		extension_loader_map_t m_load_callbacks_
 		{
 			EXTENSION_ENTRY( "glb",  loadGltfFile )
 			EXTENSION_ENTRY( "gltf", loadGltfFile )
 			EXTENSION_ENTRY( "png",  loadPngFile  )
 		};
-		// TODO: Make the asset loader multithreaded.
-		loaders_vector_t   m_loaders;
 
-		id_to_asset_map_t  m_assets;
-		str_to_asset_map_t m_asset_name_map;
-		str_to_asset_map_t m_asset_path_map;
+		id_to_asset_map_t  m_assets_;
+		str_to_asset_map_t m_asset_name_map_;
+		str_to_asset_map_t m_asset_path_map_;
+		path_to_ref_map_t  m_path_ref_map_;
 	};
 
 	namespace Assets

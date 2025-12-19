@@ -27,6 +27,13 @@ namespace sk::Assets
             k16,
             k32
         };
+
+        // TODO: Primitives
+        struct sPrimitive
+        {
+            size_t offset;
+            size_t count;
+        };
         
         using buffer_t     = cShared_ptr< Graphics::cDynamic_Buffer >;
         using buffer_map_t = unordered_map< str_hash, buffer_t >;

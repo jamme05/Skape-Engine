@@ -4,9 +4,9 @@
  *
  */
 
-#include "AssetRef.h"
+#include "Asset_Ptr.h"
 
-sk::cAsset_Ref::cAsset_Ref( const cShared_ptr< cAsset_Meta >& _meta, const cWeak_Ptr< iClass >& _self )
+sk::cAsset_Ptr::cAsset_Ptr( const cShared_ptr< cAsset_Meta >& _meta, const cWeak_Ptr< iClass >& _self )
 : on_asset_loaded( _self )
 , on_asset_updated( _self )
 , on_asset_unloaded( _self )
@@ -15,13 +15,13 @@ sk::cAsset_Ref::cAsset_Ref( const cShared_ptr< cAsset_Meta >& _meta, const cWeak
     SetAsset( _meta );
 }
 
-sk::cAsset_Ref::cAsset_Ref( const cAsset_Ref& _other, const cWeak_Ptr< iClass >& _self )
+sk::cAsset_Ptr::cAsset_Ptr( const cAsset_Ptr& _other, const cWeak_Ptr< iClass >& _self )
 : m_self_( _self )
 {
     SetAsset( _other.m_asset_meta_.Lock() );
 }
 
-sk::cAsset_Ref::cAsset_Ref( cAsset_Ref&& _other ) noexcept
+sk::cAsset_Ptr::cAsset_Ptr( cAsset_Ptr&& _other ) noexcept
 : on_asset_loaded( std::move( _other.on_asset_loaded ) )
 , on_asset_updated( std::move( _other.on_asset_updated ) )
 , on_asset_unloaded( std::move( _other.on_asset_unloaded ) )
@@ -31,33 +31,33 @@ sk::cAsset_Ref::cAsset_Ref( cAsset_Ref&& _other ) noexcept
     SetAsset( _other.m_asset_meta_.Lock() );
 }
 
-sk::cAsset_Ref::~cAsset_Ref()
+sk::cAsset_Ptr::~cAsset_Ptr()
 {
     if( IsLoaded() )
         Unload();
 }
 
-sk::cAsset_Ref& sk::cAsset_Ref::operator=( const cAsset_Ref& _other )
+sk::cAsset_Ptr& sk::cAsset_Ptr::operator=( const cAsset_Ptr& _other )
 {
     
 }
 
-sk::cAsset_Ref& sk::cAsset_Ref::operator=( cAsset_Ref&& _other ) noexcept
+sk::cAsset_Ptr& sk::cAsset_Ptr::operator=( cAsset_Ptr&& _other ) noexcept
 {
     
 }
 
-auto sk::cAsset_Ref::GetAsset() const -> cAsset*
+auto sk::cAsset_Ptr::GetAsset() const -> cAsset*
 {
     return IsLoaded() ? m_asset_ : nullptr;
 }
 
-bool sk::cAsset_Ref::IsLoaded() const
+bool sk::cAsset_Ptr::IsLoaded() const
 {
     return m_has_loaded_.load() && m_asset_meta_ != nullptr && m_asset_meta_->IsLoaded();
 }
 
-bool sk::cAsset_Ref::SetAsset( const cShared_ptr< cAsset_Meta >& _meta )
+bool sk::cAsset_Ptr::SetAsset( const cShared_ptr< cAsset_Meta >& _meta )
 {
     if( m_asset_meta_ != nullptr )
         unsubscribe();
@@ -71,7 +71,7 @@ bool sk::cAsset_Ref::SetAsset( const cShared_ptr< cAsset_Meta >& _meta )
     return true;
 }
 
-auto sk::cAsset_Ref::LoadSync() -> cAsset*
+auto sk::cAsset_Ptr::LoadSync() -> cAsset*
 {
     if( IsLoaded() )
     {
@@ -88,14 +88,14 @@ auto sk::cAsset_Ref::LoadSync() -> cAsset*
     return m_asset_;
 }
 
-bool sk::cAsset_Ref::LoadAsync()
+bool sk::cAsset_Ptr::LoadAsync()
 {
     validate();
 
-    m_asset_meta_->AddReferer( get_source() );
+    m_asset_meta_->AddReferrer( this, m_self_ );
 }
 
-void sk::cAsset_Ref::Unload()
+void sk::cAsset_Ptr::Unload()
 {
     validate();
 
@@ -105,43 +105,37 @@ void sk::cAsset_Ref::Unload()
             "Warning: Trying to unload an already unloaded asset reference." )
         return;
     }
-    
 
     m_has_loaded_.store( false );
     
-    m_asset_meta_->RemoveReferer( get_source() );
+    m_asset_meta_->RemoveReferrer( this, m_self_ );
 }
 
-bool sk::cAsset_Ref::IsValid() const
+bool sk::cAsset_Ptr::IsValid() const
 {
     return m_asset_meta_ != nullptr;
 }
 
-auto sk::cAsset_Ref::get_source() const -> const void*
-{
-    return m_self_ != nullptr ? static_cast< void* >( m_self_.get() ) : this;
-}
-
-void sk::cAsset_Ref::validate() const
+void sk::cAsset_Ptr::validate() const
 {
     SK_ERR_IF( m_asset_meta_ == nullptr,
         "Error: Trying to use an uninitialized asset reference!" )
 }
 
-void sk::cAsset_Ref::subscribe()
+void sk::cAsset_Ptr::subscribe()
 {
     m_asset_meta_->AddListener( CreateEvent( &on_asset_event ) );
 }
 
-void sk::cAsset_Ref::unsubscribe()
+void sk::cAsset_Ptr::unsubscribe()
 {
     m_asset_meta_->RemoveListener( GetFunctionId( &on_asset_event ) );
 }
 
-void sk::cAsset_Ref::on_asset_event( cAsset_Meta& _meta, const void* _source, const cAsset_Meta::eEventType _event )
+void sk::cAsset_Ptr::on_asset_event( cAsset_Meta& _meta, const void* _source, const cAsset_Meta::eEventType _event )
 {
     const auto asset     = _meta.GetAsset();
-    const bool from_this = _source == get_source();
+    const bool from_this = _source == this;
     switch( _event )
     {
     case cAsset_Meta::eEventType::kLoaded:

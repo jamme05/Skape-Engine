@@ -281,6 +281,16 @@ namespace sk
 			return *this;
 		}
 
+		bool operator==( std::nullptr_t ) const
+		{
+			return m_data_ == nullptr;
+		}
+
+		bool operator==( const cShared_ptr& _right ) const
+		{
+			return m_data_ == _right.m_data_;
+		}
+
 		operator bool( void ) const { return ( m_data_ != nullptr ); }
 
 		Ty& operator  *( void ){ return *get(); }

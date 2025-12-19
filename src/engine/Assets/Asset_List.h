@@ -61,11 +61,9 @@ namespace sk::Assets
 
 		template< class Ty >
 		requires std::is_base_of_v< cAsset, Ty >
-		cShared_ptr< Ty > Get_Asset_Of_Type( void )
+		cShared_ptr< cAsset > Get_Asset_Of_Type()
 		{
-			std::scoped_lock lock( m_mtx );
-
-			auto  range   = m_assets.equal_range( Ty::getStaticType() );
+			auto range = m_assets.equal_range( Ty::getStaticType() );
 
 			if( range.first == m_assets.end() )
 				return nullptr;
@@ -88,11 +86,9 @@ namespace sk::Assets
 		} // Get_Asset_Of_Type
 
 		template< class Ty >
-		requires std::is_base_of_v< cAsset_Meta, Ty >
+		requires std::is_base_of_v< cAsset, Ty >
 		std::vector< cShared_ptr< Ty > > Get_Assets_Of_Type( const int32_t _max_count = 0 )
 		{
-			std::scoped_lock lock( m_mtx );
-
 			auto range = m_assets.equal_range( Ty::getStaticClassType() );
 			std::vector< cShared_ptr< Ty > > assets;
 
@@ -111,6 +107,13 @@ namespace sk::Assets
 			return assets;
 		} // Get_Assets_Of_Type
 
+		template< class Ty >
+		requires std::is_base_of_v< cAsset, Ty >
+		auto GetRange()
+		{
+			return m_assets.equal_range( Ty::getStaticClassType() );
+		}
+
 		auto begin( void ) const { return asset_iterator( m_assets.begin() ); }
 		auto end  ( void ) const { return asset_iterator( m_assets.end  () ); }
 
@@ -118,13 +121,12 @@ namespace sk::Assets
 
 	protected:
 
-		void add_asset   ( const cShared_ptr< cAsset_Meta >& _asset );
-		void remove_asset( const cShared_ptr< cAsset_Meta >& _asset );
+		void addAsset   ( const cShared_ptr< cAsset_Meta >& _asset );
+		void removeAsset( const cShared_ptr< cAsset_Meta >& _asset );
 
 	private:
 		friend class sk::cAsset_Manager;
 
-		std::mutex          m_mtx;
 		asset_map_t         m_assets;
 		asset_counter_map_t m_counters;
 	};

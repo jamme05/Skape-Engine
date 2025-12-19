@@ -18,23 +18,30 @@
 
 #include <Scene/Managers/EventManager.h>
 
+#include <simdjson/simdjson.h>
+
 namespace sk
 {
+	namespace Assets::Jobs
+	{
+		class cAsset_Worker;
+	} // sk::Assets::Jobs::
+	
 	class cAsset_Manager;
-	class cAsset_Worker;
 	class cAsset;
 
 	// Remember to update macro if changing this.
 	constexpr auto kInvalid_Asset_Id = std::numeric_limits< uint64_t >::max();
 
-	// Base Asset interface
+	// Asset Metadata class
 	SK_CLASS( Asset_Meta ), public cShared_from_this< cAsset_Meta >
 	{
 		SK_CLASS_BODY( Asset_Meta )
 
 		friend class cAsset_Manager;
-		friend class cAsset_Worker;
+		friend class cAsset_Ptr;
 		friend class cAsset_Ref;
+		friend class Assets::Jobs::cAsset_Worker;
 	public:
 		enum class eEventType : uint8_t
 		{
@@ -46,13 +53,18 @@ namespace sk
 		enum eFlags : uint8_t
 		{
 			kNone     = 0,
-			
+
+			// States:
 			// If the asset is loaded.
 			kLoaded   = 1 << 0,
 			// If the asset is currently loading
 			kLoading  = 1 << 1,
+			
 			// If the asset has a metadata file associated with it.
 			kMetadata = 1 << 2,
+
+			// If this asset shares a path with other assets. Ex: Multiple assets made from a single gltf file.
+			kSharesPath = 1 << 3,
 		};
 
 		using dispatcher_t = Event::cEventDispatcher< cAsset_Meta&, void*, eEventType >;
@@ -66,7 +78,7 @@ namespace sk
 		auto& GetPath() const { return m_path_; }
 		
 		// Saves any changes made to the asset.
-		void Save  ();
+		void Save();
 		// Gets weather or not the asset is currently loading
 		bool IsLoading() const;
 		// Gets weather or not the asset is loaded
@@ -80,7 +92,7 @@ namespace sk
 		template< reflected Ty >
 		auto GetAsset() -> Ty*;
 		// Gets the flags this asset has. Check eFlags for details.
-		auto GetFlags() const { return m_flags_; }
+		auto GetFlags() const;
 
 		// Adds a listener to get events on when the asset changes.
 		// NOTE: Listeners do not load or unload the asset, and are only used to receive information.
@@ -92,7 +104,7 @@ namespace sk
 
 		// Removes a listener from getting events on when the asset changes.
 		// NOTE: Listeners do not load or unload the asset, and are only used to receive information.
-		void RemoveListener( const size_t _listener_id );
+		void RemoveListener( size_t _listener_id );
 
 		// Removes a listener from getting events on when the asset changes.
 		// NOTE: Listeners do not load or unload the asset, and are only used to receive information.
@@ -109,14 +121,20 @@ namespace sk
 		cUUID     m_uuid_ = cUUID::kInvalid;
 		cStringID m_name_ = {};
 		cStringID m_path_ = {};
-		
-		cAsset*   m_asset_ = nullptr;
+
+		type_info_t m_asset_type_ = nullptr;
+		cAsset*     m_asset_      = nullptr;
 
 		std::atomic_uint32_t m_asset_refs_;
-		uint32_t             m_flags_ = 0;
+		std::atomic_uint32_t m_flags_ = 0;
 
 		std::mutex   m_dispatcher_mutex_;
 		dispatcher_t m_dispatcher_;
+
+		simdjson::dom::object m_metadata_;
+		simdjson::dom::object m_runtime_metadata_;
+
+		std::unordered_multiset< void* > m_referrers_;
 
 		void setPath( const std::filesystem::path& _path );
 	};

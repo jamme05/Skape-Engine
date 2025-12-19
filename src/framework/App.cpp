@@ -32,7 +32,7 @@
 
 #include <Graphics/Renderer.h>
 
-#include "Assets/AssetRef.h"
+#include "Assets/Asset_Ptr.h"
 
 cApp* cApp::m_running_instance_ = nullptr;
 
@@ -81,8 +81,8 @@ sk::Input::response_t cApp::onInput( const uint32_t _type, const sk::Input::sEve
 void cApp::create( void )
 {
 	//auto list   = sk::cAssetManager::get().loadFolder( "data/" );
-	auto list_1 = sk::cAsset_Manager::get().loadFileMeta( "data/humanforscale.glb" );
-	auto list_2 = sk::cAsset_Manager::get().loadFileMeta( "data/heheToiletwithtextures.glb" );
+	auto list_1 = sk::cAsset_Manager::get().loadFile( "data/humanforscale.glb" );
+	auto list_2 = sk::cAsset_Manager::get().loadFile( "data/heheToiletwithtextures.glb" );
 
 	//sk::cAssetManager::get().loadFile( "data/mushroom.glb" );
 	
@@ -96,7 +96,7 @@ void cApp::create( void )
 	m_scene = sk::make_shared< sk::cScene >();
 	m_scene->create_object< sk::Object::cCameraFlight >( "Camera Free Flight" )->setAsMain();
 
-	sk::cAsset_Ref test = sk::cAsset_Manager::get().GetAssetRefByName( "Mesh", nullptr );
+	sk::cAsset_Ptr test = sk::cAsset_Manager::get().GetAssetPtrByName( "Mesh", nullptr );
 
 	std::function< void( int ) > test69 = []( int ){ return true; };
 	

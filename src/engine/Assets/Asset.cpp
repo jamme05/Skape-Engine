@@ -8,6 +8,8 @@
 
 #include <Assets/Management/Asset_Manager.h>
 
+#include "Management/Asset_Job_Manager.h"
+
 void sk::cAsset_Meta::Save()
 {
     // TODO: Saving logic and actual metadata saving.
@@ -31,6 +33,11 @@ bool sk::cAsset_Meta::HasMetadata() const
 auto sk::cAsset_Meta::GetAsset() const -> cAsset*
 {
     return m_asset_;
+}
+
+auto sk::cAsset_Meta::GetFlags() const
+{
+    return m_flags_.load();
 }
 
 size_t sk::cAsset_Meta::AddListener( const dispatcher_t::event_t& _listener )
@@ -67,7 +74,15 @@ void sk::cAsset_Meta::dispatch_if_loaded( const dispatcher_t::listener_t& _liste
     if( IsLoaded() == 0 )
         return;
 
-    cAsset_Manager::get().pushNewListenerJob( get_shared(), _listener );
+    const Assets::Jobs::sTask task
+    {
+        .type = Assets::Jobs::eJobType::kPushEvent,
+        .data = reinterpret_cast< std::byte* >( new Assets::Jobs::sListenerTask{
+            .partial = get_shared(), .event = _listener
+        } )
+    };
+
+    Assets::Jobs::cAsset_Job_Manager::get().push_task( task );
 }
 
 void sk::cAsset_Meta::setPath( const std::filesystem::path& _path )
