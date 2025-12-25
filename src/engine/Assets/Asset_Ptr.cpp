@@ -6,11 +6,16 @@
 
 #include "Asset_Ptr.h"
 
-sk::cAsset_Ptr::cAsset_Ptr( const cShared_ptr< cAsset_Meta >& _meta, const cWeak_Ptr< iClass >& _self )
+sk::cAsset_Ptr::cAsset_Ptr( const cWeak_Ptr<iClass>& _self )
 : on_asset_loaded( _self )
 , on_asset_updated( _self )
 , on_asset_unloaded( _self )
 , m_self_( _self )
+{
+}
+
+sk::cAsset_Ptr::cAsset_Ptr( const cShared_ptr< cAsset_Meta >& _meta, const cWeak_Ptr< iClass >& _self )
+: cAsset_Ptr( _self )
 {
     SetAsset( _meta );
 }
@@ -39,12 +44,24 @@ sk::cAsset_Ptr::~cAsset_Ptr()
 
 sk::cAsset_Ptr& sk::cAsset_Ptr::operator=( const cAsset_Ptr& _other )
 {
+    if( &_other == this )
+        return *this;
     
+    SetAsset( _other.m_asset_meta_.Lock() );
+    m_asset_ = _other.m_asset_;
+
+    return *this;
 }
 
 sk::cAsset_Ptr& sk::cAsset_Ptr::operator=( cAsset_Ptr&& _other ) noexcept
 {
-    
+    SetAsset( nullptr );
+    m_asset_meta_ = std::move( _other.m_asset_meta_ );
+    m_asset_      = _other.m_asset_;
+    m_has_loaded_.store( _other.m_has_loaded_.load() );
+    _other.m_has_loaded_.store( false );
+
+    return *this;
 }
 
 auto sk::cAsset_Ptr::GetAsset() const -> cAsset*
@@ -59,7 +76,7 @@ bool sk::cAsset_Ptr::IsLoaded() const
 
 bool sk::cAsset_Ptr::SetAsset( const cShared_ptr< cAsset_Meta >& _meta )
 {
-    if( m_asset_meta_ != nullptr )
+    if( m_asset_meta_.get() != _meta )
         unsubscribe();
     
     m_asset_meta_ = _meta;
@@ -68,6 +85,7 @@ bool sk::cAsset_Ptr::SetAsset( const cShared_ptr< cAsset_Meta >& _meta )
         return false;
 
     subscribe();
+    
     return true;
 }
 
@@ -92,7 +110,9 @@ bool sk::cAsset_Ptr::LoadAsync()
 {
     validate();
 
-    m_asset_meta_->AddReferrer( this, m_self_ );
+    m_asset_meta_->addReferrer( this, m_self_ );
+
+    return true;
 }
 
 void sk::cAsset_Ptr::Unload()
@@ -108,7 +128,7 @@ void sk::cAsset_Ptr::Unload()
 
     m_has_loaded_.store( false );
     
-    m_asset_meta_->RemoveReferrer( this, m_self_ );
+    m_asset_meta_->removeReferrer( this, m_self_ );
 }
 
 bool sk::cAsset_Ptr::IsValid() const
@@ -124,12 +144,14 @@ void sk::cAsset_Ptr::validate() const
 
 void sk::cAsset_Ptr::subscribe()
 {
-    m_asset_meta_->AddListener( CreateEvent( &on_asset_event ) );
+    if( !m_has_loaded_.load() )
+        m_asset_meta_->AddListener( CreateEvent( &on_asset_event ) );
 }
 
 void sk::cAsset_Ptr::unsubscribe()
 {
-    m_asset_meta_->RemoveListener( GetFunctionId( &on_asset_event ) );
+    if( m_has_loaded_.load() )
+        m_asset_meta_->RemoveListener( GetFunctionId( &on_asset_event ) );
 }
 
 void sk::cAsset_Ptr::on_asset_event( cAsset_Meta& _meta, const void* _source, const cAsset_Meta::eEventType _event )
@@ -150,7 +172,7 @@ void sk::cAsset_Ptr::on_asset_event( cAsset_Meta& _meta, const void* _source, co
         on_asset_updated.push_event( *asset );
     break;
     case cAsset_Meta::eEventType::kUnload:
-        on_asset_unloaded.push_event( from_this, _meta );
+        on_asset_unloaded.push_event( _meta );
     break;
     }
 }

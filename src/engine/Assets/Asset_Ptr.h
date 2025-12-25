@@ -30,9 +30,11 @@ namespace sk
         using weak_listener_t     = cAsset_Meta::dispatcher_t::weak_listener_t;
         using load_dispatcher_t   = Event::cDispatcherProxy< bool, cAsset& >;
         using update_dispatcher_t = Event::cDispatcherProxy< cAsset& >;
-        using unload_dispatcher_t = Event::cDispatcherProxy< bool, cAsset_Meta& >;
+        using unload_dispatcher_t = Event::cDispatcherProxy< cAsset_Meta& >;
 
+        // TODO: Make the default constructor invalid.
         cAsset_Ptr() = default;
+        explicit cAsset_Ptr( const cWeak_Ptr< iClass >& _self );
         explicit cAsset_Ptr( const cShared_ptr< cAsset_Meta >& _meta, const cWeak_Ptr< iClass >& _self = nullptr );
         cAsset_Ptr( const cAsset_Ptr& _other, const cWeak_Ptr< iClass >& _self = nullptr );
         cAsset_Ptr( cAsset_Ptr&& _other ) noexcept;

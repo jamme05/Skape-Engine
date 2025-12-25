@@ -40,7 +40,7 @@ namespace sk
 
 		friend class cAsset_Manager;
 		friend class cAsset_Ptr;
-		friend class cAsset_Ref;
+		friend class cAsset_Ref_Base;
 		friend class Assets::Jobs::cAsset_Worker;
 	public:
 		enum class eEventType : uint8_t
@@ -67,7 +67,7 @@ namespace sk
 			kSharesPath = 1 << 3,
 		};
 
-		using dispatcher_t = Event::cEventDispatcher< cAsset_Meta&, void*, eEventType >;
+		using dispatcher_t = Event::cEventDispatcher< cAsset_Meta&, const void*, eEventType >;
 		
 		explicit cAsset_Meta( const std::string_view _name )
 		: m_name_{ _name }
@@ -115,12 +115,19 @@ namespace sk
 		void RemoveListener( const dispatcher_t::weak_event_t& _listener );
 
 	private:
+		void addReferrer   ( void* _source, cWeak_Ptr< iClass > _referrer );
+		void removeReferrer( const void* _source, cWeak_Ptr< iClass > _referrer );
+
+		void push_load_task( bool _load, const void* _source );
+
 		// Requests a asset loader to post a asset loaded event to the specified listener.
-		void dispatch_if_loaded( const dispatcher_t::listener_t& _listener );
+		void dispatch_if_loaded( const dispatcher_t::listener_t& _listener, const void* _source );
 
 		cUUID     m_uuid_ = cUUID::kInvalid;
 		cStringID m_name_ = {};
 		cStringID m_path_ = {};
+		// File Extension
+		cStringID m_ext_  = {};
 
 		type_info_t m_asset_type_ = nullptr;
 		cAsset*     m_asset_      = nullptr;
@@ -134,7 +141,8 @@ namespace sk
 		simdjson::dom::object m_metadata_;
 		simdjson::dom::object m_runtime_metadata_;
 
-		std::unordered_multiset< void* > m_referrers_;
+		// Nullptr is untrackable referrers.
+		std::unordered_multimap< iClass*, void* > m_referrers_;
 
 		void setPath( const std::filesystem::path& _path );
 	};

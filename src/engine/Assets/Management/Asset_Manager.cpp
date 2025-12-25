@@ -77,9 +77,8 @@ namespace sk
 	auto cAsset_Manager::getAssetsByPath( const str_hash& _path_hash ) -> Assets::cAsset_List
 	{
 		Assets::cAsset_List assets;
-		const auto range = m_asset_path_map_.equal_range( _path_hash );
-		for( auto it = range.first; it != range.second; ++it )
-			assets.addAsset( it->second );
+		const auto [ fst, snd ] = m_asset_path_map_.equal_range( _path_hash );
+		assets.m_assets.insert( fst, snd );
 
 		return assets;
 	} // getAssetsByPath
@@ -164,6 +163,14 @@ namespace sk
 		return {};
 	}
 
+	auto cAsset_Manager::GetAssetPtrById( const cUUID& _uuid, const cShared_ptr< iClass >& _self,
+		bool _load_asset ) -> cAsset_Ptr
+	{
+		if( auto asset = getAsset( _uuid ) )
+			return GetAssetPtr( *asset, _self, _load_asset );
+		return {};
+	}
+
 	auto cAsset_Manager::GetAssetPtr( const cAsset_Meta& _partial, const cShared_ptr< iClass >& _self, bool _load_asset ) -> cAsset_Ptr
 	{
 		
@@ -185,6 +192,13 @@ namespace sk
 			m_load_callbacks_.emplace( extension, _function );
 	} // AddFileLoader
 	
+	auto cAsset_Manager::GetFileLoader( const str_hash& _extension_hash ) -> load_file_func_t
+	{
+		if( const auto itr = m_load_callbacks_.find( _extension_hash ); itr != m_load_callbacks_.end() )
+			return itr->second;
+		return nullptr;
+	}
+
 	void cAsset_Manager::addPathReferrer( const str_hash& _path_hash, const void* _referrer )
 	{
 		auto& [ referrers ] = m_path_ref_map_[ _path_hash ];
@@ -192,7 +206,7 @@ namespace sk
 		
 		auto  [ fst, lst ] = m_asset_path_map_.equal_range( _path_hash );
 
-		
+		// TODO: Remember what I was planning here.
 	}
 
 	void cAsset_Manager::removePathReferrer( const str_hash& _path_hash, const void* _referrer )
@@ -208,14 +222,9 @@ namespace sk
 	void cAsset_Manager::loadGltfFile( const std::filesystem::path& _path, Assets::cAsset_List& _asset_metas, eAssetTask _load_task )
 	{
 		if( _load_task == eAssetTask::kUnloadAsset )
-		{
-			for( auto& meta : _asset_metas )
-			{
-				SK_FREE( meta->m_asset_ );
-				meta->m_asset_ = nullptr;
-			}
 			return;
-		}
+
+		// TODO: Fix this asset loader.
 
 		fastgltf::Parser parser;
 
@@ -256,7 +265,7 @@ namespace sk
 			else
 			{
 				
-				assets.addAsset( loadGltfMesh( *mesh_fst->second, asset, mesh, _load_task ) );
+				loadGltfMesh( *mesh_fst->second, asset, mesh, _load_task );
 			}
 		}
 
@@ -265,8 +274,6 @@ namespace sk
 			for( auto& meta : assets )
 				meta->m_flags_ |= cAsset_Meta::eFlags::kSharesPath;
 		}
-
-		return assets;
 	} // loadGltfFile
 	
 	auto cAsset_Manager::loadGltfMeshMeta( const fastgltf::Mesh& _mesh, const size_t _index ) -> cShared_ptr< cAsset_Meta >
@@ -412,9 +419,9 @@ namespace sk
 		}
 	} // ::
 
-	auto cAsset_Manager::loadGltfMesh( const cAsset_Meta& _meta, const fastgltf::Asset& _asset, fastgltf::Mesh& _mesh, const eAssetTask _task ) -> cShared_ptr< cAsset_Meta >
+	void cAsset_Manager::loadGltfMesh( const cAsset_Meta& _meta, const fastgltf::Asset& _asset, fastgltf::Mesh& _mesh, const eAssetTask _task )
 	{
-		auto mesh_asset = SK_NEW( Assets::cMesh,  );
+		auto mesh_asset = SK_SINGLE( Assets::cMesh, _meta.GetName().string() );
 		
 		for( auto& primitive : _mesh.primitives )
 		{
@@ -431,8 +438,6 @@ namespace sk
 			// TODO: Support multiple primitives
 			break;
 		} // auto& primitive : _mesh.primitives
-
-		return me;
 	} // handleGltfMesh
 	
 	auto cAsset_Manager::handleGltfTexture( const fastgltf::Asset& _asset, fastgltf::Texture& _texture, eAssetTask _task ) -> cShared_ptr< cAsset_Meta >

@@ -19,7 +19,7 @@ namespace sk::Assets::Jobs
         cAsset_Job_Manager();
         ~cAsset_Job_Manager() override;
 
-        auto WaitForTask() -> sTask;
+        auto WaitForTask( const std::atomic_bool& _working_ref ) -> sTask;
 
     private:
         void push_task( const sTask& _task );

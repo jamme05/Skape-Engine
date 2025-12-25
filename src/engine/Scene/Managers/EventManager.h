@@ -625,6 +625,14 @@ namespace sk
 
 				clean_listeners();
 			} // push_event
+
+			void reset()
+			{
+				m_is_pushing = false;
+				m_to_remove_.clear();
+				m_listeners_.clear();
+				m_weak_listeners_.clear();
+			}
 			
 		private:
 			// Cleans out all events that were supposed to get deleted during the last event push.
@@ -713,66 +721,66 @@ namespace sk
 			: m_dispatcher_( std::make_unique< dispatcher_t >( _self ) )
 			{}
 
-			auto& operator+=( const dispatcher_t::event_t _listener )
+			auto& operator+=( const typename dispatcher_t::event_t _listener )
 			{
 				return get() += _listener;
 			}
 
-			auto& operator+=( const dispatcher_t::weak_event_t& _listener )
+			auto& operator+=( const typename dispatcher_t::weak_event_t& _listener )
 			{
 				return get() += _listener;
 			}
 
-			auto& operator+=( const dispatcher_t::listener_t& _listener )
+			auto& operator+=( const typename dispatcher_t::listener_t& _listener )
 			{
 				return get() += _listener;
 			}
 
-			auto& operator+=( const dispatcher_t::weak_listener_t& _listener )
+			auto& operator+=( const typename dispatcher_t::weak_listener_t& _listener )
 			{
 				return get() += _listener;
 			}
 
 			// Unsubscribes a member function to be called on the assigned self.
 			// In case you want to call a function with another class instance, use sk::CreateEvent
-			auto& operator+=( const dispatcher_t::sSelfWrapper& _wrapper )
+			auto& operator+=( const typename dispatcher_t::sSelfWrapper& _wrapper )
 			{
 				return get() += _wrapper;
 			}
 			
-			auto& operator-=( const dispatcher_t::event_t& _listener )
+			auto& operator-=( const typename dispatcher_t::event_t& _listener )
 			{
 				return get() -= _listener;
 			}
 
-			auto& operator-=( const dispatcher_t::weak_event_t& _listener )
+			auto& operator-=( const typename dispatcher_t::weak_event_t& _listener )
 			{
 				return get() -= _listener;
 			}
 
 			// Unsubscribes a member function to be called on the assigned self.
 			// In case you want to call a function with another class instance, use sk::CreateEvent
-			auto& operator-=( const dispatcher_t::sSelfWrapper& _wrapper )
+			auto& operator-=( const typename dispatcher_t::sSelfWrapper& _wrapper )
 			{
 				return get() -= _wrapper;
 			}
 
-			size_t add_listener( const dispatcher_t::event_t& _listener )
+			size_t add_listener( const typename dispatcher_t::event_t& _listener )
 			{
 				return m_dispatcher_->add_listener( _listener );
 			} // add_listener
 
-			size_t add_listener( const dispatcher_t::weak_event_t& _listener )
+			size_t add_listener( const typename dispatcher_t::weak_event_t& _listener )
 			{
 				return m_dispatcher_->add_listener( _listener );
 			} // add_listener
 
-			void remove_listener( const dispatcher_t::event_t& _listener )
+			void remove_listener( const typename dispatcher_t::event_t& _listener )
 			{
 				m_dispatcher_->remove_listener( _listener );
 			}
 
-			void remove_listener( const dispatcher_t::weak_event_t& _listener )
+			void remove_listener( const typename dispatcher_t::weak_event_t& _listener )
 			{
 				m_dispatcher_->remove_listener( _listener );
 			}
@@ -785,6 +793,11 @@ namespace sk
 			void push_event( Args... _args )
 			{
 				m_dispatcher_->push_event( std::forward< Args >( _args )... );
+			}
+
+			void reset()
+			{
+				m_dispatcher_->reset();
 			}
 
 		private:

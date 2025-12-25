@@ -101,6 +101,8 @@ namespace sk
 			-> cAsset_Ptr;
 		auto GetAssetPtrByPath ( const str_hash& _path_hash, const cShared_ptr< iClass >& _self, bool _load_asset = true )
 			-> cAsset_Ptr;
+		auto GetAssetPtrById   ( const cUUID& _uuid, const cShared_ptr< iClass >& _self, bool _load_asset = true )
+			-> cAsset_Ptr;
 		auto GetAssetPtr       ( const cAsset_Meta& _partial, const cShared_ptr< iClass >& _self, bool _load_asset = true )
 			-> cAsset_Ptr;
 
@@ -118,6 +120,7 @@ namespace sk
 		using load_file_func_t = std::function< void( const std::filesystem::path&, Assets::cAsset_List&, eAssetTask ) >;
 
 		void AddFileLoader( const std::vector< str_hash >& _extensions, const load_file_func_t& _function );
+		auto GetFileLoader( const str_hash& _extension_hash ) -> load_file_func_t;
 	
 	private:
 		struct sRef_Info
@@ -138,7 +141,7 @@ namespace sk
 		
 		static void loadGltfFile     ( const std::filesystem::path& _path, Assets::cAsset_List& _asset_metas, eAssetTask _load_task );
 		static auto loadGltfMeshMeta ( const fastgltf::Mesh& _mesh, size_t _index ) -> cShared_ptr< cAsset_Meta >;
-		static auto loadGltfMesh     ( const cAsset_Meta& _meta, const fastgltf::Asset& _asset, fastgltf::Mesh& _mesh,       eAssetTask _task ) -> cShared_ptr< cAsset_Meta >;
+		static void loadGltfMesh     ( const cAsset_Meta& _meta, const fastgltf::Asset& _asset, fastgltf::Mesh& _mesh, eAssetTask _task );
 		static auto handleGltfTexture( const fastgltf::Asset& _asset, fastgltf::Texture& _texture, eAssetTask _task ) -> cShared_ptr< cAsset_Meta >;
 
 		static void loadPngFile      ( const std::filesystem::path& _path, Assets::cAsset_List& _assets, eAssetTask _load_task );

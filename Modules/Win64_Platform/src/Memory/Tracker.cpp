@@ -80,7 +80,7 @@ namespace sk::Memory
 
 		static size_t GetAvailableHeapSpace( void );
 
-		static size_t m_memory_usage;
+		static std::atomic_size_t m_memory_usage;
 
 private:
 		void add_history( sTracker_entry& _entry, const sHistory_action& _action );
@@ -92,7 +92,7 @@ private:
 		std::mutex  m_mtx;
 
 	}; // cTracker
-	size_t cTracker::m_memory_usage = 0;
+	std::atomic_size_t cTracker::m_memory_usage = 0;
 
     namespace Tracker
     {
@@ -248,6 +248,7 @@ private:
     	entry->size  = _size;
     	entry->extra = static_cast< uint16_t >( t_size - _size );
 
+    	// TODO: Remove mutex usage in memory tracker
     	m_mtx.lock();
     	if constexpr( Tracker::kSaveMemoryHistory )
     	{
@@ -335,7 +336,7 @@ private:
     {
         const auto size = static_cast< size_t* >( _block ) - 1;
         cTracker::m_memory_usage -= *size;
-        return ::free( size );
+        ::free( size );
     } // free_fast
 
     void* realloc_fast( void* _block, size_t _size, const eAlignment _alignment )
