@@ -56,12 +56,12 @@ namespace sk::Assets
 		if( _asset == nullptr )
 			return;
 		
-		m_assets.insert( { _asset->getClassType(), _asset } );
+		m_assets.insert( { _asset->GetHash(), _asset } );
 	} // add_asset
 
 	void cAsset_List::removeAsset( const cShared_ptr< cAsset_Meta >& _asset )
 	{
-		auto [ fst, snd ] = m_assets.equal_range( _asset->getClassType() );
+		auto [ fst, snd ] = m_assets.equal_range( _asset->GetHash() );
 		for( auto it = fst; it != snd; ++it )
 		{
 			if( it->second == _asset )

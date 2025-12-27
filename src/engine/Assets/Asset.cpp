@@ -6,11 +6,13 @@
 
 #include "Asset.h"
 
+#include <typeindex>
 #include <Assets/Management/Asset_Manager.h>
 #include <Assets/Management/Asset_Job_Manager.h>
 
 void sk::cAsset_Meta::Save()
 {
+    static constexpr cStringID test = std::string_view{ "Hello" };
     // TODO: Saving logic and actual metadata saving.
 }
 
@@ -39,6 +41,16 @@ auto sk::cAsset_Meta::GetFlags() const
     return m_flags_.load();
 }
 
+auto sk::cAsset_Meta::GetType() const -> type_info_t
+{
+    return m_asset_type_;
+}
+
+auto sk::cAsset_Meta::GetHash() const -> type_hash
+{
+    return m_asset_type_->hash;
+}
+
 size_t sk::cAsset_Meta::AddListener( const dispatcher_t::event_t& _listener )
 {
     dispatch_if_loaded( _listener.function, nullptr );
@@ -50,12 +62,12 @@ size_t sk::cAsset_Meta::AddListener( const dispatcher_t::weak_event_t& _listener
 {
     dispatch_if_loaded( _listener.function, nullptr );
 
-    return m_dispatcher_.add_listener( _listener );
+    return m_dispatcher_.add_listener( Event::sEvent{ _listener } );
 }
 
 void sk::cAsset_Meta::RemoveListener( const size_t _listener_id )
 {
-    m_dispatcher_.remove_listener( _listener_id );
+    m_dispatcher_.remove_listener_by_id( _listener_id );
 }
 
 void sk::cAsset_Meta::RemoveListener( const dispatcher_t::event_t& _listener )
@@ -108,7 +120,7 @@ void sk::cAsset_Meta::removeReferrer( const void* _source, cWeak_Ptr< iClass > _
     push_load_task( false, _source );
 }
 
-void sk::cAsset_Meta::push_load_task( const bool _load, const void* _source )
+void sk::cAsset_Meta::push_load_task( const bool _load, const void* _source ) const
 {
     using namespace Assets;
     
@@ -125,8 +137,7 @@ void sk::cAsset_Meta::push_load_task( const bool _load, const void* _source )
     Jobs::sTask task;
     task.type = _load ? Jobs::eJobType::kLoad : Jobs::eJobType::kUnload;
     task.data = ::new( Memory::alloc_fast( sizeof( Jobs::sAssetTask ) ) ) Jobs::sAssetTask{
-        .path    = m_path_.string(),
-        .partial = get_shared(),
+        .path   = m_path_.view(),
         .affected_assets = affected,
         .loader = loader,
         .source = _source,
@@ -144,18 +155,18 @@ void sk::cAsset_Meta::dispatch_if_loaded( const dispatcher_t::listener_t& _liste
     {
         .type = Assets::Jobs::eJobType::kPushEvent,
         .data = ::new( Memory::alloc_fast( sizeof( Assets::Jobs::sListenerTask ) ) ) Assets::Jobs::sListenerTask{
-            .partial = get_shared(),
-            .event   = _listener,
-            .source  = _source,
+            .meta   = get_shared(),
+            .event  = _listener,
+            .source = _source,
         },
     };
 
     Assets::Jobs::cAsset_Job_Manager::get().push_task( task );
 }
 
-void sk::cAsset_Meta::setPath( const std::filesystem::path& _path )
+void sk::cAsset_Meta::setPath( std::filesystem::path _path )
 {
-    m_path_ = _path.string();
     m_ext_  = _path.extension().string();
+    m_path_ = _path.replace_extension().string();
 }
 

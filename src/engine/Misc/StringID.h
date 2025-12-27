@@ -31,21 +31,26 @@ namespace sk
         class cStringRegistry
         {
         public:
-            cStringRegistry() = default;
-            explicit cStringRegistry( sStringRegistry* _registry );
-            cStringRegistry( const cStringRegistry&  _other );
-            cStringRegistry(       cStringRegistry&& _other ) noexcept;
-            ~cStringRegistry();
+            constexpr cStringRegistry() = default;
+            explicit  cStringRegistry( sStringRegistry* _registry );
+            constexpr cStringRegistry( std::string_view _str );
+            constexpr cStringRegistry( const cStringRegistry&  _other );
+            constexpr cStringRegistry(       cStringRegistry&& _other ) noexcept;
+            constexpr ~cStringRegistry();
             
-            auto operator=( const cStringRegistry&  _other )          -> cStringRegistry&;
-            auto operator=(       cStringRegistry&& _other ) noexcept -> cStringRegistry&;
+            constexpr auto operator=( const cStringRegistry&  _other )          -> cStringRegistry&;
+            constexpr auto operator=(       cStringRegistry&& _other ) noexcept -> cStringRegistry&;
 
-            [[ nodiscard ]] auto string() const -> const std::string&; 
+            [[ nodiscard ]]
+            constexpr auto view() const -> const std::string_view&;
+            [[ nodiscard ]]
+            constexpr auto string() const -> const std::string&;
 
         private:
             void inc() const;
             void dec() const;
             
+            std::string_view m_string_;
             sStringRegistry* m_registry_ = nullptr;
         };
 
@@ -67,10 +72,10 @@ namespace sk
     class cStringID
     {
     public:
-        cStringID() = default;
-        cStringID( std::string_view _str );
+        constexpr cStringID() = default;
+        constexpr cStringID( const std::string_view& _str );
         template< size_t N >
-        cStringID( const char( &_str )[ N ] )
+        constexpr cStringID( const char( &_str )[ N ] )
         : cStringID( std::string_view{ _str, N } )
         {
         } // cStringID
@@ -78,19 +83,25 @@ namespace sk
         constexpr cStringID( const cStringID&  _other )          = default;
         constexpr cStringID(       cStringID&& _other ) noexcept = default;
 
-        ~cStringID() = default;
+        constexpr ~cStringID() = default;
 
         // TODO: Rename to follow more closely to the naming convention
-        [[ nodiscard ]] auto  hash  () const { return m_hash_; }
-        [[ nodiscard ]] auto& string() const { return m_registry_.string(); }
+        [[ nodiscard ]]
+        constexpr auto hash() const { return m_hash_; }
+        [[ nodiscard ]]
+        constexpr auto& view() const { return m_registry_.view(); }
+        [[ nodiscard ]]
+        auto string() const { return m_registry_.string(); }
         
-        cStringID& operator=( const cStringID& ) = default;
-        cStringID& operator=( cStringID&& _other ) noexcept = default;
-        cStringID& operator=( const std::string_view& _str );
+        constexpr operator str_hash        () const noexcept { return hash(); }
+        constexpr operator std::string_view() const noexcept { return view(); }
         
-        bool operator== ( const cStringID& _other ) const { return m_hash_ ==  _other.m_hash_; }
-        bool operator!= ( const cStringID& _other ) const { return m_hash_ !=  _other.m_hash_; }
-        auto operator<=>( const cStringID& _other ) const { return m_hash_ <=> _other.m_hash_; }
+        constexpr cStringID& operator=( const cStringID& ) = default;
+        constexpr cStringID& operator=( cStringID&& _other ) noexcept = default;
+        constexpr cStringID& operator=( const std::string_view& _str );
+        
+        constexpr bool operator== ( const cStringID& _other ) const { return m_hash_ ==  _other.m_hash_; }
+        constexpr auto operator<=>( const cStringID& _other ) const { return m_hash_ <=> _other.m_hash_; }
 
         auto operator<<( std::ostream& _os ) const -> std::ostream&;
 
@@ -99,6 +110,110 @@ namespace sk
         
         str_hash   m_hash_     = {};
         registry_t m_registry_ = {};
-        
     };
 } // sk
+
+////////////////////////////////////////////////
+// I hate forced inline :)
+
+constexpr sk::cStringIDManager::cStringRegistry::cStringRegistry( const std::string_view _str )
+: m_string_( _str )
+{
+}
+
+constexpr sk::cStringIDManager::cStringRegistry::cStringRegistry( const cStringRegistry& _other )
+: m_string_( _other.m_string_ )
+, m_registry_( _other.m_registry_ )
+{
+    if not consteval
+    {
+        inc();
+    }
+}
+
+constexpr sk::cStringIDManager::cStringRegistry::cStringRegistry( cStringRegistry&& _other ) noexcept
+: m_registry_( _other.m_registry_ )
+{
+    _other.m_registry_ = nullptr;
+}
+
+constexpr sk::cStringIDManager::cStringRegistry::~cStringRegistry()
+{
+    if not consteval
+    {
+        dec();
+    }
+}
+
+constexpr auto sk::cStringIDManager::cStringRegistry::operator=( const cStringRegistry& _other ) -> cStringRegistry&
+{
+    if( this ==  &_other )
+        return *this;
+
+    if not consteval
+    {
+        dec();
+    }
+    m_string_   = _other.m_string_;
+    m_registry_ = _other.m_registry_;
+    if not consteval
+    {
+        inc();
+    }
+    
+    return *this;
+}
+
+constexpr auto sk::cStringIDManager::cStringRegistry::operator=( cStringRegistry&& _other ) noexcept -> cStringRegistry&
+{
+    if not consteval
+    {
+        dec();
+    }
+    
+    m_string_   = _other.m_string_;
+    m_registry_ = _other.m_registry_;
+    
+    return *this;
+}
+
+constexpr auto sk::cStringIDManager::cStringRegistry::view() const -> const std::string_view&
+{
+    return m_string_;
+}
+
+constexpr auto sk::cStringIDManager::cStringRegistry::string() const->const std::string&
+{
+    return m_registry_->string;
+}
+
+////////////////////////////////////////////////
+
+constexpr sk::cStringID::cStringID( const std::string_view& _str )
+: m_hash_( _str )
+{
+    if consteval
+    {
+        m_registry_ = _str;
+    }
+    else
+    {
+        m_registry_ = cStringIDManager::try_init().getRegistry( _str );
+    }
+} // cStringID
+
+constexpr sk::cStringID& sk::cStringID::operator=( const std::string_view& _str )
+{
+    m_hash_ = _str;
+    
+    if consteval
+    {
+        m_registry_ = _str;
+    }
+    else
+    {
+        m_registry_ = cStringIDManager::try_init().getRegistry( _str );
+    }
+    
+    return *this;
+}

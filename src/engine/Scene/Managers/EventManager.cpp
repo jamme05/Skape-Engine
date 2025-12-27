@@ -32,7 +32,7 @@ namespace sk
 		if( itr == m_dispatcher.end() )
 			return;
 
-		itr->second->remove_listener( _id );
+		itr->second->remove_listener_by_id( _id );
 	} // unregisterEvent
 
 	Event::cEventListener::~cEventListener( void )

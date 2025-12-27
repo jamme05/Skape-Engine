@@ -422,7 +422,7 @@ constexpr static bool      kValid = true; \
 
 #define MAKE_DEFAULT_HASH( HashName, ... ) { HashName }
 #define REGISTER_DEFAULT_TYPE( Type, InternalName, Name, IsInline ) \
-    MAKE_TYPE_INFO_DIRECT( Type, Name, MAKE_DEFAULT_HASH, Name ) \
+    MAKE_TYPE_INFO_DIRECT( Type, Name, MAKE_DEFAULT_HASH, InternalName ) \
     REGISTER_TYPE_INTERNAL( Type, IsInline )
 
 #define REGISTER_T_TYPE( Type, Name ) REGISTER_DEFAULT_TYPE( Type ## _t, #Type, Name, false )

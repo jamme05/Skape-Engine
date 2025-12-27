@@ -9,12 +9,8 @@
 
 namespace sk::Graphics::Rendering
 {
-	class cWindow_Context;
-}
-
-namespace sk::Graphics::Rendering
-{
 	class cRender_Context;
+	class cWindow_Context;
 }
 
 namespace sk::Platform
@@ -22,7 +18,8 @@ namespace sk::Platform
 	class iWindow;
 }
 
-namespace sk::Assets {
+namespace sk::Assets
+{
 	class cShader;
 }
 
@@ -68,7 +65,7 @@ public:
 	using window_t = sk::Platform::iWindow*;
 	std::unordered_set< window_t > m_windows;
 	static cApp* getRunningInstance(){ return m_running_instance_; }
-
+	
 private:
 	void destroy( void ) const;
 	

@@ -18,15 +18,21 @@ namespace sk::Graphics
     {
         glbinding::initialize( &Platform::get_proc_address );
 
-        cAsset_Manager::get().AddFileLoader( { "glsl" }, &loadGLSL );
+        cAsset_Manager::get().AddFileLoaderForExtension( "glsl", &loadGLSL );
     } // cRenderer
+    
+    cGLRenderer::~cGLRenderer()
+    {
+        cAsset_Manager::get().AddFileLoaderForExtension( "glsl", &loadGLSL );
+    }
 
     bool cGLRenderer::Render( Rendering::cRender_Context& _render_context, const Assets::cMesh& _mesh )
     {
         // TODO: Mesh rendering.
+        return false;
     }
 
-    Assets::cAsset_List loadGLSL( const std::filesystem::path& _path )
+    void loadGLSL( const std::filesystem::path& _path, Assets::cAsset_List& _asset_list, Assets::eAssetTask _task )
     {
         
     }

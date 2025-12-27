@@ -117,7 +117,7 @@ void cApp::create( void )
 	example_dispatcher += sk::Assets::cMesh::test;
 	example_dispatcher -= sk::Assets::cMesh::test;
 	example_dispatcher.add_listener( CreateEvent( sk::Assets::cMesh::test ) );
-	example_dispatcher.remove_listener( CreateEvent( sk::Assets::cMesh::test ) );
+	example_dispatcher.remove_listener_by_id( CreateEvent( sk::Assets::cMesh::test ) );
 	
 	auto t = []( const sk::cAsset& _asset )
 	{
@@ -175,7 +175,7 @@ void cApp::create( void )
 
 	REGISTER_LISTENER( "Custom Event", &cApp::custom_event )
 	sk::Register_Event_Helper( sk::Const( sk::str_hash( "Aaaa" ) ), &cApp::custom_event, this );
-
+	
 	print_types();
 } // _create
 

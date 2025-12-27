@@ -53,13 +53,13 @@ void sk::Assets::Jobs::cAsset_Worker::do_work( const sTask& _work )
 
 void sk::Assets::Jobs::cAsset_Worker::load_asset( sAssetTask& _task, const bool _refresh )
 {
-    const auto loader_task = _refresh ? cAsset_Manager::eAssetTask::kRefreshAsset : cAsset_Manager::eAssetTask::kLoadAsset;
+    const auto loader_task = _refresh ? eAssetTask::kRefreshAsset : eAssetTask::kLoadAsset;
     _task.loader( _task.path, _task.affected_assets, loader_task );
 }
 
 void sk::Assets::Jobs::cAsset_Worker::unload_asset( sAssetTask& _task )
 {
-    _task.loader( _task.path, _task.affected_assets, cAsset_Manager::eAssetTask::kUnloadAsset );
+    _task.loader( _task.path, _task.affected_assets, eAssetTask::kUnloadAsset );
 
     for( auto& asset : _task.affected_assets )
     {
@@ -70,6 +70,6 @@ void sk::Assets::Jobs::cAsset_Worker::unload_asset( sAssetTask& _task )
 
 void sk::Assets::Jobs::cAsset_Worker::push_event( sListenerTask& _task )
 {
-    _task.event( *_task.partial, _task.source, cAsset_Meta::eEventType::kLoaded );
+    _task.event( *_task.meta, _task.source, cAsset_Meta::eEventType::kLoaded );
 }
 

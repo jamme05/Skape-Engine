@@ -33,6 +33,14 @@ namespace sk
 			kModel,
 			kTexture,
 		};
+		
+		enum class eAssetTask : uint8_t
+		{
+			kLoadMeta,
+			kLoadAsset,
+			kRefreshAsset,
+			kUnloadAsset,
+		};
 	}  // Assets
 
 	class cAsset_Manager : public cSingleton< cAsset_Manager >
@@ -103,24 +111,18 @@ namespace sk
 			-> cAsset_Ptr;
 		auto GetAssetPtrById   ( const cUUID& _uuid, const cShared_ptr< iClass >& _self, bool _load_asset = true )
 			-> cAsset_Ptr;
-		auto GetAssetPtr       ( const cAsset_Meta& _partial, const cShared_ptr< iClass >& _self, bool _load_asset = true )
+		static auto GetAssetPtr( const cShared_ptr< cAsset_Meta >& _meta, const cShared_ptr< iClass >& _self, bool _load_asset = true )
 			-> cAsset_Ptr;
 
 		static auto getAbsolutePath ( const std::filesystem::path& _path ) -> std::filesystem::path;
 		static void makeAbsolutePath(       std::filesystem::path& _path );
 
-		enum class eAssetTask : uint8_t
-		{
-			kLoadMeta,
-			kLoadAsset,
-			kRefreshAsset,
-			kUnloadAsset,
-		};
+		using load_file_func_t = std::function< void( const std::filesystem::path&, Assets::cAsset_List&, Assets::eAssetTask ) >;
 
-		using load_file_func_t = std::function< void( const std::filesystem::path&, Assets::cAsset_List&, eAssetTask ) >;
-
-		void AddFileLoader( const std::vector< str_hash >& _extensions, const load_file_func_t& _function );
-		auto GetFileLoader( const str_hash& _extension_hash ) -> load_file_func_t;
+		void AddFileLoaderForExtensions   ( const std::vector< cStringID >& _extensions, const load_file_func_t& _function );
+		void AddFileLoaderForExtension   ( const cStringID& _extension, const load_file_func_t& _function );
+		void RemoveFileLoader( const std::vector< str_hash >& _extensions );
+		auto GetFileLoader   ( const str_hash& _extension_hash ) -> load_file_func_t;
 	
 	private:
 		struct sRef_Info
@@ -139,12 +141,13 @@ namespace sk
 		void addPathReferrer   ( const str_hash& _path_hash, const void* _referrer );
 		void removePathReferrer( const str_hash& _path_hash, const void* _referrer );
 		
-		static void loadGltfFile     ( const std::filesystem::path& _path, Assets::cAsset_List& _asset_metas, eAssetTask _load_task );
-		static auto loadGltfMeshMeta ( const fastgltf::Mesh& _mesh, size_t _index ) -> cShared_ptr< cAsset_Meta >;
-		static void loadGltfMesh     ( const cAsset_Meta& _meta, const fastgltf::Asset& _asset, fastgltf::Mesh& _mesh, eAssetTask _task );
-		static auto handleGltfTexture( const fastgltf::Asset& _asset, fastgltf::Texture& _texture, eAssetTask _task ) -> cShared_ptr< cAsset_Meta >;
+		static void loadGltfFile         ( const std::filesystem::path& _path, Assets::cAsset_List& _asset_metas, Assets::eAssetTask _load_task );
+		static auto createGltfMeshMeta   ( const fastgltf::Mesh& _mesh, size_t _index ) -> cShared_ptr< cAsset_Meta >;
+		static auto createGltfTextureMeta( const fastgltf::Texture& _texture, size_t _index ) -> cShared_ptr< cAsset_Meta >;
+		static void handleGltfMesh       ( cAsset_Meta& _meta, const fastgltf::Asset& _asset, fastgltf::Mesh& _mesh, Assets::eAssetTask _task );
+		static void handleGltfTexture    ( cAsset_Meta& _meta, const fastgltf::Asset& _asset, fastgltf::Texture& _texture, Assets::eAssetTask _task );
 
-		static void loadPngFile      ( const std::filesystem::path& _path, Assets::cAsset_List& _assets, eAssetTask _load_task );
+		static void loadPngFile      ( const std::filesystem::path& _path, Assets::cAsset_List& _assets, Assets::eAssetTask _load_task );
 
 		void requestAssetLoadJob  ( const cShared_ptr< cAsset_Meta >& _meta, void* _referrer, bool _reload );
 		void requestAssetUnloadJob( const cShared_ptr< cAsset_Meta >& _meta, void* _referrer );

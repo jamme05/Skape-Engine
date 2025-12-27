@@ -24,8 +24,8 @@ namespace sk::Assets::Jobs
     {
         friend class cAsset_Job_Manager;
 
-        cAsset_Worker();
     public:
+        cAsset_Worker();
         using partial_t  = cShared_ptr< cAsset_Meta >;
         using void_ptr_t = cShared_ptr< void >;
         using listener_t = std::function< void( cAsset_Meta&, cAsset_Meta::eEventType ) >;

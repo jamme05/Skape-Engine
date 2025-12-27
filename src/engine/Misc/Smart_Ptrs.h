@@ -314,8 +314,8 @@ namespace sk
 		cShared_ptr< Ot > Cast( void )
 		{
 			cShared_ptr< Ot > other{};
-			other.m_data = m_data_;
-			other.m_ptr_ = static_cast< Ot* >( m_ptr_ );
+			other.m_data_ = m_data_;
+			other.m_ptr_  = static_cast< Ot* >( m_ptr_ );
 			inc();
 
 			return other;
@@ -606,10 +606,13 @@ namespace sk
 
 		[[ nodiscard ]] auto Lock() const
 		{
-			return cShared_ptr< Ty >( static_cast< const cPtr_base& >( this ) );
+			return cShared_ptr< Ty >( static_cast< const cPtr_base& >( *this ) );
 		}
 
 		operator bool( void ) const { return is_valid(); }
+		
+		bool operator==( std::nullptr_t ) const { return is_valid(); }
+		bool operator==( const cWeak_Ptr& _right ) const { return m_data_ == _right.m_data_; }
 
 		Ty& operator  *( void ){ return *get(); }
 		Ty* operator ->( void ){ return  get(); }

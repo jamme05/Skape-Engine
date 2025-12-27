@@ -105,6 +105,12 @@ namespace sk
 		{
 			_l = _r;
 		};
+		
+		template< class Fu, class Tuple >
+		concept appliable = requires( Fu&& _callable, Tuple&& _args )
+		{
+			std::apply( static_cast< Fu&& >( _callable ), static_cast< Tuple&& >( _args ) );
+		};
 
 		// Use event_t to create an event type, as it'll need the helper to function.
 		// TODO: Add some way to deduce the helper from a type.
@@ -114,40 +120,37 @@ namespace sk
 			using raw_t  = FuncTy;
 			using func_t = std::function< FuncTy >;
 			using ret_t  = func_t::result_type;
+			using raw_fun_t = const void*;
+			
+			using args_t = std::tuple_element_t< 2, Helper >;
 			
 			std::function< FuncTy > function;
-			void*                   raw_ptr;
+			raw_fun_t               raw_ptr;
 
 			sEvent() = default;
-			sEvent( const func_t& _function )
-			: function( _function )
-			, raw_ptr( nullptr )
-			{}
 			
-			template< class Fn >
-			requires std::is_same_v< decltype( std::apply( std::declval< Fn >(), std::declval< std::tuple_element_t< 2, Helper > >() ) ), ret_t >
-			sEvent( Fn& _invocable )
-			: function( _invocable )
-			, raw_ptr( nullptr )
-			{}
-			
-			template< class Fn >
-			requires std::is_same_v< decltype( std::apply( std::declval< Fn >(), std::declval< std::tuple_element_t< 2, Helper > >() ) ), ret_t >
-			sEvent( Fn&& _invocable )
-			: function( std::forward< Fn >( _invocable ) )
-			, raw_ptr( nullptr )
+			sEvent( const sEvent& _other )
+			: function( _other.function )
+			, raw_ptr( _other.raw_ptr )
 			{}
 
+			sEvent( sEvent&& _other ) noexcept
+			: function( std::move( _other.function ) )
+			, raw_ptr( _other.raw_ptr )
+			{}
+			
 			template< class H >
+			requires std::negation_v< std::is_same< H, Helper > >
 			sEvent( const sEvent< FuncTy, H >& _other )
 			: function( _other.function )
 			, raw_ptr( _other.raw_ptr )
 			{}
 
 			template< class H >
+			requires std::negation_v< std::is_same< H, Helper > >
 			sEvent( sEvent< FuncTy, H >&& _other )
 			: function( std::move( _other.function ) )
-			, raw_ptr( std::move( _other.raw_ptr ) )
+			, raw_ptr( _other.raw_ptr )
 			{}
 			
 			template< class Ot, class H >
@@ -165,24 +168,51 @@ namespace sk
 			: function( _other.function )
 			, raw_ptr( _other.raw_ptr )
 			{}
+
+			sEvent( const func_t& _function )
+			: function( _function )
+			, raw_ptr( nullptr )
+			{}
+			
+			template< class Fn >
+			requires (
+				!std::is_same_v< std::remove_cvref_t< Fn >, sEvent >
+				&& appliable< std::remove_cvref_t< Fn >, args_t >
+				&& std::is_same_v< decltype( std::apply( std::declval< Fn >(), std::declval< args_t >() ) ), ret_t >
+				)
+			explicit sEvent( Fn& _invocable )
+			: function( _invocable )
+			, raw_ptr( nullptr )
+			{}
+			
+			template< class Fn >
+			requires (
+				!std::is_same_v< std::remove_cvref_t< Fn >, sEvent >
+				&& appliable< std::remove_cvref_t< Fn >, args_t >
+				&& std::is_same_v< decltype( std::apply( std::declval< Fn >(), std::declval< args_t >() ) ), ret_t >
+				)
+			explicit sEvent( Fn&& _invocable )
+			: function( std::forward< Fn >( _invocable ) )
+			, raw_ptr( nullptr )
+			{}
 		};
 
 		template< class Re, class... Args >
 		requires ( std::is_same_v< Re, void > || std::is_same_v< Re, bool > )
-		sEvent( std::function< Re( Args... ) > ) -> sEvent< Re( Args... ), std::tuple< Re( Args... ) > >;
+		sEvent( std::function< Re( Args... ) > ) -> sEvent< Re( Args... ), std::tuple< Re( Args... ), Re, std::tuple< Args... > > >;
 		template< class Fn >
 		sEvent( Fn& ) -> sEvent< function_type_t< &Fn::operator() >, decltype( get_fn_type_helper( &Fn::operator() ) ) >;
 		template< class Fn >
 		sEvent( Fn&& ) -> sEvent< function_type_t< &Fn::operator() >, decltype( get_fn_type_helper( &Fn::operator() ) ) >;
 
 		template< class Re, class... Args >
-		using event_t = sEvent< Re( Args... ), std::tuple< Re( Args... ), Re, Args... > >;
+		using event_t = sEvent< Re( Args... ), std::tuple< Re( Args... ), Re, std::tuple< Args... > > >;
 	} // sk::Event::
 	
 	template< class Ty, class Re, class... Args >
 	auto CreateEvent( Ty& _instance, Re( Ty::*_function )( Args... ) )
 	{
-		static_assert( std::is_same_v< Ty, void > || std::is_same_v< Ty, bool >,
+		static_assert( std::is_same_v< Re, void > || std::is_same_v< Re, bool >,
 			"Event return type HAS to be of type bool or void" );
 
 		// Shared
@@ -204,7 +234,7 @@ namespace sk
 					return true;
 				}
 			};
-			event.raw_ptr = _function;
+			event.raw_ptr = std::addressof( _function );
 
 			return event;
 		}
@@ -212,7 +242,7 @@ namespace sk
 		{
 			Event::event_t< Re, Args... > event;
 			event.function = std::bind_front( _function, _instance );
-			event.raw_ptr  = _function;
+			event.raw_ptr  = std::addressof( _function );
 				
 			return event;
 		}
@@ -221,7 +251,7 @@ namespace sk
 	template< class Ty, class Re, class... Args >
 	auto CreateEvent( Ty& _instance, Re( Ty::* _function )( Args... ) const )
 	{
-		static_assert( std::is_same_v< Ty, void > || std::is_same_v< Ty, bool >,
+		static_assert( std::is_same_v< Re, void > || std::is_same_v< Re, bool >,
 			"Event return type HAS to be of type bool or void" );
 
 		// Shared
@@ -243,7 +273,7 @@ namespace sk
 					return true;
 				}
 			};
-			event.raw_ptr = _function;
+			event.raw_ptr  = std::addressof( _function );
 
 			return event;
 		}
@@ -251,16 +281,11 @@ namespace sk
 		{
 			Event::event_t< Re, Args... > event;
 			event.function = std::bind_front( _function, _instance );
-			event.raw_ptr  = _function;
+			event.raw_ptr  = std::addressof( _function );
+			
 				
 			return event;
 		}
-	}
-	
-	template< class Ty, class Re, class... Args >
-	auto CreateEvent( Ty* _instance, Re( Ty::*_function )( Args... ) )
-	{
-		return CreateEvent( *_instance, _function );
 	}
 	
 	template< class Ty, class Re, class... Args >
@@ -350,14 +375,14 @@ namespace sk
 			iEventDispatcher& operator=( const iEventDispatcher& ){ return *this; }
 			iEventDispatcher& operator=( iEventDispatcher&& ) noexcept { return *this; }
 
-			virtual void remove_listener( const size_t _id ) = 0;
+			virtual void remove_listener_by_id( const size_t _id ) = 0;
 
 			virtual size_t get_arg_size( void ) const = 0;
 			
-			static size_t get_function_hash( void* _ptr )
+			static size_t get_function_hash( const void* _ptr )
 			{
 				// Function hashes will always have a binary 1 in the start.
-				return Hashing::fnv1a_64( reinterpret_cast< const char* >( &_ptr ), sizeof( void* ) ) | 1llu;
+				return Hashing::fnv1a_64( reinterpret_cast< const char* >( &_ptr ), sizeof( _ptr ) ) | 1llu;
 			}
 
 		protected:
@@ -376,14 +401,15 @@ namespace sk
 
 			struct sSelfWrapper
 			{
-				using function_t = std::function< bool( const cWeak_Ptr< void >&, Args... ) >;
+				using function_t = std::function< bool( const cWeak_Ptr< iClass >&, Args... ) >;
+				using raw_func_t = const void*;
 				
 				template< sk_class Ty >
 				sSelfWrapper( void( Ty::*_listener )( Args... ) )
 				{
 					runtime_class = Ty::getStaticClass();
 					
-					wrapped = [ _listener ]( const cWeak_Ptr< void >& _ptr, Args... _args )
+					wrapped = [ _listener ]( const cWeak_Ptr< iClass >& _ptr, Args... _args )
 					{
 						if( auto ptr = _ptr.get() )
 						{
@@ -392,7 +418,7 @@ namespace sk
 						}
 						return false;
 					};
-					raw_ptr = _listener;
+					raw_ptr = std::addressof( _listener );
 				}
 				
 				template< sk_class Ty >
@@ -409,11 +435,11 @@ namespace sk
 						}
 						return false;
 					};
-					raw_ptr = _listener;
+					raw_ptr = std::addressof( _listener );
 				}
 
 				iRuntimeClass* runtime_class;
-				void*          raw_ptr;
+				raw_func_t     raw_ptr;
 				function_t     wrapped;
 			};
 
@@ -538,14 +564,14 @@ namespace sk
 			size_t add_listener( const event_t& _listener )
 			{
 				auto [ id, is_lambda ] = get_function_id( _listener );
-				m_listeners_.insert( std::make_pair( id, _listener ) );
+				m_listeners_.insert( std::make_pair( id, _listener.function ) );
 				return id;
 			} // add_listener
 
 			size_t add_listener( const weak_event_t& _listener )
 			{
 				auto [ id, is_lambda ] = get_function_id( _listener );
-				m_weak_listeners_.insert( std::make_pair( id, _listener ) );
+				m_weak_listeners_.insert( std::make_pair( id, _listener.function ) );
 				return id;
 			} // add_listener
 
@@ -575,7 +601,7 @@ namespace sk
 				}
 			}
 
-			void remove_listener( const size_t _id ) override
+			void remove_listener_by_id( const size_t _id ) override
 			{
 				if( m_is_pushing )
 				{
@@ -589,7 +615,7 @@ namespace sk
 				}
 				else if( const auto itr_2 = m_weak_listeners_.find( _id ); itr_2 != m_weak_listeners_.end() )
 				{
-					m_weak_listeners_.erase( itr );
+					m_weak_listeners_.erase( itr_2 );
 				}
 			} // remove_listener
 
@@ -658,9 +684,9 @@ namespace sk
 				if( _listener.raw_ptr )
 					return { get_function_hash( _listener.raw_ptr ), false };
 
-				auto ptr = _listener.template target< void(*)( Args... ) >();
+				auto ptr = _listener.function.template target< void(*)( Args... ) >();
 				if( ptr != nullptr )
-					return { get_function_hash( ptr ), false };
+					return { get_function_hash( std::addressof( *ptr ) ), false };
 
 				if( !_ignore_lambda )
 					return { get_lambda_hash(), true };
@@ -675,7 +701,7 @@ namespace sk
 				
 				auto ptr = _listener.function.template target< bool(*)( Args... ) >();
 				if( ptr != nullptr )
-					return { get_function_hash( ptr ), false };
+					return { get_function_hash( std::addressof( *ptr ) ), false };
 
 				if( !_ignore_lambda )
 					return { get_lambda_hash(), true };
@@ -721,66 +747,66 @@ namespace sk
 			: m_dispatcher_( std::make_unique< dispatcher_t >( _self ) )
 			{}
 
-			auto& operator+=( const typename dispatcher_t::event_t _listener )
+			auto& operator+=( const dispatcher_t::event_t _listener )
 			{
 				return get() += _listener;
 			}
 
-			auto& operator+=( const typename dispatcher_t::weak_event_t& _listener )
+			auto& operator+=( const dispatcher_t::weak_event_t& _listener )
 			{
 				return get() += _listener;
 			}
 
-			auto& operator+=( const typename dispatcher_t::listener_t& _listener )
+			auto& operator+=( const dispatcher_t::listener_t& _listener )
 			{
 				return get() += _listener;
 			}
 
-			auto& operator+=( const typename dispatcher_t::weak_listener_t& _listener )
+			auto& operator+=( const dispatcher_t::weak_listener_t& _listener )
 			{
 				return get() += _listener;
 			}
 
 			// Unsubscribes a member function to be called on the assigned self.
 			// In case you want to call a function with another class instance, use sk::CreateEvent
-			auto& operator+=( const typename dispatcher_t::sSelfWrapper& _wrapper )
+			auto& operator+=( const dispatcher_t::sSelfWrapper& _wrapper )
 			{
 				return get() += _wrapper;
 			}
 			
-			auto& operator-=( const typename dispatcher_t::event_t& _listener )
+			auto& operator-=( const dispatcher_t::event_t& _listener )
 			{
 				return get() -= _listener;
 			}
 
-			auto& operator-=( const typename dispatcher_t::weak_event_t& _listener )
+			auto& operator-=( const dispatcher_t::weak_event_t& _listener )
 			{
 				return get() -= _listener;
 			}
 
 			// Unsubscribes a member function to be called on the assigned self.
 			// In case you want to call a function with another class instance, use sk::CreateEvent
-			auto& operator-=( const typename dispatcher_t::sSelfWrapper& _wrapper )
+			auto& operator-=( const dispatcher_t::sSelfWrapper& _wrapper )
 			{
 				return get() -= _wrapper;
 			}
 
-			size_t add_listener( const typename dispatcher_t::event_t& _listener )
+			size_t add_listener( const dispatcher_t::event_t& _listener )
 			{
 				return m_dispatcher_->add_listener( _listener );
 			} // add_listener
 
-			size_t add_listener( const typename dispatcher_t::weak_event_t& _listener )
+			size_t add_listener( const dispatcher_t::weak_event_t& _listener )
 			{
 				return m_dispatcher_->add_listener( _listener );
 			} // add_listener
 
-			void remove_listener( const typename dispatcher_t::event_t& _listener )
+			void remove_listener( const dispatcher_t::event_t& _listener )
 			{
 				m_dispatcher_->remove_listener( _listener );
 			}
 
-			void remove_listener( const typename dispatcher_t::weak_event_t& _listener )
+			void remove_listener( const dispatcher_t::weak_event_t& _listener )
 			{
 				m_dispatcher_->remove_listener( _listener );
 			}
@@ -801,7 +827,7 @@ namespace sk
 			}
 
 		private:
-			auto& get() -> dispatcher_t&
+			auto get() -> dispatcher_t&
 			{
 				return *m_dispatcher_;
 			}
@@ -1019,15 +1045,15 @@ namespace sk
 			}
 
 			template< class Ty2, class... Args >
-			auto GetFunctionId( void( Ty2::*_function )( Args...) )
+			static auto GetFunctionId( void( Ty2::*_function )( Args...) )
 			{
-				return iEventDispatcher::get_function_hash( _function );
+				return iEventDispatcher::get_function_hash( std::addressof( _function ) );
 			}
 
 			template< class Ty2, class... Args >
-			auto GetFunctionId( void( Ty2::*_function )( Args...) const )
+			static auto GetFunctionId( void( Ty2::*_function )( Args...) const )
 			{
-				return iEventDispatcher::get_function_hash( _function );
+				return iEventDispatcher::get_function_hash( std::addressof( _function ) );
 			}
 		};
 

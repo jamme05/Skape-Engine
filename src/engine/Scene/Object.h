@@ -104,7 +104,7 @@ namespace sk::Object
 		auto AddOrGetInternalComponent() -> std::pair< bool, cShared_ptr< Ty > >
 		{
 			if( const auto itr = m_internal_components_.find( Ty::getStaticType() ); itr != m_internal_components_.end() )
-				return { false, itr->second };
+				return { false, itr->second.template Cast< Ty >() };
 			
 			auto component = sk::make_shared< Ty >();
 

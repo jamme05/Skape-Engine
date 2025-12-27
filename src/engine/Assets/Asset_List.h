@@ -32,18 +32,20 @@ namespace sk::Assets
 		class asset_iterator
 		{
 		public:
-			asset_iterator( const asset_map_t::const_iterator& _it ) : m_it( _it ){}
+			asset_iterator( const asset_map_t::const_iterator& _it ) : m_it_( _it ){}
 
-			const cShared_ptr< cAsset_Meta >& operator*() const { return m_it->second; }
-			operator cShared_ptr< cAsset_Meta >        () const { return m_it->second; }
+			const cShared_ptr< cAsset_Meta >& operator*() const { return m_it_->second; }
+			operator cShared_ptr< cAsset_Meta >        () const { return m_it_->second; }
+			
+			auto operator->() const -> const cShared_ptr< cAsset_Meta >& { return m_it_->second; }
 
-			bool operator!=( const asset_iterator& _other ) const { return m_it != _other.m_it; }
-			bool operator==( const asset_iterator& _other ) const { return m_it == _other.m_it; }
+			bool operator!=( const asset_iterator& _other ) const { return m_it_ != _other.m_it_; }
+			bool operator==( const asset_iterator& _other ) const { return m_it_ == _other.m_it_; }
 
-			asset_iterator& operator++(){ ++m_it; return *this; }
-			asset_iterator& operator--(){ ++m_it; return *this; }
+			asset_iterator& operator++(){ ++m_it_; return *this; }
+			asset_iterator& operator--(){ ++m_it_; return *this; }
 		private:
-			asset_map_t::const_iterator m_it;
+			asset_map_t::const_iterator m_it_;
 		};
 
 	public:
@@ -61,7 +63,7 @@ namespace sk::Assets
 
 		template< class Ty >
 		requires std::is_base_of_v< cAsset, Ty >
-		cShared_ptr< cAsset > Get_Asset_Of_Type()
+		auto Get_Asset_Of_Type() -> cShared_ptr< cAsset >
 		{
 			auto range = m_assets.equal_range( Ty::getStaticType() );
 
@@ -87,7 +89,7 @@ namespace sk::Assets
 
 		template< class Ty >
 		requires std::is_base_of_v< cAsset, Ty >
-		std::vector< cShared_ptr< Ty > > Get_Assets_Of_Type( const int32_t _max_count = 0 )
+		auto Get_Assets_Of_Type( const int32_t _max_count = 0 ) -> std::vector< cShared_ptr< Ty > >
 		{
 			auto range = m_assets.equal_range( Ty::getStaticClassType() );
 			std::vector< cShared_ptr< Ty > > assets;
@@ -111,13 +113,13 @@ namespace sk::Assets
 		requires std::is_base_of_v< cAsset, Ty >
 		auto GetRange()
 		{
-			return m_assets.equal_range( Ty::getStaticClassType() );
+			return m_assets.equal_range( Ty::getStaticType() );
 		}
 
-		auto begin( void ) const { return asset_iterator( m_assets.begin() ); }
-		auto end  ( void ) const { return asset_iterator( m_assets.end  () ); }
+		[[ nodiscard ]] auto begin( void ) const { return asset_iterator( m_assets.begin() ); }
+		[[ nodiscard ]] auto end  ( void ) const { return asset_iterator( m_assets.end  () ); }
 
-		bool empty( void ) const { return m_assets.empty(); }
+		[[ nodiscard ]] bool empty( void ) const { return m_assets.empty(); }
 
 	protected:
 

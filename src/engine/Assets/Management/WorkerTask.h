@@ -32,9 +32,7 @@ namespace sk::Assets::Jobs
     {
         using path_t = std::filesystem::path;
         path_t        path;
-        // Main asset being loaded
-        partial_t     partial;
-        // Additional assets being affected
+        // All assets being affected
         cAsset_List   affected_assets;
         load_func_t   loader;
         const void*   source;
@@ -42,7 +40,7 @@ namespace sk::Assets::Jobs
                 
     struct sListenerTask
     {
-        partial_t   partial;
+        partial_t   meta;
         listener_t  event;
         const void* source;
     };

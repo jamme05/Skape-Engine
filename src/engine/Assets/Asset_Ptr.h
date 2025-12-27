@@ -21,7 +21,7 @@ namespace sk
 namespace sk
 {
     // Allows manual loading and unloading of the asset.
-    class cAsset_Ptr : Event::cHelper< cAsset_Ptr >
+    class cAsset_Ptr : public Event::cHelper< cAsset_Ptr >
     {
         friend class cAsset_Manager;
         

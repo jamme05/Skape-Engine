@@ -144,7 +144,7 @@ namespace sk::Graphics
         
         m_item_type_ = nullptr;
         
-        AlignAs( sizeof( Ty ), _clear );
+        UnsafeAlignAs( sizeof( Ty ), _clear );
     }
 
     template< reflected Ty > requires ( !std::is_polymorphic_v< Ty > )
@@ -152,7 +152,7 @@ namespace sk::Graphics
     {
         m_item_type_ = &kTypeInfo< Ty >;
         
-        AlignAs( sizeof( Ty ), _clear );
+        UnsafeAlignAs( sizeof( Ty ), _clear );
     }
     
     template< class Ty >

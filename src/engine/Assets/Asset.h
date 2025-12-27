@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <any>
 #include <unordered_map>
 #include <filesystem>
 
@@ -42,6 +43,8 @@ namespace sk
 		friend class cAsset_Ptr;
 		friend class cAsset_Ref_Base;
 		friend class Assets::Jobs::cAsset_Worker;
+		
+		static constexpr std::string_view kMetaExtension = "skmeta"; // = Skape Meta
 	public:
 		enum class eEventType : uint8_t
 		{
@@ -69,8 +72,9 @@ namespace sk
 
 		using dispatcher_t = Event::cEventDispatcher< cAsset_Meta&, const void*, eEventType >;
 		
-		explicit cAsset_Meta( const std::string_view _name )
+		explicit cAsset_Meta( const std::string_view _name, const type_info_t _asset_type )
 		: m_name_{ _name }
+		, m_asset_type_{ _asset_type }
 		{ }
 		~cAsset_Meta() override = default;
 
@@ -93,6 +97,10 @@ namespace sk
 		auto GetAsset() -> Ty*;
 		// Gets the flags this asset has. Check eFlags for details.
 		auto GetFlags() const;
+		// Gets the type info for the asset
+		auto GetType () const -> type_info_t;
+		// Gets the type hash of the asset
+		auto GetHash () const -> type_hash;
 
 		// Adds a listener to get events on when the asset changes.
 		// NOTE: Listeners do not load or unload the asset, and are only used to receive information.
@@ -118,7 +126,7 @@ namespace sk
 		void addReferrer   ( void* _source, cWeak_Ptr< iClass > _referrer );
 		void removeReferrer( const void* _source, cWeak_Ptr< iClass > _referrer );
 
-		void push_load_task( bool _load, const void* _source );
+		void push_load_task( bool _load, const void* _source ) const;
 
 		// Requests a asset loader to post a asset loaded event to the specified listener.
 		void dispatch_if_loaded( const dispatcher_t::listener_t& _listener, const void* _source );
@@ -139,12 +147,13 @@ namespace sk
 		dispatcher_t m_dispatcher_;
 
 		simdjson::dom::object m_metadata_;
-		simdjson::dom::object m_runtime_metadata_;
+		// TODO: Make something more convenient for handling runtime asset metadata.
+		std::unordered_map< str_hash, std::any > m_info_;
 
 		// Nullptr is untrackable referrers.
 		std::unordered_multimap< iClass*, void* > m_referrers_;
 
-		void setPath( const std::filesystem::path& _path );
+		void setPath( std::filesystem::path _path );
 	};
 
 	namespace Asset_Meta
@@ -158,12 +167,12 @@ namespace sk
 	public:
 		auto& GetMeta() const
 		{
-			return m_asset_;
+			return m_metadata_;
 		}
 	protected:
 		cAsset() = default;
 	private:
-		cWeak_Ptr< cAsset_Meta > m_asset_;
+		cWeak_Ptr< cAsset_Meta > m_metadata_;
 	};
 
 	template< class In, class Out >

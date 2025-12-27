@@ -43,50 +43,9 @@ sk::cStringIDManager::sStringRegistry& sk::cStringIDManager::sStringRegistry::op
 sk::cStringIDManager::cStringRegistry::cStringRegistry( sStringRegistry* _registry )
 : m_registry_( _registry )
 {
+    if( _registry != nullptr )
+        m_string_ = _registry->string;
     inc();
-}
-
-sk::cStringIDManager::cStringRegistry::cStringRegistry( const cStringRegistry& _other )
-: m_registry_( _other.m_registry_ )
-{
-    inc();
-}
-
-sk::cStringIDManager::cStringRegistry::cStringRegistry( cStringRegistry&& _other ) noexcept
-: m_registry_( _other.m_registry_ )
-{
-    _other.m_registry_ = nullptr;
-}
-
-sk::cStringIDManager::cStringRegistry::~cStringRegistry()
-{
-    dec();
-}
-
-auto sk::cStringIDManager::cStringRegistry::operator=( const cStringRegistry& _other )->cStringRegistry&
-{
-    if( this ==  &_other )
-        return *this;
-
-    dec();
-    m_registry_ = _other.m_registry_;
-    inc();
-    
-    return *this;
-}
-
-auto sk::cStringIDManager::cStringRegistry::operator=( cStringRegistry&& _other ) noexcept->cStringRegistry&
-{
-    dec();
-    m_registry_ = _other.m_registry_;
-    
-    return *this;
-}
-
-auto sk::cStringIDManager::cStringRegistry::string() const -> const std::string&
-{
-    static auto empty_string = std::string{};
-    return m_registry_ ? m_registry_->string : empty_string;
 }
 
 void sk::cStringIDManager::cStringRegistry::inc() const
@@ -181,23 +140,9 @@ void sk::cStringIDManager::destroyRegistry( const str_hash& _registry )
     }
 }
 
-sk::cStringID::cStringID( const std::string_view _str )
-: m_hash_( _str )
-, m_registry_( cStringIDManager::try_init().getRegistry( _str ) )
-{
-} // cStringID
-
 ////////////////////////////////////////////////
-
-sk::cStringID& sk::cStringID::operator=( const std::string_view& _str )
-{
-    m_hash_   = _str;
-    m_registry_ = cStringIDManager::try_init().getRegistry( _str );
-    
-    return *this;
-}
 
 auto sk::cStringID::operator<<( std::ostream& _os ) const -> std::ostream&
 {
-    return _os << string();
+    return _os << view();
 } // operator<<

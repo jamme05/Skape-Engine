@@ -145,13 +145,13 @@ void sk::cAsset_Ptr::validate() const
 void sk::cAsset_Ptr::subscribe()
 {
     if( !m_has_loaded_.load() )
-        m_asset_meta_->AddListener( CreateEvent( &on_asset_event ) );
+        m_asset_meta_->AddListener( CreateEvent( &cAsset_Ptr::on_asset_event ) );
 }
 
 void sk::cAsset_Ptr::unsubscribe()
 {
     if( m_has_loaded_.load() )
-        m_asset_meta_->RemoveListener( GetFunctionId( &on_asset_event ) );
+        m_asset_meta_->RemoveListener( GetFunctionId( &cAsset_Ptr::on_asset_event ) );
 }
 
 void sk::cAsset_Ptr::on_asset_event( cAsset_Meta& _meta, const void* _source, const cAsset_Meta::eEventType _event )
