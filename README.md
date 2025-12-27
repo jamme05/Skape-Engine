@@ -1,13 +1,15 @@
-# QWarp Engine
+# Skape Engine
+Skape as in Shape or Skapelse (you're allowed ot cringe)
 
-Yes QWarp and not Q-Warp
-
-namespace: qw
+namespace: sk
 
 ## Note:
-Requires a Core to run. Details on how to make one coming sometime in the future.
+Currently doesn't have some helper application for selecting modules, so either just change the UUIDs manually or copy and paste them.
+The engine requires a certain amount of components from the modules. These will be documented in the future.
 
 ## Dependencies:
 - [fastgltf](https://github.com/spnda/fastgltf) - MIT License
   - [simdjson](https://github.com/simdjson/simdjson) - Apache 2.0 License
-- [lodepng](https://github.com/lvandeve/lodepng) - zlib License
+- [stb_image](https://github.com/nothings/stb) - zlib License
+### Note:
+Dependencies for modules are specified within their own folders.
