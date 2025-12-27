@@ -62,7 +62,7 @@ function Default_Module_Setup( module_name )
     
         files { DefaultModuleFiles( "Modules/" .. module_dir .. "/src/**", { ".hpp", ".h", ".cpp", ".c" } ) }
         
-        includedirs { "src/engine", "external/fastgltf/include", "external/stb", Get_Module_Includes() }
+        includedirs { CommonEngineIncludeDirs(), Get_Module_Includes() }
     end
 end
 
@@ -80,7 +80,7 @@ function Module_Setup( module_name, library_dirs, includes )
         -- TODO: Add module.extensions to decide which files.
         files { DefaultModuleFiles( "Modules/" .. module_dir .. "/src/**", { ".hpp", ".h", ".cpp", ".c" } ) }
         
-        includedirs { "src/engine", "external/fastgltf/include", "external/stb", Get_Module_Includes() }
+        includedirs { CommonEngineIncludeDirs(), Get_Module_Includes() }
         libdirs { library_dirs( module_dir ) }
     end
 end

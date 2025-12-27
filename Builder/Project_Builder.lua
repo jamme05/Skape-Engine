@@ -70,6 +70,8 @@ workspace "Skape_Playground"
 
     files { "visualizers/*.natvis" }
 
+    rtti "On"
+
     Setup_Workspace()
 
 filter { "configurations:Debug" }
