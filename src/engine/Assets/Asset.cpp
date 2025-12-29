@@ -10,6 +10,14 @@
 #include <Assets/Management/Asset_Manager.h>
 #include <Assets/Management/Asset_Job_Manager.h>
 
+sk::cAsset_Meta::cAsset_Meta( const std::string_view _name, const type_info_t _asset_type )
+: m_name_{ _name }
+, m_asset_type_{ _asset_type }
+{
+    SK_ERR_IF( m_asset_type_->type != sType_Info::eType::kClass,
+        "Error: Asset HAS to be a class type." )
+}
+
 void sk::cAsset_Meta::Save()
 {
     static constexpr cStringID test = std::string_view{ "Hello" };
@@ -46,6 +54,11 @@ auto sk::cAsset_Meta::GetType() const -> type_info_t
     return m_asset_type_;
 }
 
+auto sk::cAsset_Meta::GetClass() const -> const iRuntimeClass*
+{
+    return m_asset_type_->as_class_info()->runtime_class;
+}
+
 auto sk::cAsset_Meta::GetHash() const -> type_hash
 {
     return m_asset_type_->hash;
@@ -53,14 +66,14 @@ auto sk::cAsset_Meta::GetHash() const -> type_hash
 
 size_t sk::cAsset_Meta::AddListener( const dispatcher_t::event_t& _listener )
 {
-    dispatch_if_loaded( _listener.function, nullptr );
+    dispatch_if_loaded( _listener.function, nullptr, true );
 			
     return m_dispatcher_.add_listener( _listener );
 }
 
 size_t sk::cAsset_Meta::AddListener( const dispatcher_t::weak_event_t& _listener )
 {
-    dispatch_if_loaded( _listener.function, nullptr );
+    dispatch_if_loaded( _listener.function, nullptr, true );
 
     return m_dispatcher_.add_listener( Event::sEvent{ _listener } );
 }
@@ -80,7 +93,7 @@ void sk::cAsset_Meta::RemoveListener( const dispatcher_t::weak_event_t& _listene
     m_dispatcher_.remove_listener( _listener );
 }
 
-void sk::cAsset_Meta::addReferrer( void* _source, cWeak_Ptr< iClass > _referrer )
+void sk::cAsset_Meta::addReferrer( void* _source, const cWeak_Ptr< iClass >& _referrer )
 {
     ++m_asset_refs_;
     
@@ -97,7 +110,7 @@ void sk::cAsset_Meta::addReferrer( void* _source, cWeak_Ptr< iClass > _referrer 
     push_load_task( true, _source );
 }
 
-void sk::cAsset_Meta::removeReferrer( const void* _source, cWeak_Ptr< iClass > _referrer )
+void sk::cAsset_Meta::removeReferrer( const void* _source, const cWeak_Ptr< iClass >& _referrer )
 {
 #ifdef DEBUG
     // TODO: Think of a way to make this faster.
@@ -137,7 +150,7 @@ void sk::cAsset_Meta::push_load_task( const bool _load, const void* _source ) co
     Jobs::sTask task;
     task.type = _load ? Jobs::eJobType::kLoad : Jobs::eJobType::kUnload;
     task.data = ::new( Memory::alloc_fast( sizeof( Jobs::sAssetTask ) ) ) Jobs::sAssetTask{
-        .path   = m_path_.view(),
+        .path   = m_absolute_path_,
         .affected_assets = affected,
         .loader = loader,
         .source = _source,
@@ -146,7 +159,7 @@ void sk::cAsset_Meta::push_load_task( const bool _load, const void* _source ) co
     Jobs::cAsset_Job_Manager::get().push_task( task );
 }
 
-void sk::cAsset_Meta::dispatch_if_loaded( const dispatcher_t::listener_t& _listener, const void* _source )
+void sk::cAsset_Meta::dispatch_if_loaded( const dispatcher_t::listener_t& _listener, const void* _source, bool _is_loading )
 {
     if( !IsLoaded() )
         return;
@@ -166,7 +179,8 @@ void sk::cAsset_Meta::dispatch_if_loaded( const dispatcher_t::listener_t& _liste
 
 void sk::cAsset_Meta::setPath( std::filesystem::path _path )
 {
-    m_ext_  = _path.extension().string();
+    m_absolute_path_ = _path;
+    m_ext_  = _path.extension().string().substr( 1 );
     m_path_ = _path.replace_extension().string();
 }
 

@@ -32,6 +32,12 @@ namespace sk
 {
 	cAsset_Manager::cAsset_Manager()
 	{
+		// We're expected to be inside [Project Root]/Build/Project/Startup
+		// And we need to move to [Project Root]/game
+		auto current_path = std::filesystem::current_path();
+		current_path = current_path.parent_path().parent_path().parent_path();
+		std::filesystem::current_path( current_path / "game" );
+
 		loadEmbedded();
 
 		Assets::Jobs::cAsset_Job_Manager::init();
@@ -56,7 +62,7 @@ namespace sk
 			
 			// It's ugly but it works
 			// TODO: Use stringID instead of str_hash in places like these.
-			const auto path   = assets.begin()->GetPath().view();
+			const auto path   = assets.begin()->GetAbsolutePath();
 			const auto loader = GetFileLoader( assets.begin()->m_ext_ );
 			
 			task.data = ::new( Memory::alloc_fast( sizeof( Assets::Jobs::sAssetTask ) ) ) Assets::Jobs::sAssetTask{
@@ -112,8 +118,8 @@ namespace sk
 	auto cAsset_Manager::getAssetsByPath( const str_hash& _path_hash ) -> Assets::cAsset_List
 	{
 		Assets::cAsset_List assets;
-		const auto [ fst, snd ] = m_asset_path_map_.equal_range( _path_hash );
-		assets.m_assets.insert( fst, snd );
+		for( auto [ fst, lst ] = m_asset_path_map_.equal_range( _path_hash ); fst != lst; ++fst )
+			assets.addAsset( fst->second );
 
 		return assets;
 	} // getAssetsByPath
@@ -156,7 +162,13 @@ namespace sk
 
 	auto cAsset_Manager::loadFile( const std::filesystem::path& _path, const bool _reload ) -> Assets::cAsset_List
 	{
-		const auto extension_hash = str_hash( _path.extension() );
+		auto ext = _path.extension().string();
+		SK_ERR_IF( ext.empty(),
+			"Error: File extension is empty." )
+		
+		ext = ext.substr( 1 );
+		
+		const auto extension_hash = str_hash( ext );
 
 		const auto callback_pair = m_load_callbacks_.find( extension_hash );
 
@@ -166,23 +178,16 @@ namespace sk
 		const auto absolute_path = getAbsolutePath( _path );
 
 		Assets::cAsset_List assets;
-		callback_pair->second( _path, assets, Assets::eAssetTask::kLoadMeta );
+		callback_pair->second( absolute_path, assets, Assets::eAssetTask::kLoadMeta );
 
 		for( auto& asset : assets )
+		{
+			asset->setPath( absolute_path );
 			registerAsset( asset );
+		}
 
 		return assets;
 	} // loadFile
-	
-	void cAsset_Manager::RequestLoadAsset( const cAsset_Meta& _partial )
-	{
-		
-	}
-
-	void cAsset_Manager::RequestUnloadAsset( const cAsset_Meta& _partial, bool _force )
-	{
-		
-	}
 
 	auto cAsset_Manager::GetAssetPtrByName( const str_hash& _name_hash, const cShared_ptr< iClass >& _self, bool _load_asset ) -> cAsset_Ptr
 	{
@@ -208,7 +213,7 @@ namespace sk
 
 	auto cAsset_Manager::GetAssetPtr( const cShared_ptr< cAsset_Meta >& _meta, const cShared_ptr< iClass >& _self, const bool _load_asset ) -> cAsset_Ptr
 	{
-		auto ptr = cAsset_Ptr{ _meta, _self };
+		auto ptr = cAsset_Ptr{ _self, _meta };
 		if( _load_asset )
 			ptr.LoadSync();
 		
@@ -271,7 +276,7 @@ namespace sk
 		referrers.erase( referrers.find( _referrer ) );
 	}
 
-	void cAsset_Manager::loadGltfFile( const std::filesystem::path& _path, Assets::cAsset_List& _asset_metas, Assets::eAssetTask _load_task )
+	void cAsset_Manager::loadGltfFile( const std::filesystem::path& _path, Assets::cAsset_List& _metas, Assets::eAssetTask _load_task )
 	{
 		if( _load_task == Assets::eAssetTask::kUnloadAsset )
 			return;
@@ -290,7 +295,6 @@ namespace sk
 
 		auto& asset = raw_asset.get();
 
-		Assets::cAsset_List assets;
 		for( auto& node : asset.nodes )
 		{
 			// TODO: Models
@@ -298,13 +302,13 @@ namespace sk
 			// TODO: Decide if models are gonna be a thing, or just have them be prefabs.
 		}
 		
-		auto [ tex_fst, tex_lst ] = _asset_metas.GetRange< Assets::cTexture >();
+		auto [ tex_fst, tex_lst ] = _metas.GetRange< Assets::cTexture >();
 		for( size_t i = 0; i < asset.textures.size(); i++ )
 		{
 			if( _load_task == Assets::eAssetTask::kLoadMeta )
 			{
 				auto& texture = asset.textures[ i ];
-				assets.addAsset( createGltfTextureMeta( texture, i ) );
+				_metas.addAsset( createGltfTextureMeta( texture, i ) );
 			}
 			else
 			{
@@ -315,13 +319,13 @@ namespace sk
 			}
 		}
 		
-		auto [ mesh_fst, mesh_lst ] = _asset_metas.GetRange< Assets::cMesh >();
+		auto [ mesh_fst, mesh_lst ] = _metas.GetRange< Assets::cMesh >();
 		for( size_t i = 0; i < asset.meshes.size(); i++ )
 		{
 			if( _load_task == Assets::eAssetTask::kLoadMeta )
 			{
 				auto& mesh = asset.meshes[ i ];
-				assets.addAsset( createGltfMeshMeta( mesh, i ) );
+				_metas.addAsset( createGltfMeshMeta( mesh, i ) );
 			}
 			else
 			{
@@ -334,7 +338,7 @@ namespace sk
 
 		if( _load_task == Assets::eAssetTask::kLoadMeta )
 		{
-			for( auto& meta : assets )
+			for( auto& meta : _metas )
 				meta->m_flags_ |= cAsset_Meta::eFlags::kSharesPath;
 		}
 	} // loadGltfFile
@@ -351,7 +355,7 @@ namespace sk
 	auto cAsset_Manager::createGltfTextureMeta( const fastgltf::Texture& _texture,
 		size_t _index )->cShared_ptr< cAsset_Meta >
 	{
-		auto meta = sk::make_shared< cAsset_Meta >( std::string_view( _texture.name ), &sk::kTypeInfo< Assets::cMesh > );
+		auto meta = sk::make_shared< cAsset_Meta >( std::string_view( _texture.name ), &sk::kTypeInfo< Assets::cTexture > );
 		
 		meta->m_info_[ "gltf_index" ] = _index;
 		
@@ -498,7 +502,7 @@ namespace sk
 
 	void cAsset_Manager::handleGltfMesh( cAsset_Meta& _meta, const fastgltf::Asset& _asset, fastgltf::Mesh& _mesh, const Assets::eAssetTask _task )
 	{
-		auto mesh_asset = sk::Memory::alloc< Assets::cMesh >( 1, std::source_location::current() , _meta.GetName().string() );
+		const auto mesh_asset = sk::Memory::alloc< Assets::cMesh >( 1, std::source_location::current() , _meta.GetName().string() );
 		
 		for( auto& primitive : _mesh.primitives )
 		{

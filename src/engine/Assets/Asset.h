@@ -35,10 +35,8 @@ namespace sk
 	constexpr auto kInvalid_Asset_Id = std::numeric_limits< uint64_t >::max();
 
 	// Asset Metadata class
-	SK_CLASS( Asset_Meta ), public cShared_from_this< cAsset_Meta >
+	class cAsset_Meta : public cShared_from_this< cAsset_Meta >
 	{
-		SK_CLASS_BODY( Asset_Meta )
-
 		friend class cAsset_Manager;
 		friend class cAsset_Ptr;
 		friend class cAsset_Ref_Base;
@@ -70,16 +68,18 @@ namespace sk
 			kSharesPath = 1 << 3,
 		};
 
-		using dispatcher_t = Event::cEventDispatcher< cAsset_Meta&, const void*, eEventType >;
+		using dispatcher_t = Event::cDispatcherProxy< cAsset_Meta&, const void*, eEventType >;
 		
-		explicit cAsset_Meta( const std::string_view _name, const type_info_t _asset_type )
-		: m_name_{ _name }
-		, m_asset_type_{ _asset_type }
-		{ }
-		~cAsset_Meta() override = default;
+		cAsset_Meta( std::string_view _name, type_info_t _asset_type );
+		~cAsset_Meta() = default;
+		cAsset_Meta( const cAsset_Meta& ) = delete;
+		cAsset_Meta( cAsset_Meta&& ) = delete;
+		cAsset_Meta& operator=( const cAsset_Meta& ) = delete;
+		cAsset_Meta& operator=( cAsset_Meta&& ) = delete;
 
 		auto& GetName() const { return m_name_; }
 		auto& GetPath() const { return m_path_; }
+		auto& GetAbsolutePath() const { return m_absolute_path_; }
 		
 		// Saves any changes made to the asset.
 		void Save();
@@ -90,7 +90,7 @@ namespace sk
 		// Gets weather or not the asset has metadata
 		bool HasMetadata() const;
 		
-		// Gets the asset
+		// Gets the asset. Unsafe to be used directly as the state is controlled externally.
 		auto GetAsset() const -> cAsset*;
 		// Gets the asset if it is of a certain type
 		template< reflected Ty >
@@ -99,6 +99,8 @@ namespace sk
 		auto GetFlags() const;
 		// Gets the type info for the asset
 		auto GetType () const -> type_info_t;
+		// Gets the type info for the asset
+		auto GetClass() const -> const iRuntimeClass*;
 		// Gets the type hash of the asset
 		auto GetHash () const -> type_hash;
 
@@ -123,19 +125,21 @@ namespace sk
 		void RemoveListener( const dispatcher_t::weak_event_t& _listener );
 
 	private:
-		void addReferrer   ( void* _source, cWeak_Ptr< iClass > _referrer );
-		void removeReferrer( const void* _source, cWeak_Ptr< iClass > _referrer );
+		void addReferrer   ( void* _source, const cWeak_Ptr< iClass >& _referrer );
+		void removeReferrer( const void* _source, const cWeak_Ptr< iClass >& _referrer );
+		void setPath( std::filesystem::path _path );
 
 		void push_load_task( bool _load, const void* _source ) const;
 
 		// Requests a asset loader to post a asset loaded event to the specified listener.
-		void dispatch_if_loaded( const dispatcher_t::listener_t& _listener, const void* _source );
+		void dispatch_if_loaded( const dispatcher_t::listener_t& _listener, const void* _source, bool _is_loading );
 
-		cUUID     m_uuid_ = cUUID::kInvalid;
 		cStringID m_name_ = {};
 		cStringID m_path_ = {};
+		std::filesystem::path m_absolute_path_ = {};
 		// File Extension
 		cStringID m_ext_  = {};
+		cUUID     m_uuid_ = cUUID::kInvalid;
 
 		type_info_t m_asset_type_ = nullptr;
 		cAsset*     m_asset_      = nullptr;
@@ -146,14 +150,11 @@ namespace sk
 		std::mutex   m_dispatcher_mutex_;
 		dispatcher_t m_dispatcher_;
 
-		simdjson::dom::object m_metadata_;
 		// TODO: Make something more convenient for handling runtime asset metadata.
 		std::unordered_map< str_hash, std::any > m_info_;
 
 		// Nullptr is untrackable referrers.
 		std::unordered_multimap< iClass*, void* > m_referrers_;
-
-		void setPath( std::filesystem::path _path );
 	};
 
 	namespace Asset_Meta
@@ -191,7 +192,6 @@ namespace sk
 
 } // sk::
 
-DECLARE_CLASS( sk::Asset_Meta )
 DECLARE_CLASS( sk::Asset )
 
 // Initializes data required for cAsset.

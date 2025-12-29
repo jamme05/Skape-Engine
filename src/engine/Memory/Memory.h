@@ -37,7 +37,7 @@ namespace sk::Memory
 	// Returns the size ( in bytes ) aligned.
 	constexpr size_t get_aligned( const size_t _size, const uint32_t _align = default_alignment )
 	{
-		if( is_power_of_two( _size ) )
+		if( is_power_of_two( _align ) )
 		{
 			const auto align = _align - 1;
 			return ( _size + align ) & ~align;

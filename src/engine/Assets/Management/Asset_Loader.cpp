@@ -55,10 +55,16 @@ void sk::Assets::Jobs::cAsset_Worker::load_asset( sAssetTask& _task, const bool 
 {
     const auto loader_task = _refresh ? eAssetTask::kRefreshAsset : eAssetTask::kLoadAsset;
     _task.loader( _task.path, _task.affected_assets, loader_task );
+    
+    for( auto& meta : _task.affected_assets )
+        meta->m_dispatcher_.push_event( *meta, nullptr, _refresh ? cAsset_Meta::eEventType::kUpdated : cAsset_Meta::eEventType::kLoaded );
 }
 
 void sk::Assets::Jobs::cAsset_Worker::unload_asset( sAssetTask& _task )
 {
+    for( auto& meta : _task.affected_assets )
+        meta->m_dispatcher_.push_event( *meta, nullptr, cAsset_Meta::eEventType::kUnload );
+    
     _task.loader( _task.path, _task.affected_assets, eAssetTask::kUnloadAsset );
 
     for( auto& asset : _task.affected_assets )

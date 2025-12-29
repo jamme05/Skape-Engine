@@ -490,7 +490,7 @@ namespace sk
 		template< class Other, std::enable_if_t< std::is_base_of_v< Ty, Other > >... >
 		cWeak_Ptr( const cWeak_Ptr< Other >& _right )
 		{
-			m_data_ = _right.m_data;
+			m_data_ = _right.m_data_;
 			inc_weak();
 		} // cShared_ptr
 
@@ -611,7 +611,7 @@ namespace sk
 
 		operator bool( void ) const { return is_valid(); }
 		
-		bool operator==( std::nullptr_t ) const { return is_valid(); }
+		bool operator==( std::nullptr_t ) const { return !is_valid(); }
 		bool operator==( const cWeak_Ptr& _right ) const { return m_data_ == _right.m_data_; }
 
 		Ty& operator  *( void ){ return *get(); }
@@ -623,10 +623,10 @@ namespace sk
 		operator Ty*   ( void )       { return get(); }
 		operator Ty*   ( void ) const { return get(); }
 
-		Ty* get( void )       { return static_cast< Ty* >( m_data_->get_ptr() ); }
-		Ty* get( void ) const { return static_cast< Ty* >( m_data_->get_ptr() ); }
+		Ty* get( void )       { return static_cast< Ty* >( m_data_ ? m_data_->get_ptr() : nullptr ); }
+		Ty* get( void ) const { return static_cast< Ty* >( m_data_ ? m_data_->get_ptr() : nullptr ); }
 
-		bool is_valid( void ) const { return m_data_ != nullptr && m_data_->get_ptr(); }
+		bool is_valid( void ) const { return get() != nullptr; }
 
 		// TODO: Make safer version.
 		// Safe enough? You can go up/down in the polymorphic family tree?
@@ -667,7 +667,7 @@ namespace sk
 
 	protected:
 		cShared_from_this( void )
-		: m_self_( cPtr_base( SK_SINGLE( Ptr_logic::cData< Ty >, static_cast< Ty* >( this ) ) ) )
+		: m_self_( SK_SINGLE( Ptr_logic::cData< Ty >, static_cast< Ty* >( this ) ) )
 		{
 		} // cShared_from_this
 

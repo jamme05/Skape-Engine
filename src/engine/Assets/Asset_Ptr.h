@@ -28,14 +28,14 @@ namespace sk
     public:
         using listener_t          = cAsset_Meta::dispatcher_t::listener_t;
         using weak_listener_t     = cAsset_Meta::dispatcher_t::weak_listener_t;
-        using load_dispatcher_t   = Event::cDispatcherProxy< bool, cAsset& >;
+        using load_dispatcher_t   = Event::cDispatcherProxy< cAsset& >;
         using update_dispatcher_t = Event::cDispatcherProxy< cAsset& >;
         using unload_dispatcher_t = Event::cDispatcherProxy< cAsset_Meta& >;
 
         // TODO: Make the default constructor invalid.
         cAsset_Ptr() = default;
         explicit cAsset_Ptr( const cWeak_Ptr< iClass >& _self );
-        explicit cAsset_Ptr( const cShared_ptr< cAsset_Meta >& _meta, const cWeak_Ptr< iClass >& _self = nullptr );
+        explicit cAsset_Ptr( const cWeak_Ptr< iClass >& _self, const cShared_ptr< cAsset_Meta >& _meta );
         cAsset_Ptr( const cAsset_Ptr& _other, const cWeak_Ptr< iClass >& _self = nullptr );
         cAsset_Ptr( cAsset_Ptr&& _other ) noexcept;
         ~cAsset_Ptr();
@@ -74,7 +74,8 @@ namespace sk
         meta_t  m_asset_meta_  = nullptr;
         cAsset* m_asset_       = nullptr;
         
-        bool             m_is_listening_ = false;
-        std::atomic_bool m_has_loaded_   = false;
+        bool             m_is_listening_  = false;
+        std::atomic_bool m_has_loaded_    = false;
+        std::atomic_bool m_has_requested_ = false;
     };
 } // sk::

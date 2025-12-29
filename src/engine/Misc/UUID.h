@@ -14,7 +14,7 @@ namespace sk
 {
     class cUUID_Helper;
 
-    class alignas( 16 ) cUUID
+    class cUUID
     {
         // Don't make a full 128-bit integer value as the full functionality isn't required.
         uint64_t m_low_  = 0;

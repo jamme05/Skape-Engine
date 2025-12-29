@@ -83,6 +83,9 @@ namespace sk::Memory
 	template< typename Ty >
 	static void free( Ty* _block )
 	{
+		if( _block == nullptr )
+			return;
+		
 		const auto count_ptr = reinterpret_cast< size_t* >( _block ) - 1;
 
 		for( size_t i = 0; i < *count_ptr; i++ )

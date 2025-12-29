@@ -6,7 +6,7 @@
 
 #include "Asset_Ptr.h"
 
-sk::cAsset_Ptr::cAsset_Ptr( const cWeak_Ptr<iClass>& _self )
+sk::cAsset_Ptr::cAsset_Ptr( const cWeak_Ptr< iClass >& _self )
 : on_asset_loaded( _self )
 , on_asset_updated( _self )
 , on_asset_unloaded( _self )
@@ -14,7 +14,7 @@ sk::cAsset_Ptr::cAsset_Ptr( const cWeak_Ptr<iClass>& _self )
 {
 }
 
-sk::cAsset_Ptr::cAsset_Ptr( const cShared_ptr< cAsset_Meta >& _meta, const cWeak_Ptr< iClass >& _self )
+sk::cAsset_Ptr::cAsset_Ptr( const cWeak_Ptr< iClass >& _self, const cShared_ptr< cAsset_Meta >& _meta )
 : cAsset_Ptr( _self )
 {
     SetAsset( _meta );
@@ -71,7 +71,7 @@ auto sk::cAsset_Ptr::GetAsset() const -> cAsset*
 
 bool sk::cAsset_Ptr::IsLoaded() const
 {
-    return m_has_loaded_.load() && m_asset_meta_ != nullptr && m_asset_meta_->IsLoaded();
+    return m_has_requested_.load() && m_has_loaded_.load();
 }
 
 bool sk::cAsset_Ptr::SetAsset( const cShared_ptr< cAsset_Meta >& _meta )
@@ -83,8 +83,6 @@ bool sk::cAsset_Ptr::SetAsset( const cShared_ptr< cAsset_Meta >& _meta )
 
     if( _meta == nullptr )
         return false;
-
-    subscribe();
     
     return true;
 }
@@ -110,6 +108,8 @@ bool sk::cAsset_Ptr::LoadAsync()
 {
     validate();
 
+    m_has_requested_.store( true );
+    subscribe();
     m_asset_meta_->addReferrer( this, m_self_ );
 
     return true;
@@ -127,13 +127,14 @@ void sk::cAsset_Ptr::Unload()
     }
 
     m_has_loaded_.store( false );
+    m_has_requested_.store( false );
     
     m_asset_meta_->removeReferrer( this, m_self_ );
 }
 
 bool sk::cAsset_Ptr::IsValid() const
 {
-    return m_asset_meta_ != nullptr;
+    return m_asset_meta_.is_valid();
 }
 
 void sk::cAsset_Ptr::validate() const
@@ -154,10 +155,9 @@ void sk::cAsset_Ptr::unsubscribe()
         m_asset_meta_->RemoveListener( GetFunctionId( &cAsset_Ptr::on_asset_event ) );
 }
 
-void sk::cAsset_Ptr::on_asset_event( cAsset_Meta& _meta, const void* _source, const cAsset_Meta::eEventType _event )
+void sk::cAsset_Ptr::on_asset_event( cAsset_Meta& _meta, const void*, const cAsset_Meta::eEventType _event )
 {
-    const auto asset     = _meta.GetAsset();
-    const bool from_this = _source == this;
+    const auto asset = _meta.GetAsset();
     switch( _event )
     {
     case cAsset_Meta::eEventType::kLoaded:
@@ -166,7 +166,7 @@ void sk::cAsset_Ptr::on_asset_event( cAsset_Meta& _meta, const void* _source, co
         m_has_loaded_.store( true );
         m_has_loaded_.notify_all();
         
-        on_asset_loaded.push_event( from_this, *asset );
+        on_asset_loaded.push_event( *asset );
     break;
     case cAsset_Meta::eEventType::kUpdated:
         on_asset_updated.push_event( *asset );

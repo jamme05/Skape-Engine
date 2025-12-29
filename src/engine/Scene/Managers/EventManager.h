@@ -727,10 +727,10 @@ namespace sk
 				return gen();
 			}
 
-			cWeak_Ptr< iClass >                      m_self_;
-			vector< size_t >                         m_to_remove_;
-			unordered_map< size_t, listener_t >      m_listeners_;      // Static Listeners
-			unordered_map< size_t, weak_listener_t > m_weak_listeners_; // Class Listeners, returns false if no longer valid.
+			cWeak_Ptr< iClass >                      m_self_      = nullptr;
+			vector< size_t >                         m_to_remove_ = {};
+			unordered_map< size_t, listener_t >      m_listeners_ = {};      // Static Listeners
+			unordered_map< size_t, weak_listener_t > m_weak_listeners_ = {}; // Class Listeners, returns false if no longer valid.
 		};
 
 		// Has a unique ptr to a dispatcher but provides proxy functions to it.
@@ -740,6 +740,11 @@ namespace sk
 		{
 			using dispatcher_t = cEventDispatcher< Args... >;
 		public:
+			using listener_t      = dispatcher_t::listener_t;
+			using weak_listener_t = dispatcher_t::weak_listener_t;
+			using event_t         = dispatcher_t::event_t;
+			using weak_event_t    = dispatcher_t::weak_event_t;
+
 			cDispatcherProxy()
 			: m_dispatcher_( std::make_unique< dispatcher_t >() )
 			{}
@@ -747,22 +752,22 @@ namespace sk
 			: m_dispatcher_( std::make_unique< dispatcher_t >( _self ) )
 			{}
 
-			auto& operator+=( const dispatcher_t::event_t _listener )
+			auto& operator+=( const event_t _listener )
 			{
 				return get() += _listener;
 			}
 
-			auto& operator+=( const dispatcher_t::weak_event_t& _listener )
+			auto& operator+=( const weak_event_t& _listener )
 			{
 				return get() += _listener;
 			}
 
-			auto& operator+=( const dispatcher_t::listener_t& _listener )
+			auto& operator+=( const listener_t& _listener )
 			{
 				return get() += _listener;
 			}
 
-			auto& operator+=( const dispatcher_t::weak_listener_t& _listener )
+			auto& operator+=( const weak_listener_t& _listener )
 			{
 				return get() += _listener;
 			}
@@ -774,12 +779,12 @@ namespace sk
 				return get() += _wrapper;
 			}
 			
-			auto& operator-=( const dispatcher_t::event_t& _listener )
+			auto& operator-=( const event_t& _listener )
 			{
 				return get() -= _listener;
 			}
 
-			auto& operator-=( const dispatcher_t::weak_event_t& _listener )
+			auto& operator-=( const weak_event_t& _listener )
 			{
 				return get() -= _listener;
 			}
@@ -791,29 +796,29 @@ namespace sk
 				return get() -= _wrapper;
 			}
 
-			size_t add_listener( const dispatcher_t::event_t& _listener )
+			size_t add_listener( const event_t& _listener )
 			{
 				return m_dispatcher_->add_listener( _listener );
 			} // add_listener
 
-			size_t add_listener( const dispatcher_t::weak_event_t& _listener )
+			size_t add_listener( const weak_event_t& _listener )
 			{
 				return m_dispatcher_->add_listener( _listener );
 			} // add_listener
 
-			void remove_listener( const dispatcher_t::event_t& _listener )
+			void remove_listener( const event_t& _listener )
 			{
 				m_dispatcher_->remove_listener( _listener );
 			}
 
-			void remove_listener( const dispatcher_t::weak_event_t& _listener )
+			void remove_listener( const weak_event_t& _listener )
 			{
 				m_dispatcher_->remove_listener( _listener );
 			}
 
-			void remove_listener( const size_t _id )
+			void remove_listener_by_id( const size_t _id )
 			{
-				m_dispatcher_->remove_listener( _id );
+				m_dispatcher_->remove_listener_by_id( _id );
 			}
 
 			void push_event( Args... _args )

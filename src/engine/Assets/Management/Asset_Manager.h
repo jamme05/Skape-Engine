@@ -56,9 +56,10 @@ namespace sk
 
 		template< class Ty >
 		requires std::is_base_of_v< cAsset_Meta, Ty >
+		[[ deprecated( "With the changes to the asset system this no longer works." ) ]]
 		auto getAssetAs( const cUUID _id ) -> cShared_ptr< Ty >
 		{
-			if( auto asset = getAsset( _id ); asset && asset->getClass().isDerivedFrom( Ty::GetStaticClass() ) )
+			if( auto asset = getAsset( _id ); asset && asset->GetClass()->isDerivedFrom( Ty::GetStaticClass() ) )
 				return asset.Cast< Ty >();
 
 			return nullptr;
@@ -103,8 +104,6 @@ namespace sk
 		auto loadFolder( const std::filesystem::path& _path, const bool _recursive = true, const bool _reload = false ) -> Assets::cAsset_List;
 		auto loadFile  ( const std::filesystem::path& _path, const bool _reload = false ) -> Assets::cAsset_List;
 
-		void RequestLoadAsset  ( const cAsset_Meta& _partial );
-		void RequestUnloadAsset( const cAsset_Meta& _partial, bool _force = false );
 		auto GetAssetPtrByName ( const str_hash& _name_hash, const cShared_ptr< iClass >& _self, bool _load_asset = true )
 			-> cAsset_Ptr;
 		auto GetAssetPtrByPath ( const str_hash& _path_hash, const cShared_ptr< iClass >& _self, bool _load_asset = true )
@@ -141,7 +140,7 @@ namespace sk
 		void addPathReferrer   ( const str_hash& _path_hash, const void* _referrer );
 		void removePathReferrer( const str_hash& _path_hash, const void* _referrer );
 		
-		static void loadGltfFile         ( const std::filesystem::path& _path, Assets::cAsset_List& _asset_metas, Assets::eAssetTask _load_task );
+		static void loadGltfFile         ( const std::filesystem::path& _path, Assets::cAsset_List& _metas, Assets::eAssetTask _load_task );
 		static auto createGltfMeshMeta   ( const fastgltf::Mesh& _mesh, size_t _index ) -> cShared_ptr< cAsset_Meta >;
 		static auto createGltfTextureMeta( const fastgltf::Texture& _texture, size_t _index ) -> cShared_ptr< cAsset_Meta >;
 		static void handleGltfMesh       ( cAsset_Meta& _meta, const fastgltf::Asset& _asset, fastgltf::Mesh& _mesh, Assets::eAssetTask _task );

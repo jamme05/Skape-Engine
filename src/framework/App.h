@@ -30,7 +30,7 @@ MAKE_STRUCT( TestStructNested,
 	M( TestStruct, Val2 ),
 )
 
-class cApp : public sk::cSingleton< cApp >, public sk::Input::iListener, public sk::cShared_from_this< cApp >, public sk::Event::cHelper< cApp >
+class cApp : public sk::cSingleton< cApp >, public sk::Input::iListener
 {
 	bool m_running = true;
 

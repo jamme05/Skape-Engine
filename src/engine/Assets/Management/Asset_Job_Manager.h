@@ -26,6 +26,7 @@ namespace sk::Assets::Jobs
     private:
         void push_task( const sTask& _task );
         void resize   ( size_t _new_size );
+        auto distance () -> size_t;
 
         using workers_t = cAsset_Worker*;
         

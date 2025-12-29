@@ -77,7 +77,7 @@ auto sk::cStringIDManager::getRegistry( const std::string_view _str ) -> cString
         {
             spot = m_registries_.size();
             // More efficient than resize.
-            m_registries_.emplace_back();
+            m_registries_.emplace_back( std::make_unique< sStringRegistry >() );
         }
         else
         {
@@ -85,7 +85,7 @@ auto sk::cStringIDManager::getRegistry( const std::string_view _str ) -> cString
             m_available_spots_.pop_back();
         }
 
-        auto& registry  = m_registries_[ spot ];
+        auto& registry  = *m_registries_[ spot ];
         registry.ref_count.store( 0, std::memory_order_relaxed );
         registry.hash   = hash;
         registry.string = std::string_view( _str.data(), _str.size() );
@@ -121,7 +121,7 @@ void sk::cStringIDManager::destroyRegistry( const str_hash& _registry )
         }
 
         // We can ignore the pruning if the spot that's available isn't in the back.
-        if( m_available_spots_.front() != m_registries_.size() - 1 )
+        if( m_available_spots_.empty() || m_available_spots_.front() != m_registries_.size() - 1 )
             return;
         
         // We will be going from back to front and purge everything that has been "destroyed"
@@ -129,7 +129,7 @@ void sk::cStringIDManager::destroyRegistry( const str_hash& _registry )
         uint32_t prune = 0;
         for( size_t i = 0; i < m_available_spots_.size(); ++i )
         {
-            if( m_registries_[ i ].hash != str_hash::kEmpty )
+            if( m_registries_[ i ]->hash != str_hash::kEmpty )
                 break;
             
             prune = static_cast< uint32_t >( i );

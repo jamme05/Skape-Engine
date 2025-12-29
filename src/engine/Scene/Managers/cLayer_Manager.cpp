@@ -17,7 +17,7 @@ void sk::Scene::cLayer_Manager::AddLayer( const uint64_t _layer, const cStringID
         TEXT( "Layer with name {} and value {} is not a power of two.", _name.view(), _layer ) )
     
     sLayer* layer;
-    if( m_layers_.size() < static_cast< size_t >( _layer ) )
+    if( m_layers_.size() <= static_cast< size_t >( _layer ) )
     {
         m_layers_.resize( _layer + 1 );
         layer = &m_layers_.back();
@@ -55,7 +55,7 @@ void sk::Scene::cLayer_Manager::AddObject( const cShared_ptr< Object::iObject >&
     if( !was_created && component->m_index_ != std::numeric_limits< uint64_t >::max() )
         removeObjectAt( component->m_layer_index_, component->m_index_ );
     
-    const auto layer_index = __builtin_ctzll( _object->GetLayer() );
+    const auto layer_index = std::countr_one( _object->GetLayer() );
     auto& objects = m_layers_[ layer_index ].objects;
     
     component->m_layer_index_ = layer_index;

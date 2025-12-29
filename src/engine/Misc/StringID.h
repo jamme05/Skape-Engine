@@ -59,7 +59,7 @@ namespace sk
         void destroyRegistry( const str_hash&  _registry );
 
         using index_vec_t    = std::vector< size_t >;
-        using registry_vec_t = std::vector< sStringRegistry >;
+        using registry_vec_t = std::vector< std::unique_ptr< sStringRegistry > >;
         using registry_map_t = std::unordered_map< str_hash, sStringRegistry* >;
         
         index_vec_t    m_available_spots_;
@@ -91,7 +91,7 @@ namespace sk
         [[ nodiscard ]]
         constexpr auto& view() const { return m_registry_.view(); }
         [[ nodiscard ]]
-        auto string() const { return m_registry_.string(); }
+        auto& string() const { return m_registry_.string(); }
         
         constexpr operator str_hash        () const noexcept { return hash(); }
         constexpr operator std::string_view() const noexcept { return view(); }
@@ -173,6 +173,7 @@ constexpr auto sk::cStringIDManager::cStringRegistry::operator=( cStringRegistry
     
     m_string_   = _other.m_string_;
     m_registry_ = _other.m_registry_;
+    _other.m_registry_ = nullptr;
     
     return *this;
 }
@@ -182,8 +183,12 @@ constexpr auto sk::cStringIDManager::cStringRegistry::view() const -> const std:
     return m_string_;
 }
 
-constexpr auto sk::cStringIDManager::cStringRegistry::string() const->const std::string&
+constexpr auto sk::cStringIDManager::cStringRegistry::string() const -> const std::string&
 {
+    // Due to ease of use, we force this function to be const.
+    if( m_registry_ == nullptr )
+        *const_cast< cStringRegistry* >( this ) = cStringIDManager::get().getRegistry( m_string_ );
+    
     return m_registry_->string;
 }
 

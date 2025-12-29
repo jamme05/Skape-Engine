@@ -16,7 +16,6 @@
 #include "Scene/Objects/CameraFlight.h"
 
 #include "Containers/Const/Const_Wrapper.h"
-#include "Graphics/Renderer_Impl.h"
 #include "Platform/Window/Window_Base.h"
 
 #include "Reflection/RuntimeClass.h"
@@ -49,13 +48,6 @@ cApp::cApp( void )
 		"Unable to show window." )
 
 	sk::cAsset_Manager::init();
-	// TODO: Move renderer initialization elsewhere.
-#if defined( SK_GRAPHICS_OPENGL )
-	sk::Graphics::cGLRenderer::init();
-#elif defined( SK_GRAPHICS_VULKAN ) // SK_GRAPHICS_OPENGL
-	sk::Graphics::cVKRenderer::init();
-#endif // SK_GRAPHICS_VULKAN
-	
 	sk::Graphics::InitRenderer();
 
 	m_window_context = sk::make_shared< sk::Graphics::Rendering::cWindow_Context >( m_main_window->GetResolution() );
@@ -87,69 +79,16 @@ void cApp::create( void )
 	//sk::cAssetManager::get().loadFile( "data/mushroom.glb" );
 	
 	//auto cube          = sk::cAssetManager::get().getAssetAs< sk::Assets::cMesh >( 0 );
-	auto christopher_t = list_1.Get_Asset_Of_Type< sk::Assets::cTexture >();
-	auto christopher_m = list_1.Get_Asset_Of_Type< sk::Assets::cMesh    >();
-	auto toilet_t      = list_2.Get_Asset_Of_Type< sk::Assets::cTexture >();
-	auto toilet_m      = list_2.Get_Asset_Of_Type< sk::Assets::cMesh    >();
+	auto christopher_t = list_1.GetAssetOfType< sk::Assets::cTexture >();
+	auto christopher_m = list_1.GetAssetOfType< sk::Assets::cMesh    >();
+	auto toilet_t      = list_2.GetAssetOfType< sk::Assets::cTexture >();
+	auto toilet_m      = list_2.GetAssetOfType< sk::Assets::cMesh    >();
 	//auto mushroom      = sk::cAssetManager::get().getAssetAs< sk::Assets::cMesh >( 5 );
 
 	m_scene = sk::make_shared< sk::cScene >();
 	m_scene->create_object< sk::Object::cCameraFlight >( "Camera Free Flight" )->setAsMain();
 
 	sk::cAsset_Ptr test = sk::cAsset_Manager::get().GetAssetPtrByName( "Mesh", nullptr );
-
-	std::function< void( int ) > test69 = []( int ){ return true; };
-	
-	// Don't use lambdas for this. Here it's only shown as a quick example and would probably break in practice
-	test.on_asset_loaded += CreateEvent( []( bool, const sk::cAsset& _asset )
-	{
-		std::println( "Asset: {} loaded", _asset.GetMeta()->GetName() );
-	} );
-
-	auto event = CreateEvent( []( const sk::cAsset& _asset )
-	{
-		std::println( "Asset: {} loaded", _asset.GetMeta()->GetName() );
-	} );
-
-	auto test_asset = sk::make_shared< sk::Assets::cMesh >( "Some name" );
-
-	sk::Event::cEventDispatcher< int > example_dispatcher { test_asset };
-	example_dispatcher += sk::Assets::cMesh::test;
-	example_dispatcher -= sk::Assets::cMesh::test;
-	example_dispatcher.add_listener( CreateEvent( sk::Assets::cMesh::test ) );
-	example_dispatcher.remove_listener_by_id( CreateEvent( sk::Assets::cMesh::test ) );
-	
-	auto t = []( const sk::cAsset& _asset )
-	{
-		std::println( "Asset: {} loaded", _asset.GetMeta()->GetName() );
-	};
-	auto t3 = sk::Event::sEvent{ []( const sk::cAsset& _asset )
-	{
-		std::println( "Asset: {} loaded", _asset.GetMeta()->GetName() );
-	} };
-	
-	auto test7 = sk::Event::sEvent( t );
-	using test5 = sk::Event::function_type_t< &decltype(t)::operator() >;
-	auto t2 = std::bind_front( t );
-	
-	test.on_asset_updated += sk::CreateEvent( this, []( const sk::cAsset& _asset )
-	{
-		std::println( "Asset: {} updated", _asset.GetMeta()->GetName() );
-	} );
-	test.on_asset_unloaded += []( bool, const sk::cAsset_Meta& _meta )
-	{
-		std::println( "Asset: {} unloaded", _meta.GetName() );
-	};
-
-	test.on_asset_unloaded += CreateEvent( []( bool, const sk::cAsset_Meta& _meta )
-	{
-		
-	} );
-
-	auto test4 = std::function< void() >{ std::bind_front( &create, this ) };
-	sk::Event::sEvent test3 = test4;
-
-	auto test2 = sk::CreateEvent( this, create );
 	
 	//auto mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 1" );
 	//mesh->getTransform().getPosition() = { -10.0f, 0.0f, 0.0f };
@@ -159,12 +98,16 @@ void cApp::create( void )
 	auto mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 2" );
 	mesh->GetTransform().getPosition() = { -2.0f, 0.0f, 0.0f };
 	mesh->GetTransform().update();
-	mesh->AddComponent< sk::Object::Components::cMeshComponent >( christopher_m )->setTexture( christopher_t );
+	auto component = mesh->AddComponent< sk::Object::Components::cMeshComponent >( christopher_m );
+	component->SetTexture( christopher_t );
+	component->enabled();
 
 	mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 3" );
 	mesh->GetTransform().getPosition() = { 2.0f, 0.0f, 0.0f };
 	mesh->GetTransform().update();
-	mesh->AddComponent< sk::Object::Components::cMeshComponent >( toilet_m )->setTexture( toilet_t );
+	component = mesh->AddComponent< sk::Object::Components::cMeshComponent >( toilet_m );
+	component->SetTexture( toilet_t );
+	component->enabled();
 
 	//mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 4" );
 	//mesh->getTransform().getPosition() = { 10.0f, 0.0f, 0.0f };

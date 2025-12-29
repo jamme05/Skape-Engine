@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Component.h"
+#include "Assets/Asset_Ptr.h"
 #include "Assets/Mesh.h"
 
 namespace sk::Assets {
@@ -24,17 +25,18 @@ namespace sk::Object::Components
 	{
 		SK_CLASS_BODY( MeshComponent )
 	public:
-		explicit cMeshComponent( const cShared_ptr< Assets::cMesh >& _mesh )
-		{}
+		explicit cMeshComponent( const cShared_ptr< cAsset_Meta >& _mesh );
 
-		void render( void ) override{}
+		void render() override;
+		void enabled() override;
+		void disabled() override;
 
-		void setTexture( const cShared_ptr< Assets::cTexture >& _texture ){	m_texture = _texture; }
+		void SetMesh( const cShared_ptr< cAsset_Meta >& _mesh );
+		void SetTexture( const cShared_ptr< cAsset_Meta >& _texture );
 
 	private:
-		cShared_ptr< Assets::cMesh > m_mesh = nullptr;
-		// TODO: Move to materal
-		cShared_ptr< Assets::cTexture > m_texture;
+		cAsset_Ptr m_mesh_;
+		cAsset_Ptr m_texture_;
 	};
 } // sk::Object::Components
 

@@ -16,6 +16,7 @@
 
 namespace sk
 {
+	class iRuntimeClass;
 	class cAsset;
 	class cAsset_Meta;
 	class cAsset_Manager;
@@ -27,7 +28,7 @@ namespace sk::Assets
 	class cAsset_List
 	{
 		typedef multimap< type_hash, cShared_ptr< cAsset_Meta > > asset_map_t;
-		typedef map< type_hash, size_t >                     asset_counter_map_t;
+		typedef map< type_hash, uint32_t >                        asset_counter_map_t;
 
 		class asset_iterator
 		{
@@ -63,51 +64,21 @@ namespace sk::Assets
 
 		template< class Ty >
 		requires std::is_base_of_v< cAsset, Ty >
-		auto Get_Asset_Of_Type() -> cShared_ptr< cAsset >
+		auto GetAssetOfType() -> cShared_ptr< cAsset_Meta >
 		{
-			auto range = m_assets.equal_range( Ty::getStaticType() );
-
-			if( range.first == m_assets.end() )
-				return nullptr;
-
-			// Always return same if only a single exists.
-			if( range.first == range.second )
-				return range.first->second;
-
-			auto& counter = m_counters[ Ty::getStaticType() ];
-			auto  dist    = std::distance( range.first, range.second );
-
-			if( counter >= dist )
-			{
-				printf( "Warning: No more assets of type %s. Asset List will now loop around.", Ty::getStaticClass().getRawName() );
-				counter = 0;
-			}
-			auto itr = std::next( range.first, counter++ );
-
-			return itr->second;
+			return GetAssetOfType( Ty::getStaticClass() );
 		} // Get_Asset_Of_Type
+		
+		auto GetAssetOfType( const iRuntimeClass& _class ) -> cShared_ptr< cAsset_Meta >;
 
 		template< class Ty >
 		requires std::is_base_of_v< cAsset, Ty >
-		auto Get_Assets_Of_Type( const int32_t _max_count = 0 ) -> std::vector< cShared_ptr< Ty > >
+		auto GetAssetsOfType( const int32_t _max_count = 0 ) -> std::vector< cShared_ptr< cAsset_Meta > >
 		{
-			auto range = m_assets.equal_range( Ty::getStaticClassType() );
-			std::vector< cShared_ptr< Ty > > assets;
-
-			if( _max_count > 0 )
-			{
-				for( auto itr = range.first; itr != range.second; ++itr )
-					assets.push_back( itr->second );
-			}
-			else
-			{
-				size_t count = 0;
-				for( auto itr = range.first; itr != range.second && count < _max_count; ++itr, ++count )
-					assets.push_back( itr->second );
-			}
-
-			return assets;
+			return GetAssetsOfType( Ty::getStaticType(), _max_count );
 		} // Get_Assets_Of_Type
+		
+		auto GetAssetsOfType( const iRuntimeClass& _class, int32_t _max_count = 0 ) -> std::vector< cShared_ptr< cAsset_Meta > >;
 
 		template< class Ty >
 		requires std::is_base_of_v< cAsset, Ty >

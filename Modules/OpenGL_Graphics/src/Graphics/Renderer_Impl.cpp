@@ -36,4 +36,9 @@ namespace sk::Graphics
     {
         
     }
+
+    void InitRenderer()
+    {
+        cGLRenderer::init();
+    }
 } // sk::Graphics

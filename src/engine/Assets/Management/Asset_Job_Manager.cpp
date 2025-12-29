@@ -82,8 +82,8 @@ void sk::Assets::Jobs::cAsset_Job_Manager::push_task( const sTask& _task )
     auto new_head = m_head_.load() + 1;
     if( new_head == m_tasks_.size() )
         resize( m_tasks_.size() * 2 );
-    else if( const auto half_size = m_tasks_.size() / 2; m_available_.load() < half_size )
-        resize( half_size );
+    else if( const auto half_size = m_tasks_.size() / 2; m_available_.load() < half_size && half_size > 64 )
+        resize( std::max< size_t >( half_size, distance() ) );
     
     new_head = new_head % m_tasks_.size();
 
@@ -98,13 +98,33 @@ void sk::Assets::Jobs::cAsset_Job_Manager::push_task( const sTask& _task )
 void sk::Assets::Jobs::cAsset_Job_Manager::resize( const size_t _new_size )
 {
     // We wait for the workers to complete their current tasks.
+    // TODO: Move the head and tail when resizing.
     if( const auto working = m_currently_getting_work_.load(); working != 0 )
         m_currently_getting_work_.wait( working );
     
     m_currently_resizing_.store( true );
     
-    m_tasks_.resize( _new_size );
+    std::vector< sTask > new_vec( _new_size );
+    const auto head = m_head_.load();
+    auto tail = m_tail_.load();
+    for( size_t i = 0; tail != head; ++tail, i++ )
+    {
+        tail = tail % m_tasks_.size();
+        
+        new_vec[ i ] = m_tasks_[ tail ];
+    }
+    m_tasks_.swap( new_vec );
     
     m_currently_resizing_.store( false );
     m_currently_resizing_.notify_all();
+}
+
+auto sk::Assets::Jobs::cAsset_Job_Manager::distance() -> size_t
+{
+    const auto head = m_head_.load();
+    const auto tail = m_tail_.load();
+    if( head > tail )
+        return std::abs( static_cast< int64_t >( head ) - static_cast< int64_t >( tail ) );
+    
+    return m_tasks_.size() - tail + head;
 }

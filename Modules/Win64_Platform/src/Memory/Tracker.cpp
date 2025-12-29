@@ -334,6 +334,9 @@ private:
 
     void free_fast( void* _block )
     {
+    	if( _block == nullptr )
+    		return;
+    	
         const auto size = static_cast< size_t* >( _block ) - 1;
         cTracker::m_memory_usage -= *size;
         ::free( size );
@@ -355,6 +358,9 @@ private:
 
     void free( void* _block, const std::source_location& _location )
     {
+    	if( _block == nullptr )
+    		return;
+    	
     	Tracker::free( _block, _location );
     } // free
 
