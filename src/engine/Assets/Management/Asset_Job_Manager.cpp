@@ -1,6 +1,6 @@
 #include "Asset_Job_Manager.h"
 
-#include <Assets/Management/Asset_Loader.h>
+#include <Assets/Workers/Asset_Loader.h>
 
 sk::Assets::Jobs::cAsset_Job_Manager::cAsset_Job_Manager()
 {

@@ -237,12 +237,12 @@ namespace sk::Graphics
         m_data_ = SK_REALLOC( m_data_, _byte_size );
     } // Resize
 
-    void cUnsafe_Buffer::Upload()
+    void cUnsafe_Buffer::Upload( bool _force )
     {
         SK_BREAK_RET_IF( sk::Severity::kConstGraphics | 10,
-            m_byte_size_ == 0, TEXT( "ERROR: Trying to lock empty buffer." ) )
+            m_byte_size_ == 0, TEXT( "ERROR: Trying to upload empty buffer." ) )
 
-        if( m_is_updated_ )
+        if( _force || m_is_updated_ )
         {
             if( m_byte_size_ == m_buffer_.size )
                 gl::glNamedBufferSubData( m_buffer_.buffer, 0,
@@ -254,6 +254,8 @@ namespace sk::Graphics
                 
                 m_buffer_.size = m_byte_size_;
             }
+            
+            m_is_updated_.store( false );
         }
     } // Lock
 

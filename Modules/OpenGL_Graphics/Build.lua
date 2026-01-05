@@ -6,7 +6,7 @@ module = {
     Name = "OpenGL",
     Setup_Workspace = function( mod )
         filter( mod.Filter )
-        defines( { "SK_GRAPHICS_OPENGL" } )
+        defines( { "SK_GRAPHICS_OPENGL", "SK_OPENGL_MAJOR_VERSION=4", "SK_OPENGL_MINOR_VERSION=5" } )
     end,
 
     Init = function( module_dir )

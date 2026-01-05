@@ -19,6 +19,11 @@ namespace sk::Graphics::Rendering
     {
         create();
     } // cDepth_Target
+    
+    auto cDepth_Target::GetResolution() const -> cVector2u32
+    {
+        return m_resolution_;
+    }
 
     void cDepth_Target::Resize( const cVector2u32& _new_resolution )
     {

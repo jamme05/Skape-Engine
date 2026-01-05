@@ -19,17 +19,33 @@ namespace detail {
 	struct offset_helper {
 		using TV = declval_helper< T >;
 		char for_sizeof[
-			reinterpret_cast< char* >( &( TV::value.*MPtr ) ) -
-			reinterpret_cast< char* >( &TV::value )
+			( char* )( &( TV::value.*MPtr ) ) -
+			( char* )( &TV::value )
 		];
 	};
 #pragma clang diagnostic pop
 }
 
-template<typename T, auto T::*MPtr>
+namespace sk
+{
+	// Made the offset_of function use this as a helper class to deduce away the explicit mention of the members class.
+	template< class Ty, class Value >
+	struct sMemberVariable
+	{
+		using class_type = Ty;
+		using value_type = Value;
+	            
+		consteval sMemberVariable( Value Ty::* _ptr )
+		: ptr( _ptr )
+		{}
+		Value Ty::* ptr;
+	};
+} // sk::
+
+template< sk::sMemberVariable Member, class Class = decltype( Member )::class_type >
 constexpr int offset_of() {
-	if constexpr( MPtr == nullptr )
+	if constexpr( Member.ptr == nullptr )
 		return 0;
 	else
-		return sizeof( detail::offset_helper< T, MPtr >::for_sizeof );
+		return sizeof( detail::offset_helper< Class, Member.ptr >::for_sizeof );
 }

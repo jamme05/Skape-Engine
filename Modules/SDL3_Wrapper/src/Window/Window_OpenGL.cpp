@@ -18,8 +18,8 @@ namespace sk::Platform
     {
         SDL_GL_SetAttribute( SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG );
         SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
-        SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 4 );
-        SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 5 );
+        SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, SK_OPENGL_MAJOR_VERSION );
+        SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, SK_OPENGL_MINOR_VERSION );
 
         const SDL_WindowFlags flags = _flags | SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY;
         m_window_ = SDL_CreateWindow( _name.c_str(), static_cast< int >( _resolution.x ), static_cast< int >( _resolution.y ), flags );

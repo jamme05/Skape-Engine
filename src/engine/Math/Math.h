@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <bit>
 #include <cstdint>
 #include <math.h>
 #include <valarray>
@@ -104,16 +105,46 @@ namespace sk
 		}
 
 		// Gets 2 powered by exp.
-		template< std::unsigned_integral Ty = uint8_t >
+		template< std::integral Ty = uint8_t >
 		constexpr Ty pow2( const uint8_t _exp )
 		{
-			return static_cast< Ty >( 0x1 << _exp );
+			return static_cast< Ty >( 0x1 ) << _exp;
 		}
 		
+		// Returns the nearest power of two that's less than this value.
+		template< std::integral Ty >
+		constexpr Ty floorToPow2( const Ty _val )
+		{
+			if( _val <= Ty( 2 ) )
+				return _val;
+			
+			return pow2< Ty >( sizeof( Ty ) - std::countr_zero( _val ) - 1 );
+		}
+
+		// Returns the nearest power of two.
 		template< std::integral Ty >
 		constexpr Ty roundToPow2( const Ty _val )
 		{
+			if( _val <= Ty( 2 ) )
+				return _val;
 			
+			const uint8_t bits = sizeof( Ty ) - std::countr_zero( _val );
+			
+			// The defining bit is the bit behind the bit furthest to the right.
+			// If the number has this bit, it means that we will ciel, otherwise we floor.
+			auto defining_bit = pow2< Ty >( bits - 2 );
+			
+			return ( ( _val & defining_bit ) == 0 ) ? pow2< Ty >( bits - 1 ) : pow2< Ty >( bits );
+		}
+
+		// Returns the nearest power of two that's greater than this value.
+		template< std::integral Ty >
+		constexpr Ty ceilToPow2( const Ty _val )
+		{
+			if( _val <= Ty( 2 ) )
+				return _val;
+
+			return pow2< Ty >( sizeof( Ty ) - std::countr_zero( _val ) );
 		}
 
 		template< class T >

@@ -6,6 +6,10 @@
 
 #include "UUID.h"
 
+#include <random>
+
+#include "Seralization/SerializedObject.h"
+
 
 namespace sk
 {
@@ -17,6 +21,20 @@ namespace sk
         constexpr uuid_format_string_t dashed_format_string { "{:0>2x}{:0>2x}{:0>2x}{:0>2x}-{:0>2x}{:0>2x}-{:0>2x}{:0>2x}-{:0>2x}{:0>2x}-{:0>2x}{:0>2x}{:0>2x}{:0>2x}{:0>2x}{:0>2x}" };
         constexpr uuid_format_string_t compact_format_string{ "{:0>2x}{:0>2x}{:0>2x}{:0>2x}{:0>2x}{:0>2x}{:0>2x}{:0>2x}{:0>2x}{:0>2x}{:0>2x}{:0>2x}{:0>2x}{:0>2x}{:0>2x}{:0>2x}" };
     } // ::
+
+    cUUID::cUUID( cSerializedObject& _object )
+    {
+        
+    }
+
+    auto cUUID::Serialize() -> cShared_ptr< cSerializedObject >
+    {
+        auto object = cSerializedObject::CreateForWrite();
+        
+        // TODO: UUID Serialization.
+        
+        return object;
+    }
 
     std::string cUUID::to_string( const bool _dashed ) const
     {
@@ -38,7 +56,12 @@ namespace sk
             )
         );
     } // to_string
-    
+
+    constexpr auto cUUID::operator==( const cUUID& _other ) const
+    {
+        return m_low_ == _other.m_low_ && m_high_ == _other.m_high_;
+    }
+
     constexpr auto cUUID::operator<=>( const cUUID& _other ) const
     {
         // Very much referenced from std::_Big_uint128
@@ -47,4 +70,38 @@ namespace sk
 
         return m_high_ <=> _other.m_high_;
     } // operator<=>
+    
+    namespace
+    {
+        // This is following the RFC 9562 standard for the UUIDv4 ( https://www.rfc-editor.org/rfc/rfc9562.html ). 
+        // We're working in a Byte environment hence we need to convert it.
+        constexpr uint8_t uuid_version_index = 48 / 8;
+        constexpr uint8_t uuid_variant_index = 64 / 8;
+        constexpr uint8_t uuid_version_mask  = 0b00001111;
+        constexpr uint8_t uuid_variant_mask  = 0b00111111;
+
+        constexpr uint8_t uuid_v4_version = 0b01000000;
+        constexpr uint8_t uuid_v4_variant = 0b10000000;
+    } // ::
+    
+    cUUID GenerateRandomUUID()
+    {
+        static std::random_device rd;
+        static std::mt19937_64    gen{ rd() };
+        
+        const auto low  = gen();
+        const auto high = gen();
+
+        cUUID uuid{ low, high };
+        const auto raw = reinterpret_cast< uint8_t* >( &uuid );
+
+        // Add the version and variant.
+        raw[ uuid_version_index ] &= uuid_version_mask;
+        raw[ uuid_version_index ] |= uuid_v4_version;
+
+        raw[ uuid_variant_index ] &= uuid_variant_mask;
+        raw[ uuid_variant_index ] |= uuid_v4_variant;
+
+        return uuid;
+    } // GenerateRandomUUID
 } // sk::

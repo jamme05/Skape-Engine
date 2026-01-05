@@ -14,57 +14,57 @@ namespace sk::Assets
 {
 	cAsset_List::~cAsset_List( void )
 	{
-		m_assets.clear();
+		m_assets_.clear();
 	} // ~cAsset_List
 
 	cAsset_List::cAsset_List( const cAsset_List& _other )
 	{
-		m_assets = _other.m_assets;
+		m_assets_ = _other.m_assets_;
 	} // cAsset_List Copy
 
 	cAsset_List::cAsset_List( cAsset_List&& _other ) noexcept
 	{
-		m_assets = std::move( _other.m_assets );
+		m_assets_ = std::move( _other.m_assets_ );
 	} // cAsset_List Move
 
 	cAsset_List& cAsset_List::operator=( const cAsset_List& _other )
 	{
 		if( this != &_other )
-			m_assets = _other.m_assets;
+			m_assets_ = _other.m_assets_;
 
 		return *this;
 	} // operator= ( Copy )
 
 	cAsset_List& cAsset_List::operator=( cAsset_List&& _other ) noexcept
 	{
-		m_assets = std::move( _other.m_assets );
+		m_assets_ = std::move( _other.m_assets_ );
 		return *this;
 	} // operator= ( Move )
 
 	cAsset_List& cAsset_List::operator+=( const cAsset_List& _other )
 	{
-		m_assets.insert( _other.m_assets.begin(), _other.m_assets.end() );
+		m_assets_.insert( _other.m_assets_.begin(), _other.m_assets_.end() );
 		return *this;
 	} // operator+= ( Copy )
 
 	cAsset_List& cAsset_List::operator+=( cAsset_List&& _other )
 	{
-		m_assets.merge( std::move( _other ).m_assets );
+		m_assets_.merge( std::move( _other ).m_assets_ );
 		return *this;
 	} // operator+= ( Move )
 	
 	auto cAsset_List::GetAssetOfType( const iRuntimeClass& _class ) -> cShared_ptr< cAsset_Meta >
 	{
-		const auto [ fst, snd ] = m_assets.equal_range( _class.getType() );
+		const auto [ fst, snd ] = m_assets_.equal_range( _class.getType() );
 
-		if( fst == m_assets.end() )
+		if( fst == m_assets_.end() )
 			return nullptr;
 
 		// Always return same if only a single exists.
 		if( fst == snd )
 			return fst->second;
 
-		auto& counter = m_counters[ _class.getType() ];
+		auto& counter = m_counters_[ _class.getType() ];
 
 		if( const auto dist = std::distance( fst, snd ); static_cast< int_fast32_t >( counter ) >= dist )
 		{
@@ -79,7 +79,7 @@ namespace sk::Assets
 
 	auto cAsset_List::GetAssetsOfType( const iRuntimeClass& _class, const int32_t _max_count )->std::vector<cShared_ptr<cAsset_Meta>>
 	{
-		auto range = m_assets.equal_range( _class.getType() );
+		auto range = m_assets_.equal_range( _class.getType() );
 		std::vector< cShared_ptr< cAsset_Meta > > assets;
 
 		if( _max_count > 0 )
@@ -97,21 +97,21 @@ namespace sk::Assets
 		return assets;
 	}
 
-	void cAsset_List::addAsset( const cShared_ptr< cAsset_Meta >& _asset )
+	void cAsset_List::AddAsset( const cShared_ptr< cAsset_Meta >& _asset )
 	{
 		if( _asset == nullptr )
 			return;
 		
-		m_assets.insert( { _asset->GetHash(), _asset } );
+		m_assets_.insert( { _asset->GetHash(), _asset } );
 	} // add_asset
 
-	void cAsset_List::removeAsset( const cShared_ptr< cAsset_Meta >& _asset )
+	void cAsset_List::RemoveAsset( const cShared_ptr< cAsset_Meta >& _asset )
 	{
-		auto [ fst, snd ] = m_assets.equal_range( _asset->GetHash() );
+		auto [ fst, snd ] = m_assets_.equal_range( _asset->GetHash() );
 		for( auto it = fst; it != snd; ++it )
 		{
 			if( it->second == _asset )
-				m_assets.erase( it );
+				m_assets_.erase( it );
 		}
 	} // remove_asset
 

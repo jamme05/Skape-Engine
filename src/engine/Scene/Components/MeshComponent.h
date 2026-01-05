@@ -6,13 +6,16 @@
 
 #pragma once
 
-#include "Component.h"
-#include "Assets/Asset_Ptr.h"
-#include "Assets/Mesh.h"
+#include <Assets/Material.h>
+#include <Assets/Mesh.h>
+#include <Assets/Access/Asset_Ptr.h>
+#include <Scene/Components/Component.h>
 
-namespace sk::Assets {
-	class cTexture;
-}
+
+namespace sk::Assets
+{
+	class cMaterial;
+} // sk::Assets::
 
 namespace sk::Scene
 {
@@ -25,18 +28,18 @@ namespace sk::Object::Components
 	{
 		SK_CLASS_BODY( MeshComponent )
 	public:
-		explicit cMeshComponent( const cShared_ptr< cAsset_Meta >& _mesh );
+		explicit cMeshComponent( const cShared_ptr< cAsset_Meta >& _mesh, const cShared_ptr< cAsset_Meta >& _material );
 
 		void render() override;
 		void enabled() override;
 		void disabled() override;
 
 		void SetMesh( const cShared_ptr< cAsset_Meta >& _mesh );
-		void SetTexture( const cShared_ptr< cAsset_Meta >& _texture );
+		void SetMaterial( const cShared_ptr< cAsset_Meta >& _material );
 
 	private:
-		cAsset_Ptr m_mesh_;
-		cAsset_Ptr m_texture_;
+		cAsset_Ptr< Assets::cMesh >     m_mesh_;
+		cAsset_Ptr< Assets::cMaterial > m_material_;
 	};
 } // sk::Object::Components
 

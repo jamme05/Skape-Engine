@@ -566,8 +566,8 @@ namespace sk
 		auto& operator=( cShared_ptr< Ty >&& _right ) noexcept
 		{
 			dec_weak(); // TODO: Make sure that it's counting correctly.
-			m_data_ = std::move( _right ).m_data;
-			_right.m_data = nullptr;
+			m_data_ = std::move( _right ).m_data_;
+			_right.m_data_ = nullptr;
 			dec(); // Decrease due to stealing shared ptr
 
 			return *this;
@@ -613,7 +613,10 @@ namespace sk
 		
 		bool operator==( std::nullptr_t ) const { return !is_valid(); }
 		bool operator==( const cWeak_Ptr& _right ) const { return m_data_ == _right.m_data_; }
-
+		// TODO: Maybe compare the data used instead of the pointers?
+		// May be safe tho.
+		bool operator==( const cShared_ptr< Ty >& _right  ) const { return get() == _right.get(); }
+		
 		Ty& operator  *( void ){ return *get(); }
 		Ty* operator ->( void ){ return  get(); }
 

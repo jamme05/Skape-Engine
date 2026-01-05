@@ -6,12 +6,15 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include <Misc/Hashing.h>
 
-#include <cstdint>
+#include <Seralization/Serializable.h>
 
 namespace sk
 {
+    class cSerializable;
     class cUUID_Helper;
 
     class cUUID
@@ -24,21 +27,25 @@ namespace sk
     public:
         // It has constexpr support in case of future changes.
         constexpr cUUID() = default;
+        cUUID( cSerializedObject& _object );
         constexpr cUUID( const uint64_t _first, const uint64_t _second )
         : m_low_( _first ), m_high_( _second )
         {}
         constexpr cUUID( const cUUID& _other ) = default;
         constexpr cUUID( cUUID&& _other )      = default;
-        ~cUUID() = default;
+        constexpr ~cUUID() = default;
 
         constexpr cUUID& operator=( const cUUID& _other ) = default;
         constexpr cUUID& operator=( cUUID&& _other )      = default;
+        
+        auto Serialize() -> cShared_ptr< cSerializedObject >;
 
         [[ nodiscard ]]
         constexpr auto get_low () const { return m_low_;  }
         [[ nodiscard ]]
         constexpr auto get_high() const { return m_high_; }
 
+        constexpr auto operator==( const cUUID& _other ) const;
         constexpr auto operator<=>( const cUUID& _other ) const;
 
         [[ nodiscard ]]
@@ -59,7 +66,7 @@ namespace sk
 
         HASH_REQUIREMENTS( hash )
     };
-
+    
     // Defined here so helper isn't required to be included.
     extern cUUID GenerateRandomUUID();
 } // sk::

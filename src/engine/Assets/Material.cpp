@@ -1,0 +1,174 @@
+﻿//
+//
+// COPYRIGHT William Ask S. Ness 2025
+//
+//
+
+#include "Material.h"
+
+#include "Graphics/Utils/Shader_Link.h"
+#include "Graphics/Utils/Shader_Reflection.h"
+
+using namespace sk::Assets;
+
+namespace 
+{
+    // From: https://en.cppreference.com/w/cpp/utility/variant/visit
+    template< class... Ts >
+    struct sVisitor : Ts... { using Ts::operator()...; };
+} // ::
+
+cMaterial::cBlock::cBlock( const cWeak_Ptr< cMaterial >& _owner, std::string _name, const block_t* _info, const size_t _binding )
+: m_pretty_name_( std::move( _name ) )
+, m_info_( _info )
+, m_binding_( _binding )
+, m_buffer_( m_pretty_name_ + ": Constant buffer", _info->size, Graphics::Buffer::eType::kConstant, false, false )
+, m_owner_( _owner )
+{}
+
+bool cMaterial::cBlock::SetUniform( const cStringID& _name, const auto& _value )
+{
+    const auto itr = m_uniform_map_.find( _name );
+    
+    SK_BREAK_RET_IF( sk::Severity::kEngine, itr == m_uniform_map_.end(),
+        TEXT( "Warning: Unable to find uniform with the name, {}", _name.view() ), false )
+    
+    auto& uniform = itr->second;
+    
+    std::visit( [ & ]( auto& _uniform_ptr )
+    {
+        // If you get an error here, that means you've provided an invalid type.
+        auto& value = *_uniform_ptr;
+        value = _value;
+    }, uniform.accessor );
+    
+    return true;
+}
+
+cMaterial::cMaterial( const Graphics::Utils::cShader_Link& _shader_link )
+: m_shader_link_( _shader_link )
+{
+    SK_ERR_IFN( _shader_link.IsValid(),
+        "Error: Invalid shader link provided." )
+    
+    // TODO: Get rid of the wait.
+    // TODO: Have some way to either update the material during the runtime and check the status
+    // Or some event on when the link has refreshed.
+    _shader_link.WaitUntilReady();
+    
+    create_data();
+}
+
+void cMaterial::WaitForShader() const
+{
+    m_shader_link_.WaitUntilReady();
+}
+
+auto cMaterial::GetBlock( const cStringID& _name ) -> cBlock*
+{
+    const auto itr = m_block_map_.find( _name );
+    
+    SK_BREAK_RET_IF( sk::Severity::kEngine, itr == m_block_map_.end(),
+        TEXT( "Warning: Unable to find uniform with the name, {}", _name.view() ), nullptr )
+    
+    return &itr->second;
+}
+
+auto cMaterial::GetShaderLink() const -> const Graphics::Utils::cShader_Link&
+{
+    return m_shader_link_;
+}
+
+bool cMaterial::IsReady() const
+{
+    return m_shader_link_.IsReady();
+}
+
+void cMaterial::Update()
+{
+    for( auto& block : m_block_map_ | std::views::values )
+        block.m_buffer_.Upload( true );
+}
+
+void cMaterial::create_data()
+{
+    using namespace sk::Graphics::Utils;
+    
+    auto reflection = m_shader_link_.GetReflection();
+    
+    for( auto& raw_block : reflection->GetBlockVec() )
+    {
+        auto [ itr, snd ] = m_block_map_.emplace( raw_block->name,
+            cBlock{ get_weak().cast< cMaterial >(), raw_block->pretty_name, raw_block, raw_block->binding } );
+        auto& block = itr->second;
+
+        const auto data = static_cast< std::byte* >( block.m_buffer_.Data() );
+        
+        for( auto& raw_uniform : raw_block->uniforms | std::views::values )
+        {
+            auto& uniform = block.m_uniform_map_[ raw_uniform.name ];
+            
+            uniform.pretty_name = raw_uniform.pretty_name;
+            uniform.array_size  = raw_uniform.size;
+            uniform.matrix_size = 1;
+
+            switch( raw_uniform.type )
+            {
+            case sUniform::eType::kFloat:
+            case sUniform::eType::kInt:
+            case sUniform::eType::kUInt:
+                uniform.vector_size = 1; break;
+                
+            case sUniform::eType::kFloat2x2:
+                uniform.matrix_size = 2;
+            case sUniform::eType::kFloat2:
+            case sUniform::eType::kInt2:
+            case sUniform::eType::kUInt2:
+                uniform.vector_size = 2; break;
+                
+            case sUniform::eType::kFloat3x3:
+                uniform.matrix_size = 3; break;
+            case sUniform::eType::kFloat3:
+            case sUniform::eType::kInt3:
+            case sUniform::eType::kUInt3:
+                uniform.vector_size = 3; break;
+                
+            case sUniform::eType::kFloat4x4:
+                uniform.matrix_size = 4; break;
+            case sUniform::eType::kFloat4:
+            case sUniform::eType::kInt4:
+            case sUniform::eType::kUInt4:
+                uniform.vector_size = 4; break;
+            }
+            
+            uniform.byte_size = 4 * uniform.array_size * static_cast< uint32_t >( uniform.vector_size * uniform.matrix_size );
+            
+            void* data_point = data + raw_uniform.location;
+            
+#define ACCESSOR_EMPLACE( type ) (uniform.accessor.emplace< type * >( static_cast< type * >( data_point ) ))
+
+            switch( raw_uniform.type )
+            {
+            case sUniform::eType::kFloat: ACCESSOR_EMPLACE( float );    break;
+            case sUniform::eType::kInt:   ACCESSOR_EMPLACE( int32_t );  break;
+            case sUniform::eType::kUInt:  ACCESSOR_EMPLACE( uint32_t ); break;
+                
+            case sUniform::eType::kFloat2: ACCESSOR_EMPLACE( cVector2f ); break;
+            case sUniform::eType::kFloat3: ACCESSOR_EMPLACE( cVector3f ); break;
+            case sUniform::eType::kFloat4: ACCESSOR_EMPLACE( cVector4f ); break;
+                
+            case sUniform::eType::kInt2: ACCESSOR_EMPLACE( cVector2i32 ); break;
+            case sUniform::eType::kInt3: ACCESSOR_EMPLACE( cVector3i32 ); break;
+            case sUniform::eType::kInt4: ACCESSOR_EMPLACE( cVector4i32 ); break;
+                
+            case sUniform::eType::kUInt2: ACCESSOR_EMPLACE( cVector2u32 ); break;
+            case sUniform::eType::kUInt3: ACCESSOR_EMPLACE( cVector3u32 ); break;
+            case sUniform::eType::kUInt4: ACCESSOR_EMPLACE( cVector4u32 ); break;
+                
+            case sUniform::eType::kFloat4x4: ACCESSOR_EMPLACE( cMatrix4x4f ); break;
+                
+            default: SK_BREAK break; // Not supported.
+            }
+        }
+    }
+}

@@ -11,6 +11,7 @@
 
 #include <Misc/Smart_Ptrs.h>
 
+#include "Graphics/Buffer/Dynamic_Buffer.h"
 #include "Math/Vector2.h"
 
 namespace sk::Graphics::Rendering
@@ -20,6 +21,11 @@ namespace sk::Graphics::Rendering
 
 namespace sk::Graphics
 {
+    namespace OpenGL
+    {
+        class cUnsafe_Buffer;
+    }
+
     struct sScissor;
     struct sViewport;
 } // sk::Graphics
@@ -62,6 +68,9 @@ namespace sk::Graphics::Rendering
         // The target NEEDS to be able to survive.
         void Bind( size_t _index, const cShared_ptr< cRender_Target >& _target, bool _force = false );
         void Bind( const cShared_ptr< cDepth_Target >& _depth_target, bool _force = false );
+        
+        void BindVertexBuffer( size_t _binding, const cDynamic_Buffer& _buffer );
+        void UnbindVertexBuffers();
 
         void UnbindRenderTargetAt( size_t _index );
         void UnbindDepthTarget();

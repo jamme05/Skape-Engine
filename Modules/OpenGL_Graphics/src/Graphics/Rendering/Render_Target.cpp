@@ -10,12 +10,18 @@
 
 namespace sk::Graphics::Rendering
 {
-    cRender_Target::cRender_Target( const cVector2u32& _resolution, const eFormat _format, const cColor& _clear_color )
+    cRender_Target::cRender_Target( const cVector2u32& _resolution, const eFormat _format, const cColor& _clear_color, const bool _auto_resize )
     : m_clear_color_( _clear_color )
     , m_resolution_ ( _resolution )
     , m_format_     ( _format )
+    , m_auto_resize_( _auto_resize )
     {
         create();
+    }
+
+    auto cRender_Target::GetResolution() const -> cVector2u32
+    {
+        return m_resolution_;
     }
 
     void cRender_Target::Resize( const cVector2u32& _resolution )

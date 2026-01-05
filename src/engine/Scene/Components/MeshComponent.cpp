@@ -12,9 +12,9 @@
 
 namespace sk::Object::Components
 {
-	cMeshComponent::cMeshComponent( const cShared_ptr< cAsset_Meta >& _mesh )
+	cMeshComponent::cMeshComponent( const cShared_ptr< cAsset_Meta >& _mesh, const cShared_ptr< cAsset_Meta >& _material )
 	: m_mesh_( get_weak(), _mesh )
-	, m_texture_( get_weak() )
+	, m_material_( get_weak(), _material )
 	{
 		m_mesh_.on_asset_loaded += []( const cAsset& _asset )
 		{
@@ -24,7 +24,8 @@ namespace sk::Object::Components
 
 	void cMeshComponent::render()
 	{
-		if( m_mesh_.IsLoaded() );
+		if( m_mesh_.IsLoaded() )
+			;
 			// DoSomeInternalRender();
 	}
 
@@ -32,16 +33,16 @@ namespace sk::Object::Components
 	{
 		if( m_mesh_.IsValid() )
 			m_mesh_.LoadAsync();
-		if( m_texture_.IsValid() )
-			m_texture_.LoadAsync();
+		if( m_material_.IsValid() )
+			m_material_.LoadAsync();
 	}
 
 	void cMeshComponent::disabled()
 	{
 		if( m_mesh_.IsValid() )
 			m_mesh_.Unload();
-		if( m_texture_.IsValid() )
-			m_texture_.Unload();
+		if( m_material_.IsValid() )
+			m_material_.Unload();
 	}
 
 	void cMeshComponent::SetMesh( const cShared_ptr< cAsset_Meta >& _mesh )
@@ -49,8 +50,8 @@ namespace sk::Object::Components
 		m_mesh_.SetAsset( _mesh );
 	}
 
-	void cMeshComponent::SetTexture( const cShared_ptr<cAsset_Meta>& _texture )
+	void cMeshComponent::SetMaterial( const cShared_ptr< cAsset_Meta >& _material )
 	{
-		m_texture_.SetAsset( _texture );
+		m_material_.SetAsset( _material );
 	}
 } // sk::Object::Components

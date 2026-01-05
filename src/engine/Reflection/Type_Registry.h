@@ -74,9 +74,44 @@ namespace sk
         constexpr const sStruct_Type_Info* as_struct_info( void ) const;
         constexpr const sClass_Type_Info*  as_class_info( void ) const;
     };
+    
+    class cType_Wrapper
+    {
+    public:
+        constexpr cType_Wrapper() = default;
+        constexpr cType_Wrapper( const sType_Info* _type_info )
+        : m_type_( _type_info )
+        {}
+        constexpr cType_Wrapper( const sType_Info& _type_info )
+        : m_type_( &_type_info )
+        {}
+        
+        constexpr cType_Wrapper( const cType_Wrapper& ) = default;
+        constexpr cType_Wrapper( cType_Wrapper&& ) = default;
+        constexpr cType_Wrapper& operator=( const cType_Wrapper& ) = default;
+        constexpr cType_Wrapper& operator=( cType_Wrapper&& ) = default;
+        
+        constexpr auto  operator->() const { return m_type_; }
+        constexpr auto& operator* () const { return *m_type_; }
+        
+        constexpr operator bool() const { return m_type_ != nullptr; }
+        
+        constexpr bool operator==( std::nullptr_t ) const
+        {
+            return m_type_ == nullptr;
+        }
+        constexpr bool operator==( const cType_Wrapper& _other ) const
+        {
+            return m_type_ == _other.m_type_ || ( m_type_ != nullptr && _other != nullptr && m_type_->hash == _other->hash );
+        }
+        
+    private:
+        const sType_Info* m_type_ = nullptr;
+    };
 
     // TODO: Remove const pointer?
-    typedef const sType_Info* type_info_t;
+    using type_info_t = cType_Wrapper;
+
 
     // TODO: Move individual types to their own spaces.
     namespace runtime_struct
@@ -266,6 +301,9 @@ namespace sk
     // concept modless_reflected = kValidType< Ty >
     template< reflected Ty >
     constexpr auto& kTypeInfo = get_type_info< Ty >::kInfo;
+    
+    template< reflected Ty >
+    constexpr auto kTypeId = kTypeInfo< Ty >.hash;
 
     template< class... Types >
     inline constexpr bool kValidTypes =  ( ... || kValidType< Types > );

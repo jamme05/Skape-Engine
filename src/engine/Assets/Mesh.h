@@ -52,8 +52,6 @@ namespace sk::Assets
         [[ nodiscard ]] auto& GetVertexBuffers() const { return m_vertex_buffers_; }
 
         [[ nodiscard ]] bool  IsValid() const;
-
-        void test( int ){}
         
     private:
         std::string  m_name_;

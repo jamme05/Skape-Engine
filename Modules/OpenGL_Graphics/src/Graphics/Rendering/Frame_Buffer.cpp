@@ -13,6 +13,7 @@
 #include "Render_Target.h"
 #include "Scissor.h"
 #include "Viewport.h"
+#include "Graphics/Buffer/Unsafe_Buffer.h"
 
 namespace sk::Graphics::Rendering
 {
@@ -132,6 +133,20 @@ namespace sk::Graphics::Rendering
 
         gl::glNamedFramebufferRenderbuffer( m_frame_buffer_, m_depth_type_, gl::GL_RENDERBUFFER, m_depth_target_->m_buffer_ );
     } // Bind
+    
+    void cFrame_Buffer::BindVertexBuffer( size_t _binding, const cDynamic_Buffer& _buffer )
+    {
+        auto& buffer = static_cast< cUnsafe_Buffer& >( _buffer.GetBuffer() );
+        
+        // TODO: Vertex buffer binding.
+        
+        gl::glBindVertexBuffer( _binding, buffer.get_buffer().buffer, 0, 0 );
+        
+    }
+
+    void cFrame_Buffer::UnbindVertexBuffers()
+    {
+    }
 
     void cFrame_Buffer::UnbindRenderTargetAt( const size_t _index )
     {
@@ -161,6 +176,7 @@ namespace sk::Graphics::Rendering
 
     void cFrame_Buffer::Resize( const cVector2u32& _new_resolution )
     {
+        gl::gldraw
         destroy();
 
         const auto render_targets = m_render_targets_;

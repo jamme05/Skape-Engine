@@ -55,17 +55,21 @@ namespace sk::Graphics::Rendering
             kRGBA32F,
         };
 
-        cRender_Target( const cVector2u32& _resolution, eFormat _format, const cColor& _clear_color = Color::kBlack );
+        cRender_Target( const cVector2u32& _resolution, eFormat _format, const cColor& _clear_color = Color::kBlack, bool _auto_resize = false );
 
+        [[ nodiscard ]]
+        auto GetResolution() const -> cVector2u32;
         void Resize( const cVector2u32& _resolution );
 
+        [[ nodiscard ]]
         auto& GetClearColor() const { return m_clear_color_; }
         void  SetClearColor( const cColor& _clear_color );
 
+    private:
         // Internal use only.
+        [[ nodiscard ]]
         auto get_texture() const { return m_texture_; }
 
-    private:
         // YOU NEED TO BIND A FRAME BUFFER BEFORE CALLING THIS!!!!
         void clear( gl::GLint _index );
         void create();
@@ -75,8 +79,10 @@ namespace sk::Graphics::Rendering
         cVector2u32 m_resolution_;
         // The scale relative to the first render target in a owning frame buffer. Is 1,1 in the first.
         cVector2f   m_rel_scale_ = kOne;
+        
         eFormat     m_format_;
         eType       m_type_;
+        bool        m_auto_resize_;
         gl::GLuint  m_texture_;
     };
 } // sk::Graphics::Rendering

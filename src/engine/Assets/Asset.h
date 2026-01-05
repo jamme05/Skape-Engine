@@ -7,19 +7,21 @@
 #pragma once
 
 #include <any>
-#include <unordered_map>
 #include <filesystem>
+#include <unordered_map>
 
+#include <simdjson/simdjson.h>
+
+#include <Assets/Utils/Event.h>
 #include <Memory/Tracker/Tracker.h>
-#include <Reflection/RuntimeClass.h>
 #include <Misc/Hashing.h>
 #include <Misc/Smart_Ptrs.h>
 #include <Misc/StringID.h>
 #include <Misc/UUID.h>
-
+#include <Reflection/RuntimeClass.h>
 #include <Scene/Managers/EventManager.h>
+#include <Seralization/Serializable.h>
 
-#include <simdjson/simdjson.h>
 
 namespace sk
 {
@@ -38,19 +40,11 @@ namespace sk
 	class cAsset_Meta : public cShared_from_this< cAsset_Meta >
 	{
 		friend class cAsset_Manager;
-		friend class cAsset_Ptr;
-		friend class cAsset_Ref_Base;
+		friend class cAsset_Ptr_Base;
 		friend class Assets::Jobs::cAsset_Worker;
 		
 		static constexpr std::string_view kMetaExtension = "skmeta"; // = Skape Meta
 	public:
-		enum class eEventType : uint8_t
-		{
-			kUnload,
-			kLoaded,
-			kUpdated
-		};
-
 		enum eFlags : uint8_t
 		{
 			kNone     = 0,
@@ -66,9 +60,12 @@ namespace sk
 
 			// If this asset shares a path with other assets. Ex: Multiple assets made from a single gltf file.
 			kSharesPath = 1 << 3,
+			
+			// If this asset was manually created.
+			kManualCreation = 1 << 4,
 		};
 
-		using dispatcher_t = Event::cDispatcherProxy< cAsset_Meta&, const void*, eEventType >;
+		using dispatcher_t = Event::cDispatcherProxy< cAsset_Meta&, Assets::eEventType >;
 		
 		cAsset_Meta( std::string_view _name, type_info_t _asset_type );
 		~cAsset_Meta() = default;
@@ -80,6 +77,7 @@ namespace sk
 		auto& GetName() const { return m_name_; }
 		auto& GetPath() const { return m_path_; }
 		auto& GetAbsolutePath() const { return m_absolute_path_; }
+		auto& GetExtension() const { return m_ext_; }
 		
 		// Saves any changes made to the asset.
 		void Save();
@@ -90,6 +88,8 @@ namespace sk
 		// Gets weather or not the asset has metadata
 		bool HasMetadata() const;
 		
+		// Gets the UUID of this asset.
+		auto GetUUID() const -> cUUID;
 		// Gets the asset. Unsafe to be used directly as the state is controlled externally.
 		auto GetAsset() const -> cAsset*;
 		// Gets the asset if it is of a certain type
@@ -103,6 +103,8 @@ namespace sk
 		auto GetClass() const -> const iRuntimeClass*;
 		// Gets the type hash of the asset
 		auto GetHash () const -> type_hash;
+		
+		void Reload();
 
 		// Adds a listener to get events on when the asset changes.
 		// NOTE: Listeners do not load or unload the asset, and are only used to receive information.
@@ -123,6 +125,16 @@ namespace sk
 		// Removes a listener from getting events on when the asset changes.
 		// NOTE: Listeners do not load or unload the asset, and are only used to receive information.
 		void RemoveListener( const dispatcher_t::weak_event_t& _listener );
+		
+		// Prevents the asset from being destroyed. Locks stack to allow for the asset to be used by multiple sources.
+		void LockAsset();
+		// Removes a lock from the asset.
+		void UnlockAsset();
+		
+		// Always make sure to assign COMPLETED assets.
+		// Providing an asset with incomplete information will be considered undefined behavior.
+		// Made for internal usage. But can be used in case you want to manually create an asset.
+		void setAsset( cAsset* _asset );
 
 	private:
 		void addReferrer   ( void* _source, const cWeak_Ptr< iClass >& _referrer );
@@ -142,10 +154,12 @@ namespace sk
 		cUUID     m_uuid_ = cUUID::kInvalid;
 
 		type_info_t m_asset_type_ = nullptr;
+		// Do not write to directly, use setAsset instead.
 		cAsset*     m_asset_      = nullptr;
 
 		std::atomic_uint32_t m_asset_refs_;
-		std::atomic_uint32_t m_flags_ = 0;
+		std::atomic_uint16_t m_lock_refs_ = 0;
+		std::atomic_uint16_t m_flags_     = 0;
 
 		std::mutex   m_dispatcher_mutex_;
 		dispatcher_t m_dispatcher_;
@@ -162,14 +176,13 @@ namespace sk
 		using class_type = cAsset_Meta;
 	} // Asset
 	
-	SK_CLASS( Asset ), public cShared_from_this< cAsset >
+	SK_CLASS( Asset ), public cShared_from_this< cAsset >, public cSerializable
 	{
 		SK_CLASS_BODY( Asset )
 	public:
-		auto& GetMeta() const
-		{
-			return m_metadata_;
-		}
+		[[ nodiscard ]] auto& GetMeta() const { return m_metadata_; }
+		
+		cShared_ptr< cSerializedObject > Serialize() override;
 	protected:
 		cAsset() = default;
 	private:

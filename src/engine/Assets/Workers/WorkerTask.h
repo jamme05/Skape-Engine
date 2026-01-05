@@ -7,14 +7,14 @@
 #pragma once
 
 #include <Assets/Asset.h>
-#include <Misc/Smart_Ptrs.h>
 #include <Assets/Management/Asset_Manager.h>
+#include <Misc/Smart_Ptrs.h>
 
 namespace sk::Assets::Jobs
 {
     using partial_t   = cShared_ptr< cAsset_Meta >;
     using void_ptr_t  = cShared_ptr< void >;
-    using listener_t  = std::function< void( cAsset_Meta&, const void*, cAsset_Meta::eEventType ) >;
+    using listener_t  = std::function< void( cAsset_Meta&, eEventType ) >;
     using load_func_t = cAsset_Manager::load_file_func_t;
 
     enum class eJobType : uint8_t
@@ -42,7 +42,6 @@ namespace sk::Assets::Jobs
     {
         partial_t   meta;
         listener_t  event;
-        const void* source;
     };
             
     struct sTask

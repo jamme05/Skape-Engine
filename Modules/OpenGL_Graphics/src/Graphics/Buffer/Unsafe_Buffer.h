@@ -80,7 +80,7 @@ namespace sk::Graphics
             auto GetSize() const -> size_t override { return m_byte_size_; }
             void Resize ( size_t _byte_size ) override;
             
-            void Upload  () override;
+            void Upload ( bool _force ) override;
 
             void Copy ( const iUnsafe_Buffer& _other ) override;
             void Steal( iUnsafe_Buffer&& _other ) noexcept override;

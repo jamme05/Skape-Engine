@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Assets/Management/WorkerTask.h>
+#include <Assets/Workers/WorkerTask.h>
 #include <Assets/Management/Asset_Manager.h>
 
 namespace sk::Assets::Jobs

@@ -6,7 +6,7 @@
 
 #include "Asset_Loader.h"
 
-#include "Asset_Job_Manager.h"
+#include <Assets/Management/Asset_Job_Manager.h>
 
 namespace
 {
@@ -57,25 +57,22 @@ void sk::Assets::Jobs::cAsset_Worker::load_asset( sAssetTask& _task, const bool 
     _task.loader( _task.path, _task.affected_assets, loader_task );
     
     for( auto& meta : _task.affected_assets )
-        meta->m_dispatcher_.push_event( *meta, nullptr, _refresh ? cAsset_Meta::eEventType::kUpdated : cAsset_Meta::eEventType::kLoaded );
+        meta->m_dispatcher_.push_event( *meta, _refresh ? eEventType::kUpdated : eEventType::kLoaded );
 }
 
 void sk::Assets::Jobs::cAsset_Worker::unload_asset( sAssetTask& _task )
 {
     for( auto& meta : _task.affected_assets )
-        meta->m_dispatcher_.push_event( *meta, nullptr, cAsset_Meta::eEventType::kUnload );
+        meta->m_dispatcher_.push_event( *meta, eEventType::kUnload );
     
     _task.loader( _task.path, _task.affected_assets, eAssetTask::kUnloadAsset );
 
     for( auto& asset : _task.affected_assets )
-    {
-        SK_FREE( asset->m_asset_ );
-        asset->m_asset_ = nullptr;
-    }
+        asset->setAsset( nullptr );
 }
 
 void sk::Assets::Jobs::cAsset_Worker::push_event( sListenerTask& _task )
 {
-    _task.event( *_task.meta, _task.source, cAsset_Meta::eEventType::kLoaded );
+    _task.event( *_task.meta, eEventType::kLoaded );
 }
 

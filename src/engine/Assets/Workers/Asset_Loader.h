@@ -9,7 +9,7 @@
 #include <thread>
 
 #include <Assets/Asset.h>
-#include <Assets/Management/WorkerTask.h>
+#include <Assets/Workers/WorkerTask.h>
 #include <Misc/Smart_Ptrs.h>
 
 
@@ -28,7 +28,7 @@ namespace sk::Assets::Jobs
         cAsset_Worker();
         using partial_t  = cShared_ptr< cAsset_Meta >;
         using void_ptr_t = cShared_ptr< void >;
-        using listener_t = std::function< void( cAsset_Meta&, cAsset_Meta::eEventType ) >;
+        using listener_t = std::function< void( cAsset_Meta&, eEventType ) >;
 
     private:
         static void worker( const cAsset_Worker* _loader );

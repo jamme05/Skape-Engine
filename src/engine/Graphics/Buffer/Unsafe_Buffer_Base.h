@@ -96,7 +96,7 @@ namespace sk::Graphics
         virtual void  Copy ( const iUnsafe_Buffer& _other ) = 0;
         virtual void  Steal( iUnsafe_Buffer&& _other ) noexcept = 0;
 
-        virtual void  Upload() = 0;
+        virtual void  Upload( bool _force ) = 0;
 
         [[ nodiscard ]]
         virtual std::string GetName() const = 0;

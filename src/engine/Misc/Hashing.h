@@ -10,8 +10,6 @@
 #include <filesystem>
 #include <string>
 
-#include "Math/Math.h"
-
 // FNV1a c++11 constexpr compile time hash functions, 32 and 64 bit
 // str should be a null terminated string literal, value should be left out
 // e.g. hash_32_fnv1a_const("example")
@@ -70,19 +68,22 @@ namespace Hashing
 		return fnv1a_64s( reinterpret_cast< const char* >( _in ), sizeof( _in ), _v );
 	}
 
-#define HASH_REQUIREMENTS( Class ) \
-constexpr Class( const Class& _other ) : m_hash_( _other.m_hash_ ){}; \
-constexpr Class( Class&& _other ) noexcept : m_hash_( std::move( _other.m_hash_ ) ){} \
-~Class( void ) = default; \
-constexpr auto value() const { return m_hash_; } \
-constexpr Class& operator=( const Class& ) = default; \
-constexpr Class& operator=( Class&& _other ) noexcept = default; \
-constexpr bool   operator==( const Class& _other ) const { return m_hash_ == _other.m_hash_; } \
-constexpr bool   operator!=( const Class& _other ) const { return m_hash_ != _other.m_hash_; } \
-constexpr auto   operator<=>( const Class & _other ) const { return m_hash_ <=> _other.m_hash_; } \
-private: \
-uint64_t m_hash_;
+#define HASH_REQUIREMENTS_0_( HashName, ... ) \
+	constexpr HashName( const HashName& _other ) : m_hash_( _other.m_hash_ ){}; \
+	constexpr HashName( HashName&& _other ) noexcept : m_hash_( std::move( _other.m_hash_ ) ){} \
+	~HashName( void ) = default; \
+	constexpr auto value() const noexcept { return m_hash_; } \
+	constexpr operator uint64_t() const noexcept { return value(); } \
+	constexpr HashName& operator=( const HashName& ) noexcept = default; \
+	constexpr HashName& operator=( HashName && ) noexcept = default; \
+	constexpr bool   operator==( const HashName & _other ) const noexcept { return m_hash_ == _other.m_hash_; } \
+	constexpr auto   operator<=>( const HashName & _other ) const noexcept { return m_hash_ <=> _other.m_hash_; } \
+	private: \
+	uint64_t m_hash_;
 
+#define HASH_REQUIREMENTS( ... ) \
+	HASH_REQUIREMENTS_0_( __VA_OPT__( __VA_ARGS__ , ) hash )
+	
 } // Hashing
 
 namespace sk
@@ -93,7 +94,7 @@ namespace sk
 		constexpr hash( const Ty& _to_hash )
 		: m_hash_( fnv1a_64< Ty >( _to_hash ) ){}
 
-		HASH_REQUIREMENTS( hash )
+		HASH_REQUIREMENTS()
 	};
 
 	template<>
@@ -135,9 +136,9 @@ namespace sk
 		: m_hash_( 0 )
 		{
 			if( _c < 0 )
-				Hashing::fnv1a_64( _to_hash );
+				m_hash_ = Hashing::fnv1a_64( _to_hash );
 			else
-				Hashing::fnv1a_64s( _to_hash, _c );
+				m_hash_ = Hashing::fnv1a_64s( _to_hash, _c );
 		}
 
 		static const hash kEmpty;
@@ -155,7 +156,7 @@ namespace sk
 		constexpr hash( const uint32_t& _to_hash )
 		: m_hash_( static_cast< uint64_t >( _to_hash ) ){}
 
-		HASH_REQUIREMENTS( hash )
+		HASH_REQUIREMENTS()
 	};
 
 	template<>
@@ -164,14 +165,14 @@ namespace sk
 		constexpr hash( const uint64_t& _to_hash )
 		: m_hash_( _to_hash ){}
 
-		HASH_REQUIREMENTS( hash )
+		HASH_REQUIREMENTS()
 	};
 } // sk::
 
 template< class Ty >
 struct std::hash< sk::hash< Ty > >
 {
-	uint64_t operator()( const sk::hash< Ty >& _hash ) const
+	uint64_t operator()( const sk::hash< Ty >& _hash ) const noexcept
 	{
 		return _hash.value();
 	}

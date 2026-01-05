@@ -10,13 +10,16 @@
 #include <fastgltf/core.hpp>
 
 #include <Assets/Asset.h>
-#include <Assets/Asset_List.h>
+#include <Assets/Utils/Asset_List.h>
 
 #include <Containers/Map.h>
 #include <Containers/Vector.h>
 
 #include <Misc/Singleton.h>
 #include <Misc/Smart_Ptrs.h>
+
+#include "Assets/Access/Asset_Ptr.h"
+#include "Assets/Access/Asset_Ref.h"
 
 
 namespace sk
@@ -57,7 +60,7 @@ namespace sk
 		template< class Ty >
 		requires std::is_base_of_v< cAsset_Meta, Ty >
 		[[ deprecated( "With the changes to the asset system this no longer works." ) ]]
-		auto getAssetAs( const cUUID _id ) -> cShared_ptr< Ty >
+		auto getAssetAs( const cUUID& _id ) -> cShared_ptr< Ty >
 		{
 			if( auto asset = getAsset( _id ); asset && asset->GetClass()->isDerivedFrom( Ty::GetStaticClass() ) )
 				return asset.Cast< Ty >();
@@ -104,24 +107,106 @@ namespace sk
 		auto loadFolder( const std::filesystem::path& _path, const bool _recursive = true, const bool _reload = false ) -> Assets::cAsset_List;
 		auto loadFile  ( const std::filesystem::path& _path, const bool _reload = false ) -> Assets::cAsset_List;
 
-		auto GetAssetPtrByName ( const str_hash& _name_hash, const cShared_ptr< iClass >& _self, bool _load_asset = true )
-			-> cAsset_Ptr;
-		auto GetAssetPtrByPath ( const str_hash& _path_hash, const cShared_ptr< iClass >& _self, bool _load_asset = true )
-			-> cAsset_Ptr;
-		auto GetAssetPtrById   ( const cUUID& _uuid, const cShared_ptr< iClass >& _self, bool _load_asset = true )
-			-> cAsset_Ptr;
-		static auto GetAssetPtr( const cShared_ptr< cAsset_Meta >& _meta, const cShared_ptr< iClass >& _self, bool _load_asset = true )
-			-> cAsset_Ptr;
+		// Asset ptrs
+		template< class Ty >
+		requires std::is_base_of_v< cAsset, Ty >
+		auto GetAssetPtrByName ( const str_hash& _name_hash, const cShared_ptr< iClass >& _self = nullptr, const bool _load_asset = true )
+			-> cAsset_Ptr< Ty >
+		{
+			if( const auto asset = getAssetByName( _name_hash ) )
+				return GetAssetPtr< Ty >( asset, _self, _load_asset );
+			return cAsset_Ptr< Ty >( _self );
+		}
+		template< class Ty >
+		requires std::is_base_of_v< cAsset, Ty >
+		auto GetAssetPtrByPath ( const str_hash& _path_hash, const cShared_ptr< iClass >& _self = nullptr, const bool _load_asset = true )
+			-> cAsset_Ptr< Ty >
+		{
+			if( const auto asset = getAssetByPath( _path_hash ) )
+				return GetAssetPtr< Ty >( asset, _self, _load_asset );
+			return cAsset_Ptr< Ty >( _self );
+		}
+		template< class Ty >
+		requires std::is_base_of_v< cAsset, Ty >
+		auto GetAssetPtrById   ( const cUUID& _uuid, const cShared_ptr< iClass >& _self = nullptr, const bool _load_asset = true )
+			-> cAsset_Ptr< Ty >
+		{
+			if( const auto asset = getAsset( _uuid ) )
+				return GetAssetPtr< Ty >( asset, _self, _load_asset );
+			return cAsset_Ptr< Ty >( _self );
+		}
+		template< class Ty >
+		requires std::is_base_of_v< cAsset, Ty >
+		static auto GetAssetPtr( const cShared_ptr< cAsset_Meta >& _meta, const cShared_ptr< iClass >& _self = nullptr, const bool _load_asset = true )
+			-> cAsset_Ptr< Ty >
+		{
+			auto ptr = cAsset_Ptr< Ty >{ _self, _meta };
+			if( _load_asset )
+				ptr.LoadSync();
+		
+			return ptr;
+		}
+
+		// Asset Refs
+		template< class Ty, eAsset_Ref_Mode Mode = eAsset_Ref_Mode::kAutomaticAsync >
+		requires std::is_base_of_v< cAsset, Ty >
+		auto GetAssetRefByName ( const str_hash& _name_hash, const cShared_ptr< iClass >& _self = nullptr )
+			-> cAsset_Ref< Ty, Mode >
+		{
+			if( const auto asset = getAssetByName( _name_hash ) )
+				return GetAssetRef< Ty, Mode >( asset, _self );
+			return cAsset_Ref< Ty, Mode >( _self );
+		}
+		template< class Ty, eAsset_Ref_Mode Mode = eAsset_Ref_Mode::kAutomaticAsync >
+		requires std::is_base_of_v< cAsset, Ty >
+		auto GetAssetRefByPath ( const str_hash& _path_hash, const cShared_ptr< iClass >& _self = nullptr )
+			-> cAsset_Ref< Ty, Mode >
+		{
+			if( const auto asset = getAssetByPath( _path_hash ) )
+				return GetAssetRef< Ty, Mode >( asset, _self );
+			return cAsset_Ref< Ty, Mode >( _self );
+		}
+		template< class Ty, eAsset_Ref_Mode Mode = eAsset_Ref_Mode::kAutomaticAsync >
+		requires std::is_base_of_v< cAsset, Ty >
+		auto GetAssetRefById   ( const cUUID& _uuid, const cShared_ptr< iClass >& _self = nullptr )
+			-> cAsset_Ref< Ty, Mode >
+		{
+			if( const auto asset = getAsset( _uuid ) )
+				return GetAssetRef< Ty, Mode >( asset, _self );
+			return cAsset_Ref< Ty, Mode >( _self );
+		}
+		template< class Ty, eAsset_Ref_Mode Mode = eAsset_Ref_Mode::kAutomaticAsync >
+		requires std::is_base_of_v< cAsset, Ty >
+		static auto GetAssetRef( const cShared_ptr< cAsset_Meta >& _meta, const cShared_ptr< iClass >& _self = nullptr )
+			-> cAsset_Ref< Ty, Mode >
+		{
+			return cAsset_Ref< Ty, Mode >{ _self, _meta };
+		}
+		
+		template< class Ty, class... Args >
+		requires std::is_base_of_v< cAsset, Ty >
+		auto CreateAsset( std::string_view _name, Args&&... _args ) -> cShared_ptr< cAsset_Meta >
+		{
+			cShared_ptr< cAsset_Meta > meta = sk::make_shared< cAsset_Meta >( _name, kTypeInfo< Ty > );
+			meta->setAsset( SK_SINGLE( Ty, std::forward< Args >( _args )... ) );
+			
+			meta->m_flags_ |= cAsset_Meta::eFlags::kManualCreation;
+			
+			registerAsset( meta );
+			
+			return meta;
+		}
 
 		static auto getAbsolutePath ( const std::filesystem::path& _path ) -> std::filesystem::path;
 		static void makeAbsolutePath(       std::filesystem::path& _path );
 
 		using load_file_func_t = std::function< void( const std::filesystem::path&, Assets::cAsset_List&, Assets::eAssetTask ) >;
 
-		void AddFileLoaderForExtensions   ( const std::vector< cStringID >& _extensions, const load_file_func_t& _function );
-		void AddFileLoaderForExtension   ( const cStringID& _extension, const load_file_func_t& _function );
-		void RemoveFileLoader( const std::vector< str_hash >& _extensions );
+		void AddFileLoaderForExtensions( const std::vector< cStringID >& _extensions, const load_file_func_t& _function );
+		void AddFileLoaderForExtension ( const cStringID& _extension, const load_file_func_t& _function );
+		void RemoveFileLoaders( const std::vector< cStringID >& _extensions );
 		auto GetFileLoader   ( const str_hash& _extension_hash ) -> load_file_func_t;
+		auto GetExtensions   () -> std::vector< cStringID >;
 	
 	private:
 		struct sRef_Info
@@ -134,7 +219,7 @@ namespace sk
 		using id_to_asset_map_t      = unordered_map< hash< cUUID >, cShared_ptr< cAsset_Meta > >;
 		using str_to_asset_map_t     = unordered_multimap< str_hash, cShared_ptr< cAsset_Meta > >;
 		using path_to_ref_map_t      = unordered_map< str_hash, sRef_Info >;
-		using extension_loader_map_t = unordered_map< str_hash, load_file_func_t >;
+		using extension_loader_map_t = unordered_map< cStringID, load_file_func_t >;
 		using extension_map_entry_t  = extension_loader_map_t::value_type;
 
 		void addPathReferrer   ( const str_hash& _path_hash, const void* _referrer );
@@ -147,13 +232,10 @@ namespace sk
 		static void handleGltfTexture    ( cAsset_Meta& _meta, const fastgltf::Asset& _asset, fastgltf::Texture& _texture, Assets::eAssetTask _task );
 
 		static void loadPngFile      ( const std::filesystem::path& _path, Assets::cAsset_List& _assets, Assets::eAssetTask _load_task );
-
-		void requestAssetLoadJob  ( const cShared_ptr< cAsset_Meta >& _meta, void* _referrer, bool _reload );
-		void requestAssetUnloadJob( const cShared_ptr< cAsset_Meta >& _meta, void* _referrer );
 		
 		void loadEmbedded( void );
 
-#define EXTENSION_ENTRY( Ext, Func ) extension_map_entry_t{ str_hash( Ext ), Func },
+#define EXTENSION_ENTRY( Ext, Func ) extension_map_entry_t{ cStringID( Ext ), Func },
 
 		// It may show an error but is perfectly fine.
 		extension_loader_map_t m_load_callbacks_

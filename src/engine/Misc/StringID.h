@@ -56,6 +56,7 @@ namespace sk
 
     private:
         auto getRegistry    ( std::string_view _str      ) -> cStringRegistry;
+        auto getRegistry    ( const str_hash&  _hash );
         void destroyRegistry( const str_hash&  _registry );
 
         using index_vec_t    = std::vector< size_t >;
@@ -79,6 +80,14 @@ namespace sk
         : cStringID( std::string_view{ _str, N } )
         {
         } // cStringID
+        
+        // Only used to create temporary StringIDs. Don't store anything created by this.
+        static constexpr auto FromHash( const str_hash& _hash )
+        {
+            cStringID id;
+            id.m_hash_ = _hash;
+            return id;
+        }
 
         constexpr cStringID( const cStringID&  _other )          = default;
         constexpr cStringID(       cStringID&& _other ) noexcept = default;
@@ -112,6 +121,15 @@ namespace sk
         registry_t m_registry_ = {};
     };
 } // sk
+
+template<>
+struct std::hash< sk::cStringID >
+{
+    uint64_t operator()( const sk::cStringID& _value ) const noexcept
+    {
+        return _value.hash().value();
+    }
+};
 
 ////////////////////////////////////////////////
 // I hate forced inline :)

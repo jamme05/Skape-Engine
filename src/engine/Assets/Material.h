@@ -1,0 +1,135 @@
+﻿//
+//
+// COPYRIGHT William Ask S. Ness 2025
+//
+//
+
+#pragma once
+
+#include <variant>
+#include <Assets/Asset.h>
+#include <Assets/Shader.h>
+#include <Assets/Access/Asset_Ptr.h>
+#include <Graphics/Buffer/Dynamic_Buffer.h>
+
+#include "Access/Asset_Ref.h"
+#include "Graphics/Utils/Shader_Link.h"
+#include "Math/Matrix4x4.h"
+#include "Math/Vector4.h"
+
+
+namespace sk::Graphics::Utils
+{
+    struct sUniform;
+    struct sBlock;
+    class cShader_Reflection;
+} // sk::Graphics::Utils::
+
+namespace sk
+{
+    // TODO: Move this to a different file
+    template< class Ty, class... Types >
+    constexpr bool kOneOf = ( std::is_same_v< Ty, Types > ||... );
+    template< class Ty >
+    constexpr bool kOneOf< Ty > = true;
+} // sk::
+
+namespace sk::Assets
+{
+    SK_ASSET_CLASS( Material )
+    {
+        SK_CLASS_BODY( Material )
+        
+        friend class sk::Graphics::Utils::cShader_Link;
+    public:
+        class cBlock
+        {
+            friend class cMaterial;
+            friend bool sk::Graphics::Utils::ApplyMaterial( const Assets::cMaterial& _material );
+            friend class sk::Graphics::Utils::cShader_Link;
+        public:
+            using variant_t = std::variant<
+                int32_t,  cVector2i32, cVector3i32, cVector4i32,
+                uint32_t, cVector2u32, cVector3u32, cVector4u32,
+                float, cVector2f, cVector3f, cVector4f, cMatrix4x4f
+            >;
+            using direct_variant_t = std::variant<
+                int32_t*,  cVector2i32*, cVector3i32*, cVector4i32*,
+                uint32_t*, cVector2u32*, cVector3u32*, cVector4u32*,
+                float*, cVector2f*, cVector3f*, cVector4f*, cMatrix4x4f*
+            >;
+            template< class Ty >
+            static constexpr bool kValidType = kOneOf< Ty, int32_t, uint32_t, cVector4i32, cVector4u32, float, cVector4f, cMatrix4x4f >;
+
+            struct sUniform
+            {
+                // TODO: Support uniforms with array values.
+                
+                using uniform_t = Graphics::Utils::sUniform;
+                
+                std::string_view pretty_name;
+                direct_variant_t accessor;
+                uint32_t    byte_size;
+                uint32_t    array_size;
+                // Actual vector size.
+                uint32_t    vector_size;
+                uint32_t    matrix_size;
+                uniform_t*  info;
+            };
+            
+            using buffer_t      = Graphics::cUnsafe_Buffer;
+            using block_t       = Graphics::Utils::sBlock;
+            using uniform_map_t = unordered_map< str_hash, sUniform >;
+            using uniform_vec_t = vector< sUniform* >;
+            
+            cBlock( const cWeak_Ptr< cMaterial >& _owner, std::string _name, const block_t* _info, size_t _binding );
+
+            bool SetUniform( const cStringID& _name, const auto& _value );
+            
+            auto& GetUniformMap() const { return m_uniform_map_; }
+            auto& GetUniformVec() const { return m_uniform_vec_; }
+            
+        private:
+            std::string    m_pretty_name_;
+            const block_t* m_info_;
+            size_t         m_binding_;
+            buffer_t       m_buffer_;
+            
+            uniform_map_t m_uniform_map_;
+            uniform_vec_t m_uniform_vec_;
+            
+            cWeak_Ptr< cMaterial > m_owner_;
+        };
+        
+        explicit cMaterial( const Graphics::Utils::cShader_Link& _shader_link );
+        
+        void WaitForShader() const;
+        
+        auto  GetBlock( const cStringID& _name ) -> cBlock*;
+        auto& GetBlocks() const { return m_block_map_; }
+        
+        auto GetShaderLink() const -> const Graphics::Utils::cShader_Link&;
+        
+        bool IsReady() const;
+        
+        void Update();
+        
+    private:
+        using block_map_t  = unordered_map< str_hash, cBlock >;
+        using block_vec_t  = vector< cBlock* >;
+        using reflection_t = cShared_ptr< Graphics::Utils::cShader_Reflection >;
+        using shader_ptr_t = cAsset_Ref< cShader, eAsset_Ref_Mode::kManual >;
+        
+        void create_data();
+        
+        block_map_t m_block_map_;
+        block_vec_t m_block_vec_;
+        
+        Graphics::Utils::cShader_Link m_shader_link_;
+        
+        std::mutex m_access_mutex_;
+    };
+    
+} // sk::Assets
+
+DECLARE_CLASS( sk::Assets::Material )

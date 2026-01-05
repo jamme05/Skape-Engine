@@ -111,6 +111,8 @@ namespace sk
 	};
 
 	constexpr static iRuntimeClass kInvalidClass{ "Invalid" };
+	
+	using class_info_t = const iRuntimeClass*;
 
 	template< bool Select, class Ty, class Ty2 >
 	struct select_class_type{};
@@ -984,7 +986,7 @@ namespace sk::Reflection
 		// 0 Will always be defined. Hence, it'll never begin with there being nothing.
 		constexpr auto& point = Ty::template _xxx_sk_access< std::integral_constant< int, Layer > >::kAccess;
 
-		if( _offset < offset_of< Ty, point.m_point >() )
+		if( _offset < offset_of< point.m_point >() )
 			return _previous_access;
 
 		if constexpr( point.m_access == 0 )
@@ -1011,7 +1013,7 @@ namespace sk::Reflection
 		if( _array )
 		{
 			// Add the current element to the array at index Layer
-			auto access = get_offset_access< Ty >( offset_of< Ty, extraction.point >() );
+			auto access = get_offset_access< Ty >( offset_of< extraction.point >() );
 			( *_array )[ Layer ] = member_func_pair_t{
 				extraction.name, cMemberFunction{ extraction.name, *extraction.holder, access }
 			};
@@ -1028,7 +1030,7 @@ namespace sk::Reflection
 			if( _array )
 				return process_member_functions< Ty, Size, Layer - 1 >( _array );
 
-			auto access = get_offset_access< Ty >( offset_of< Ty, extraction.point >() );
+			auto access = get_offset_access< Ty >( offset_of< extraction.point >() );
 			array_t array{};
 			array[ Layer ] = member_func_pair_t{
 				extraction.name, cMemberFunction{ extraction.name, *extraction.holder, access }
@@ -1048,7 +1050,7 @@ namespace sk::Reflection
 		static constexpr auto& extraction = extractor_t::kMember;
 		if( _array )
 		{
-			uint8_t access = get_offset_access< Ty >( offset_of< Ty, extraction.point >() );
+			uint8_t access = get_offset_access< Ty >( offset_of< extraction.point >() );
 
 			( *_array )[ Layer ] = member_var_pair_t{
 				extraction.name, cMemberVariable{ extraction.name, *extraction.holder, access }
@@ -1064,7 +1066,7 @@ namespace sk::Reflection
 			if( _array )
 				return process_member_variables< Ty, Size, Layer - 1 >( _array );
 
-			uint8_t access = get_offset_access< Ty >( offset_of< Ty, extraction.point >() );
+			uint8_t access = get_offset_access< Ty >( offset_of< extraction.point >() );
 
 			array_t array{};
 			array[ Layer ] = member_var_pair_t{
@@ -1126,22 +1128,40 @@ namespace sk
 		// Virtual member reflection
 		[[ nodiscard ]]
 		virtual auto getVariables() const
-			-> Reflection::member_var_map_ref_t = 0;
+			-> Reflection::member_var_map_ref_t
+		{
+			return staticGetVariables();
+		}
 		[[ nodiscard ]]
 		virtual auto getFunctions() const
-			-> Reflection::member_func_map_ref_t = 0;
+			-> Reflection::member_func_map_ref_t
+		{
+			return staticGetFunctions();
+		}
 		[[ nodiscard ]]
 		virtual auto getVariable( const str_hash& _hash ) const
-			-> Reflection::member_var_ptr_t = 0;
+			-> Reflection::member_var_ptr_t
+		{
+			return staticGetVariable( _hash );
+		}
 		[[ nodiscard ]]
 		virtual auto getFunction( const str_hash& _hash ) const
-			-> Reflection::member_func_ptr_t = 0;
+			-> Reflection::member_func_ptr_t
+		{
+			return staticGetFunction( _hash );
+		}
 		[[ nodiscard ]]
 		virtual auto getFunctionOverloads( const str_hash& _hash ) const
-			-> Reflection::member_func_range_t = 0;
+			-> Reflection::member_func_range_t
+		{
+			return staticGetFunctionOverloads( _hash );
+		}
 		[[ nodiscard ]]
 		virtual auto getFunction( const str_hash& _hash, const type_hash& _args ) const
-			-> Reflection::member_func_ptr_t = 0;
+			-> Reflection::member_func_ptr_t
+		{
+			return staticGetFunction( _hash, _args );
+		}
 
 		[[ nodiscard ]] static constexpr auto staticGetVariables()
 			-> Reflection::member_var_map_ref_t{

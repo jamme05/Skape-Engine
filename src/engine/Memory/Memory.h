@@ -33,7 +33,9 @@ namespace sk::Memory
 	 */
 	constexpr static eAlignment default_alignment = kB64Align;
 
+	// Source for this: https://stackoverflow.com/a/108360
 	constexpr bool   is_power_of_two( const size_t _value ){ return ( _value & ( _value - 1 ) ) == 0; }
+	
 	// Returns the size ( in bytes ) aligned.
 	constexpr size_t get_aligned( const size_t _size, const uint32_t _align = default_alignment )
 	{

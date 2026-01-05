@@ -3,7 +3,7 @@
 #include "App.h"
 
 #include "Assets/Asset.h"
-#include <Assets/Asset_List.h>
+#include <Assets/Utils/Asset_List.h>
 #include <Assets/Management/Asset_Manager.h>
 #include "Assets/Texture.h"
 
@@ -31,7 +31,7 @@
 
 #include <Graphics/Renderer.h>
 
-#include "Assets/Asset_Ptr.h"
+#include "Assets/Access/Asset_Ptr.h"
 
 cApp* cApp::m_running_instance_ = nullptr;
 
@@ -72,9 +72,14 @@ sk::Input::response_t cApp::onInput( const uint32_t _type, const sk::Input::sEve
 
 void cApp::create( void )
 {
+	auto& asset_m = sk::cAsset_Manager::get();
 	//auto list   = sk::cAssetManager::get().loadFolder( "data/" );
-	auto list_1 = sk::cAsset_Manager::get().loadFile( "data/humanforscale.glb" );
-	auto list_2 = sk::cAsset_Manager::get().loadFile( "data/heheToiletwithtextures.glb" );
+	auto list_1 = asset_m.loadFile( "models/humanforscale.glb" );
+	auto list_2 = asset_m.loadFile( "models/heheToiletwithtextures.glb" );
+	auto shader_frag = *asset_m.loadFile( "shaders/forward.frag" ).begin();
+	auto shader_vert = *asset_m.loadFile( "shaders/forward.vert" ).begin();
+	
+	auto mat1 = asset_m.CreateAsset< sk::Assets::cMaterial >( "Material Test", shader_vert );
 
 	//sk::cAssetManager::get().loadFile( "data/mushroom.glb" );
 	
@@ -88,8 +93,13 @@ void cApp::create( void )
 	m_scene = sk::make_shared< sk::cScene >();
 	m_scene->create_object< sk::Object::cCameraFlight >( "Camera Free Flight" )->setAsMain();
 
-	sk::cAsset_Ptr test = sk::cAsset_Manager::get().GetAssetPtrByName( "Mesh", nullptr );
+	auto test  = sk::cAsset_Manager::get().GetAssetPtrByName< sk::Assets::cMesh >( christopher_m->GetName(), nullptr );
+	auto test2 = sk::cAsset_Manager::get().GetAssetRefById< sk::Assets::cMesh >( test.GetMeta()->GetUUID(), nullptr );
+	auto test3 = sk::cAsset_Manager::get().GetAssetRefById< sk::Assets::cMesh, sk::eAsset_Ref_Mode::kAutomaticSync >( toilet_m->GetUUID(), nullptr );
 	
+	
+	constexpr auto s1 = sizeof( test );
+	constexpr auto s2 = sizeof( test2 );
 	//auto mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 1" );
 	//mesh->getTransform().getPosition() = { -10.0f, 0.0f, 0.0f };
 	//mesh->getTransform().update();
@@ -99,14 +109,14 @@ void cApp::create( void )
 	mesh->GetTransform().getPosition() = { -2.0f, 0.0f, 0.0f };
 	mesh->GetTransform().update();
 	auto component = mesh->AddComponent< sk::Object::Components::cMeshComponent >( christopher_m );
-	component->SetTexture( christopher_t );
+	component->SetMaterial( christopher_t );
 	component->enabled();
 
 	mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 3" );
 	mesh->GetTransform().getPosition() = { 2.0f, 0.0f, 0.0f };
 	mesh->GetTransform().update();
 	component = mesh->AddComponent< sk::Object::Components::cMeshComponent >( toilet_m );
-	component->SetTexture( toilet_t );
+	component->SetMaterial( toilet_t );
 	component->enabled();
 
 	//mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 4" );

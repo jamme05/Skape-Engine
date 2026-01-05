@@ -84,24 +84,24 @@ namespace sk::Assets
 		requires std::is_base_of_v< cAsset, Ty >
 		auto GetRange()
 		{
-			return m_assets.equal_range( Ty::getStaticType() );
+			return m_assets_.equal_range( Ty::getStaticType() );
 		}
+		void AddAsset   ( const cShared_ptr< cAsset_Meta >& _asset );
+		void RemoveAsset( const cShared_ptr< cAsset_Meta >& _asset );
 
-		[[ nodiscard ]] auto begin( void ) const { return asset_iterator( m_assets.begin() ); }
-		[[ nodiscard ]] auto end  ( void ) const { return asset_iterator( m_assets.end  () ); }
+		[[ nodiscard ]] auto begin( void ) const { return asset_iterator( m_assets_.begin() ); }
+		[[ nodiscard ]] auto end  ( void ) const { return asset_iterator( m_assets_.end  () ); }
 
-		[[ nodiscard ]] bool empty( void ) const { return m_assets.empty(); }
+		[[ nodiscard ]] bool empty( void ) const { return m_assets_.empty(); }
 
 	protected:
 
-		void addAsset   ( const cShared_ptr< cAsset_Meta >& _asset );
-		void removeAsset( const cShared_ptr< cAsset_Meta >& _asset );
 
 	private:
 		friend class sk::cAsset_Manager;
 
-		asset_map_t         m_assets;
-		asset_counter_map_t m_counters;
+		asset_map_t         m_assets_;
+		asset_counter_map_t m_counters_;
 	};
 
 } // sk::Assets::

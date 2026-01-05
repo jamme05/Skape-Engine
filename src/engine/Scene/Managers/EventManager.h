@@ -240,8 +240,9 @@ namespace sk
 		}
 		else // Not shared
 		{
+			auto instance = &_instance;
 			Event::event_t< Re, Args... > event;
-			event.function = std::bind_front( _function, _instance );
+			event.function = std::bind_front( _function, instance );
 			event.raw_ptr  = std::addressof( _function );
 				
 			return event;
@@ -391,7 +392,7 @@ namespace sk
 
 		// TODO: Clean up the number of possible ways to create listeners, as it can get quite confusing.
 		template< class... Args >
-		class cEventDispatcher : public iEventDispatcher
+		class cEventDispatcher final : public iEventDispatcher
 		{
 		public:
 			using listener_t      = std::function< void( Args... ) >;
@@ -459,6 +460,8 @@ namespace sk
 			
 			cEventDispatcher& operator=( const cEventDispatcher& ) = default;
 			cEventDispatcher& operator=( cEventDispatcher&& ) noexcept = default;
+			
+			auto GetSelf() const { return m_self_; }
 
 			auto& operator+=( const event_t _listener )
 			{
@@ -466,7 +469,9 @@ namespace sk
 				
 				SK_WARN_IF( sk::Severity::kGeneral | 200,
 					is_lambda, "Warning: You shouldn't add a lambda with the += operator." )
-
+				
+				std::scoped_lock lock{ m_write_mtx_ };
+				
 				m_listeners_.emplace( id, _listener );
 
 				return *this;
@@ -478,7 +483,9 @@ namespace sk
 				
 				SK_WARN_IF( sk::Severity::kGeneral | 200,
 					is_lambda, "Warning: You shouldn't add a lambda with the += operator." )
-
+				
+				std::scoped_lock lock{ m_write_mtx_ };
+				
 				m_weak_listeners_.emplace( id, _listener );
 
 				return *this;
@@ -490,7 +497,9 @@ namespace sk
 				
 				SK_WARN_IF( sk::Severity::kGeneral | 200,
 					is_lambda, "Warning: You shouldn't add a lambda with the += operator." )
-
+				
+				std::scoped_lock lock{ m_write_mtx_ };
+				
 				m_listeners_.emplace( id, _listener );
 
 				return *this;
@@ -502,7 +511,9 @@ namespace sk
 				
 				SK_WARN_IF( sk::Severity::kGeneral | 200,
 					is_lambda, "Warning: You shouldn't add a lambda with the += operator." )
-
+				
+				std::scoped_lock lock{ m_write_mtx_ };
+				
 				m_weak_listeners_.emplace( id, _listener );
 
 				return *this;
@@ -519,7 +530,9 @@ namespace sk
 					"Error: You can't provide a member function from a class which isn't compatible with this class." )
 				
 				auto id = get_function_hash( _wrapper.raw_ptr );
-
+				
+				std::scoped_lock lock{ m_write_mtx_ };
+				
 				m_listeners_.emplace( id, std::bind_front( _wrapper.wrapped, m_self_ ) );
 
 				return *this;
@@ -564,6 +577,11 @@ namespace sk
 			size_t add_listener( const event_t& _listener )
 			{
 				auto [ id, is_lambda ] = get_function_id( _listener );
+				std::scoped_lock lock{ m_write_mtx_ };
+				
+				if( m_listeners_.contains( id ) )
+					return id;
+				
 				m_listeners_.insert( std::make_pair( id, _listener.function ) );
 				return id;
 			} // add_listener
@@ -571,7 +589,11 @@ namespace sk
 			size_t add_listener( const weak_event_t& _listener )
 			{
 				auto [ id, is_lambda ] = get_function_id( _listener );
+				
+				std::scoped_lock lock{ m_write_mtx_ };
+				
 				m_weak_listeners_.insert( std::make_pair( id, _listener.function ) );
+				
 				return id;
 			} // add_listener
 
@@ -582,6 +604,8 @@ namespace sk
 				SK_ERR_IF( is_lambda,
 					"Error: Can't remove a lambda by using a function pointer." )
 
+				std::scoped_lock lock{ m_write_mtx_ };
+				
 				if( const auto itr = m_listeners_.find( id ); itr != m_listeners_.end() )
 				{
 					m_listeners_.erase( itr );
@@ -595,6 +619,8 @@ namespace sk
 				SK_ERR_IF( is_lambda,
 					"Error: Can't remove a lambda by using a function pointer." )
 
+				std::scoped_lock lock{ m_write_mtx_ };
+				
 				if( const auto itr = m_weak_listeners_.find( id ); itr != m_weak_listeners_.end() )
 				{
 					m_weak_listeners_.erase( itr );
@@ -609,6 +635,8 @@ namespace sk
 					return;
 				}
 
+				std::scoped_lock lock{ m_write_mtx_ };
+				
 				if( const auto itr = m_listeners_.find( _id ); itr != m_listeners_.end() )
 			 	{
 			 		m_listeners_.erase( itr );
@@ -647,13 +675,18 @@ namespace sk
 							m_to_remove_.push_back( weak_listener.first );
 					}
 				}
+				
 				m_is_pushing = false;
+				m_is_pushing.notify_all();
 
 				clean_listeners();
 			} // push_event
 
 			void reset()
 			{
+				if( m_is_pushing.load() )
+					m_is_pushing.wait( true );
+				
 				m_is_pushing = false;
 				m_to_remove_.clear();
 				m_listeners_.clear();
@@ -727,6 +760,7 @@ namespace sk
 				return gen();
 			}
 
+			std::mutex                               m_write_mtx_;
 			cWeak_Ptr< iClass >                      m_self_      = nullptr;
 			vector< size_t >                         m_to_remove_ = {};
 			unordered_map< size_t, listener_t >      m_listeners_ = {};      // Static Listeners
@@ -751,6 +785,8 @@ namespace sk
 			cDispatcherProxy( const cWeak_Ptr< iClass >& _self )
 			: m_dispatcher_( std::make_unique< dispatcher_t >( _self ) )
 			{}
+			
+			auto GetSelf() const { return m_dispatcher_->GetSelf(); }
 
 			auto& operator+=( const event_t _listener )
 			{

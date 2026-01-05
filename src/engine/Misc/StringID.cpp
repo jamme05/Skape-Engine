@@ -99,45 +99,54 @@ auto sk::cStringIDManager::getRegistry( const std::string_view _str ) -> cString
         return cStringRegistry{ itr->second };
 }
 
+auto sk::cStringIDManager::getRegistry( const str_hash& _hash )
+{
+    if( const auto itr = m_registry_lookup_.find( _hash ); itr != m_registry_lookup_.end() )
+        return cStringRegistry{ itr->second };
+    
+    return cStringRegistry{ "" };
+}
+
 void sk::cStringIDManager::destroyRegistry( const str_hash& _registry )
 {
-    if( const auto itr = m_registry_lookup_.find( _registry ); itr != m_registry_lookup_.end() )
+    const auto itr = m_registry_lookup_.find( _registry );
+    if( itr == m_registry_lookup_.end() )
+        return;
+
+    auto& to_destroy = *itr->second;
+    m_registry_lookup_.erase( itr );
+
+    // If it's in the back then we can remove it without adding it to the available list.
+    if( to_destroy.index == m_registries_.size() - 1 )
+        m_registries_.pop_back();
+    else
     {
-        auto& to_destroy = *itr->second;
-        m_registry_lookup_.erase( itr );
-
-        // If it's in the back then we can remove it without adding it to the available list.
-        if( to_destroy.index == m_registries_.size() - 1 )
-            m_registries_.pop_back();
-        else
-        {
-            m_available_spots_.emplace_back( to_destroy.index );
-            std::ranges::sort( m_available_spots_, std::ranges::greater{} );
-            
-            to_destroy.ref_count.store( 0, std::memory_order_relaxed );
-            to_destroy.string = {};
-            to_destroy.hash  = {};
-            // registry.index = 0;
-        }
-
-        // We can ignore the pruning if the spot that's available isn't in the back.
-        if( m_available_spots_.empty() || m_available_spots_.front() != m_registries_.size() - 1 )
-            return;
+        m_available_spots_.emplace_back( to_destroy.index );
+        std::ranges::sort( m_available_spots_, std::ranges::greater{} );
         
-        // We will be going from back to front and purge everything that has been "destroyed"
-        // The registry will always be larger than the available spots so this is fine.
-        uint32_t prune = 0;
-        for( size_t i = 0; i < m_available_spots_.size(); ++i )
-        {
-            if( m_registries_[ i ]->hash != str_hash::kEmpty )
-                break;
-            
-            prune = static_cast< uint32_t >( i );
-        }
-        
-        m_available_spots_.erase( m_available_spots_.begin(), m_available_spots_.begin() + prune );
-        m_registries_.erase( m_registries_.begin() + prune, m_registries_.end() );
+        to_destroy.ref_count.store( 0, std::memory_order_relaxed );
+        to_destroy.string = {};
+        to_destroy.hash  = {};
+        // registry.index = 0;
     }
+
+    // We can ignore the pruning if the spot that's available isn't in the back.
+    if( m_available_spots_.empty() || m_available_spots_.front() != m_registries_.size() - 1 )
+        return;
+    
+    // We will be going from back to front and purge everything that has been "destroyed"
+    // The registry will always be larger than the available spots so this is fine.
+    uint32_t prune = 0;
+    for( size_t i = 0; i < m_available_spots_.size(); ++i )
+    {
+        if( m_registries_[ i ]->hash != str_hash::kEmpty )
+            break;
+        
+        prune = static_cast< uint32_t >( i );
+    }
+    
+    m_available_spots_.erase( m_available_spots_.begin(), m_available_spots_.begin() + prune );
+    m_registries_.erase( m_registries_.begin() + prune, m_registries_.end() );
 }
 
 ////////////////////////////////////////////////
