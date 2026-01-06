@@ -85,6 +85,8 @@ namespace sk
 		bool IsLoading() const;
 		// Gets weather or not the asset is loaded
 		bool IsLoaded() const;
+		// If the asset is currently being loaded in, or is already loaded.
+		bool IsLoadingOrLoaded() const;
 		// Gets weather or not the asset has metadata
 		bool HasMetadata() const;
 		
@@ -148,7 +150,7 @@ namespace sk
 
 		cStringID m_name_ = {};
 		cStringID m_path_ = {};
-		std::filesystem::path m_absolute_path_ = {};
+		cStringID m_absolute_path_ = {};
 		// File Extension
 		cStringID m_ext_  = {};
 		cUUID     m_uuid_ = cUUID::kInvalid;
@@ -176,9 +178,11 @@ namespace sk
 		using class_type = cAsset_Meta;
 	} // Asset
 	
-	SK_CLASS( Asset ), public cShared_from_this< cAsset >, public cSerializable
+	SK_CLASS( Asset ), public cSerializable
 	{
 		SK_CLASS_BODY( Asset )
+		friend class cAsset_Manager;
+		friend class cAsset_Meta;
 	public:
 		[[ nodiscard ]] auto& GetMeta() const { return m_metadata_; }
 		

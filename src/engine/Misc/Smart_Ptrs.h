@@ -22,41 +22,42 @@ namespace sk
 			virtual void  deleteSelf( void ) = 0;
 			virtual void  deleteCont( void ) = 0;
 		protected:
-			cData_base( void )
+			cData_base()
 			: m_ref_count( 0 )
 			, m_weak_ref_count( 0 )
 			{}
 
-			virtual ~cData_base( void ) = default;
+			virtual ~cData_base() = default;
 
 		public:
-			virtual void* get_ptr   ( void ) = 0;
+			virtual void* get_ptr() = 0;
 
-			void inc( void )
+			void inc()
 			{
 				++m_ref_count;
 			}
 
-			void inc_weak( void )
+			void inc_weak()
 			{
 				++m_weak_ref_count;
 			}
 
-			void dec( void )
+			void dec()
 			{
-				if( --m_ref_count <= 0 && !m_is_deleting && m_is_deleting ) // TODO: Not use the bool and only change the ref count after deletion?
+				if( --m_ref_count <= 0 && !m_is_deleting && m_is_constructed ) // TODO: Not use the bool and only change the ref count after deletion?
 				{
 					m_is_deleting = true;
 					deleteCont();
 					if( m_weak_ref_count <= 0 )
 						deleteSelf();
-					m_is_deleting = false;
+					else
+						m_is_deleting = false;
 				}
 			}
 
-			void dec_weak( void )
+			void dec_weak()
 			{
-				if( --m_weak_ref_count <= 0 && m_ref_count <= 0 && !m_is_deleting && m_is_deleting )
+				if( --m_weak_ref_count <= 0 && m_ref_count <= 0 && !m_is_deleting && m_is_constructed )
 				{
 					deleteSelf();
 				}
@@ -80,12 +81,12 @@ namespace sk
 		{
 			void deleteCont( void ) override
 			{
-				SK_FREE( m_ptr );
+				SK_DELETE( m_ptr );
 				m_ptr = nullptr;
 			}
 			void deleteSelf( void ) override
 			{
-				SK_FREE( this );
+				SK_DELETE( this );
 			}
 		public:
 			void* get_ptr( void ) override { return m_ptr; }
@@ -146,8 +147,7 @@ namespace sk
 		friend class cShared_Ref;
 		template< class Fy >
 		friend class cWeak_Ptr;
-		template< class Fy >
-		friend class cShared_from_this;
+		friend class iShared_From_this;
 	};
 
 	template< class Ty >
@@ -223,7 +223,7 @@ namespace sk
 
 		auto& operator=( const cShared_ptr& _right )
 		{
-			if( m_data_ != _right.m_data_ && this != &_right )
+			if( this != &_right && m_data_ != _right.m_data_ )
 			{
 				dec();
 				m_data_ = _right.m_data_;
@@ -313,12 +313,19 @@ namespace sk
 		requires ( std::is_base_of_v< Ty, Ot > || std::is_base_of_v< Ot, Ty > || std::is_same_v< Ty, void > )
 		cShared_ptr< Ot > Cast( void )
 		{
-			cShared_ptr< Ot > other{};
-			other.m_data_ = m_data_;
-			other.m_ptr_  = static_cast< Ot* >( m_ptr_ );
-			inc();
+			if constexpr( std::is_same_v< Ty, Ot > )
+			{
+				return *this;
+			}
+			else
+			{
+				cShared_ptr< Ot > other{};
+				other.m_data_ = m_data_;
+				other.m_ptr_  = static_cast< Ot* >( m_ptr_ );
+				inc();
 
-			return other;
+				return other;
+			}
 		}
 	};
 
@@ -464,7 +471,7 @@ namespace sk
 		friend class cWeak_Ptr;
 
 		public:
-		cWeak_Ptr( void )
+		cWeak_Ptr()
 		{
 			m_data_ = nullptr;
 		} // cShared_ptr
@@ -656,9 +663,24 @@ namespace sk
 			return unsafe;
 		} // make_unsafe
 	};
-
+	
+	// We need this class as some classes will have different base classes.
+	class iShared_From_this
+	{
+	protected:
+		explicit iShared_From_this( Ptr_logic::cData_base* _data )
+		: m_self_( _data )
+		{}
+		
+		cPtr_base m_self_;
+		
+		void complete() const { m_self_.m_data_->completed(); }
+		
+		template< class Ty2, class ...Args >
+		friend auto make_shared( Args&&... ) -> cShared_ptr< Ty2 >;
+	};
 	template< class Ty >
-	class cShared_from_this
+	class cShared_from_this : public iShared_From_this
 	{
 	public:
 		// Warning, don't run this in the constructor.
@@ -669,31 +691,26 @@ namespace sk
 		[[ nodiscard ]] auto get_weak  ( void ) const -> cWeak_Ptr  < Ty > { return m_self_; }
 
 	protected:
-		cShared_from_this( void )
-		: m_self_( SK_SINGLE( Ptr_logic::cData< Ty >, static_cast< Ty* >( this ) ) )
-		{
-		} // cShared_from_this
+		cShared_from_this()
+		: iShared_From_this( SK_SINGLE( Ptr_logic::cData< Ty >, static_cast< Ty* >( this ) ) )
+		{} // cShared_from_this
 
 	private:
 		template< class Ty2, class ...Args >
 		friend auto make_shared( Args&&... ) -> cShared_ptr< Ty2 >;
-
-		void complete() const { m_self_.m_data_->completed(); }
-
-		cPtr_base m_self_;
 	};
 
 	// TODO: Replace cShared_ptr with std::shared_ptr to allow for optimizations.
 	template< class Ty, class... Args >
 	auto make_shared( Args&&... _args ) -> cShared_ptr< Ty >
 	{
-		// TODO: Add protection for cShared_from_this, if get_shared_this is ran in constructor, it deletes itself.
+		// TODO
 		Ty* ptr = SK_SINGLE( Ty, std::forward< Args >( _args )... );
 
-		if constexpr( std::is_base_of_v< cShared_from_this< Ty >, Ty > )
+		if constexpr( std::is_base_of_v< iShared_From_this, Ty > )
 		{
-			static_cast< cShared_from_this< Ty >* >( ptr )->complete();
-			return ptr->get_shared();
+			static_cast< iShared_From_this* >( ptr )->complete();
+			return ptr->get_shared().template Cast< Ty >();
 		}
 		else
 			return cShared_ptr< Ty >( ptr );

@@ -77,7 +77,7 @@ namespace sk
         constexpr cStringID( const std::string_view& _str );
         template< size_t N >
         constexpr cStringID( const char( &_str )[ N ] )
-        : cStringID( std::string_view{ _str, N } )
+        : cStringID( std::string_view{ _str, N - 1 } )
         {
         } // cStringID
         

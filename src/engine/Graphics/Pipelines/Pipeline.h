@@ -3,26 +3,23 @@
 #include <memory>
 #include <string>
 
+#include <Graphics/Passes/Render_Pass.h>
+
 namespace sk::Object::Components
 {
     class cCameraComponent;
 } // sk::Object::Components
-
-namespace sk::Graphics::Passes
-{
-    class iPass;
-} // sk::Graphics
 
 namespace sk::Graphics
 {
     class cPipeline
     {
     public:
+        virtual ~cPipeline() = default;
         using pass_vec_t = std::vector< std::unique_ptr< Passes::iPass > >;
 
         virtual void Initialize();
-        virtual void Begin     ();
-        virtual void End       ();
+        virtual void Execute   ();
         virtual void Destroy   ();
 
         template< class Ty, class... Args >
@@ -32,8 +29,8 @@ namespace sk::Graphics
         auto GetPass( size_t _index ) const -> Passes::iPass&;
 
     private:
-        pass_vec_t m_passes_      = {};
         bool       m_initialized_ = false;
+        pass_vec_t m_passes_      = {};
     };
 
     template< class Ty, class ... Args >

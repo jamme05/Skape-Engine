@@ -11,6 +11,7 @@
 
 #include <Misc/Smart_Ptrs.h>
 
+#include "Assets/Material.h"
 #include "Graphics/Buffer/Dynamic_Buffer.h"
 #include "Math/Vector2.h"
 
@@ -51,6 +52,7 @@ namespace sk::Graphics::Rendering
 
     class cFrame_Buffer
     {
+        friend class cRender_Context;
     public:
 
         // TODO: Add name to frame buffer?
@@ -68,26 +70,41 @@ namespace sk::Graphics::Rendering
         // The target NEEDS to be able to survive.
         void Bind( size_t _index, const cShared_ptr< cRender_Target >& _target, bool _force = false );
         void Bind( const cShared_ptr< cDepth_Target >& _depth_target, bool _force = false );
-        
-        void BindVertexBuffer( size_t _binding, const cDynamic_Buffer& _buffer );
-        void UnbindVertexBuffers();
 
         void UnbindRenderTargetAt( size_t _index );
         void UnbindDepthTarget();
 
         // When resizing the buffer.
         void Resize( const cVector2u32& _new_resolution );
+        
+        // ApplyMaterial has to be called before this
+        void BindVertexBuffer( size_t _binding, const cDynamic_Buffer& _buffer );
+        void UnbindVertexBuffers();
+        // ApplyMaterial has to be called before this
+        void BindIndexBuffer( const cDynamic_Buffer& _buffer );
+        void UnbindIndexBuffer() const;
+        
+        bool UseMaterial( const Assets::cMaterial& _material );
+        void ResetMaterial();
+        
+        bool DrawIndexed( size_t _start = 0, size_t _end = std::numeric_limits< size_t >::max() ) const;
 
     private:
-        friend class cRender_Context;
-
-        void create ();
+        void create ( bool _is_window_frame );
         void destroy() const;
 
-        gl::GLuint m_frame_buffer_;
-        gl::GLenum m_depth_type_;
+        gl::GLuint m_frame_buffer_ = 0;
+        gl::GLenum m_depth_type_   = gl::GLenum::GL_INVALID_ENUM;
+        
         vector< cShared_ptr< cRender_Target > > m_render_targets_;
         cShared_ptr< cDepth_Target >            m_depth_target_;
+        
+        gl::GLuint m_vertex_array_    = 0;
+        uint32_t   m_attribute_count_ = 0;
+        std::vector< size_t > m_assigned_blocks_;
+        
+        std::vector< const cDynamic_Buffer* > m_bound_vertex_buffers_;
+        const cDynamic_Buffer* m_bound_index_buffer_ = nullptr;
     };
 } // sk::Graphics::Rendering
 

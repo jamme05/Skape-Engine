@@ -41,6 +41,9 @@ namespace sk
 
             return init( std::forward< Args >( _args )... );
         }
+        
+        static Ty& get   (){ return static_cast< Ty& >( *Base::m_instance_ ); } // TODO: Add error/assert checks
+        static Ty* getPtr(){ return static_cast< Ty* >( Base::m_instance_ ); }
     };
 
     template< class Ty >

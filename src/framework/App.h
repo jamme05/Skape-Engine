@@ -7,6 +7,11 @@
 
 #include <Reflection/RuntimeStruct.h>
 
+namespace sk::Graphics
+{
+	class cPipeline;
+}
+
 namespace sk::Graphics::Rendering
 {
 	class cRender_Context;
@@ -46,19 +51,13 @@ public:
 	
 	void create ( void );
 	void run    ( void );
-	void test( sk::cAsset& ) const {}
-	void test1( int ) const {}
 
 	static void print_types( void );
-	static void custom_event( void );
 
-	auto GetMainWindow() const { return m_main_window; }
+	auto GetMainWindow() const { return m_main_window_; }
 
 	sk::cShared_ptr< sk::Assets::cShader > m_mesh_pair = nullptr;
 	sk::cShared_ptr< sk::Assets::cShader > m_post_pair = nullptr;
-
-	sk::cShared_ptr< sk::Graphics::Rendering::cRender_Context > m_render_context = nullptr;
-	sk::cShared_ptr< sk::Graphics::Rendering::cWindow_Context > m_window_context = nullptr;
 
 	sk::cShared_ptr< sk::cScene > m_scene = nullptr;
 
@@ -69,7 +68,7 @@ public:
 private:
 	void destroy( void ) const;
 	
-	window_t     m_main_window = nullptr;
+	window_t     m_main_window_ = nullptr;
 	static cApp* m_running_instance_;
 };
 

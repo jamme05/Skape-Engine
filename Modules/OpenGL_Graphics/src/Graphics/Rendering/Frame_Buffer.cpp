@@ -14,6 +14,7 @@
 #include "Scissor.h"
 #include "Viewport.h"
 #include "Graphics/Buffer/Unsafe_Buffer.h"
+#include "Graphics/Utils/Shader_Reflection.h"
 
 namespace sk::Graphics::Rendering
 {
@@ -22,7 +23,6 @@ namespace sk::Graphics::Rendering
     {
         SK_ERR_IF( _render_targets == 0, "ERROR: Can't create a frame buffer with 0 render targets." )
         SK_ERR_IF( _render_targets > 31, "ERROR: OpenGL doesn't support more than 31 render targets." )
-        create();
     } // cFrame_Buffer
 
     cFrame_Buffer::~cFrame_Buffer()
@@ -51,16 +51,26 @@ namespace sk::Graphics::Rendering
         gl::glBindFramebuffer( gl::GL_FRAMEBUFFER, 0 );
     } // End
 
-    void cFrame_Buffer::create()
+    void cFrame_Buffer::create( const bool _is_window_frame )
     {
-        gl::glGenFramebuffers( 1, &m_frame_buffer_ );
-        gl::glBindFramebuffer( gl::GL_FRAMEBUFFER, m_frame_buffer_ );
-        gl::glBindFramebuffer( gl::GL_FRAMEBUFFER, 0 );
+        if( !_is_window_frame )
+        {
+            gl::glGenFramebuffers( 1, &m_frame_buffer_ );
+            gl::glBindFramebuffer( gl::GL_FRAMEBUFFER, m_frame_buffer_ );
+            // TODO: Was I required to do anything here?
+            gl::glBindFramebuffer( gl::GL_FRAMEBUFFER, 0 );
+        }
+        else
+            m_frame_buffer_ = 0;
+        
+        gl::glGenVertexArrays( 1, &m_vertex_array_ );
     } // create
 
     void cFrame_Buffer::destroy() const
     {
-        gl::glDeleteFramebuffers( 1, &m_frame_buffer_ );
+        gl::glDeleteVertexArrays( 1, &m_vertex_array_ );
+        if( m_frame_buffer_ != 0 )
+            gl::glDeleteFramebuffers( 1, &m_frame_buffer_ );
     } // destroy
 
     void cFrame_Buffer::Clear( const uint8_t _clear )
@@ -134,18 +144,146 @@ namespace sk::Graphics::Rendering
         gl::glNamedFramebufferRenderbuffer( m_frame_buffer_, m_depth_type_, gl::GL_RENDERBUFFER, m_depth_target_->m_buffer_ );
     } // Bind
     
-    void cFrame_Buffer::BindVertexBuffer( size_t _binding, const cDynamic_Buffer& _buffer )
+    void cFrame_Buffer::BindVertexBuffer( const size_t _binding, const cDynamic_Buffer& _buffer )
     {
         auto& buffer = static_cast< cUnsafe_Buffer& >( _buffer.GetBuffer() );
+        buffer.Upload( false );
         
-        // TODO: Vertex buffer binding.
+        if( m_bound_vertex_buffers_.size() < _binding )
+            m_bound_vertex_buffers_.resize( _binding );
         
-        gl::glBindVertexBuffer( _binding, buffer.get_buffer().buffer, 0, 0 );
+        gl::glBindVertexArray( m_vertex_array_ );
+        gl::glBindVertexBuffer(
+            static_cast< gl::GLuint >( _binding ), buffer.get_buffer().buffer,
+            0, static_cast< gl::GLsizei >( buffer.GetStride() )
+        );
+        gl::glBindVertexArray( 0 );
         
+        if( m_bound_vertex_buffers_.size() <= _binding )
+            m_bound_vertex_buffers_.resize( _binding + 1 );
+        
+        m_bound_vertex_buffers_[ _binding ] = &_buffer;
     }
 
     void cFrame_Buffer::UnbindVertexBuffers()
     {
+        gl::glBindVertexArray( m_vertex_array_ );
+        for( size_t i = 0; i < m_bound_vertex_buffers_.size(); i++ )
+            gl::glBindVertexBuffer( static_cast< gl::GLuint >( i ), 0, 0, 0 );
+        gl::glBindVertexArray( 0 );
+        
+        m_bound_vertex_buffers_.clear();
+    }
+
+    void cFrame_Buffer::BindIndexBuffer( const cDynamic_Buffer& _buffer )
+    {
+        auto& buffer = static_cast< cUnsafe_Buffer& >( _buffer.GetBuffer() );
+        buffer.Upload( false );
+        // TODO: Validate the buffer.
+        
+        gl::glBindVertexArray( m_vertex_array_ );
+        gl::glBindBuffer( gl::GL_ELEMENT_ARRAY_BUFFER, buffer.get_buffer().buffer );
+        gl::glBindVertexArray( 0 );
+        
+        m_bound_index_buffer_ = &_buffer;
+    }
+
+    void cFrame_Buffer::UnbindIndexBuffer() const
+    {
+        gl::glBindVertexArray( m_vertex_array_ );
+        gl::glBindBuffer( gl::GL_ELEMENT_ARRAY_BUFFER, 0 );
+        gl::glBindVertexArray( 0 );
+    }
+
+    bool cFrame_Buffer::UseMaterial( const Assets::cMaterial& _material )
+    {
+        SK_BREAK_RET_IF( sk::Severity::kGraphics, !_material.IsReady(),
+            "Error: Material isn't ready yet.", false )
+        
+        auto& link = _material.GetShaderLink();
+        
+        link.Use();
+        
+        auto reflection = link.GetReflection();
+        auto& attributes = reflection->GetAttributes();
+
+        gl::glBindVertexArray( m_vertex_array_ );
+        
+        // TODO: Make into a int for loop
+        gl::GLuint index = 0;
+        for( auto& attribute : attributes )
+        {
+            gl::glEnableVertexAttribArray( index );
+            // TODO: Support normalizing in the future.
+            gl::glVertexAttribFormat( index, attribute.components, attribute.gl_type, false, 0 );
+            gl::glVertexAttribBinding( index, index );
+            
+            ++index;
+        }
+        m_attribute_count_ = index;
+        
+        gl::glBindVertexArray( 0 );
+            
+        for( auto& block : _material.GetBlocks() | std::views::values )
+        {
+            m_assigned_blocks_.emplace_back( block.m_binding_ );
+            gl::glUniformBlockBinding( link.get_program(), static_cast< gl::GLuint >( block.m_binding_ ), static_cast< gl::GLuint >( block.m_binding_ ) );
+            gl::glBindBufferBase( gl::GL_UNIFORM_BUFFER, static_cast< gl::GLuint >( block.m_binding_ ), block.m_buffer_.get_buffer().buffer );
+        }
+
+        return true;
+    }
+
+    void cFrame_Buffer::ResetMaterial()
+    {
+        gl::glBindVertexArray( m_vertex_array_ );
+        
+        for( uint32_t i = 0; i < m_attribute_count_; i++ )
+            gl::glDisableVertexAttribArray( i );
+        m_attribute_count_ = 0;
+        
+        gl::glBindVertexArray( 0 );
+        
+        for( const auto& block : m_assigned_blocks_ )
+            gl::glBindBufferBase( gl::GL_UNIFORM_BUFFER, static_cast< gl::GLuint >( block ), 0 );
+        
+        gl::glUseProgram( 0 );
+        
+        m_assigned_blocks_.clear();
+    }
+
+    bool cFrame_Buffer::DrawIndexed( const size_t _start, size_t _end ) const
+    {
+        SK_BREAK_RET_IF( sk::Severity::kGraphics, _start > m_bound_index_buffer_->GetSize(),
+            "Error: Offset is greater than index buffer size!", false )
+        
+        if( _end == std::numeric_limits< size_t >::max() )
+            _end = m_bound_index_buffer_->GetSize();
+        else
+        {
+            SK_BREAK_RET_IF( sk::Severity::kGraphics, _end > m_bound_index_buffer_->GetSize(),
+                "Error: End is outside of the index buffers range.", false )
+        }
+
+        const auto size = _end - _start;
+
+        gl::GLenum type;
+        switch( m_bound_index_buffer_->GetItemType()->hash )
+        {
+        case kTypeId< uint16_t >: type = gl::GL_UNSIGNED_SHORT; break;
+        case kTypeId< uint32_t >: type = gl::GL_UNSIGNED_INT;   break;
+        default: type = gl::GL_INVALID_ENUM; break;
+        }
+        
+        SK_BREAK_RET_IF( sk::Severity::kGraphics, type == gl::GL_INVALID_ENUM,
+            TEXT( "Error: Invalid index buffer type Has to be one of uint16_t or uint32_t. But {} was provided instead!",
+                m_bound_index_buffer_->GetItemType()->name ), false )
+        
+        gl::glBindVertexArray( m_vertex_array_ );
+        gl::glDrawElements( gl::GL_TRIANGLES, static_cast< gl::GLsizei >( size ), type, nullptr );
+        gl::glBindVertexArray( 0 );
+        
+        return true;
     }
 
     void cFrame_Buffer::UnbindRenderTargetAt( const size_t _index )
@@ -176,14 +314,13 @@ namespace sk::Graphics::Rendering
 
     void cFrame_Buffer::Resize( const cVector2u32& _new_resolution )
     {
-        gl::gldraw
         destroy();
 
         const auto render_targets = m_render_targets_;
         for( const auto& render_target : render_targets )
             render_target->Resize( _new_resolution );
         
-        create();
+        create( m_frame_buffer_ == 0 );
 
         // Rebind all targets.
         m_render_targets_.clear();

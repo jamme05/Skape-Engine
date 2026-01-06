@@ -13,6 +13,8 @@
 // TODO: Look at https://github.com/nothings/stb/blob/master/stb_image.h for importing textures.
 #include <stb_image.h>
 
+#include "Graphics/Renderer_Impl.h"
+
 namespace sk::Assets
 {
     cTexture::cTexture( const std::string& _name, const void* _buffer, const size_t _size )
@@ -43,12 +45,15 @@ namespace sk::Assets
 
         SK_ERR_IF( format == gl::GLenum::GL_INVALID_VALUE,
             TEXT( "ERROR: Texture with name {} does not have a valid number of channels", _name ) )
-
-        gl::glGenTextures( 1, &m_buffer_.m_buffer_ );
-        gl::glBindTexture( gl::GL_TEXTURE_2D, m_buffer_.m_buffer_ );
-        gl::glTexImage2D ( gl::GL_TEXTURE_2D, 0, static_cast< gl::GLint >( format ), width, height, 0, format, gl::GL_UNSIGNED_BYTE, data );
-        gl::glGenerateMipmap( gl::GL_TEXTURE_2D );
-        gl::glBindTexture( gl::GL_TEXTURE_2D, 0 );
+        
+        Graphics::cGLRenderer::AddGLTask( [ & ]
+        {
+            gl::glGenTextures( 1, &m_buffer_.m_buffer_ );
+            gl::glBindTexture( gl::GL_TEXTURE_2D, m_buffer_.m_buffer_ );
+            gl::glTexImage2D ( gl::GL_TEXTURE_2D, 0, static_cast< gl::GLint >( format ), width, height, 0, format, gl::GL_UNSIGNED_BYTE, data );
+            gl::glGenerateMipmap( gl::GL_TEXTURE_2D );
+            gl::glBindTexture( gl::GL_TEXTURE_2D, 0 );
+        } );
 
         stbi_image_free( data );
     }

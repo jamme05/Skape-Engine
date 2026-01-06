@@ -25,11 +25,19 @@ namespace sk
 {
 	cAsset_Manager::cAsset_Manager()
 	{
-		// We're expected to be inside [Project Root]/Build/Project/Startup
+		// We're expected to be inside [Project Root]/Build/Project/startup
 		// And we need to move to [Project Root]/game
-		auto current_path = std::filesystem::current_path();
-		current_path = current_path.parent_path().parent_path().parent_path();
-		std::filesystem::current_path( current_path / "game" );
+		if( auto current_path = std::filesystem::current_path(); current_path.filename() == "startup" )
+		{
+			current_path = current_path.parent_path().parent_path().parent_path();
+			std::filesystem::current_path( current_path / "game" );
+		}
+		else if( current_path.parent_path().filename() == "game" )
+		{
+			// We may otherwise be in [Project Root]/game/bin
+			// In that case we only need to go down one directory.
+			std::filesystem::current_path( current_path.parent_path() );
+		}
 
 		loadEmbedded();
 
@@ -59,7 +67,7 @@ namespace sk
 			const auto loader = GetFileLoader( assets.begin()->m_ext_ );
 			
 			task.data = ::new( Memory::alloc_fast( sizeof( Assets::Jobs::sAssetTask ) ) ) Assets::Jobs::sAssetTask{
-				.path    = path, 
+				.path    = path.view(), 
 				.affected_assets = assets,
 				.loader = loader,
 				.source = this,
@@ -126,8 +134,8 @@ namespace sk
 			const auto id = GenerateRandomUUID();
 			m_assets_[ id ] = _asset;
 			_asset->m_uuid_   = id;
-			m_asset_name_map_.insert( { _asset->GetName().hash(), _asset } );
-			m_asset_path_map_.insert( { _asset->GetPath().hash(), _asset } );
+			m_asset_name_map_.insert( { _asset->GetName().hash(),  _asset } );
+			m_asset_path_map_.insert( { _asset->GetAbsolutePath(), _asset } );
 		}
 		else if( _reload )
 			_asset->Reload();
@@ -246,14 +254,16 @@ namespace sk
 		// TODO: Remember what I was planning here.
 	}
 
-	void cAsset_Manager::removePathReferrer( const str_hash& _path_hash, const void* _referrer )
+	bool cAsset_Manager::removePathReferrer( const str_hash& _path_hash, const void* _referrer )
 	{
 		const auto itr = m_path_ref_map_.find( _path_hash );
 		if( itr == m_path_ref_map_.end() )
-			return;
+			return false;
 
 		auto& referrers = itr->second.referrers;
 		referrers.erase( referrers.find( _referrer ) );
+		
+		return referrers.empty();
 	}
 
 	void cAsset_Manager::loadGltfFile( const std::filesystem::path& _path, Assets::cAsset_List& _metas, Assets::eAssetTask _load_task )

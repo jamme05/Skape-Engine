@@ -31,9 +31,9 @@
 
 // Good reference: https://stackoverflow.com/a/49079078
 #if __has_builtin( __builtin_debugtrap )
-#define SK_BREAK { __builtin_debugtrap(); }
+#define SK_BREAK __builtin_debugtrap()
 #elif SK_HAS_MSC // __has_builtin( __builtin_debugtrap )
-#define SK_BREAK { __debugbreak() }
+#define SK_BREAK __debugbreak()
 #endif // !__has_builtin( __builtin_debugtrap )
 
 // Fallback for linux
@@ -87,13 +87,13 @@
 // Breaks
 
 #define SK_BREAK_IF( Severity, Condition, Text ) \
-    SK_ASSERT_TEMPLATE_IF( WARN, Condition, Severity, Text, SK_BREAK )
+    SK_ASSERT_TEMPLATE_IF( WARN, Condition, Severity, Text, SK_BREAK; )
 
 #define SK_BREAK_IFN( Severity, Condition, Text ) \
     SK_BREAK_IF( Severity, NOT( Condition ), Text )
 
 #define SK_BREAK_RET_IF( Severity, Condition, Text, ... ) \
-    SK_ASSERT_TEMPLATE_IF_RET( WARN, Condition, Severity, Text, SK_BREAK return __VA_ARGS__ )
+    SK_ASSERT_TEMPLATE_IF_RET( WARN, Condition, Severity, Text, SK_BREAK; return __VA_ARGS__ )
 
 #define SK_BREAK_RET_IFN( Severity, Condition, Text, ... ) \
     SK_BREAK_RET_IF( Severity, NOT( Condition ), Text )

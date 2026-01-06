@@ -21,7 +21,7 @@ layout( std140 ) uniform _Object
 
 mat4 WorldViewProj()
 {
-    return world * view_proj;
+    return view_proj * world;
 }
 
 void main()

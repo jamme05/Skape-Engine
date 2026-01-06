@@ -26,8 +26,22 @@ namespace sk::Graphics
     class cGLRenderer final : public cRenderer::Derived< cGLRenderer >
     {
     public:
+        struct sTask
+        {
+            std::atomic_bool*       stopper;
+            std::function< void() > function;
+        };
+        
         cGLRenderer();
-        ~cGLRenderer();
+        ~cGLRenderer() override;
+        
+        static void AddGLTask( const std::function< void() >& _function, bool _wait = true );
+        
+        void Update() override;
     private:
+        void addGLTask( const std::function< void() >& _function, bool _wait );
+        std::mutex           m_task_mtx_;
+        std::vector< sTask > m_tasks_;
+        
     };
 } // sk::Graphics

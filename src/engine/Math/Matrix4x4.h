@@ -38,6 +38,8 @@ namespace sk::Math
 
 		// Default constructor
 		cMatrix() = default;
+		cMatrix( const cMatrix& ) = default;
+		cMatrix( cMatrix&& ) noexcept = default;
 		constexpr cMatrix(const cVector3<T>& _x, const cVector3<T>& _y, const cVector3<T>& _z)                        : x( _x, T( 0 ) ), y( _y, T( 0 ) ), z( _z, T( 0 ) ), w( kZero ) {}
 		constexpr cMatrix(const cVector3<T>& _x, const cVector3<T>& _y, const cVector3<T>& _z, const cVector3<T>& _w) : x( _x, T( 0 ) ), y( _y, T( 0 ) ), z( _z, T( 0 ) ), w( _w ) {}
 		constexpr cMatrix(const cVector4<T>& _x, const cVector4<T>& _y, const cVector4<T>& _z, const cVector4<T>& _w) : x(_x), y(_y), z(_z), w(_w) {}
@@ -46,11 +48,11 @@ namespace sk::Math
 		// Hardcore but direct
 		//constexpr Matrix operator*(const Matrix& _m) const { return { { x.x * _m.x.x + x.y * _m.y.x + x.z * _m.z.x + x.w * _m.w.x, x.x * _m.x.y + x.y * _m.y.y + x.z * _m.z.y + x.w * _m.w.y, x.x * _m.x.z + x.y * _m.y.z + x.z * _m.z.z + x.w * _m.w.z, x.x * _m.x.w + x.y * _m.y.w + x.z * _m.z.w + x.w * _m.w.w, }, { y.x * _m.x.x + y.y * _m.y.x + y.z * _m.z.x + y.w * _m.w.x, y.x * _m.x.y + y.y * _m.y.y + y.z * _m.z.y + y.w * _m.w.y, y.x * _m.x.z + y.y * _m.y.z + y.z * _m.z.z + y.w * _m.w.z, y.x * _m.x.w + y.y * _m.y.w + y.z * _m.z.w + y.w * _m.w.w, }, { z.x * _m.x.x + z.y * _m.y.x + z.z * _m.z.x + z.w * _m.w.x, z.x * _m.x.y + z.y * _m.y.y + z.z * _m.z.y + z.w * _m.w.y, z.x * _m.x.z + z.y * _m.y.z + z.z * _m.z.z + z.w * _m.w.z, z.x * _m.x.w + z.y * _m.y.w + z.z * _m.z.w + z.w * _m.w.w, }, { w.x * _m.x.x + w.y * _m.y.x + w.z * _m.z.x + w.w * _m.w.x, w.x * _m.x.y + w.y * _m.y.y + w.z * _m.z.y + w.w * _m.w.y, w.x * _m.x.z + w.y * _m.y.z + w.z * _m.z.z + w.w * _m.w.z, w.x * _m.x.w + w.y * _m.y.w + w.z * _m.z.w + w.w * _m.w.w, } }; }
 
-		float& operator()( size_t _r, size_t _c )       { return ( *this )[ _r ][ _c ]; }
-		float& operator()( size_t _r, size_t _c ) const { return ( *this )[ _r ][ _c ]; }
+		auto operator()( size_t _r, size_t _c ) -> float& { return ( *this )[ _r ][ _c ]; }
+		auto operator()( size_t _r, size_t _c ) const -> const float& { return ( *this )[ _r ][ _c ]; }
 
-		cVector4< T >& operator[]( size_t _r )       { return ( &x )[ _r ]; }
-		cVector4< T >& operator[]( size_t _r ) const { return ( &x )[ _r ]; }
+		auto operator[]( size_t _r ) -> cVector4< T >& { return ( &x )[ _r ]; }
+		auto operator[]( size_t _r ) const -> const cVector4< T >& { return ( &x )[ _r ]; }
 
 		constexpr cMatrix operator+(const cMatrix& _m) const { return { _m.x + x, _m.y + y, _m.z + z, _m.w + w }; }
 		constexpr cMatrix operator-(const cMatrix& _m) const { return { _m.x - x, _m.y - y, _m.z - z, _m.w - w }; }
@@ -122,20 +124,8 @@ namespace sk::Math
 			_mm_store_ps( out + 2, row2 );
 			_mm_store_ps( out + 3, row3 );
 		} // transpose
-
-		constexpr auto& inverse( void )
-		{
-			inversed( *this );
-			return *this;
-		} // inverse
-
-		constexpr auto inversed( void ) const
-		{
-			cMatrix out;
-			invsered( out );
-			return out;
-		} // inversed
-
+		
+		
 		constexpr void inversed( cMatrix& _out ) const
 		{
 			// From: https://stackoverflow.com/a/60374938
@@ -183,7 +173,20 @@ namespace sk::Math
 		    im(3, 1) = det *   ( m(0, 0) * A1223 - m(0, 1) * A0223 + m(0, 2) * A0123 );
 		    im(3, 2) = det * - ( m(0, 0) * A1213 - m(0, 1) * A0213 + m(0, 2) * A0113 );
 		    im(3, 3) = det *   ( m(0, 0) * A1212 - m(0, 1) * A0212 + m(0, 2) * A0112 );
-		} // inverse_safe
+		} // inversed
+
+		constexpr auto& inverse()
+		{
+			inversed( *this );
+			return *this;
+		} // inverse
+
+		constexpr auto inversed() const
+		{
+			cMatrix out;
+			inversed( out );
+			return out;
+		} // inversed
 
 		auto& inverse_fast( void )
 		{

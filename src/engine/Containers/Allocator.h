@@ -60,7 +60,7 @@ namespace sk
 
 		void deallocate( void* _p, size_t _n )
 		{
-			SK_FREE( static_cast< void* >( _p ) );
+			SK_FREE( _p );
 		} // deallocate
 
 		size_type max_size( void ) const

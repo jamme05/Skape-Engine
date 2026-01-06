@@ -8,6 +8,8 @@
 
 #include <Assets/Asset.h>
 
+#include "Graphics/Renderer.h"
+
 using namespace sk;
 
 namespace
@@ -65,7 +67,7 @@ auto cAsset_Ptr_Base::GetMeta() const -> cShared_ptr<cAsset_Meta>
 
 bool cAsset_Ptr_Base::IsLoaded() const
 {
-    return m_meta_->IsLoaded() && has_data();
+    return IsValid() && m_meta_->IsLoaded() && has_data();
 }
 
 bool cAsset_Ptr_Base::SetAsset( const cShared_ptr< cAsset_Meta >& _meta )
@@ -73,7 +75,7 @@ bool cAsset_Ptr_Base::SetAsset( const cShared_ptr< cAsset_Meta >& _meta )
     if( IsLoaded() )
         Unload();
     
-    if( m_meta_.get() != _meta )
+    if( m_meta_.get() != _meta && m_meta_.is_valid() )
         unsubscribe();
     
     m_meta_ = validate_asset( _meta );
@@ -115,7 +117,14 @@ bool cAsset_Ptr_Base::LoadAsync()
 void cAsset_Ptr_Base::WaitUntilLoaded() const
 {
     if( const auto asset = m_asset_.load(); asset == has_requested_ptr_ )
-        m_asset_.wait( asset );
+    {
+        // TODO: Make this prettier
+        while( !IsLoaded() )
+        {
+            Graphics::cRenderer::get().Update();
+            std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
+        }
+    }
     else if( asset == nullptr )
         SK_WARNING( sk::Severity::kEngine, "Warning: Tried to wait for asset not requested to be loaded." )
 }

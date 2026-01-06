@@ -15,10 +15,20 @@
 
 namespace sk::Graphics
 {
+    class cPipeline;
+
     // Will be overriden by Module
     class cRenderer : public cBaseSingleton< cRenderer >
     {
-    protected:
+    public:
+        ~cRenderer() override;
+        [[ nodiscard ]]
+        auto GetPipeline() const -> cPipeline*;
+        void SetPipeline( cPipeline* _pipeline );
+    
+        virtual void Update() = 0;
+    private:
+        cPipeline* m_active_pipeline_ = nullptr;
     };
     
     extern void InitRenderer();

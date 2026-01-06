@@ -34,7 +34,7 @@ namespace sk::Graphics
             else
                 m_item_type_ = nullptr;
             
-            m_buffer_ = std::make_unique< cUnsafe_Buffer >( _name, m_raw_size_, _type, _is_normalized, false );
+            m_buffer_ = std::make_unique< cUnsafe_Buffer >( _name, m_raw_size_, sizeof( type ), _type, _is_normalized, false );
 
             // Initialize buffer.
             auto ptr = static_cast< type* >( m_buffer_->Data() );
@@ -42,7 +42,7 @@ namespace sk::Graphics
                 ::new( ptr + i ) type( *_begin );
         } // cDynamic_Buffer
 
-        cDynamic_Buffer( const std::string& _name, Buffer::eType _type, bool _is_normalized, size_t _raw_size ); // cDynamic_Buffer
+        cDynamic_Buffer( const std::string& _name, Buffer::eType _type, bool _is_normalized, size_t _raw_size, size_t _raw_stride ); // cDynamic_Buffer
         
     public:
         cDynamic_Buffer();
@@ -51,7 +51,7 @@ namespace sk::Graphics
 
         template< class Ty >
         cDynamic_Buffer( const std::string& _name, const Buffer::eType _type, const bool _is_normalized, const size_t _size, Ty&& _element )
-        : cDynamic_Buffer( _name, _type, _is_normalized, _size * sizeof( Ty ) )
+        : cDynamic_Buffer( _name, _type, _is_normalized, _size * sizeof( Ty ), sizeof( Ty ) )
         {
             if constexpr( kValidType< Ty > )
                 AlignAs< Ty >( false );
@@ -62,7 +62,7 @@ namespace sk::Graphics
         } // cDynamic_Buffer
 
         template< class Itr >
-        cDynamic_Buffer( const std::string& _name, Buffer::eType _type, bool _is_normalized, Itr _begin, Itr _end )
+        cDynamic_Buffer( const std::string& _name, Buffer::eType _type, Itr _begin, Itr _end, bool _is_normalized )
         : cDynamic_Buffer( _name, _type, _is_normalized, std::distance( _begin, _end ), _begin, _end )
         {} // cDynamic_Buffer
 

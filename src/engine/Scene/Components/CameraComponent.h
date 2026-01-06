@@ -22,6 +22,7 @@ namespace sk::Scene
 
 namespace sk::Object::Components
 {
+	// TODO: Create a generic camera class which will act more like an util.
 	SK_COMPONENT_CLASS( CameraComponent )
 	{
 		SK_CLASS_BODY( CameraComponent )
@@ -59,6 +60,10 @@ namespace sk::Object::Components
 
 		auto& getViewProjInv( void ) const { return m_view_proj_inv; }
 		auto& getProjection ( void ) const { return m_projection; }
+		
+		auto  GetLayers() const { return m_layers_; }
+		
+		auto& GetSettings() const { return m_camera_settings; }
 
 	private:
 
@@ -66,7 +71,6 @@ namespace sk::Object::Components
 
 		sCameraSettings m_camera_settings;
 
-		// TODO: Create a generic camera class
 		// TODO: Add support for render target, custom render pipeline in that case.
 		Graphics::Rendering::cRender_Target* m_render_target;
 
@@ -78,6 +82,8 @@ namespace sk::Object::Components
 		cMatrix4x4f m_projection;
 
 		eType m_type;
+		
+		uint64_t m_layers_ = 1;
 
 		constexpr static auto invalid_camera_id = ~0llu;
 

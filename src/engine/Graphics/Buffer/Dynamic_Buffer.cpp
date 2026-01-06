@@ -22,15 +22,15 @@ namespace sk::Graphics
     {} // cDynamic_Buffer
 
     cDynamic_Buffer::cDynamic_Buffer( const std::string& _name, const Buffer::eType _type, const bool _is_normalized )
-    : cDynamic_Buffer( _name, _type, _is_normalized, 0 )
+    : cDynamic_Buffer( _name, _type, _is_normalized, static_cast< size_t >( 0 ), static_cast< size_t >( 0 ) )
     {} // cDynamic_Buffer
     
-    cDynamic_Buffer::cDynamic_Buffer( const std::string& _name, Buffer::eType _type, bool _is_normalized, size_t _raw_size )
+    cDynamic_Buffer::cDynamic_Buffer( const std::string& _name, Buffer::eType _type, bool _is_normalized, size_t _raw_size, size_t _raw_stride )
     : m_raw_size_( 0 )
     , m_buffer_type_( _type )
     , m_type_size_( 0 )
     , m_item_type_( nullptr )
-    , m_buffer_( std::make_unique< cUnsafe_Buffer >( _name, _raw_size, _type, _is_normalized, false ) )
+    , m_buffer_( std::make_unique< cUnsafe_Buffer >( _name, _raw_size, _raw_stride, _type, _is_normalized, false ) )
     {
         m_buffer_->Clear();
     }
@@ -40,7 +40,8 @@ namespace sk::Graphics
     , m_buffer_type_( _other.m_buffer_type_ )
     , m_type_size_( _other.m_type_size_ )
     , m_item_type_( _other.m_item_type_ )
-    , m_buffer_{ std::make_unique< cUnsafe_Buffer >( _other.m_buffer_->GetName(), m_raw_size_,  m_buffer_type_, _other.GetBuffer().IsNormalized(), false ) }
+    , m_buffer_{ std::make_unique< cUnsafe_Buffer >(
+        _other.m_buffer_->GetName(), m_raw_size_, m_type_size_, m_buffer_type_, _other.GetBuffer().IsNormalized(), false ) }
     {
         m_buffer_->Copy( *_other.m_buffer_ );
     }
@@ -71,7 +72,7 @@ namespace sk::Graphics
         m_type_size_   = _other.m_type_size_;
         m_item_type_   = _other.m_item_type_;
         
-        m_buffer_ = std::make_unique< cUnsafe_Buffer >( _other.m_buffer_->GetName(), m_raw_size_,  m_buffer_type_, _other.GetBuffer().IsNormalized(), false );
+        m_buffer_ = std::make_unique< cUnsafe_Buffer >( _other.m_buffer_->GetName(), m_raw_size_, m_type_size_, m_buffer_type_, _other.GetBuffer().IsNormalized(), false );
         m_buffer_->Copy( *_other.m_buffer_ );
         
         return *this;
@@ -99,6 +100,7 @@ namespace sk::Graphics
             m_buffer_->Clear();
         
         m_type_size_ = _align;
+        m_buffer_->SetStride( m_type_size_ );
     }
 
     void cDynamic_Buffer::AlignAs( const type_info_t _type, const bool _clear )

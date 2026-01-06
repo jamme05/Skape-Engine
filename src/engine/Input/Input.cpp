@@ -122,8 +122,11 @@ namespace sk
 				if( listener->getEnabled() && listener->getFilter() & _type )
 				{
 					// In case the variant is a bool we only care if it's going to consume the input. Aka if it's false.
-					if( const auto response = listener->onInput( _type, _event ); response.index() == 0 && !std::get< 0 >( response ) )
-						return false;
+					if( const auto response = listener->onInput( _type, _event ); response.index() == 0 )
+					{
+						if( !std::get< 0 >( response ) )
+							return false;
+					}
 					else if( const auto res = std::get< 1 >( response ); res != kContinue )
 						return res == kQuit;
 				}

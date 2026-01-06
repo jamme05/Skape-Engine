@@ -37,7 +37,7 @@ namespace Hashing
 	}
 
 	constexpr uint64_t fnv1a_64s( const char* const _s, const size_t _c, const size_t _i = 0, const uint64_t _v = val_64_const ) noexcept {
-		return ( _i >= _c ) ? _v : fnv1a_64s( _s, _c, _i + 1, ( _v ^ static_cast< uint64_t >( static_cast< uint8_t >( _s[ _i ] ) ) ) * prime_64_const );
+		return ( _i >= _c || _s[ _i ] == 0 ) ? _v : fnv1a_64s( _s, _c, _i + 1, ( _v ^ static_cast< uint64_t >( static_cast< uint8_t >( _s[ _i ] ) ) ) * prime_64_const );
 	}
 
 	inline uint32_t fnv1a_32( const std::string& _s ) noexcept {

@@ -57,12 +57,14 @@ namespace sk
         using base_t     = cAsset_Ptr_Base;
 
     public:
-        using dispatcher_t = Event::cDispatcherProxy< Assets::eEventType, cAsset_Ref& >;
+        using dispatcher_t = Event::cDispatcherProxy< Assets::eEventType, cAsset_Ref< Ty, Mode >& >;
 
         static constexpr auto kType = type_info_t{ kTypeInfo< Ty > };
         static constexpr auto kMode = Mode; 
         
         cAsset_Ref() = default;
+        cAsset_Ref( const cAsset_Ref& _other );
+        cAsset_Ref( cAsset_Ref&& _other ) noexcept;
         cAsset_Ref( const cWeak_Ptr< iClass >& _self );
         cAsset_Ref( const cWeak_Ptr< iClass >& _self, const cShared_ptr< cAsset_Meta >& _meta );
 
@@ -97,6 +99,20 @@ namespace sk
 
         void on_asset_event( cAsset_Meta& _meta, const Assets::eEventType _event ) override;
     };
+
+    template< reflected Ty, eAsset_Ref_Mode Mode > requires std::is_base_of_v<cAsset, Ty>
+    cAsset_Ref< Ty, Mode >::cAsset_Ref( const cAsset_Ref& _other )
+    {
+        base_t::operator=( _other );
+        
+        try_load();
+    }
+
+    template< reflected Ty, eAsset_Ref_Mode Mode > requires std::is_base_of_v<cAsset, Ty>
+    cAsset_Ref<Ty, Mode>::cAsset_Ref( cAsset_Ref&& _other ) noexcept
+    {
+        base_t::operator=( std::move( _other ) );
+    }
 
     template< reflected Ty, eAsset_Ref_Mode Mode > requires std::is_base_of_v< cAsset, Ty >
     cAsset_Ref< Ty, Mode >::cAsset_Ref( const cWeak_Ptr< iClass >& _self )
@@ -236,6 +252,9 @@ namespace sk
     auto cAsset_Ref< Ty, Mode >::validate_asset(
         const cShared_ptr< cAsset_Meta >& _meta ) const -> cShared_ptr< cAsset_Meta >
     {
+        if( _meta == nullptr )
+            return _meta;
+        
         SK_BREAK_RET_IF( sk::Severity::kEngine, kType != _meta->GetType(),
                          "Error: Asset type does not match the requested type!", nullptr )
 

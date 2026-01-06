@@ -51,15 +51,16 @@ namespace sk::Graphics
         } m_data_;
         cUnsafe_Buffer m_buffer_;
     };
-
+    
+    // TODO: Is normalized support.
     template< class Ty, Buffer::eType Type >
     cBuffer< Ty, Type >::cBuffer( const std::string& _name, const bool _is_static )
-    : m_buffer_( _name, 0, Type, _is_static )
+    : m_buffer_( _name, 0, sizeof( Ty ), Type, false, _is_static )
     {} // cBuffer
 
     template< class Ty, Buffer::eType Type >
     cBuffer< Ty, Type >::cBuffer( const std::string& _name, const size_t _size, const bool _is_static )
-    : m_buffer_( _name, _size, Type, _is_static )
+    : m_buffer_( _name, _size * sizeof( Ty ), sizeof( Ty ), Type, false, _is_static )
     {} // cBuffer
 
     template< class Ty, Buffer::eType Type >
@@ -143,7 +144,7 @@ namespace sk::Graphics
     template< class Ty >
     using cConstant_Buffer = cBuffer< Ty, Buffer::eType::kConstant >;
     template< class Ty >
-    using cStructed_Buffer = cBuffer< Ty, Buffer::eType::kStructed >;
+    using cStructed_Buffer = cBuffer< Ty, Buffer::eType::kStructured >;
     template< class Ty >
     using cVertex_Buffer = cBuffer< Ty, Buffer::eType::kVertex >;
 

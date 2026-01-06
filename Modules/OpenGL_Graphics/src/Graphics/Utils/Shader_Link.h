@@ -5,7 +5,6 @@
 #include <Assets/Shader.h>
 #include <Assets/Access/Asset_Ref.h>
 
-
 namespace sk::Assets
 {
     class cMaterial;
@@ -19,7 +18,7 @@ namespace sk::Graphics::Utils
         cShader_Link() = default;
         cShader_Link( const cShared_ptr< cAsset_Meta >& _vertex_shader, const cShared_ptr< cAsset_Meta >& _fragment_shader );
         cShader_Link( const cShader_Link& _other );
-        cShader_Link( cShader_Link&& ) = default;
+        cShader_Link( cShader_Link&& ) noexcept = default;
         ~cShader_Link() = default;
         
         cShader_Link& operator=( const cShader_Link& ) = default;
@@ -29,7 +28,7 @@ namespace sk::Graphics::Utils
         bool IsValid() const;
         bool IsReady() const;
         
-        void WaitUntilReady() const;
+        void Complete();
         
         auto GetVertexShader  () const -> const Assets::cShader&;
         auto GetFragmentShader() const -> const Assets::cShader&;
@@ -37,6 +36,8 @@ namespace sk::Graphics::Utils
         auto GetReflection() const -> cShared_ptr< cShader_Reflection >;
         
         void Use() const;
+        
+        auto get_program() const { return m_program_; }
         
     private:
         void on_shader_changed( Assets::eEventType _event, cAsset_Ref< Assets::cShader >& );

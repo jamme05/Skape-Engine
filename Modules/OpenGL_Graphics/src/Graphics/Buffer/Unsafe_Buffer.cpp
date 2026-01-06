@@ -13,18 +13,21 @@
 
 #include <print>
 
+#include "Graphics/Renderer_Impl.h"
+
 namespace sk::Graphics
 {
     cUnsafe_Buffer::cUnsafe_Buffer() = default;
 
-    cUnsafe_Buffer::cUnsafe_Buffer( std::string _name, const size_t _byte_size, Buffer::eType _type, const bool _is_normalized, const bool _is_static )
-    : cUnsafe_Buffer( std::move( _name ), _byte_size, kTypeConverter[ static_cast< size_t >( _type ) ], _is_normalized, _is_static )
+    cUnsafe_Buffer::cUnsafe_Buffer( std::string _name, const size_t _byte_size, const size_t _stride, Buffer::eType _type, const bool _is_normalized, const bool _is_static )
+    : cUnsafe_Buffer( std::move( _name ), _byte_size, _stride, kTypeConverter[ static_cast< size_t >( _type ) ], _is_normalized, _is_static )
     {} // cUnsafe_Buffer
 
-    cUnsafe_Buffer::cUnsafe_Buffer( std::string _name, const size_t _byte_size, gl::GLenum _type, const bool _is_normalized, const bool _is_static )
+    cUnsafe_Buffer::cUnsafe_Buffer( std::string _name, const size_t _byte_size, const size_t _stride, gl::GLenum _type, const bool _is_normalized, const bool _is_static )
     : m_flags_( kInitialized | ( _is_normalized ? kNormalized : kNone ) | ( _is_static ? kStatic : kNone ) )
-    , m_buffer_{ .type = kTypeConverter[ static_cast< size_t >( _type ) ], .size = _byte_size }
+    , m_buffer_{ .type = _type, .size = _byte_size }
     , m_byte_size_( _byte_size )
+    , m_stride_( _stride )
     , m_name_( std::move( _name ) )
     {
         create();
@@ -72,6 +75,9 @@ namespace sk::Graphics
         m_name_      = std::move( _other.m_name_ );
         m_buffer_    = _other.m_buffer_;
         m_data_      = _other.m_data_;
+        _other.m_buffer_ = {};
+        _other.m_data_ = nullptr;
+        _other.m_flags_ &= ~kInitialized;
 
         return *this;
     } // operator=
@@ -92,18 +98,21 @@ namespace sk::Graphics
 
     void cUnsafe_Buffer::create()
     {
-        gl::glGenBuffers( 1, &m_buffer_.buffer );
-        gl::glBindBuffer( m_buffer_.type, m_buffer_.buffer );
-
-        m_flags_ |= kInitialized;
-
-        if( m_byte_size_ > 0 )
+        cGLRenderer::AddGLTask( [ & ]
         {
-            gl::glNamedBufferData( m_buffer_.buffer, static_cast< gl::GLsizeiptr >( m_byte_size_ ), nullptr,
-                IsStatic() ? gl::GLenum::GL_STATIC_DRAW : gl::GLenum::GL_DYNAMIC_DRAW );
+            gl::glGenBuffers( 1, &m_buffer_.buffer );
+            gl::glBindBuffer( m_buffer_.type, m_buffer_.buffer );
 
-            m_data_ = SK_ALLOC( m_byte_size_ );
-        }
+            m_flags_ |= kInitialized;
+
+            if( m_byte_size_ > 0 )
+            {
+                gl::glNamedBufferData( m_buffer_.buffer, static_cast< gl::GLsizeiptr >( m_byte_size_ ), nullptr,
+                    IsStatic() ? gl::GLenum::GL_STATIC_DRAW : gl::GLenum::GL_DYNAMIC_DRAW );
+
+                m_data_ = SK_ALLOC( m_byte_size_ );
+            }
+        } );
     } // Create
 
     void cUnsafe_Buffer::copy( const cUnsafe_Buffer& _other )
@@ -125,6 +134,7 @@ namespace sk::Graphics
     void cUnsafe_Buffer::Destroy()
     {
         SK_FREE( m_data_ );
+        m_data_ = nullptr;
 
         if( IsInitialized() )
             gl::glDeleteBuffers( 1, &m_buffer_.buffer );
@@ -150,7 +160,7 @@ namespace sk::Graphics
     } // Data
 
     cUnsafe_Buffer::cUnsafe_Buffer( const cUnsafe_Buffer& _other )
-    : cUnsafe_Buffer( _other.m_name_ + " Copy", _other.m_byte_size_, _other.m_buffer_.type, _other.IsNormalized(), _other.IsStatic() )
+    : cUnsafe_Buffer( _other.m_name_ + " Copy", _other.m_byte_size_, _other.m_stride_, _other.m_buffer_.type, _other.IsNormalized(), _other.IsStatic() )
     {
         // Copy the buffer after creation.
         copy( _other );
@@ -165,6 +175,9 @@ namespace sk::Graphics
     , m_name_( std::move( _other.m_name_ ) )
     {
         m_is_updated_.store( true );
+        _other.m_buffer_ = {};
+        _other.m_data_    = nullptr;
+        _other.m_flags_   = 0;
     } // cUnsafe_Buffer ( Move )
 
     void cUnsafe_Buffer::Read( void* _out, size_t _max_size ) const
@@ -233,11 +246,19 @@ namespace sk::Graphics
         if( m_byte_size_ == _byte_size )
             return;
         
+        m_byte_size_ = _byte_size;
+        
         m_is_updated_.store( true );
         m_data_ = SK_REALLOC( m_data_, _byte_size );
     } // Resize
 
-    void cUnsafe_Buffer::Upload( bool _force )
+    void cUnsafe_Buffer::SetStride( const size_t _new_stride )
+    {
+        // TODO: Ensure that the new stride is valid.
+        m_stride_ = _new_stride;
+    }
+
+    void cUnsafe_Buffer::Upload( const bool _force )
     {
         SK_BREAK_RET_IF( sk::Severity::kConstGraphics | 10,
             m_byte_size_ == 0, TEXT( "ERROR: Trying to upload empty buffer." ) )

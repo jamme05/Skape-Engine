@@ -18,7 +18,7 @@ void sk::Graphics::cPipeline::Initialize()
     m_initialized_ = true;
 } // Initialize
 
-void sk::Graphics::cPipeline::Begin()
+void sk::Graphics::cPipeline::Execute()
 {
     for( const auto& pass : m_passes_ )
     {
@@ -29,11 +29,6 @@ void sk::Graphics::cPipeline::Begin()
         }
     }
 } // Start
-
-void sk::Graphics::cPipeline::End()
-{
-    
-} // End
 
 void sk::Graphics::cPipeline::Destroy()
 {

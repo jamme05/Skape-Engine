@@ -32,13 +32,13 @@ void cShader_Reflection::init()
 {
     gl::GLint out;
     gl::glGetProgramiv( m_program_, gl::GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &out );
-    m_max_attribute_name_size_ = static_cast< uint32_t >( out );
+    m_max_attribute_name_size_ = std::max( static_cast< uint32_t >( out ), 128u );
 
     gl::glGetProgramiv( m_program_, gl::GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH, &out );
-    m_max_block_name_size_ = static_cast< uint32_t >( out );
+    m_max_block_name_size_ = std::max( static_cast< uint32_t >( out ), 128u );
 
     gl::glGetProgramiv( m_program_, gl::GL_ACTIVE_UNIFORM_MAX_LENGTH, &out );
-    m_max_uniform_name_size_ = static_cast< uint32_t >( out );
+    m_max_uniform_name_size_ = std::max( static_cast< uint32_t >( out ), 128u );
     m_uniform_name_buffer_   = static_cast< gl::GLchar* >( SK_ALLOC( m_max_uniform_name_size_ ) );
 }
 
@@ -60,40 +60,44 @@ void cShader_Reflection::fetch_attributes()
         gl::glGetActiveAttrib( m_program_, i, static_cast< gl::GLint >( m_max_attribute_name_size_ ),
             &name_length, &size, &type, a_name_buffer );
         
-        attribute.name   = std::string_view( a_name_buffer, name_length - 1 );
+        attribute.name   = std::string_view( a_name_buffer, name_length );
         attribute.index  = i;
         attribute.stride = static_cast< uint16_t >( size );
         attribute.flags  = a_name_buffer[ 0 ] == '_' ? kHidden : 0;
 
         type_info_t sk_type;
+        gl::GLenum  gl_type;
+        uint16_t    components;
         switch( type )
         {
-        case gl::GL_FLOAT:      sk_type = kTypeInfo< float >;     break;
-        case gl::GL_FLOAT_VEC2: sk_type = kTypeInfo< cVector2f >; break;
-        case gl::GL_FLOAT_VEC3: sk_type = kTypeInfo< cVector3f >; break;
-        case gl::GL_FLOAT_VEC4: sk_type = kTypeInfo< cVector4f >; break;
+        case gl::GL_FLOAT:      sk_type = kTypeInfo< float >;     gl_type = gl::GL_FLOAT; components = 1; break;
+        case gl::GL_FLOAT_VEC2: sk_type = kTypeInfo< cVector2f >; gl_type = gl::GL_FLOAT; components = 2; break;
+        case gl::GL_FLOAT_VEC3: sk_type = kTypeInfo< cVector3f >; gl_type = gl::GL_FLOAT; components = 3; break;
+        case gl::GL_FLOAT_VEC4: sk_type = kTypeInfo< cVector4f >; gl_type = gl::GL_FLOAT; components = 4; break;
             
-        case gl::GL_INT:       sk_type = kTypeInfo< int32_t >;     break;
-        case gl::GL_INT_VEC2:  sk_type = kTypeInfo< cVector2i32 >; break;
-        case gl::GL_INT_VEC3:  sk_type = kTypeInfo< cVector3i32 >; break;
-        case gl::GL_INT_VEC4:  sk_type = kTypeInfo< cVector4i32 >; break;
+        case gl::GL_INT:       sk_type = kTypeInfo< int32_t >;     gl_type = gl::GL_INT; components = 1; break;
+        case gl::GL_INT_VEC2:  sk_type = kTypeInfo< cVector2i32 >; gl_type = gl::GL_INT; components = 2; break;
+        case gl::GL_INT_VEC3:  sk_type = kTypeInfo< cVector3i32 >; gl_type = gl::GL_INT; components = 3; break;
+        case gl::GL_INT_VEC4:  sk_type = kTypeInfo< cVector4i32 >; gl_type = gl::GL_INT; components = 4; break;
             
-        case gl::GL_UNSIGNED_INT:      sk_type = kTypeInfo< uint32_t >;    break;
-        case gl::GL_UNSIGNED_INT_VEC2: sk_type = kTypeInfo< cVector2u32 >; break;
-        case gl::GL_UNSIGNED_INT_VEC3: sk_type = kTypeInfo< cVector3u32 >; break;
-        case gl::GL_UNSIGNED_INT_VEC4: sk_type = kTypeInfo< cVector4u32 >; break;
+        case gl::GL_UNSIGNED_INT:      sk_type = kTypeInfo< uint32_t >;    gl_type = gl::GL_UNSIGNED_INT; components = 1; break;
+        case gl::GL_UNSIGNED_INT_VEC2: sk_type = kTypeInfo< cVector2u32 >; gl_type = gl::GL_UNSIGNED_INT; components = 2; break;
+        case gl::GL_UNSIGNED_INT_VEC3: sk_type = kTypeInfo< cVector3u32 >; gl_type = gl::GL_UNSIGNED_INT; components = 3; break;
+        case gl::GL_UNSIGNED_INT_VEC4: sk_type = kTypeInfo< cVector4u32 >; gl_type = gl::GL_UNSIGNED_INT; components = 4; break;
             
-        case gl::GL_FLOAT_MAT2: sk_type = kTypeInfo< Math::cMatrix< 2, 2, float > >; break;
-        case gl::GL_FLOAT_MAT3: sk_type = kTypeInfo< Math::cMatrix3x3f >;            break;
-        case gl::GL_FLOAT_MAT4: sk_type = kTypeInfo< cMatrix4x4f >;                  break;
+        case gl::GL_FLOAT_MAT2: sk_type = kTypeInfo< Math::cMatrix< 2, 2, float > >; gl_type = gl::GL_FLOAT; components = 1; break;
+        case gl::GL_FLOAT_MAT3: sk_type = kTypeInfo< Math::cMatrix3x3f >;            gl_type = gl::GL_FLOAT; components = 2; break;
+        case gl::GL_FLOAT_MAT4: sk_type = kTypeInfo< cMatrix4x4f >;                  gl_type = gl::GL_FLOAT; components = 3; break;
             
-        default: sk_type = nullptr; break;
+        default: sk_type = nullptr; gl_type = gl::GL_INVALID_ENUM; components = 0; break;
         }
         
         SK_ERR_IF( sk_type == nullptr,
             "Error: Invalid attribute type." )
         
-        attribute.type = sk_type;
+        attribute.type       = sk_type;
+        attribute.gl_type    = gl_type;
+        attribute.components = components;
     }
     
     SK_FREE( a_name_buffer );
@@ -111,9 +115,16 @@ void cShader_Reflection::fetch_uniforms()
         
         auto uniform = get_uniform( i );
         
-        std::visit( [ this ]( auto& _value )
+        std::visit( [ this ]< class Ty >( Ty& _value )
         {
-            add( _value );
+            if constexpr( !std::is_same_v< Ty, bool > )
+            {
+                add( _value );
+            }
+            else
+            {
+                SK_FATAL( "This shouldn't happen..." )
+            }
         }, uniform );
         
     }
@@ -138,7 +149,7 @@ void cShader_Reflection::fetch_blocks()
         gl::glGetActiveUniformBlockName( m_program_, i, static_cast< gl::GLsizei >( m_max_block_name_size_ ),
             &name_length, b_name_buffer );
         
-        auto  name    = std::string_view( b_name_buffer, name_length - 1 );
+        auto  name    = std::string_view( b_name_buffer, name_length );
         auto& block   = m_block_map_[ name ];
         block.name    = name;
         block.pretty_name = make_pretty( name );
@@ -160,11 +171,13 @@ void cShader_Reflection::fetch_blocks()
             auto uniform = std::get< sUniform >( get_uniform( indices[ u ] ) );
             
             uniform.location = offset;
-            offset += uniform.size;
+            offset += uniform.byte_size;
             
             m_locked_uniforms_.insert( uniform.location );
             block.uniforms[ uniform.name.hash() ] = std::move( uniform );
         }
+        
+        block.size = offset;
         
         m_block_vec_[ i ] = &block;
     }
@@ -194,7 +207,7 @@ auto cShader_Reflection::get_uniform( const gl::GLuint _index ) const -> std::va
     gl::GLsizei size;
     gl::GLenum  type;
     
-    gl::glGetActiveUniform( m_program_, _index, static_cast< gl::GLsizei >( m_max_block_name_size_ ), 
+    gl::glGetActiveUniform( m_program_, _index, static_cast< gl::GLsizei >( m_max_block_name_size_ ),
         &name_length, &size, &type, m_uniform_name_buffer_ );
 
     switch( type )
@@ -228,40 +241,45 @@ auto cShader_Reflection::get_uniform( const gl::GLuint _index ) const -> std::va
         SK_BREAK_RET_IF( sk::Severity::kGraphics, true,
             "Error: Got invalid uniform type", false )
     }
+    
+    return false;
 }
 
 auto cShader_Reflection::create_uniform( const gl::GLenum _type, const gl::GLsizei _name_length, const gl::GLuint _index, const gl::GLsizei _size ) const -> sUniform
 {
     sUniform::eType type;
+    uint16_t        byte_size;
     switch( _type )
     {
-    case gl::GL_INT:               type = sUniform::eType::kInt;      break;
-    case gl::GL_INT_VEC2:          type = sUniform::eType::kInt2;     break;
-    case gl::GL_INT_VEC3:          type = sUniform::eType::kInt3;     break;
-    case gl::GL_INT_VEC4:          type = sUniform::eType::kInt4;     break;
-    case gl::GL_UNSIGNED_INT:      type = sUniform::eType::kUInt;     break;
-    case gl::GL_UNSIGNED_INT_VEC2: type = sUniform::eType::kUInt2;    break;
-    case gl::GL_UNSIGNED_INT_VEC3: type = sUniform::eType::kUInt3;    break;
-    case gl::GL_UNSIGNED_INT_VEC4: type = sUniform::eType::kUInt4;    break;
-    case gl::GL_FLOAT:             type = sUniform::eType::kFloat;    break;
-    case gl::GL_FLOAT_VEC2:        type = sUniform::eType::kFloat2;   break;
-    case gl::GL_FLOAT_VEC3:        type = sUniform::eType::kFloat3;   break;
-    case gl::GL_FLOAT_VEC4:        type = sUniform::eType::kFloat4;   break;
+    case gl::GL_INT:               type = sUniform::eType::kInt;    byte_size = sizeof( int32_t );      break;
+    case gl::GL_INT_VEC2:          type = sUniform::eType::kInt2;   byte_size = sizeof( int32_t ) * 2;  break;
+    case gl::GL_INT_VEC3:          type = sUniform::eType::kInt3;   byte_size = sizeof( int32_t ) * 3;  break;
+    case gl::GL_INT_VEC4:          type = sUniform::eType::kInt4;   byte_size = sizeof( int32_t ) * 4;  break;
+    case gl::GL_UNSIGNED_INT:      type = sUniform::eType::kUInt;   byte_size = sizeof( uint32_t ); break;
+    case gl::GL_UNSIGNED_INT_VEC2: type = sUniform::eType::kUInt2;  byte_size = sizeof( uint32_t ) * 2; break;
+    case gl::GL_UNSIGNED_INT_VEC3: type = sUniform::eType::kUInt3;  byte_size = sizeof( uint32_t ) * 3; break;
+    case gl::GL_UNSIGNED_INT_VEC4: type = sUniform::eType::kUInt4;  byte_size = sizeof( uint32_t ) * 4; break;
+    case gl::GL_FLOAT:             type = sUniform::eType::kFloat;  byte_size = sizeof( float );    break;
+    case gl::GL_FLOAT_VEC2:        type = sUniform::eType::kFloat2; byte_size = sizeof( float ) * 2;    break;
+    case gl::GL_FLOAT_VEC3:        type = sUniform::eType::kFloat3; byte_size = sizeof( float ) * 3;    break;
+    case gl::GL_FLOAT_VEC4:        type = sUniform::eType::kFloat4; byte_size = sizeof( float ) * 4;    break;
     // TODO: Support Matrix2x2f and Matrix3x3f
     // case gl::GL_FLOAT_MAT2:        type = sUniform::eType::kFloat2x2; break;
     // case gl::GL_FLOAT_MAT3:        type = sUniform::eType::kFloat3x3; break;
-    case gl::GL_FLOAT_MAT4:        type = sUniform::eType::kFloat4x4; break;
+    case gl::GL_FLOAT_MAT4:        type = sUniform::eType::kFloat4x4; byte_size = sizeof( float ) * 4 * 4; break;
     default:
-        SK_BREAK_RET_IF( sk::Severity::kGraphics, true, "Error: Invalid type provided.", {} )
+        SK_BREAK_RET_IF( sk::Severity::kGraphics, true, "Error: Invalid type provided.", sUniform{} )
+        return sUniform{};
     }
 
     sUniform uniform;
-    uniform.name     = std::string_view( m_uniform_name_buffer_, _name_length - 1 );
+    uniform.name     = std::string_view( m_uniform_name_buffer_, _name_length );
     uniform.pretty_name = make_pretty( uniform.name );
     uniform.type     = type;
     uniform.gl_type  = _type;
     uniform.location = _index;
-    uniform.size     = _size;
+    uniform.size     = static_cast< uint16_t >( _size );
+    uniform.byte_size = byte_size;
     uniform.flags    = m_uniform_name_buffer_[ 0 ] == '_' ? kHidden : 0;
     
     return uniform;
@@ -272,7 +290,7 @@ auto cShader_Reflection::create_sampler( const gl::GLenum _type,
 {
     sSampler sampler;
     sampler.type = _type;
-    sampler.name = std::string_view( m_uniform_name_buffer_, _name_length - 1 );
+    sampler.name = std::string_view( m_uniform_name_buffer_, _name_length );
     sampler.pretty_name = make_pretty( sampler.name );
     sampler.location = static_cast< uint16_t >( _index );
     sampler.flags    = m_uniform_name_buffer_[ 0 ] == '_' ? kHidden : 0;
@@ -284,7 +302,7 @@ auto cShader_Reflection::create_texture( const gl::GLenum _type,
 {
     sTexture texture;
     texture.type = _type;
-    texture.name = std::string_view( m_uniform_name_buffer_, _name_length - 1 );
+    texture.name = std::string_view( m_uniform_name_buffer_, _name_length );
     texture.pretty_name = make_pretty( texture.name );
     texture.location = static_cast< uint16_t >( _index );
     texture.flags    = m_uniform_name_buffer_[ 0 ] == '_' ? kHidden : 0;

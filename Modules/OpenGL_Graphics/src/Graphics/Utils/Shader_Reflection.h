@@ -31,15 +31,18 @@ namespace sk::Graphics::Utils
         std::string pretty_name;
             
         type_info_t type;
+        
+        gl::GLenum gl_type;
             
         uint32_t index;
-        uint16_t stride; // This will surely not come and bite me in the ass later.
+        uint32_t stride;
+        uint16_t components;
         uint16_t flags;
     };
 
     struct sUniform
     {
-        enum class eType : uint16_t
+        enum class eType : uint8_t
         {
             kFloat,
             kFloat2,
@@ -64,8 +67,9 @@ namespace sk::Graphics::Utils
         // Either the index or bytewise offset.
         uint32_t location;
         // Number of elements
-        uint32_t size;
-        uint16_t flags;
+        uint16_t byte_size;
+        uint16_t size;
+        uint8_t  flags;
         eType    type;
     };
         

@@ -11,6 +11,13 @@
 
 #include <SDL3/SDL_init.h>
 
+#include "Misc/Smart_Ptrs.h"
+
+namespace sk::Graphics::Rendering
+{
+    class cWindow_Context;
+}
+
 namespace sk::Platform
 {
     class cSDL_Window final : public iWindow
@@ -28,6 +35,7 @@ namespace sk::Platform
         explicit cSDL_Window( const std::string& _name, const cVector2u32& _resolution, uint8_t _flags = kNone );
         ~cSDL_Window() override;
 
+        void Init() override;
         [[ nodiscard ]]
         bool GetVisibility() const override;
         // Returns true on success.
@@ -37,7 +45,14 @@ namespace sk::Platform
         cVector2u32 GetResolution () const override;
         float       GetAspectRatio() const override;
         
-        auto GetWindow() const { return m_window_; }
+        auto GetWindowContext() const -> Graphics::Rendering::cWindow_Context& override;
+        void SwapBuffers() override;
+        
+        void PushContext() override;
+        void PopContext() override;
+        
+        // For internal usage.
+        auto get_window() const { return m_window_; }
 
         // Void type to skip include I guess
         static SDL_AppResult handle_event( void* _event );
@@ -50,6 +65,10 @@ namespace sk::Platform
         cVector2u32 m_size_;
         float       m_aspect_ratio_;
         SDL_Window* m_window_;
+        
+        cShared_ptr< Graphics::Rendering::cWindow_Context > m_window_context_;
+        
+        std::vector< SDL_GLContext > m_contexts_;
     };
 } // sk::
 

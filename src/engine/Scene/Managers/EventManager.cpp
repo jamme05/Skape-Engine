@@ -21,7 +21,7 @@ namespace sk
 	{
 		for( const auto& dispatcher : m_dispatcher )
 		{
-			SK_FREE( dispatcher.second );
+			SK_DELETE( dispatcher.second );
 		}
 		m_dispatcher.clear();
 	} // ~cEventManager

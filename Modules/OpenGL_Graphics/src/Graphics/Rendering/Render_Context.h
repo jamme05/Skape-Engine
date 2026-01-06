@@ -49,6 +49,9 @@ namespace sk::Graphics::Rendering
 
         virtual void Swap();
         
+    protected:
+        cRender_Context( size_t _frame_buffers, size_t _render_targets, bool _is_window );
+        
     private:
         friend class sk::Graphics::cRenderer;
 

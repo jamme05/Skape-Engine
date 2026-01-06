@@ -34,7 +34,7 @@ namespace sk::Graphics::Rendering
         
         explicit cDepth_Target( const cVector2u32& _resolution, eFormat _format, float _depth_clear = 0.0f, uint8_t _stencil_clear = 0 );
 
-        void GetResolution() const -> cVector2u32;
+        auto GetResolution() const -> cVector2u32;
         void Resize( const cVector2u32& _new_resolution );
 
         auto GetClearValue() const { return m_depth_clear_; }

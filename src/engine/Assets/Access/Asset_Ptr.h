@@ -115,6 +115,9 @@ namespace sk
     template< reflected Ty > requires std::is_base_of_v< cAsset, Ty >
     auto cAsset_Ptr< Ty >::validate_asset( const cShared_ptr< cAsset_Meta >& _meta ) const -> cShared_ptr< cAsset_Meta >
     {
+        if( _meta == nullptr )
+            return nullptr;
+        
         SK_BREAK_RET_IF( sk::Severity::kEngine, kType != _meta->GetType(),
             "Error: Asset type does not match the requested type!", nullptr )
 

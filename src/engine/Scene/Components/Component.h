@@ -75,7 +75,7 @@ namespace sk::Object
 		[[ nodiscard ]]
 		auto& GetTransform() const { return m_transform; }
 
-		void SetParent( const cShared_ptr< iComponent >& _component ){ m_parent = _component; m_transform.setParent( ( _component ) ? &_component->GetTransform() : nullptr ); }
+		void SetParent( const cShared_ptr< iComponent >& _component ){ m_parent = _component; m_transform.setParent( ( _component != nullptr ) ? &_component->GetTransform() : nullptr ); }
 
 	protected:
 		virtual void setEnabled( const bool _is_enabled ){ m_enabled = _is_enabled; }

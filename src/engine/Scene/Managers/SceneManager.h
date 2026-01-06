@@ -40,6 +40,7 @@ namespace sk
 
 		static void render( void );
 
+		[[ deprecated( "Use Passes from now on." ) ]]
 		void render_with( sk::Object::Components::cCameraComponent& _camera, Graphics::Rendering::cRender_Context& _context, const bool _swap = true );
 
 		static auto get_active_context( void ){ return m_active_context; }

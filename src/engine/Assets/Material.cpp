@@ -18,15 +18,15 @@ namespace
     struct sVisitor : Ts... { using Ts::operator()...; };
 } // ::
 
-cMaterial::cBlock::cBlock( const cWeak_Ptr< cMaterial >& _owner, std::string _name, const block_t* _info, const size_t _binding )
+cMaterial::cBlock::cBlock( const cMaterial& _owner, std::string _name, const block_t* _info, const size_t _binding )
 : m_pretty_name_( std::move( _name ) )
 , m_info_( _info )
 , m_binding_( _binding )
-, m_buffer_( m_pretty_name_ + ": Constant buffer", _info->size, Graphics::Buffer::eType::kConstant, false, false )
-, m_owner_( _owner )
+, m_buffer_( m_pretty_name_ + ": Constant buffer", _info->size, _info->size, Graphics::Buffer::eType::kConstant, false, false )
+, m_owner_( &_owner )
 {}
 
-bool cMaterial::cBlock::SetUniform( const cStringID& _name, const auto& _value )
+bool cMaterial::cBlock::SetUniformRaw( const cStringID& _name, const void* _data, size_t _size )
 {
     const auto itr = m_uniform_map_.find( _name );
     
@@ -35,33 +35,40 @@ bool cMaterial::cBlock::SetUniform( const cStringID& _name, const auto& _value )
     
     auto& uniform = itr->second;
     
+    if( uniform.byte_size < _size )
+    {
+        SK_BREAK;
+        SK_WARNING( sk::Severity::kGraphics,
+            "Warning: Buffer size provided is greater than what this uniform ( \"{}\" ) supports. Provided: {}, Uniform size: {}",
+            uniform.pretty_name, _size, uniform.byte_size )
+        _size = uniform.byte_size;
+    }
+    
     std::visit( [ & ]( auto& _uniform_ptr )
     {
-        // If you get an error here, that means you've provided an invalid type.
-        auto& value = *_uniform_ptr;
-        value = _value;
+        std::memcpy( static_cast< void* >( _uniform_ptr ), _data, _size );
     }, uniform.accessor );
     
     return true;
 }
 
-cMaterial::cMaterial( const Graphics::Utils::cShader_Link& _shader_link )
-: m_shader_link_( _shader_link )
+cMaterial::cMaterial( Graphics::Utils::cShader_Link&& _shader_link )
+: m_shader_link_( std::move( _shader_link ) )
 {
-    SK_ERR_IFN( _shader_link.IsValid(),
+    SK_ERR_IFN( m_shader_link_.IsValid(),
         "Error: Invalid shader link provided." )
     
     // TODO: Get rid of the wait.
     // TODO: Have some way to either update the material during the runtime and check the status
     // Or some event on when the link has refreshed.
-    _shader_link.WaitUntilReady();
+    m_shader_link_.Complete();
     
     create_data();
 }
 
-void cMaterial::WaitForShader() const
+void cMaterial::Complete()
 {
-    m_shader_link_.WaitUntilReady();
+    m_shader_link_.Complete();
 }
 
 auto cMaterial::GetBlock( const cStringID& _name ) -> cBlock*
@@ -93,14 +100,11 @@ void cMaterial::Update()
 void cMaterial::create_data()
 {
     using namespace sk::Graphics::Utils;
-    
-    auto reflection = m_shader_link_.GetReflection();
-    
-    for( auto& raw_block : reflection->GetBlockVec() )
+
+    for( auto reflection = m_shader_link_.GetReflection(); auto& raw_block : reflection->GetBlockVec() )
     {
-        auto [ itr, snd ] = m_block_map_.emplace( raw_block->name,
-            cBlock{ get_weak().cast< cMaterial >(), raw_block->pretty_name, raw_block, raw_block->binding } );
-        auto& block = itr->second;
+        auto& block = m_block_map_[ raw_block->name ];
+        block = cBlock{ *this, raw_block->pretty_name, raw_block, raw_block->binding };
 
         const auto data = static_cast< std::byte* >( block.m_buffer_.Data() );
         
@@ -111,6 +115,7 @@ void cMaterial::create_data()
             uniform.pretty_name = raw_uniform.pretty_name;
             uniform.array_size  = raw_uniform.size;
             uniform.matrix_size = 1;
+            uniform.info        = &raw_uniform;
 
             switch( raw_uniform.type )
             {
@@ -167,7 +172,7 @@ void cMaterial::create_data()
                 
             case sUniform::eType::kFloat4x4: ACCESSOR_EMPLACE( cMatrix4x4f ); break;
                 
-            default: SK_BREAK break; // Not supported.
+            default: SK_BREAK; break; // Not supported.
             }
         }
     }

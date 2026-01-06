@@ -38,6 +38,7 @@ namespace sk
 
         bool SetAsset( const cShared_ptr< cAsset_Meta >& _meta );
 
+        // TODO: Add try load functions. The try load functions will not complain if the asset is already loaded.
         auto LoadSync() -> cAsset*;
         bool LoadAsync();
 

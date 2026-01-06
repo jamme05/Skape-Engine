@@ -27,6 +27,11 @@ namespace sk::Graphics::Utils
 
 namespace sk
 {
+    namespace Graphics::Rendering
+    {
+        class cFrame_Buffer;
+    }
+
     // TODO: Move this to a different file
     template< class Ty, class... Types >
     constexpr bool kOneOf = ( std::is_same_v< Ty, Types > ||... );
@@ -45,7 +50,7 @@ namespace sk::Assets
         class cBlock
         {
             friend class cMaterial;
-            friend bool sk::Graphics::Utils::ApplyMaterial( const Assets::cMaterial& _material );
+            friend class sk::Graphics::Rendering::cFrame_Buffer;
             friend class sk::Graphics::Utils::cShader_Link;
         public:
             using variant_t = std::variant<
@@ -79,12 +84,14 @@ namespace sk::Assets
             
             using buffer_t      = Graphics::cUnsafe_Buffer;
             using block_t       = Graphics::Utils::sBlock;
-            using uniform_map_t = unordered_map< str_hash, sUniform >;
+            using uniform_map_t = std::unordered_map< str_hash, sUniform >;
             using uniform_vec_t = vector< sUniform* >;
             
-            cBlock( const cWeak_Ptr< cMaterial >& _owner, std::string _name, const block_t* _info, size_t _binding );
+            cBlock() = default;
+            cBlock( const cMaterial& _owner, std::string _name, const block_t* _info, size_t _binding );
 
             bool SetUniform( const cStringID& _name, const auto& _value );
+            bool SetUniformRaw( const cStringID& _name, const void* _data, size_t _size );
             
             auto& GetUniformMap() const { return m_uniform_map_; }
             auto& GetUniformVec() const { return m_uniform_vec_; }
@@ -98,12 +105,12 @@ namespace sk::Assets
             uniform_map_t m_uniform_map_;
             uniform_vec_t m_uniform_vec_;
             
-            cWeak_Ptr< cMaterial > m_owner_;
+            const cMaterial* m_owner_;
         };
         
-        explicit cMaterial( const Graphics::Utils::cShader_Link& _shader_link );
+        explicit cMaterial( Graphics::Utils::cShader_Link&& _shader_link );
         
-        void WaitForShader() const;
+        void Complete();
         
         auto  GetBlock( const cStringID& _name ) -> cBlock*;
         auto& GetBlocks() const { return m_block_map_; }
@@ -129,6 +136,61 @@ namespace sk::Assets
         
         std::mutex m_access_mutex_;
     };
+    
+    bool cMaterial::cBlock::SetUniform( const cStringID& _name, const auto& _value )
+    {
+        using value_type   = std::remove_cvref_t< decltype( _value ) >;
+        using element_type = std::remove_all_extents_t< value_type >;
+    
+        constexpr auto array_size = sizeof( value_type ) / sizeof( element_type );
+    
+        const auto itr = m_uniform_map_.find( _name );
+    
+        SK_BREAK_RET_IF( sk::Severity::kEngine, itr == m_uniform_map_.end(),
+            TEXT( "Warning: Unable to find uniform with the name, {}", _name.view() ), false )
+    
+        auto& uniform = itr->second;
+    
+        size_t elements = 1;
+    
+        if constexpr( std::is_array_v< value_type > )
+        {
+            if( array_size > uniform.array_size )
+            {
+                SK_BREAK;
+                SK_WARNING( sk::Severity::kGraphics,
+                    "Warning: Array size provided is greater than what the uniform supports. Clamping size." )
+            
+                elements = uniform.array_size;
+            }
+            else
+                elements = array_size;
+        }
+    
+        std::visit( [ & ]< class Ty >( Ty*& _uniform_ptr )
+        {
+            if constexpr( !std::is_convertible_v< element_type, Ty > )
+            {
+                SK_WARNING( sk::Severity::kGraphics, "Type is unsupported" )
+            }
+            else
+            {
+                if constexpr( std::is_array_v< value_type > )
+                {
+                    std::copy_n( std::addressof( _value ), elements, _uniform_ptr );
+                }
+                else
+                {
+                    // If you get an error here, that means you've provided an invalid type.
+                    auto& value = *_uniform_ptr;
+                    value = _value;
+                }
+            }
+        
+        }, uniform.accessor );
+    
+        return true;
+    }
     
 } // sk::Assets
 

@@ -56,11 +56,10 @@ namespace sk
 
 	void cSceneManager::render_with( Scene::camera_t& _camera, Graphics::Rendering::cRender_Context& _context, const bool _swap )
 	{
+		// TODO: Have this use itself of the pipelines instead.
 		m_active_context = &_context;
 		_context.Begin( _camera.getViewport(), _camera.getScissor() );
 		_context.Clear( Clear::kAll );
-		
-		// Removed due to NDA
 		
 		// TODO: Use some spacial indexing for rendering.
 		// Idea: Bounding cubes covering the entire world

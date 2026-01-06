@@ -78,24 +78,29 @@ namespace sk
 
 	namespace Event
 	{
+		template< class Ty >
+		struct type_wrapper
+		{
+			using type = Ty;
+		};
 		// Inspired by: https://stackoverflow.com/a/64782620
 		template< class Re, class Ty, class... Args >
 		consteval auto get_fn_type_helper( Re( Ty::* )( Args... ) const )
 		{
-			return std::tuple< Re( Args... ), Re, std::tuple< Args... > >{};
+			return std::tuple< type_wrapper< Re( Args... ) >, type_wrapper< Re >, std::tuple< Args... > >{};
 		}
 
 		template< class Re, class Ty, class... Args >
 		consteval auto get_fn_type_helper( Re( Ty::* )( Args... ) )
 		{
-			return std::tuple< Re( Args... ), Re, std::tuple< Args... > >{};
+			return std::tuple< type_wrapper< Re( Args... ) >, type_wrapper< Re >, std::tuple< Args... > >{};
 		}
 		
 		template< auto Fn >
-		using function_type_t = std::tuple_element_t< 0, decltype( get_fn_type_helper( Fn ) ) >;
+		using function_type_t = std::tuple_element_t< 0, decltype( get_fn_type_helper( Fn ) ) >::type;
 		
 		template< auto Fn >
-		using function_ret_t = std::tuple_element_t< 1, decltype( get_fn_type_helper( Fn ) ) >;
+		using function_ret_t = std::tuple_element_t< 1, decltype( get_fn_type_helper( Fn ) ) >::type;
 		
 		template< size_t I, auto Fn >
 		using function_arg_t = std::tuple_element_t< I, std::tuple_element_t< 2, decltype( get_fn_type_helper( Fn ) ) > >;
@@ -155,7 +160,7 @@ namespace sk
 			
 			template< class Ot, class H >
 			requires ( convertible< FuncTy, Ot >
-				&& std::is_same_v< std::tuple_element_t< 1, H >, std::tuple_element_t< 1, Helper > > )
+				&& std::is_same_v< typename std::tuple_element_t< 1, H >::type, typename std::tuple_element_t< 1, Helper >::type > )
 			sEvent( const sEvent< Ot, H >& _other )
 			: function( _other.function )
 			, raw_ptr( _other.raw_ptr )
@@ -163,7 +168,7 @@ namespace sk
 			
 			template< class Ot, class H >
 			requires ( convertible< FuncTy, Ot >
-				&& std::is_same_v< std::tuple_element_t< 1, H >, std::tuple_element_t< 1, Helper > > )
+				&& std::is_same_v< typename std::tuple_element_t< 1, H >::type, typename std::tuple_element_t< 1, Helper >::type > )
 			sEvent( const sEvent< Ot, H >&& _other )
 			: function( _other.function )
 			, raw_ptr( _other.raw_ptr )
@@ -206,7 +211,7 @@ namespace sk
 		sEvent( Fn&& ) -> sEvent< function_type_t< &Fn::operator() >, decltype( get_fn_type_helper( &Fn::operator() ) ) >;
 
 		template< class Re, class... Args >
-		using event_t = sEvent< Re( Args... ), std::tuple< Re( Args... ), Re, std::tuple< Args... > > >;
+		using event_t = sEvent< Re( Args... ), std::tuple< type_wrapper< Re( Args... ) >, type_wrapper< Re >, std::tuple< Args... > > >;
 	} // sk::Event::
 	
 	template< class Ty, class Re, class... Args >
@@ -304,7 +309,7 @@ namespace sk
 	template< class Ty, class Fn, class Helper, size_t... Indices >
 	auto create_event_impl( Ty* _instance, Fn&& _fn, Helper&, std::index_sequence< Indices... > )
 	{
-		using ret_t  = std::tuple_element_t< 1, Helper >;
+		using ret_t  = std::tuple_element_t< 1, Helper >::type;
 		using args_t = std::tuple_element_t< 2, Helper >;
 		
 		return Event::sEvent{
@@ -368,7 +373,7 @@ namespace sk
 		class iEventDispatcher
 		{
 		public:
-			         iEventDispatcher( void ){}
+			         iEventDispatcher( void ) = default;
 			virtual ~iEventDispatcher( void ) = default;
 			
 			iEventDispatcher( const iEventDispatcher& ){}
@@ -472,7 +477,7 @@ namespace sk
 				
 				std::scoped_lock lock{ m_write_mtx_ };
 				
-				m_listeners_.emplace( id, _listener );
+				m_listeners_.emplace( id, _listener.function );
 
 				return *this;
 			}
@@ -486,7 +491,7 @@ namespace sk
 				
 				std::scoped_lock lock{ m_write_mtx_ };
 				
-				m_weak_listeners_.emplace( id, _listener );
+				m_weak_listeners_.emplace( id, _listener.function );
 
 				return *this;
 			}

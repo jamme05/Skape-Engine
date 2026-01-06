@@ -10,7 +10,25 @@
 
 void sk::Object::iObject::SetLayer( const uint64_t _layer )
 {
-    auto& layerManager = Scene::cLayer_Manager::get();
+    auto& layer_manager = Scene::cLayer_Manager::get();
     m_layer_ = _layer;
-    layerManager.AddObject( get_shared() );
+    layer_manager.AddObject( get_shared() );
+}
+
+void sk::Object::iObject::SetRoot( const cShared_ptr< iComponent >& _new_root_component, const bool _override_parent )
+{
+    if( _override_parent )
+        _new_root_component->SetParent( m_root->m_parent.Lock() );
+    else if( _new_root_component->m_parent == m_root )
+        _new_root_component->SetParent( nullptr );
+
+    for( auto& component : m_components_ | std::views::values )
+    {
+        if( component == _new_root_component )
+            continue;
+        
+        component->SetParent( _new_root_component );
+    }
+    
+    m_root = _new_root_component;
 }

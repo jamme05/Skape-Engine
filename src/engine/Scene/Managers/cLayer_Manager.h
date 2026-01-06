@@ -60,23 +60,8 @@ namespace sk::Scene
                 return getObject();
             }
             
-            auto& operator++()
-            {
-                if( m_object_index_ >= getObjects().size() )
-                {
-                    // This should cap the iterator at the end.
-                    if( m_layer_index_ < m_layers_.size() )
-                    {
-                        m_layer_index_++;
-                        m_object_index_ = 0;
-                    }
-                }
-                else
-                    m_object_index_++;
-                
-                return *this;
-            }
-            
+            auto operator++() -> cObjectIterator&;
+
             auto operator++( int )
             {
                 auto tmp = *this;
@@ -86,23 +71,8 @@ namespace sk::Scene
                 return tmp;
             }
             
-            auto& operator--()
-            {
-                if( m_object_index_ == 0 )
-                {
-                    // This should cap the iterator at the end.
-                    if( m_layer_index_ > 0 )
-                    {
-                        m_layer_index_--;
-                        m_object_index_ = getObjects().size() - 1;
-                    }
-                }
-                else
-                    m_object_index_--;
-                
-                return *this;
-            }
-            
+            auto operator--() -> cObjectIterator&;
+
             auto operator--( int )
             {
                 auto tmp = *this;
@@ -150,6 +120,11 @@ namespace sk::Scene
             using reference         = value_type&;
             using iterator_category = std::forward_iterator_tag;
 
+            operator bool() const
+            {
+                return !getMeshes().empty();
+            }
+            
             auto& operator*() const
             {
                 auto& meshes = getMeshes();
@@ -164,17 +139,13 @@ namespace sk::Scene
             
             auto& operator++()
             {
-                if( m_mesh_index_ >= getMeshes().size() )
+                if( ++m_mesh_index_ >= getMeshes().size() )
                 {
                     // This should cap the iterator at the end.
                     if( m_object_itr_ != m_object_end_ )
-                    {
                         ++m_object_itr_;
-                        m_mesh_index_ = 0;
-                    }
+                    m_mesh_index_ = 0;
                 }
-                else
-                    m_mesh_index_++;
                 
                 return *this;
             }

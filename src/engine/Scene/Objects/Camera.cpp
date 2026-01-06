@@ -26,12 +26,15 @@ namespace sk::Object
 		const Graphics::sViewport viewport = { .x = 0, .y = 0, .width = resolution.x, .height = resolution.y };
 		const Graphics::sScissor  scissor  = { .x = 0, .y = 0, .width = resolution.x, .height = resolution.y };
 
-		Components::cCameraComponent::sCameraSettings settings{ 70.0f, aspect, 0.1f, 2000.0f };
+		Components::cCameraComponent::sCameraSettings settings{
+			.fov = 70.0f,
+			.aspect = aspect,
+			.near = 0.1f,
+			.far = 2000.0f
+		};
 
 		m_camera = AddComponent< Components::cCameraComponent >( viewport, scissor, settings, Components::cCameraComponent::eType::kPerspective );
-		m_root   = m_camera;
-		// Update root as old root has been deleted.
-		m_camera->SetParent( nullptr );
+		SetRoot( m_camera );
 	}
 
 	void cCamera::setAsMain( void ) const

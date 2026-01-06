@@ -60,42 +60,41 @@ bool Utils::RenderMesh( const Object::Components::cCameraComponent& _camera, Ren
     SK_BREAK_RET_IF( sk::Severity::kGraphics,
         camera_block == nullptr, "Currently you NEED a block named \"Camera\" for this utility function to work.", false )
     
+    _mesh.GetMeta()->LockAsset();
+    _material.GetMeta()->LockAsset();
+    
     // Object uniforms
     object_block->SetUniform( kWorldUniform,        _world_matrix );
     object_block->SetUniform( kInverseWorldUniform, _world_matrix.inversed() );
     
     // Camera uniforms
-    camera_block->SetUniform( kInverseWorldUniform, _camera.getViewProjInv() );
+    camera_block->SetUniform( kViewProjUniform, _camera.getViewProjInv() );
     
     _material.Update();
     
-    link.Use();
-    ApplyMaterial( _material );
+    _frame_buffer.UseMaterial( _material );
     
     auto& attributes     = link.GetReflection()->GetAttributes();
     auto& vertex_buffers = _mesh.GetVertexBuffers();
     
     for( auto& attribute : attributes )
     {
-        // TODO: Fix the binding inside the frame buffer.
         if( auto itr = vertex_buffers.find( attribute.name ); itr != vertex_buffers.end() )
             _frame_buffer.BindVertexBuffer( attribute.index, *itr->second );
     }
     
-    // TODO: Draw function.
-    _frame_buffer.DrawIndexAuto(  );
-    
-    return true;
-}
+    _frame_buffer.BindIndexBuffer( *_mesh.GetIndexBuffer() );
 
-// TODO: Find a place to move this function to. The logic isn't allowed here.
-bool Utils::ApplyMaterial( const Assets::cMaterial& _material )
-{
-    SK_BREAK_RET_IF( sk::Severity::kGraphics, !_material.IsReady(),
-        "Error: Material isn't ready yet.", false )
+    const bool res = _frame_buffer.DrawIndexed();
+    if( !res )
+        SK_BREAK;
     
-    for( auto& block : _material.GetBlocks() | std::views::values )
-        gl::glBindBufferBase( gl::GL_UNIFORM_BUFFER, static_cast< gl::GLuint >( block.m_binding_ ), block.m_buffer_.get_buffer().buffer );
+    _frame_buffer.UnbindIndexBuffer();
+    _frame_buffer.UnbindVertexBuffers();
+    _frame_buffer.ResetMaterial();
     
-    return true;
+    _mesh.GetMeta()->UnlockAsset();
+    _material.GetMeta()->UnlockAsset();
+    
+    return res;
 }

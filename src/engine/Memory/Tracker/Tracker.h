@@ -144,22 +144,22 @@ namespace sk::Memory
  */
 #define SK_SINGLE_EMPTY( Ty ) sk::Memory::alloc< Ty >( 1, std::source_location::current() )
 /**
- * Tracked free.
- *
+ * Tracked delete.
+ * Functions like the usual delete.
+ * 
  * NOTE: It does nullptr check for you.
- *
+ * 
  * Arguments: Address
  */
-#define SK_FREE( address ) sk::Memory::free( address )
+#define SK_DELETE( address ) sk::Memory::free( address )
 /**
- * Alias for SK_FREE
  * Tracked free.
- * 
+ *
  * NOTE: It does nullptr check for you.
- * 
+ *
  * Arguments: Address
  */
-#define SK_DELETE( address ) SK_FREE( address )
+#define SK_FREE( address ) SK_DELETE( static_cast< void* >( address ) )
 #else // !SK_TRACKER_DISABLED
 /**
  * Default tracked alloc.

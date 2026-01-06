@@ -2,36 +2,29 @@
 
 #include "App.h"
 
-#include "Assets/Asset.h"
-#include <Assets/Utils/Asset_List.h>
-#include <Assets/Management/Asset_Manager.h>
-#include "Assets/Texture.h"
+#include <print>
+#include <random>
 
+#include <Assets/Management/Asset_Manager.h>
+#include <Assets/Utils/Asset_List.h>
+#include <Graphics/Renderer.h>
+#include <Graphics/Rendering/Render_Context.h>
+#include "Assets/Asset.h"
+#include "Assets/Texture.h"
+#include "Assets/Management/Asset_Job_Manager.h"
+#include "Graphics/Renderer_Impl.h"
+#include "Graphics/Pipelines/Forward_Pipeline.h"
+#include "Graphics/Pipelines/Pipeline.h"
 #include "Math/Types.h"
 #include "Memory/Tracker/Tracker.h"
-
+#include "Misc/UUID.h"
+#include "Platform/Window/Window_Base.h"
+#include "Reflection/RuntimeClass.h"
+#include "Reflection/RuntimeStruct.h"
 #include "Scene/Scene.h"
 #include "Scene/Components/MeshComponent.h"
 #include "Scene/Managers/SceneManager.h"
 #include "Scene/Objects/CameraFlight.h"
-
-#include "Containers/Const/Const_Wrapper.h"
-#include "Platform/Window/Window_Base.h"
-
-#include "Reflection/RuntimeClass.h"
-#include "Reflection/RuntimeStruct.h"
-
-#include <print>
-#include <random>
-
-#include <Graphics/Rendering/Render_Context.h>
-
-#include "Graphics/Rendering/Window_Context.h"
-#include "Misc/UUID.h"
-
-#include <Graphics/Renderer.h>
-
-#include "Assets/Access/Asset_Ptr.h"
 
 cApp* cApp::m_running_instance_ = nullptr;
 
@@ -40,20 +33,23 @@ cApp::cApp( void )
 {
 	m_running_instance_ = this;
 	sk::Input::setLogInputs( false );
-
-	m_main_window = sk::Platform::CreateWindow( "Main Window", { 1280, 720 } );
-	m_windows.emplace( m_main_window );
-
-	SK_ERR_IFN( m_main_window->SetVisibility( true ),
-		"Unable to show window." )
-
+	
 	sk::cAsset_Manager::init();
+
+	m_main_window_ = sk::Platform::CreateWindow( "Main Window", { 1280, 720 } );
+	m_main_window_->PushContext();
+	
 	sk::Graphics::InitRenderer();
+	m_main_window_->Init();
+	
+	m_windows.emplace( m_main_window_ );
 
-	m_window_context = sk::make_shared< sk::Graphics::Rendering::cWindow_Context >( m_main_window->GetResolution() );
-	m_render_context = sk::make_shared< sk::Graphics::Rendering::cRender_Context >();
-
+	SK_ERR_IFN( m_main_window_->SetVisibility( true ),
+		"Unable to show window." )
+	
 	sk::cSceneManager::init();
+	
+	sk::Graphics::cRenderer::get().SetPipeline( SK_SINGLE( sk::Graphics::cForward_Pipeline, m_main_window_ ) );
 } // cApp
 
 cApp::~cApp( void )
@@ -73,51 +69,44 @@ sk::Input::response_t cApp::onInput( const uint32_t _type, const sk::Input::sEve
 void cApp::create( void )
 {
 	auto& asset_m = sk::cAsset_Manager::get();
-	//auto list   = sk::cAssetManager::get().loadFolder( "data/" );
+
 	auto list_1 = asset_m.loadFile( "models/humanforscale.glb" );
 	auto list_2 = asset_m.loadFile( "models/heheToiletwithtextures.glb" );
-	auto shader_frag = *asset_m.loadFile( "shaders/forward.frag" ).begin();
-	auto shader_vert = *asset_m.loadFile( "shaders/forward.vert" ).begin();
+	const auto shader_frag = *asset_m.loadFile( "shaders/forward.frag" ).begin();
+	const auto shader_vert = *asset_m.loadFile( "shaders/forward.vert" ).begin();
 	
-	auto mat1 = asset_m.CreateAsset< sk::Assets::cMaterial >( "Material Test", shader_vert );
-
-	//sk::cAssetManager::get().loadFile( "data/mushroom.glb" );
+	auto mat1 = asset_m.CreateAsset< sk::Assets::cMaterial >( "Material Test",
+		sk::Graphics::Utils::cShader_Link{ shader_vert, shader_frag } );
 	
-	//auto cube          = sk::cAssetManager::get().getAssetAs< sk::Assets::cMesh >( 0 );
+	auto mat2 = asset_m.CreateAsset< sk::Assets::cMaterial >( "Material Test",
+		sk::Graphics::Utils::cShader_Link{ shader_vert, shader_frag } );
+	
 	auto christopher_t = list_1.GetAssetOfType< sk::Assets::cTexture >();
 	auto christopher_m = list_1.GetAssetOfType< sk::Assets::cMesh    >();
 	auto toilet_t      = list_2.GetAssetOfType< sk::Assets::cTexture >();
 	auto toilet_m      = list_2.GetAssetOfType< sk::Assets::cMesh    >();
-	//auto mushroom      = sk::cAssetManager::get().getAssetAs< sk::Assets::cMesh >( 5 );
 
 	m_scene = sk::make_shared< sk::cScene >();
 	m_scene->create_object< sk::Object::cCameraFlight >( "Camera Free Flight" )->setAsMain();
 
-	auto test  = sk::cAsset_Manager::get().GetAssetPtrByName< sk::Assets::cMesh >( christopher_m->GetName(), nullptr );
-	auto test2 = sk::cAsset_Manager::get().GetAssetRefById< sk::Assets::cMesh >( test.GetMeta()->GetUUID(), nullptr );
-	auto test3 = sk::cAsset_Manager::get().GetAssetRefById< sk::Assets::cMesh, sk::eAsset_Ref_Mode::kAutomaticSync >( toilet_m->GetUUID(), nullptr );
-	
-	
-	constexpr auto s1 = sizeof( test );
-	constexpr auto s2 = sizeof( test2 );
 	//auto mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 1" );
 	//mesh->getTransform().getPosition() = { -10.0f, 0.0f, 0.0f };
 	//mesh->getTransform().update();
 	//mesh->addComponent< sk::Object::Components::cMesh >( cube );
 
 	auto mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 2" );
-	mesh->GetTransform().getPosition() = { -2.0f, 0.0f, 0.0f };
+	mesh->GetTransform().getPosition() = { 1.0f, 0.0f, 3.5f };
 	mesh->GetTransform().update();
-	auto component = mesh->AddComponent< sk::Object::Components::cMeshComponent >( christopher_m );
-	component->SetMaterial( christopher_t );
+	auto component = mesh->AddComponent< sk::Object::Components::cMeshComponent >( christopher_m, mat1 );
 	component->enabled();
+	component->GetTransform().update();
 
 	mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 3" );
-	mesh->GetTransform().getPosition() = { 2.0f, 0.0f, 0.0f };
+	mesh->GetTransform().getPosition() = { -2.0f, 0.0f, 3.5f };
 	mesh->GetTransform().update();
-	component = mesh->AddComponent< sk::Object::Components::cMeshComponent >( toilet_m );
-	component->SetMaterial( toilet_t );
+	component = mesh->AddComponent< sk::Object::Components::cMeshComponent >( toilet_m, mat2 );
 	component->enabled();
+	component->GetTransform().update();
 
 	//mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 4" );
 	//mesh->getTransform().getPosition() = { 10.0f, 0.0f, 0.0f };
@@ -125,12 +114,7 @@ void cApp::create( void )
 	//mesh->addComponent< sk::Object::Components::cMesh >( cube )->setTexture( toilet_t );
 
 	sk::cSceneManager::get().registerScene( m_scene );
-
-	REGISTER_LISTENER( "Custom Event", &cApp::custom_event )
-	sk::Register_Event_Helper( sk::Const( sk::str_hash( "Aaaa" ) ), &cApp::custom_event, this );
-	
-	print_types();
-} // _create
+} // create
 
 void cApp::print_types( void )
 {
@@ -206,16 +190,11 @@ void cApp::print_types( void )
 	}
 }
 
-void cApp::custom_event( void )
-{
-	std::println( "Custom Event go brrr" );
-} // custom_event
-
-void cApp::destroy( void ) const
+void cApp::destroy() const
 {
 	sk::cSceneManager::shutdown();
 	for( const auto& window : m_windows )
-		SK_FREE( window );
+		SK_DELETE( window );
 
 	sk::Graphics::cRenderer::shutdown();
 
@@ -223,10 +202,14 @@ void cApp::destroy( void ) const
 
 } // _destroy
 
-void cApp::run( void )
+void cApp::run()
 {
-	auto& scene_manager = sk::cSceneManager::get();
-	scene_manager.update();
-	scene_manager.render();
+	sk::cSceneManager::get().update();
+	
+	auto& pipeline = *sk::Graphics::cRenderer::get().GetPipeline();
+	
+	sk::Graphics::cRenderer::get().Update();
+	
+	pipeline.Execute();
 	
 } // run

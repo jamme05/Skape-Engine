@@ -133,7 +133,7 @@ void cSerializedObject::Reset()
     if( IsArray() )
     {
         std::visit( []( auto& _array ){
-            SK_FREE( _array );
+            SK_DELETE( _array );
             _array = nullptr;
         }, m_element_data_ );
         m_element_count_ = 0;

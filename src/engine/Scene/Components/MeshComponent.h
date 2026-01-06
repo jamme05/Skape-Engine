@@ -30,10 +30,12 @@ namespace sk::Object::Components
 	public:
 		explicit cMeshComponent( const cShared_ptr< cAsset_Meta >& _mesh, const cShared_ptr< cAsset_Meta >& _material );
 
-		void render() override;
 		void enabled() override;
 		void disabled() override;
+		bool IsReady() const;
 
+		auto GetMesh() const -> Assets::cMesh*;
+		auto GetMaterial() const -> Assets::cMaterial*;
 		void SetMesh( const cShared_ptr< cAsset_Meta >& _mesh );
 		void SetMaterial( const cShared_ptr< cAsset_Meta >& _material );
 

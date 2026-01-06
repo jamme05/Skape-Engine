@@ -223,7 +223,8 @@ namespace sk
 		using extension_map_entry_t  = extension_loader_map_t::value_type;
 
 		void addPathReferrer   ( const str_hash& _path_hash, const void* _referrer );
-		void removePathReferrer( const str_hash& _path_hash, const void* _referrer );
+		// Returns if there are no more referrers.
+		bool removePathReferrer( const str_hash& _path_hash, const void* _referrer );
 		
 		static void loadGltfFile         ( const std::filesystem::path& _path, Assets::cAsset_List& _metas, Assets::eAssetTask _load_task );
 		static auto createGltfMeshMeta   ( const fastgltf::Mesh& _mesh, size_t _index ) -> cShared_ptr< cAsset_Meta >;

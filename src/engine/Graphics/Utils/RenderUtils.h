@@ -31,6 +31,4 @@ namespace sk::Graphics::Utils
     
     bool RenderMesh( const Object::Components::cCameraComponent& _camera, Rendering::cFrame_Buffer &_frame_buffer, Assets::cMaterial &_material,
         const cMatrix4x4f &_world_matrix, Assets::cMesh &_mesh );
-    
-    bool ApplyMaterial( const Assets::cMaterial& _material );
 } // sk::Graphics::Utils

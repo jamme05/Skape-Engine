@@ -51,8 +51,8 @@ namespace sk::Graphics
             };
         public:
             cUnsafe_Buffer();
-            cUnsafe_Buffer( std::string _name, size_t _byte_size, Buffer::eType _type, bool _is_normalized, bool _is_static );
-            cUnsafe_Buffer( std::string _name, size_t _byte_size, gl::GLenum _type, bool _is_normalized, bool _is_static );
+            cUnsafe_Buffer( std::string _name, size_t _byte_size, size_t _stride, Buffer::eType _type, bool _is_normalized, bool _is_static );
+            cUnsafe_Buffer( std::string _name, size_t _byte_size, size_t _stride, gl::GLenum _type, bool _is_normalized, bool _is_static );
             cUnsafe_Buffer( const cUnsafe_Buffer& _other );
             cUnsafe_Buffer( cUnsafe_Buffer&& _other ) noexcept;
 
@@ -80,6 +80,9 @@ namespace sk::Graphics
             auto GetSize() const -> size_t override { return m_byte_size_; }
             void Resize ( size_t _byte_size ) override;
             
+            auto GetStride() const -> size_t override { return m_stride_; }
+            void SetStride( size_t _new_stride ) override;
+            
             void Upload ( bool _force ) override;
 
             void Copy ( const iUnsafe_Buffer& _other ) override;
@@ -102,7 +105,8 @@ namespace sk::Graphics
 
             size_t m_byte_size_ = 0;
             void*  m_data_ = nullptr;
-
+            size_t m_stride_ = 0;
+            
             std::string m_name_;
         };
     } // OpenGL::

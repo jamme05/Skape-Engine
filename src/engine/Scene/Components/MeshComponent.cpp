@@ -13,27 +13,18 @@
 namespace sk::Object::Components
 {
 	cMeshComponent::cMeshComponent( const cShared_ptr< cAsset_Meta >& _mesh, const cShared_ptr< cAsset_Meta >& _material )
-	: m_mesh_( get_weak(), _mesh )
-	, m_material_( get_weak(), _material )
+	: m_mesh_( get_weak() )
+	, m_material_( get_weak() )
 	{
-		m_mesh_.on_asset_loaded += []( const cAsset& _asset )
-		{
-			sk::println( "Asset with name: {} was loaded.", _asset.GetMeta()->GetName().view() );
-		};
+		m_mesh_.SetAsset( _mesh );
+		m_material_.SetAsset( _material );
 	}
-
-	void cMeshComponent::render()
-	{
-		if( m_mesh_.IsLoaded() )
-			;
-			// DoSomeInternalRender();
-	}
-
+	
 	void cMeshComponent::enabled()
 	{
-		if( m_mesh_.IsValid() )
+		if( m_mesh_.IsValid() && !m_mesh_.IsLoaded() )
 			m_mesh_.LoadAsync();
-		if( m_material_.IsValid() )
+		if( m_material_.IsValid() && !m_material_.IsLoaded() )
 			m_material_.LoadAsync();
 	}
 
@@ -43,6 +34,21 @@ namespace sk::Object::Components
 			m_mesh_.Unload();
 		if( m_material_.IsValid() )
 			m_material_.Unload();
+	}
+
+	bool cMeshComponent::IsReady() const
+	{
+		return m_mesh_.IsLoaded() && m_material_.IsLoaded();
+	}
+
+	auto cMeshComponent::GetMesh() const -> Assets::cMesh*
+	{
+		return m_mesh_.GetAsset();
+	}
+
+	auto cMeshComponent::GetMaterial() const -> Assets::cMaterial*
+	{
+		return m_material_.GetAsset();
 	}
 
 	void cMeshComponent::SetMesh( const cShared_ptr< cAsset_Meta >& _mesh )

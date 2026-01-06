@@ -119,16 +119,16 @@ namespace sk::Platform
     {
         return SK_SINGLE( cSDL_Window, _name, _size );
     } // create_window
+    
+    void DestroyWindow( iWindow* _window )
+    {
+        SK_DELETE( _window );
+    }
 
     iWindow* GetMainWindow()
     {
         return cSDL_Window::g_main_window_;
     } // GetMainWindow
-
-    cSDL_Window::~cSDL_Window()
-    {
-        SDL_DestroyWindow( m_window_ );
-    } // ~cSDL_Window
     
     bool cSDL_Window::SetVisibility( const bool _visible ) const
     {

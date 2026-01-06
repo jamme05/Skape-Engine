@@ -24,18 +24,22 @@ cAsset_Meta::cAsset_Meta( const std::string_view _name, const type_info_t _asset
 
 void cAsset_Meta::Save()
 {
-    static constexpr cStringID test = std::string_view{ "Hello" };
     // TODO: Saving logic and actual metadata saving.
 }
 
 bool cAsset_Meta::IsLoading() const
 {
-    return m_flags_ & kLoading;
+    return ( m_flags_ & kLoading ) != 0;
 }
 
 bool cAsset_Meta::IsLoaded() const
 {
-    return m_flags_ & kLoaded;
+    return ( m_flags_ & kLoaded ) != 0;
+}
+
+bool cAsset_Meta::IsLoadingOrLoaded() const
+{
+    return IsLoading() || IsLoaded();
 }
 
 bool cAsset_Meta::HasMetadata() const
@@ -80,12 +84,12 @@ void cAsset_Meta::Reload()
     task.type = Assets::Jobs::eJobType::kRefresh;
 
     task.data = ::new( Memory::alloc_fast( sizeof( Assets::Jobs::sAssetTask ) ) ) Assets::Jobs::sAssetTask{
-        .path    = m_absolute_path_, 
-        .affected_assets = manager.getAssetsByPath( m_path_ ),
+        .path    = m_absolute_path_.view(), 
+        .affected_assets = manager.getAssetsByPath( m_absolute_path_ ),
         .loader = manager.GetFileLoader( m_ext_ ),
         .source = this,
     };
-			
+    
     Assets::Jobs::cAsset_Job_Manager::get().push_task( task );
 }
 
@@ -139,11 +143,14 @@ void cAsset_Meta::addReferrer( void* _source, const cWeak_Ptr< iClass >& _referr
     // TODO: Add a specific define for if the asset references will be tracked.
 #ifdef DEBUG
     m_referrers_.emplace( _referrer, _source );
-    cAsset_Manager::get().addPathReferrer( m_path_.hash(), _source );
 #endif // DEBUG
+    cAsset_Manager::get().addPathReferrer( m_path_.hash(), _source );
     
-    if( IsLoaded() )
+    if( IsLoadingOrLoaded() )
         return;
+    
+    // We mark it early.
+    m_flags_ |= kLoading;
 
     push_load_task( true, _source );
 }
@@ -161,17 +168,18 @@ void cAsset_Meta::removeReferrer( const void* _source, const cWeak_Ptr< iClass >
         m_referrers_.erase( it );
         break;
     }
-    
-    cAsset_Manager::get().addPathReferrer( m_path_.hash(), _source );
 #endif // DEBUG
 
+    const auto can_remove = cAsset_Manager::get().removePathReferrer( m_path_.hash(), _source );
+    
     if( --m_asset_refs_ != 0 )
         return;
     
     if( m_lock_refs_.load() > 0 )
         return;
 
-    push_load_task( false, _source );
+    if( can_remove )
+        push_load_task( false, _source );
 }
 
 void cAsset_Meta::push_load_task( const bool _load, const void* _source ) const
@@ -186,12 +194,15 @@ void cAsset_Meta::push_load_task( const bool _load, const void* _source ) const
         "Error no loader for asset." )
 
     // TODO: Add a cache for the affected assets.
-    const auto affected = asset_manager.getAssetsByPath( m_path_.hash() );
+    const auto affected = asset_manager.getAssetsByPath( m_absolute_path_ );
+    
+    for( auto& asset : affected )
+        asset->m_flags_ |= kLoading;
     
     Jobs::sTask task;
     task.type = _load ? Jobs::eJobType::kLoad : Jobs::eJobType::kUnload;
     task.data = ::new( Memory::alloc_fast( sizeof( Jobs::sAssetTask ) ) ) Jobs::sAssetTask{
-        .path   = m_absolute_path_,
+        .path   = m_absolute_path_.view(),
         .affected_assets = affected,
         .loader = loader,
         .source = _source,
@@ -224,21 +235,24 @@ cShared_ptr< cSerializedObject > cAsset::Serialize()
 
 void cAsset_Meta::setPath( std::filesystem::path _path )
 {
-    m_absolute_path_ = _path;
+    m_absolute_path_ = _path.string();
     m_ext_  = _path.extension().string().substr( 1 );
     m_path_ = _path.replace_extension().string();
 }
 
 void cAsset_Meta::setAsset( cAsset* _asset )
 {
-    m_flags_ &= ~kLoaded;
+    m_flags_ &= ~kLoaded & ~kLoading;
     
     if( m_asset_ != nullptr )
-        SK_FREE( m_asset_ );
+        SK_DELETE( m_asset_ );
     
     m_asset_ = _asset;
     
     if( m_asset_ != nullptr )
+    {
+        m_asset_->m_metadata_ = get_weak();
         m_flags_ |= kLoaded;
+    }
 }
 

@@ -159,9 +159,10 @@ namespace sk::Object
 		
 
 	sk_protected:
-		cShared_ptr< iComponent > m_root;
+		void SetRoot( const cShared_ptr< iComponent >& _new_root_component, bool _override_parent = false );
 
 	sk_private:
+		cShared_ptr< iComponent > m_root;
 		
 		// TODO: Use typedefs/using
 		vector             < cShared_ptr< iObject > >              m_children_   = { };

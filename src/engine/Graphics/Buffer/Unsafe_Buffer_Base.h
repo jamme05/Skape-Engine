@@ -90,8 +90,11 @@ namespace sk::Graphics
          */
         virtual void   UpdateSeg( const void* _data, size_t _size, size_t _offset = 0 ) = 0;
         [[ nodiscard ]]
-        virtual size_t GetSize( void ) const = 0;
+        virtual size_t GetSize() const = 0;
         virtual void   Resize ( size_t _byte_size ) = 0;
+        
+        virtual size_t GetStride() const = 0;
+        virtual void   SetStride( size_t _new_stride ) = 0;
 
         virtual void  Copy ( const iUnsafe_Buffer& _other ) = 0;
         virtual void  Steal( iUnsafe_Buffer&& _other ) noexcept = 0;

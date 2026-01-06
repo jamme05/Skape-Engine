@@ -66,7 +66,12 @@ auto sk::Assets::Jobs::cAsset_Job_Manager::WaitForTask( const std::atomic_bool& 
     if( m_paused_.load() )
         m_available_.notify_one();
     
-    const auto new_tail = ++m_tail_;
+    auto new_tail = ++m_tail_;
+    if( new_tail >= m_tasks_.size() )
+    {
+        new_tail = 0;
+        m_tail_.store( new_tail );
+    }
     
     auto task = sTask{};
     std::swap( task, m_tasks_[ new_tail ] );
@@ -74,6 +79,11 @@ auto sk::Assets::Jobs::cAsset_Job_Manager::WaitForTask( const std::atomic_bool& 
     --m_currently_getting_work_;
 
     return task;
+}
+
+auto sk::Assets::Jobs::cAsset_Job_Manager::GetWorkerCount() const -> size_t
+{
+    return m_worker_count_;
 }
 
 void sk::Assets::Jobs::cAsset_Job_Manager::push_task( const sTask& _task )

@@ -56,20 +56,6 @@ namespace sk
             )
         );
     } // to_string
-
-    constexpr auto cUUID::operator==( const cUUID& _other ) const
-    {
-        return m_low_ == _other.m_low_ && m_high_ == _other.m_high_;
-    }
-
-    constexpr auto cUUID::operator<=>( const cUUID& _other ) const
-    {
-        // Very much referenced from std::_Big_uint128
-        if( m_low_ != _other.m_low_ )
-            return m_low_ <=> _other.m_low_;
-
-        return m_high_ <=> _other.m_high_;
-    } // operator<=>
     
     namespace
     {

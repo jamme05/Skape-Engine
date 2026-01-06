@@ -2,6 +2,34 @@
 
 #include "Scene/Components/Internal/Layer_Component.h"
 
+auto sk::Scene::cLayer_Manager::cObjectIterator::operator++() -> cObjectIterator&
+{
+    if( ++m_object_index_ >= getObjects().size() )
+    {
+        m_layer_index_++;
+        m_object_index_ = 0;
+    }
+                
+    return *this;
+}
+
+auto sk::Scene::cLayer_Manager::cObjectIterator::operator--() -> cObjectIterator&
+{
+    if( m_object_index_ == 0 )
+    {
+        // This should cap the iterator at the end.
+        if( m_layer_index_ > 0 )
+        {
+            m_layer_index_--;
+            m_object_index_ = getObjects().size() - 1;
+        }
+    }
+    else
+        m_object_index_--;
+                
+    return *this;
+}
+
 sk::Scene::cLayer_Manager::cLayer_Manager()
 {
     AddLayer( 0, "Default" );
@@ -81,20 +109,12 @@ auto sk::Scene::cLayer_Manager::GetLayerByName( const cStringID& _name ) const -
     return std::nullopt;
 }
 
-auto sk::Scene::cLayer_Manager::GetObjectsIn( uint64_t _layers ) const -> object_range_t
+auto sk::Scene::cLayer_Manager::GetObjectsIn( const uint64_t _layers ) const -> object_range_t
 {
-    if( m_layers_.size() <= _layers )
-    {
-        SK_WARNING( sk::Severity::kGeneral, "Layer with value: {} does not exist.", _layers )
-        SK_BREAK
-        
-        return { {}, {} };
-    }
-    
     std::vector< const sLayer* > layers;
     for( uint32_t shift = 0; m_layers_.size() >= shift; ++shift )
     {
-        if( ( _layers & shift ) == 0 )
+        if( ( _layers & ( 1 << shift ) ) == 0 )
             continue;
         
         layers.emplace_back( &m_layers_[ shift ] );

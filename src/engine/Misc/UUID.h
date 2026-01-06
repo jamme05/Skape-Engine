@@ -45,8 +45,19 @@ namespace sk
         [[ nodiscard ]]
         constexpr auto get_high() const { return m_high_; }
 
-        constexpr auto operator==( const cUUID& _other ) const;
-        constexpr auto operator<=>( const cUUID& _other ) const;
+        constexpr bool operator==( const cUUID& _other ) const
+        {
+            return m_low_ == _other.m_low_ && m_high_ == _other.m_high_;
+        }
+        
+        constexpr auto operator<=>( const cUUID& _other ) const
+        {
+            // Very much referenced from std::_Big_uint128
+            if( m_low_ != _other.m_low_ )
+                return m_low_ <=> _other.m_low_;
+
+            return m_high_ <=> _other.m_high_;
+        } // operator<=>
 
         [[ nodiscard ]]
         std::string to_string( bool _dashed = true ) const;

@@ -13,13 +13,16 @@ sk::Graphics::Utils::cShader_Link::cShader_Link(
 : m_vertex_shader_  ( nullptr )
 , m_fragment_shader_( nullptr )
 {
-    m_vertex_shader_.on_changed   += CreateEvent( this, &on_shader_changed );
-    m_fragment_shader_.on_changed += CreateEvent( this, &on_shader_changed );
+    const auto event = CreateEvent( this, &cShader_Link::on_shader_changed );
+    m_vertex_shader_.on_changed   += event;
+    m_fragment_shader_.on_changed += event;
+    
+    m_program_ = gl::glCreateProgram();
     
     m_vertex_shader_   = _vertex_shader;
     m_fragment_shader_ = _fragment_shader;
     
-    m_program_ = gl::glCreateProgram();
+    Complete();
 }
 
 sk::Graphics::Utils::cShader_Link::cShader_Link( const cShader_Link& _other )
@@ -28,6 +31,8 @@ sk::Graphics::Utils::cShader_Link::cShader_Link( const cShader_Link& _other )
     
     m_vertex_shader_   = _other.m_vertex_shader_;
     m_fragment_shader_ = _other.m_fragment_shader_;
+    
+    Complete();
 }
 
 bool sk::Graphics::Utils::cShader_Link::HasUpdated() const
@@ -48,10 +53,14 @@ bool sk::Graphics::Utils::cShader_Link::IsReady() const
     return m_fragment_shader_.IsLoaded() && m_vertex_shader_.IsLoaded();
 }
 
-void sk::Graphics::Utils::cShader_Link::WaitUntilReady() const
+void sk::Graphics::Utils::cShader_Link::Complete()
 {
     m_vertex_shader_.WaitUntilLoaded();
     m_fragment_shader_.WaitUntilLoaded();
+    
+    link_shaders();
+    
+    m_reflection_  = sk::make_shared< cShader_Reflection >( m_program_ );
 }
 
 auto sk::Graphics::Utils::cShader_Link::GetVertexShader() const -> const Assets::cShader&
@@ -79,9 +88,6 @@ void sk::Graphics::Utils::cShader_Link::on_shader_changed( const Assets::eEventT
     // The asset SHOULD never be unloaded.
     if( _event == Assets::eEventType::kUnload )
         return;
-    
-    if( IsReady() )
-        link_shaders();
 }
 
 void sk::Graphics::Utils::cShader_Link::link_shaders()
@@ -95,14 +101,15 @@ void sk::Graphics::Utils::cShader_Link::link_shaders()
     gl::glAttachShader( m_program_, m_fragment_shader_->m_shader_ );
     gl::glLinkProgram( m_program_ );
     
-    m_reflection_  = sk::make_shared< cShader_Reflection >( m_program_ );
     m_has_updated_ = true;
+    m_is_linked_   = true;
 }
 
 void sk::Graphics::Utils::cShader_Link::unlink_shaders()
 {
     gl::glDetachShader( m_program_, m_vertex_shader_->m_shader_ );
     gl::glDetachShader( m_program_, m_fragment_shader_->m_shader_ );
+    gl::glLinkProgram( m_program_ );
     
     m_is_linked_ = false;
 }
