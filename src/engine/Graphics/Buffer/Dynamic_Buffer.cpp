@@ -92,9 +92,10 @@ namespace sk::Graphics
 
     void cDynamic_Buffer::UnsafeAlignAs( const size_t _align, bool _clear )
     {
-        const bool is_safe_align = ( ( _align * 8 ) % Memory::kShaderAlign ) == 0;
-        SK_WARN_IFN( sk::Severity::kConstGraphics | 10,
-            is_safe_align, TEXT( "WARNING: The type isn't aligned by 16 bits. Doing this is considered undefined behaviour." ) )
+        // TODO: Validate alignment when resizing instead of when changing the alignment.
+        // const bool is_safe_align = ( ( _align * 8 ) % Memory::kShaderAlign ) == 0;
+        // SK_WARN_IFN( sk::Severity::kConstGraphics | 10,
+        //     is_safe_align, TEXT( "WARNING: The type isn't aligned by 16 bits. Doing this is considered undefined behaviour." ) )
 
         if( _clear )
             m_buffer_->Clear();

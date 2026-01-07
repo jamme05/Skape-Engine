@@ -5,6 +5,11 @@
 
 #include <Graphics/Passes/Render_Pass.h>
 
+namespace sk::Platform
+{
+    class iWindow;
+} // sk::Platform::
+
 namespace sk::Object::Components
 {
     class cCameraComponent;
@@ -15,12 +20,15 @@ namespace sk::Graphics
     class cPipeline
     {
     public:
+        explicit cPipeline( Platform::iWindow* _window );
         virtual ~cPipeline() = default;
         using pass_vec_t = std::vector< std::unique_ptr< Passes::iPass > >;
 
         virtual void Initialize();
         virtual void Execute   ();
         virtual void Destroy   ();
+        
+        auto GetWindow() const { return m_window_; }
 
         template< class Ty, class... Args >
         Ty&  AddPass( Args&&... _args );
@@ -28,6 +36,9 @@ namespace sk::Graphics
         [[ nodiscard ]]
         auto GetPass( size_t _index ) const -> Passes::iPass&;
 
+    protected:
+        Platform::iWindow* m_window_;
+        
     private:
         bool       m_initialized_ = false;
         pass_vec_t m_passes_      = {};

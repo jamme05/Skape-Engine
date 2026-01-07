@@ -62,6 +62,7 @@ void cShader_Reflection::fetch_attributes()
         
         attribute.name   = std::string_view( a_name_buffer, name_length );
         attribute.index  = i;
+        // Size may be array size here.
         attribute.stride = static_cast< uint16_t >( size );
         attribute.flags  = a_name_buffer[ 0 ] == '_' ? kHidden : 0;
 

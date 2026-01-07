@@ -72,14 +72,14 @@ cGLRenderer::cGLRenderer()
         if( std::string_view{ "glGetError" } != function->name() )
             function->addCallbackMask( glbinding::CallbackMask::After );
     }
-    /*
+    //*
     glbinding::setAfterCallback([]( const glbinding::FunctionCall& ){
         if( const auto error = gl::glGetError(); error != gl::GL_NO_ERROR ){
             SK_BREAK;
             SK_WARNING( sk::Severity::kGraphics, "OpenGL Error: {}", static_cast< size_t >( error ) )
         }
     } );
-    /**/
+    //**/
     
     cAsset_Manager::get().AddFileLoaderForExtensions(
         { "frag", "vert", "comp" }, &loadGLSL );

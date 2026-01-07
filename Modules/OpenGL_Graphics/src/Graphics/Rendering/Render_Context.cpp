@@ -15,7 +15,7 @@ namespace sk::Graphics::Rendering
     : cRender_Context( _frame_buffers, _render_targets, false )
     {} // cRender_Context
     
-    cRender_Context::cRender_Context( const size_t _frame_buffers, const size_t _render_targets, bool _is_window )
+    cRender_Context::cRender_Context( const size_t _frame_buffers, const size_t _render_targets, const bool _is_window )
     : m_frame_buffers_( _frame_buffers )
     {
         SK_ERR_IF( _frame_buffers == 0,
@@ -24,8 +24,8 @@ namespace sk::Graphics::Rendering
         // Initialize frame buffers.
         for( size_t i = 0; i < _frame_buffers; ++i )
         {
-            const auto& frame_buffer = m_frame_buffers_[ i ] = SK_NEW( cFrame_Buffer, _render_targets );
-            frame_buffer->create( true );
+            const auto& frame_buffer = m_frame_buffers_[ i ] = SK_SINGLE( cFrame_Buffer, _render_targets );
+            frame_buffer->create( _is_window );
         }
         m_front_ = m_frame_buffers_.front();
         m_back_ = m_frame_buffers_.back();

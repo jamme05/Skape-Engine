@@ -70,7 +70,8 @@ namespace sk
 
         auto operator=( const cAsset_Ref& _other ) -> cAsset_Ref&;
         auto operator=( cAsset_Ref&& _other ) noexcept -> cAsset_Ref&;
-        auto operator=( const cShared_ptr< cAsset_Meta >& _meta );
+        auto operator=( const cShared_ptr< cAsset_Meta >& _meta ) -> cAsset_Ref&;
+        auto operator=( std::nullptr_t ) -> cAsset_Ref&;
         
         operator bool() const;
 
@@ -150,11 +151,21 @@ namespace sk
     }
 
     template< reflected Ty, eAsset_Ref_Mode Mode > requires std::is_base_of_v< cAsset, Ty >
-    auto cAsset_Ref< Ty, Mode >::operator=( const cShared_ptr< cAsset_Meta >& _meta )
+    auto cAsset_Ref< Ty, Mode >::operator=( const cShared_ptr< cAsset_Meta >& _meta ) -> cAsset_Ref&
     {
         base_t::SetAsset( _meta );
 
         try_load();
+        
+        return *this;
+    }
+
+    template< reflected Ty, eAsset_Ref_Mode Mode > requires std::is_base_of_v< cAsset, Ty >
+    auto cAsset_Ref< Ty, Mode >::operator=( std::nullptr_t ) -> cAsset_Ref&
+    {
+        base_t::SetAsset( nullptr );
+        
+        return *this;
     }
 
     template< reflected Ty, eAsset_Ref_Mode Mode > requires std::is_base_of_v< cAsset, Ty >

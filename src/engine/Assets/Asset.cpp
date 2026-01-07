@@ -85,7 +85,7 @@ void cAsset_Meta::Reload()
 
     task.data = ::new( Memory::alloc_fast( sizeof( Assets::Jobs::sAssetTask ) ) ) Assets::Jobs::sAssetTask{
         .path    = m_absolute_path_.view(), 
-        .affected_assets = manager.getAssetsByPath( m_absolute_path_ ),
+        .affected_assets = manager.GetAssetsByPrecisePath( m_absolute_path_ ),
         .loader = manager.GetFileLoader( m_ext_ ),
         .source = this,
     };
@@ -194,7 +194,7 @@ void cAsset_Meta::push_load_task( const bool _load, const void* _source ) const
         "Error no loader for asset." )
 
     // TODO: Add a cache for the affected assets.
-    const auto affected = asset_manager.getAssetsByPath( m_absolute_path_ );
+    const auto affected = asset_manager.GetAssetsByPrecisePath( m_absolute_path_ );
     
     for( auto& asset : affected )
         asset->m_flags_ |= kLoading;

@@ -51,7 +51,7 @@ void sk::Graphics::Passes::cForward_Pass::RenderWithCamera( const Object::Compon
 
     for( auto [ fst, lst ] = layer_manager.GetMeshesIn( _camera.GetLayers() ); fst != lst; ++fst )
     {
-        if( !fst )
+        if( !fst.IsValid() )
             continue;
         
         auto& mesh = *fst;

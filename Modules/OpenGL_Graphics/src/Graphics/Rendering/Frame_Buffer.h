@@ -88,6 +88,7 @@ namespace sk::Graphics::Rendering
         void ResetMaterial();
         
         bool DrawIndexed( size_t _start = 0, size_t _end = std::numeric_limits< size_t >::max() ) const;
+        bool DrawAuto() const;
 
     private:
         void create ( bool _is_window_frame );

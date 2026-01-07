@@ -49,6 +49,11 @@ namespace sk::Graphics::Rendering
 
         virtual void Swap();
         
+        auto begin()       { return m_frame_buffers_.begin(); }
+        auto begin() const { return m_frame_buffers_.begin(); }
+        auto end  ()       { return m_frame_buffers_.end();   }
+        auto end  () const { return m_frame_buffers_.end();   }
+        
     protected:
         cRender_Context( size_t _frame_buffers, size_t _render_targets, bool _is_window );
         

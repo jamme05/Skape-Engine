@@ -120,9 +120,14 @@ namespace sk::Scene
             using reference         = value_type&;
             using iterator_category = std::forward_iterator_tag;
 
-            operator bool() const
+            [[ nodiscard ]] bool IsValid() const
             {
                 return !getMeshes().empty();
+            }
+            
+            operator bool() const
+            {
+                return IsValid();
             }
             
             auto& operator*() const

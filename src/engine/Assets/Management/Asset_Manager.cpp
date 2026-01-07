@@ -59,7 +59,7 @@ namespace sk
 			
 			queued.insert( path_hash );
 			
-			auto assets = getAssetsByPath( path_hash );
+			auto assets = GetAssetsByPrecisePath( path_hash );
 			
 			// It's ugly but it works
 			// TODO: Use stringID instead of str_hash in places like these.
@@ -108,22 +108,56 @@ namespace sk
 		return assets;
 	} // getAssetsByName
 
-	auto cAsset_Manager::getAssetByPath( const str_hash& _path_hash ) -> cShared_ptr< cAsset_Meta >
+	auto cAsset_Manager::GetAssetByPath( const std::string_view& _path ) -> cShared_ptr< cAsset_Meta >
+	{
+		if( _path[ 0 ] != '.' )
+		{
+			std::string new_path( _path.size() + 2, 0 );
+			
+			if( _path[ 1 ] == '/' )
+				new_path = '.' + std::string{ _path };
+			else
+				new_path = "./" + std::string{ _path };
+			
+			return getAssetByPrecisePath( new_path );
+		}
+		
+		return getAssetByPrecisePath( _path );
+	} // getAssetByPath
+
+	auto cAsset_Manager::getAssetsByPath( const std::string_view& _path ) -> Assets::cAsset_List
+	{
+		if( _path[ 0 ] != '.' )
+		{
+			std::string new_path( _path.size() + 2, 0 );
+			
+			if( _path[ 1 ] != '/' )
+				new_path = '.' + std::string{ _path };
+			else
+				new_path = "./" + std::string{ _path };
+			
+			return GetAssetsByPrecisePath( new_path );
+		}
+		
+		return GetAssetsByPrecisePath( _path );
+	} // getAssetsByPath
+	
+	auto cAsset_Manager::getAssetByPrecisePath( const str_hash& _path_hash ) -> cShared_ptr<cAsset_Meta>
 	{
 		if( const auto itr = m_asset_path_map_.find( _path_hash ); itr != m_asset_path_map_.end() )
 			return itr->second;
 
 		return nullptr;
-	} // getAssetByPath
+	}
 
-	auto cAsset_Manager::getAssetsByPath( const str_hash& _path_hash ) -> Assets::cAsset_List
+	auto cAsset_Manager::GetAssetsByPrecisePath( const str_hash& _path_hash ) -> Assets::cAsset_List
 	{
 		Assets::cAsset_List assets;
 		for( auto [ fst, lst ] = m_asset_path_map_.equal_range( _path_hash ); fst != lst; ++fst )
 			assets.AddAsset( fst->second );
 
 		return assets;
-	} // getAssetsByPath
+	}
 
 	cUUID cAsset_Manager::registerAsset( const cShared_ptr< cAsset_Meta >& _asset, const bool _reload )
 	{

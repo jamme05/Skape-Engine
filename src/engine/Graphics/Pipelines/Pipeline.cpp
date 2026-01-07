@@ -7,6 +7,10 @@
 #include "Scene/Managers/EventManager.h"
 #include "Scene/Managers/SceneManager.h"
 
+sk::Graphics::cPipeline::cPipeline( Platform::iWindow* _window )
+: m_window_( _window )
+{}
+
 void sk::Graphics::cPipeline::Initialize()
 {
     for( const auto& pass : m_passes_ )

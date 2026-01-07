@@ -1,8 +1,4 @@
-﻿/*
- *
- * COPYRIGHT William Ask S. Ness 2025
- *
- */
+﻿
 
 #pragma once
 
@@ -11,15 +7,15 @@
 namespace sk::Platform
 {
     class iWindow;
-}
+} // sk::Platform::
 
 namespace sk::Graphics
 {
-    class cForward_Pipeline final : public cPipeline
+    class cDeferred_Pipeline : public cPipeline
     {
     public:
-        explicit cForward_Pipeline( Platform::iWindow* _window );
+        explicit cDeferred_Pipeline( Platform::iWindow* _window );
         void Initialize() override;
         void Execute() override;
     };
-} // sk::Graphics
+} // sk::Graphics::

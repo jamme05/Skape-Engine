@@ -56,9 +56,9 @@ namespace sk::Math
 		~cVector( void ) = default;
 
 		// Cast to other Vectors:
-		template <typename T2>
-		requires ( !std::is_same_v< T, T2 > )
-		operator cVector< 2, T2>() { return cVector< 2, T2 >(*this); }
+		// template <typename T2>
+		// requires ( !std::is_same_v< T, T2 > )
+		// operator cVector< 2, T2>() { return cVector< 2, T2 >(*this); }
 		template <typename T2> operator cVector< 3, T2>() { return cVector< 3, T2 >(*this); }
 		template <typename T2> explicit operator cVector< 4, T2>() { return cVector< 4, T2 >(*this); }
 

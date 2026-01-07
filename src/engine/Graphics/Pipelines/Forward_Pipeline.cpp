@@ -4,7 +4,7 @@
 #include "Platform/Window/Window_Base.h"
 
 sk::Graphics::cForward_Pipeline::cForward_Pipeline( Platform::iWindow* _window )
-: m_window_( _window )
+: cPipeline( _window )
 {
     
 }

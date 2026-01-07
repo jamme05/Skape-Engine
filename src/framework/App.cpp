@@ -13,6 +13,7 @@
 #include "Assets/Texture.h"
 #include "Assets/Management/Asset_Job_Manager.h"
 #include "Graphics/Renderer_Impl.h"
+#include "Graphics/Pipelines/Deferred_Pipeline.h"
 #include "Graphics/Pipelines/Forward_Pipeline.h"
 #include "Graphics/Pipelines/Pipeline.h"
 #include "Math/Types.h"
@@ -48,8 +49,6 @@ cApp::cApp( void )
 		"Unable to show window." )
 	
 	sk::cSceneManager::init();
-	
-	sk::Graphics::cRenderer::get().SetPipeline( SK_SINGLE( sk::Graphics::cForward_Pipeline, m_main_window_ ) );
 } // cApp
 
 cApp::~cApp( void )
@@ -72,14 +71,19 @@ void cApp::create( void )
 
 	auto list_1 = asset_m.loadFile( "models/humanforscale.glb" );
 	auto list_2 = asset_m.loadFile( "models/heheToiletwithtextures.glb" );
-	const auto shader_frag = *asset_m.loadFile( "shaders/forward.frag" ).begin();
-	const auto shader_vert = *asset_m.loadFile( "shaders/forward.vert" ).begin();
+	const auto shader_frag = *asset_m.loadFile( "shaders/gpass.frag" ).begin();
+	const auto shader_vert = *asset_m.loadFile( "shaders/gpass.vert" ).begin();
+	asset_m.loadFile( "shaders/screen.vert" );
+	asset_m.loadFile( "shaders/deferred.frag" );	
 	
 	auto mat1 = asset_m.CreateAsset< sk::Assets::cMaterial >( "Material Test",
 		sk::Graphics::Utils::cShader_Link{ shader_vert, shader_frag } );
 	
-	auto mat2 = asset_m.CreateAsset< sk::Assets::cMaterial >( "Material Test",
+	auto mat2 = asset_m.CreateAsset< sk::Assets::cMaterial >( "Material Test 2",
 		sk::Graphics::Utils::cShader_Link{ shader_vert, shader_frag } );
+	
+	// sk::Graphics::cRenderer::get().SetPipeline( SK_SINGLE( sk::Graphics::cForward_Pipeline, m_main_window_ ) );
+	sk::Graphics::cRenderer::get().SetPipeline( SK_SINGLE( sk::Graphics::cDeferred_Pipeline, m_main_window_ ) );
 	
 	auto christopher_t = list_1.GetAssetOfType< sk::Assets::cTexture >();
 	auto christopher_m = list_1.GetAssetOfType< sk::Assets::cMesh    >();
@@ -88,11 +92,6 @@ void cApp::create( void )
 
 	m_scene = sk::make_shared< sk::cScene >();
 	m_scene->create_object< sk::Object::cCameraFlight >( "Camera Free Flight" )->setAsMain();
-
-	//auto mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 1" );
-	//mesh->getTransform().getPosition() = { -10.0f, 0.0f, 0.0f };
-	//mesh->getTransform().update();
-	//mesh->addComponent< sk::Object::Components::cMesh >( cube );
 
 	auto mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 2" );
 	mesh->GetTransform().getPosition() = { 1.0f, 0.0f, 3.5f };
@@ -107,11 +106,6 @@ void cApp::create( void )
 	component = mesh->AddComponent< sk::Object::Components::cMeshComponent >( toilet_m, mat2 );
 	component->enabled();
 	component->GetTransform().update();
-
-	//mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 4" );
-	//mesh->getTransform().getPosition() = { 10.0f, 0.0f, 0.0f };
-	//mesh->getTransform().update();
-	//mesh->addComponent< sk::Object::Components::cMesh >( cube )->setTexture( toilet_t );
 
 	sk::cSceneManager::get().registerScene( m_scene );
 } // create

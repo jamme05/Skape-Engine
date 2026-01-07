@@ -11,7 +11,7 @@
 namespace sk::Graphics::Rendering
 {
     cWindow_Context::cWindow_Context( Platform::iWindow& _window )
-    : cRender_Context( 1 )
+    : cRender_Context( 1, 0, true )
     , m_window_( &_window )
     , m_resolution_( _window.GetResolution() )
     {

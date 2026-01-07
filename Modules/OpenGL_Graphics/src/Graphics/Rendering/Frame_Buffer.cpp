@@ -21,7 +21,6 @@ namespace sk::Graphics::Rendering
     cFrame_Buffer::cFrame_Buffer( const size_t _render_targets )
     : m_render_targets_( _render_targets )
     {
-        SK_ERR_IF( _render_targets == 0, "ERROR: Can't create a frame buffer with 0 render targets." )
         SK_ERR_IF( _render_targets > 31, "ERROR: OpenGL doesn't support more than 31 render targets." )
     } // cFrame_Buffer
 
@@ -44,6 +43,20 @@ namespace sk::Graphics::Rendering
         gl::glBindFramebuffer( gl::GL_FRAMEBUFFER, m_frame_buffer_ );
         gl::glViewport( _viewport.x, _viewport.y, static_cast< gl::GLsizei >( _viewport.width ), static_cast< gl::GLsizei >( _viewport.height ) );
         gl::glScissor ( _scissor.x,   _scissor.y, static_cast< gl::GLsizei >(  _scissor.width ), static_cast< gl::GLsizei >(  _scissor.height ) );
+        
+        if( !m_render_targets_.empty() )
+        {
+            // TODO: Maybe limit the max number of render targets, to like... 8?
+            static constexpr gl::GLenum kAttachments[] = {
+                gl::GL_COLOR_ATTACHMENT0,  gl::GL_COLOR_ATTACHMENT1,  gl::GL_COLOR_ATTACHMENT2,  gl::GL_COLOR_ATTACHMENT3,  gl::GL_COLOR_ATTACHMENT4,
+                gl::GL_COLOR_ATTACHMENT5,  gl::GL_COLOR_ATTACHMENT6,  gl::GL_COLOR_ATTACHMENT7,  gl::GL_COLOR_ATTACHMENT8,  gl::GL_COLOR_ATTACHMENT9,
+                gl::GL_COLOR_ATTACHMENT10, gl::GL_COLOR_ATTACHMENT11, gl::GL_COLOR_ATTACHMENT12, gl::GL_COLOR_ATTACHMENT13, gl::GL_COLOR_ATTACHMENT14,
+                gl::GL_COLOR_ATTACHMENT15, gl::GL_COLOR_ATTACHMENT16, gl::GL_COLOR_ATTACHMENT17, gl::GL_COLOR_ATTACHMENT18, gl::GL_COLOR_ATTACHMENT19,
+                gl::GL_COLOR_ATTACHMENT20, gl::GL_COLOR_ATTACHMENT21, gl::GL_COLOR_ATTACHMENT22, gl::GL_COLOR_ATTACHMENT23, gl::GL_COLOR_ATTACHMENT24,
+            };
+            
+            gl::glDrawBuffers( static_cast< gl::GLsizei >( m_render_targets_.size() ), kAttachments );
+        }
     } // Begin
 
     void cFrame_Buffer::End()
@@ -281,6 +294,21 @@ namespace sk::Graphics::Rendering
         
         gl::glBindVertexArray( m_vertex_array_ );
         gl::glDrawElements( gl::GL_TRIANGLES, static_cast< gl::GLsizei >( size ), type, nullptr );
+        gl::glBindVertexArray( 0 );
+        
+        return true;
+    }
+
+    bool cFrame_Buffer::DrawAuto() const
+    {
+        if( m_bound_index_buffer_ != nullptr )
+            return DrawIndexed();
+        
+        if( m_bound_vertex_buffers_.empty() )
+            return false;
+        
+        gl::glBindVertexArray( m_vertex_array_ );
+        gl::glDrawArrays( gl::GL_TRIANGLES, 0, static_cast< gl::GLsizei >( m_bound_vertex_buffers_[ 0 ]->GetSize() ) );
         gl::glBindVertexArray( 0 );
         
         return true;

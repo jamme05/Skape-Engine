@@ -66,7 +66,7 @@ namespace sk::Platform
         float       m_aspect_ratio_;
         SDL_Window* m_window_;
         
-        cShared_ptr< Graphics::Rendering::cWindow_Context > m_window_context_;
+        std::unique_ptr< Graphics::Rendering::cWindow_Context > m_window_context_;
         
         std::vector< SDL_GLContext > m_contexts_;
     };

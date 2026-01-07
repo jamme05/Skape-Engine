@@ -68,26 +68,19 @@ namespace sk
 			return nullptr;
 		} // getAsset
 
-		template< class Ty, class... Args >
-		requires std::is_base_of_v< cAsset_Meta, Ty >
-		cShared_ptr< Ty > createAsset( Args... _args ) // TODO: Add &&
-		{
-			auto asset = Ty::create_shared( std::forward< Args >( _args )... );
-			if( asset )
-				registerAsset( asset );
-
-			return asset;
-		} // createAsset
-
 		// Gets the first asset by name.
 		auto getAssetByName ( const str_hash& _name_hash ) -> cShared_ptr< cAsset_Meta >;
 		// Gets all assets by name.
 		auto getAssetsByName( const str_hash& _name_hash ) -> Assets::cAsset_List;
 
 		// Gets the first asset by path.
-		auto getAssetByPath ( const str_hash& _path_hash ) -> cShared_ptr< cAsset_Meta >;
+		auto GetAssetByPath ( const std::string_view& _path ) -> cShared_ptr< cAsset_Meta >;
 		// Gets all assets made from the same file. ( Multiple in the case of packs )
-		auto getAssetsByPath( const str_hash& _path_hash ) -> Assets::cAsset_List;
+		auto getAssetsByPath( const std::string_view& _path ) -> Assets::cAsset_List;
+		// Gets the first asset by path. Will not try to fix your path.
+		auto getAssetByPrecisePath ( const str_hash& _path_hash ) -> cShared_ptr< cAsset_Meta >;
+		// Gets all assets made from the same file. ( Multiple in the case of packs ). Will not try to fix your path.
+		auto GetAssetsByPrecisePath( const str_hash& _path_hash ) -> Assets::cAsset_List;
 
 		 /**
 		  * 
@@ -122,7 +115,7 @@ namespace sk
 		auto GetAssetPtrByPath ( const str_hash& _path_hash, const cShared_ptr< iClass >& _self = nullptr, const bool _load_asset = true )
 			-> cAsset_Ptr< Ty >
 		{
-			if( const auto asset = getAssetByPath( _path_hash ) )
+			if( const auto asset = getAssetByPrecisePath( _path_hash ) )
 				return GetAssetPtr< Ty >( asset, _self, _load_asset );
 			return cAsset_Ptr< Ty >( _self );
 		}
@@ -162,7 +155,7 @@ namespace sk
 		auto GetAssetRefByPath ( const str_hash& _path_hash, const cShared_ptr< iClass >& _self = nullptr )
 			-> cAsset_Ref< Ty, Mode >
 		{
-			if( const auto asset = getAssetByPath( _path_hash ) )
+			if( const auto asset = getAssetByPrecisePath( _path_hash ) )
 				return GetAssetRef< Ty, Mode >( asset, _self );
 			return cAsset_Ref< Ty, Mode >( _self );
 		}
