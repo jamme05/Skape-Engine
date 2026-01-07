@@ -32,7 +32,6 @@ namespace sk
     {
     public:
         cAsset_Ref_Base() : cAsset_Ptr_Base() {}
-        cAsset_Ref_Base( const cShared_ptr< cAsset_Meta >& _meta ) : cAsset_Ptr_Base( _meta ) {}
         
         using cAsset_Ptr_Base::IsLoaded;
         using cAsset_Ptr_Base::IsValid;
@@ -44,7 +43,6 @@ namespace sk
     {
     public:
         cAsset_Ref_Base() : cAsset_Ptr_Base() {}
-        cAsset_Ref_Base( const cShared_ptr< cAsset_Meta >& _meta ) : cAsset_Ptr_Base( _meta ) {}
     };
 
     // Will keep the asset loading during its lifetime if mode it's mode is automatic. Otherwise, you'll get control.
@@ -67,6 +65,7 @@ namespace sk
         cAsset_Ref( cAsset_Ref&& _other ) noexcept;
         cAsset_Ref( const cWeak_Ptr< iClass >& _self );
         cAsset_Ref( const cWeak_Ptr< iClass >& _self, const cShared_ptr< cAsset_Meta >& _meta );
+        ~cAsset_Ref() override;
 
         auto operator=( const cAsset_Ref& _other ) -> cAsset_Ref&;
         auto operator=( cAsset_Ref&& _other ) noexcept -> cAsset_Ref&;
@@ -101,7 +100,7 @@ namespace sk
         void on_asset_event( cAsset_Meta& _meta, const Assets::eEventType _event ) override;
     };
 
-    template< reflected Ty, eAsset_Ref_Mode Mode > requires std::is_base_of_v<cAsset, Ty>
+    template< reflected Ty, eAsset_Ref_Mode Mode > requires std::is_base_of_v< cAsset, Ty >
     cAsset_Ref< Ty, Mode >::cAsset_Ref( const cAsset_Ref& _other )
     {
         base_t::operator=( _other );
@@ -109,24 +108,31 @@ namespace sk
         try_load();
     }
 
-    template< reflected Ty, eAsset_Ref_Mode Mode > requires std::is_base_of_v<cAsset, Ty>
-    cAsset_Ref<Ty, Mode>::cAsset_Ref( cAsset_Ref&& _other ) noexcept
+    template< reflected Ty, eAsset_Ref_Mode Mode > requires std::is_base_of_v< cAsset, Ty >
+    cAsset_Ref< Ty, Mode >::cAsset_Ref( cAsset_Ref&& _other ) noexcept
     {
         base_t::operator=( std::move( _other ) );
     }
 
     template< reflected Ty, eAsset_Ref_Mode Mode > requires std::is_base_of_v< cAsset, Ty >
     cAsset_Ref< Ty, Mode >::cAsset_Ref( const cWeak_Ptr< iClass >& _self )
-        : on_changed( _self )
+    : on_changed( _self )
     {
     }
 
     template< reflected Ty, eAsset_Ref_Mode Mode > requires std::is_base_of_v< cAsset, Ty >
     cAsset_Ref< Ty, Mode >::cAsset_Ref( const cWeak_Ptr< iClass >& _self, const cShared_ptr< cAsset_Meta >& _meta )
-        : ref_base_t( _meta )
-          , on_changed( _self )
+    : on_changed( _self )
     {
+        base_t::SetAsset( _meta );
         try_load();
+    }
+
+    template< reflected Ty, eAsset_Ref_Mode Mode > requires std::is_base_of_v<cAsset, Ty>
+    cAsset_Ref< Ty, Mode >::~cAsset_Ref()
+    {
+        if( base_t::m_meta_.is_valid() )
+            unsubscribe();
     }
 
     template< reflected Ty, eAsset_Ref_Mode Mode > requires std::is_base_of_v< cAsset, Ty >
@@ -244,6 +250,7 @@ namespace sk
     template< reflected Ty, eAsset_Ref_Mode Mode > requires std::is_base_of_v< cAsset, Ty >
     void cAsset_Ref< Ty, Mode >::subscribe()
     {
+        // TODO: Make the events really be sure of what is being deleted.
         base_t::m_meta_->AddListener( sk::CreateEvent( this, &cAsset_Ref::on_asset_event ) );
     }
 

@@ -178,16 +178,17 @@ namespace sk
 		
 		template< class Ty, class... Args >
 		requires std::is_base_of_v< cAsset, Ty >
-		auto CreateAsset( std::string_view _name, Args&&... _args ) -> cShared_ptr< cAsset_Meta >
+		auto CreateAsset( std::string_view _name, Args&&... _args ) -> std::pair< cShared_ptr< cAsset_Meta >, Ty* >
 		{
 			cShared_ptr< cAsset_Meta > meta = sk::make_shared< cAsset_Meta >( _name, kTypeInfo< Ty > );
-			meta->setAsset( SK_SINGLE( Ty, std::forward< Args >( _args )... ) );
+			auto asset = SK_SINGLE( Ty, std::forward< Args >( _args )... );
+			meta->setAsset( asset );
 			
-			meta->m_flags_ |= cAsset_Meta::eFlags::kManualCreation;
+			meta->m_flags_ |= cAsset_Meta::eFlags::kManualCreation | cAsset_Meta::eFlags::kLoaded;
 			
 			registerAsset( meta );
 			
-			return meta;
+			return std::make_pair( meta, asset );
 		}
 
 		static auto getAbsolutePath ( const std::filesystem::path& _path ) -> std::filesystem::path;

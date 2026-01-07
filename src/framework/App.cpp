@@ -19,6 +19,7 @@
 #include "Math/Types.h"
 #include "Memory/Tracker/Tracker.h"
 #include "Misc/UUID.h"
+#include "Platform/Time.h"
 #include "Platform/Window/Window_Base.h"
 #include "Reflection/RuntimeClass.h"
 #include "Reflection/RuntimeStruct.h"
@@ -77,37 +78,42 @@ void cApp::create( void )
 	asset_m.loadFile( "shaders/screen.vert" );
 	asset_m.loadFile( "shaders/deferred.frag" );	
 	
-	auto mat1 = asset_m.CreateAsset< sk::Assets::cMaterial >( "Material Test",
-		sk::Graphics::Utils::cShader_Link{ shader_vert, shader_frag } );
-	
-	auto mat2 = asset_m.CreateAsset< sk::Assets::cMaterial >( "Material Test 2",
-		sk::Graphics::Utils::cShader_Link{ shader_vert, shader_frag } );
+	// TODO: Create a material instance class.
 	
 	// sk::Graphics::cRenderer::get().SetPipeline( SK_SINGLE( sk::Graphics::cForward_Pipeline, m_main_window_ ) );
 	sk::Graphics::cRenderer::get().SetPipeline( SK_SINGLE( sk::Graphics::cDeferred_Pipeline, m_main_window_ ) );
-	
-	auto christopher_t = list_1.GetAssetOfType< sk::Assets::cTexture >();
+
+	const auto christopher_t = list_1.GetAssetOfType< sk::Assets::cTexture >();
 	auto christopher_m = list_1.GetAssetOfType< sk::Assets::cMesh    >();
-	auto toilet_t      = list_2.GetAssetOfType< sk::Assets::cTexture >();
+	const auto toilet_t      = list_2.GetAssetOfType< sk::Assets::cTexture >();
 	auto toilet_m      = list_2.GetAssetOfType< sk::Assets::cMesh    >();
 
 	m_scene = sk::make_shared< sk::cScene >();
 	m_scene->create_object< sk::Object::cCameraFlight >( "Camera Free Flight" )->setAsMain();
+	
+	auto mat1 = asset_m.CreateAsset< sk::Assets::cMaterial >( "Material Test",
+	sk::Graphics::Utils::cShader_Link{ shader_vert, shader_frag } );
+	mat1.second->SetTexture( "mainTexture", christopher_t );
 
 	auto mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 2" );
-	mesh->GetTransform().getPosition() = { 1.0f, 0.0f, -3.5f };
+	mesh->GetTransform().getPosition() = { 1.0f, 0.0f, 3.5f };
 	mesh->GetTransform().update();
 	auto spin_component = mesh->AddComponent< sk::Object::Components::cSpinComponent >();
-	auto component = mesh->AddComponent< sk::Object::Components::cMeshComponent >( christopher_m, mat1 );
+	auto component = mesh->AddComponent< sk::Object::Components::cMeshComponent >( christopher_m, mat1.first );
 	component->enabled();
 	component->GetTransform().update();
 	component->SetParent( spin_component );
+	
+		
+	auto mat2 = asset_m.CreateAsset< sk::Assets::cMaterial >( "Material Test 2",
+		sk::Graphics::Utils::cShader_Link{ shader_vert, shader_frag } );
+	mat2.second->SetTexture( "mainTexture", toilet_t );
 
 	mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 3" );
-	mesh->GetTransform().getPosition() = { -2.0f, 0.0f, -3.5f };
+	mesh->GetTransform().getPosition() = { -2.0f, 0.0f, 3.5f };
 	mesh->GetTransform().update();
 	spin_component = mesh->AddComponent< sk::Object::Components::cSpinComponent >();
-	component = mesh->AddComponent< sk::Object::Components::cMeshComponent >( toilet_m, mat2 );
+	component = mesh->AddComponent< sk::Object::Components::cMeshComponent >( toilet_m, mat2.first );
 	component->enabled();
 	component->GetTransform().update();
 	component->SetParent( spin_component );
@@ -203,8 +209,9 @@ void cApp::destroy() const
 
 void cApp::run()
 {
-	sk::cSceneManager::get().update();
+	sk::Time::Update();
 	
+	sk::cSceneManager::get().update();
 	auto& pipeline = *sk::Graphics::cRenderer::get().GetPipeline();
 	
 	sk::Graphics::cRenderer::get().Update();

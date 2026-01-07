@@ -24,7 +24,7 @@ void cDeferred_Pipeline::Initialize()
     auto& asset_manager = cAsset_Manager::get();
     const auto screen_shader   = asset_manager.GetAssetByPath( "shaders/screen.vert" );
     const auto deferred_shader = asset_manager.GetAssetByPath( "shaders/deferred.frag" );
-    const auto material_meta = asset_manager.CreateAsset< Assets::cMaterial >(
+    const auto [ material_meta, _ ] = asset_manager.CreateAsset< Assets::cMaterial >(
         "Deferred Screen Material", Utils::cShader_Link{ screen_shader, deferred_shader }
     );
     m_screen_material_ = material_meta;
@@ -39,7 +39,7 @@ void cDeferred_Pipeline::Execute()
     cPipeline::Execute();
 
     const auto& front = m_gbuffer_pass_->GetFront();
-    auto& color_buffer = front.GetRenderTarget( 0 );
+    auto& color_buffer = front.GetRenderTarget( 2 );
 
-    m_screen_material_->SetTexture( "screenTexture", color_buffer );
+    m_screen_material_->SetTexture( "Albedo", color_buffer );
 }

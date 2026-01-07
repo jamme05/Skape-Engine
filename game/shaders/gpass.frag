@@ -8,15 +8,11 @@ in vec4 WorldPos;
 in vec3 WorldNormal;
 in vec2 TexCoord;
 
-uniform float aatempSize;
-
-uniform sampler2D cdefaultTexture;
-uniform sampler2D bdefaultTexture1;
-uniform sampler2D adefaultTexture2;
+uniform sampler2D mainTexture;
 
 void main()
 {
     gPosition   = WorldPos.xyz;
     gNormal     = WorldNormal;
-    gAlbedoSpec = aatempSize * texture( cdefaultTexture, TexCoord ) * texture( bdefaultTexture1, TexCoord ) * texture( adefaultTexture2, TexCoord );
+    gAlbedoSpec = texture( mainTexture, TexCoord );
 }

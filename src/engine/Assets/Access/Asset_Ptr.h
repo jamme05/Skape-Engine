@@ -36,7 +36,7 @@ namespace sk
         cAsset_Ptr( const cWeak_Ptr< iClass >& _self, const cShared_ptr< cAsset_Meta >& _meta );
         cAsset_Ptr( const cAsset_Ptr& _other, const cWeak_Ptr< iClass >& _self = nullptr );
         cAsset_Ptr( cAsset_Ptr&& _other ) noexcept;
-        ~cAsset_Ptr() override = default;
+        ~cAsset_Ptr() override;
 
         cAsset_Ptr& operator=( const cAsset_Ptr& _other );
         cAsset_Ptr& operator=( cAsset_Ptr&& _other ) noexcept;
@@ -87,6 +87,13 @@ namespace sk
     , on_asset_unloaded( std::move( _other.on_asset_unloaded ) )
     {
         base_t::operator=( std::move( _other ) );
+    }
+
+    template< reflected Ty > requires std::is_base_of_v<cAsset, Ty>
+    cAsset_Ptr< Ty >::~cAsset_Ptr()
+    {
+        if( m_meta_.is_valid() )
+            unsubscribe();
     }
 
     template< reflected Ty > requires std::is_base_of_v< cAsset, Ty >

@@ -317,6 +317,22 @@ bool cFrame_Buffer::UseMaterial( const Assets::cMaterial& _material )
         gl::glUniform1i( sampler->location, static_cast< gl::GLint >( i ) );
     }
 
+    gl::glEnable( gl::GL_DEPTH_TEST );
+    gl::GLenum depth_method = gl::GL_NEVER;
+    switch( _material.GetDepthTest() )
+    {
+    case Assets::cMaterial::eDepthTest::kNever:        depth_method = gl::GL_NEVER;    break;
+    case Assets::cMaterial::eDepthTest::kAlways:       depth_method = gl::GL_ALWAYS;   break;
+    case Assets::cMaterial::eDepthTest::kLess:         depth_method = gl::GL_LESS;     break;
+    case Assets::cMaterial::eDepthTest::kLessEqual:    depth_method = gl::GL_LEQUAL;   break;
+    case Assets::cMaterial::eDepthTest::kGreater:      depth_method = gl::GL_GREATER;  break;
+    case Assets::cMaterial::eDepthTest::kGreaterEqual: depth_method = gl::GL_GEQUAL;   break;
+    case Assets::cMaterial::eDepthTest::kEqual:        depth_method = gl::GL_EQUAL;    break;
+    case Assets::cMaterial::eDepthTest::kNotEqual:     depth_method = gl::GL_NOTEQUAL; break;
+    }
+    gl::glDepthFunc( depth_method );
+    
+
     return true;
 }
 

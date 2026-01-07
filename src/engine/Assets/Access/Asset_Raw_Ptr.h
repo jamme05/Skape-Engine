@@ -36,7 +36,7 @@ namespace sk
         explicit cAsset_Raw_Ptr( const cWeak_Ptr< iClass >& _self, const cShared_ptr< cAsset_Meta >& _meta );
         cAsset_Raw_Ptr( const cAsset_Raw_Ptr& _other, const cWeak_Ptr< iClass >& _self = nullptr );
         cAsset_Raw_Ptr( cAsset_Raw_Ptr&& _other ) noexcept;
-        ~cAsset_Raw_Ptr() override = default;
+        ~cAsset_Raw_Ptr() override;
 
         cAsset_Raw_Ptr& operator=( const cAsset_Raw_Ptr& _other );
         cAsset_Raw_Ptr& operator=( cAsset_Raw_Ptr&& _other ) noexcept;

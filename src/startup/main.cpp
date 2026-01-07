@@ -9,12 +9,15 @@
 #include <Memory/Tracker/Tracker.h>
 #include <Skape_Main.h>
 
+#include "Platform/Time.h"
+
 namespace sk::App
 {
 	void startup( int, char** )
 	{
 		Reflection::cType_Manager::init();
 		Memory::Tracker::init();
+		Time::init();
 		auto& app = cApp::init();
 
 		app.create();

@@ -6,7 +6,14 @@
 
 #pragma once
 
-namespace Time
+namespace sk::Time
 {
-    inline float Delta = 0.0f;
+    extern const float  &Delta;
+    extern const double &Delta_D;
+    
+    extern const float  &Real;
+    extern const double &Real_D;
+    
+    void init();
+    void Update();
 } // Time

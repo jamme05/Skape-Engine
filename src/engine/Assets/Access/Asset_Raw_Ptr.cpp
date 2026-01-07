@@ -33,6 +33,12 @@ cAsset_Raw_Ptr::cAsset_Raw_Ptr( cAsset_Raw_Ptr&& _other ) noexcept
     cAsset_Ptr_Base::operator=( std::move( _other ) );
 }
 
+cAsset_Raw_Ptr::~cAsset_Raw_Ptr()
+{
+    if( m_meta_.is_valid() )
+        unsubscribe();
+}
+
 cAsset_Raw_Ptr& cAsset_Raw_Ptr::operator=( const cAsset_Raw_Ptr& _other )
 {
     if( &_other != this )

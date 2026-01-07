@@ -115,7 +115,7 @@ cGLRenderer::cGLRenderer()
         if( std::string_view{ "glGetError" } != function->name() )
             function->addCallbackMask( glbinding::CallbackMask::After );
     }
-    //*
+    /*
     glbinding::setAfterCallback([]( const glbinding::FunctionCall& ){
         if( const auto error = gl::glGetError(); error != gl::GL_NO_ERROR ){
             SK_BREAK;

@@ -7,7 +7,11 @@ namespace sk::Object::Components
     {
         SK_CLASS_BODY( SpinComponent )
     public:
+        explicit cSpinComponent( cVector3f _speed = kUp );
         void update() override;
+        
+    private:
+        cVector3f m_speed_;
     };
 } // sk::Object::Components::
 

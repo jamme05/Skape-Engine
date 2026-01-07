@@ -47,10 +47,12 @@ cAsset_Ptr_Base& cAsset_Ptr_Base::operator=( const cAsset_Ptr_Base& _other )
 
 cAsset_Ptr_Base& cAsset_Ptr_Base::operator=( cAsset_Ptr_Base&& _other ) noexcept
 {
-    SetAsset( nullptr );
-    m_meta_ = std::move( _other.m_meta_ );
+    // TODO: Add some swap or better steal functionality.
+    SetAsset( _other.m_meta_.Lock() );
     m_asset_.store( _other.m_asset_ );
-    _other.m_asset_.store( nullptr );
+    if( _other.IsLoaded() || m_asset_.load() == has_requested_ptr_ )
+        LoadAsync();
+    _other.SetAsset( nullptr );
 
     return *this;
 }

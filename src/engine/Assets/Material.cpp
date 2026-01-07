@@ -106,7 +106,9 @@ void cMaterial::SetTexture( const cStringID& _name, const cShared_ptr< cAsset_Me
 {
     const auto itr = m_sampler_map_.find( _name );
     
-    SK_BREAK_IF( sk::Severity::kEngine, itr == m_sampler_map_.end(),
+    // We need to do this due to the standard library acting weird when we compare it iterators inside a lambda.
+    const bool is_failure = itr == m_sampler_map_.end();
+    SK_BREAK_IF( sk::Severity::kEngine, is_failure,
         TEXT( "Warning: Unable to find texture binding with the name, {}", _name.view() ) )
 
     const auto& sampler = itr->second;
@@ -115,6 +117,16 @@ void cMaterial::SetTexture( const cStringID& _name, const cShared_ptr< cAsset_Me
         target = cAsset_Ref< cTexture >{ nullptr, _texture_meta };
     else
         target = sInvalid{};
+}
+
+void cMaterial::SetDepthTest( const eDepthTest _depth_test )
+{
+    m_depth_test_ = _depth_test;
+}
+
+auto cMaterial::GetDepthTest() const -> eDepthTest
+{
+    return m_depth_test_;
 }
 
 auto cMaterial::GetShaderLink() const -> const Graphics::Utils::cShader_Link&

@@ -239,7 +239,7 @@ namespace sk
 					return true;
 				}
 			};
-			event.raw_ptr = std::addressof( _function );
+			event.raw_ptr = _instance;
 
 			return event;
 		}
@@ -248,7 +248,7 @@ namespace sk
 			auto instance = &_instance;
 			Event::event_t< Re, Args... > event;
 			event.function = std::bind_front( _function, instance );
-			event.raw_ptr  = std::addressof( _function );
+			event.raw_ptr  = instance;
 				
 			return event;
 		}
@@ -279,7 +279,7 @@ namespace sk
 					return true;
 				}
 			};
-			event.raw_ptr  = std::addressof( _function );
+			event.raw_ptr  = &_instance;
 
 			return event;
 		}
@@ -287,7 +287,7 @@ namespace sk
 		{
 			Event::event_t< Re, Args... > event;
 			event.function = std::bind_front( _function, _instance );
-			event.raw_ptr  = std::addressof( _function );
+			event.raw_ptr  = &_instance;
 			
 				
 			return event;

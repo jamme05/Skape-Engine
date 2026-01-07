@@ -48,7 +48,7 @@ namespace sk
 				m_scale, m_rotation * Math::kDegToRad< float >, m_position );
 
 			if( m_parent )
-				m_world = m_parent->getWorld() * local;
+				m_world = local * m_parent->getWorld();
 			else
 				m_world = local;
 

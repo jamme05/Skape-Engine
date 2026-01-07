@@ -32,7 +32,7 @@ namespace sk::Graphics::Rendering
             kD32F,
         };
         
-        explicit cDepth_Target( const cVector2u32& _resolution, eFormat _format, float _depth_clear = 0.0f, uint8_t _stencil_clear = 0 );
+        explicit cDepth_Target( const cVector2u32& _resolution, eFormat _format, float _depth_clear = 1.0f, uint8_t _stencil_clear = 0 );
 
         auto GetResolution() const -> cVector2u32;
         void Resize( const cVector2u32& _new_resolution );

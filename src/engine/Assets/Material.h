@@ -53,6 +53,7 @@ namespace sk::Assets
         SK_CLASS_BODY( Material )
         
         friend class sk::Graphics::Utils::cShader_Link;
+        friend class sk::Graphics::Rendering::cFrame_Buffer;
     public:
         class cBlock
         {
@@ -115,6 +116,18 @@ namespace sk::Assets
             const cMaterial* m_owner_;
         };
         struct sInvalid{};
+
+        enum class eDepthTest : uint8_t
+        {
+            kNever,
+            kAlways,
+            kLess,
+            kLessEqual,
+            kGreater,
+            kGreaterEqual,
+            kEqual,
+            kNotEqual,
+        };
         
         explicit cMaterial( Graphics::Utils::cShader_Link&& _shader_link );
         
@@ -127,6 +140,9 @@ namespace sk::Assets
         void  SetTexture( const cStringID& _name, const cShared_ptr< Graphics::Rendering::cRender_Target >& _texture );
         void  SetTexture( const cStringID& _name, const cShared_ptr< cAsset_Meta >& _texture_meta );
         auto& GetTextures() const { return m_textures_; }
+        
+        void  SetDepthTest( eDepthTest _depth_test );
+        auto  GetDepthTest() const -> eDepthTest;
         
         auto GetShaderLink() const -> const Graphics::Utils::cShader_Link&;
         
@@ -144,22 +160,27 @@ namespace sk::Assets
             variant_t texture;
         };
         
-        using block_map_t   = unordered_map< str_hash, cBlock >;
-        using block_vec_t   = vector< cBlock* >;
-        using sampler_map_t = unordered_map< str_hash, sTexture* >;
-        using reflection_t  = cShared_ptr< Graphics::Utils::cShader_Reflection >;
-        using shader_ptr_t  = cAsset_Ref< cShader, eAsset_Ref_Mode::kManual >;
-        using texture_vec_t = std::vector< sTexture >;
+        using block_map_t       = unordered_map< str_hash, cBlock >;
+        using block_vec_t       = vector< cBlock* >;
+        using reflection_t      = cShared_ptr< Graphics::Utils::cShader_Reflection >;
+        using shader_ptr_t      = cAsset_Ref< cShader, eAsset_Ref_Mode::kManual >;
+        using sampler_map_t     = unordered_map< str_hash, sTexture* >;
+        using texture_vec_t     = std::vector< sTexture >;
+        using texture_ref_vec_t = std::vector< cAsset_Ref< cTexture > >;
         
         void create_data();
         
         block_map_t   m_block_map_;
         block_vec_t   m_block_vec_;
         sampler_map_t m_sampler_map_;
-
         texture_vec_t m_textures_;
+
+        texture_ref_vec_t m_texture_refs_;
         
         Graphics::Utils::cShader_Link m_shader_link_;
+        
+        // TODO: Add more settings.
+        eDepthTest m_depth_test_ = eDepthTest::kLessEqual;
     };
     
     bool cMaterial::cBlock::SetUniform( const cStringID& _name, const auto& _value )

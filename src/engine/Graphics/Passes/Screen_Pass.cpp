@@ -49,13 +49,16 @@ bool cScreen_Pass::Begin()
     m_material_meta_->LockAsset();
     
     m_material_->Update();
-    frame_buffer.UseMaterial( *m_material_ );
-    
-    frame_buffer.BindVertexBuffer( 0, &m_screen_vertex_buffer_ );
+    bool res = false;
+    if( frame_buffer.UseMaterial( *m_material_ ) )
+    {
+        frame_buffer.BindVertexBuffer( 0, &m_screen_vertex_buffer_ );
 
-    const bool res = frame_buffer.DrawAuto();
-    if( !res )
-        SK_BREAK;
+        res = frame_buffer.DrawAuto();
+        if( !res )
+            SK_BREAK;
+    }
+    
     
     m_material_meta_->UnlockAsset();
     

@@ -29,9 +29,9 @@ void cGBuffer_Pass::Init()
         
         auto depth_target = sk::make_shared< Rendering::cDepth_Target >( resolution, Rendering::cDepth_Target::eFormat::kD24FS8 );
         
-        frame_buffer->Bind( 0, color_target );
-        frame_buffer->Bind( 1, position_target );
-        frame_buffer->Bind( 2, normal_target );
+        frame_buffer->Bind( 0, position_target );
+        frame_buffer->Bind( 1, normal_target );
+        frame_buffer->Bind( 2, color_target );
         
         frame_buffer->Bind( depth_target );
     }
