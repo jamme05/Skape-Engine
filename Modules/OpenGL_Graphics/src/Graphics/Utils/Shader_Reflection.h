@@ -36,7 +36,10 @@ namespace sk::Graphics::Utils
             
         uint32_t index;
         uint32_t stride;
-        uint16_t components;
+        // Vector components
+        uint8_t  components;
+        // Array elements
+        uint8_t  elements;
         uint16_t flags;
     };
 
@@ -115,6 +118,7 @@ namespace sk::Graphics::Utils
         [[ nodiscard ]] auto& GetBlockMap  () const { return m_block_map_; }
         [[ nodiscard ]] auto& GetBlockVec  () const { return m_block_vec_; }
         [[ nodiscard ]] auto& GetUniforms  () const { return m_global_uniforms_; }
+        [[ nodiscard ]] auto& GetSamplers  () const { return m_samplers_; }
         
     private:
         void init();
@@ -147,7 +151,7 @@ namespace sk::Graphics::Utils
         
         gl::GLchar* m_uniform_name_buffer_;      
         
-        std::set< gl::GLuint > m_locked_uniforms_;
+        std::set< str_hash > m_locked_uniforms_;
         
         std::vector< sAttribute > m_attributes_;
         

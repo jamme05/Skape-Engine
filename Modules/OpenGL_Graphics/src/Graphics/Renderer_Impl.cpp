@@ -60,12 +60,55 @@ namespace
         
         delete[] buffer;
     }
+
+    void message_callback(gl::GLenum source, gl::GLenum type, gl::GLuint id, gl::GLenum severity, gl::GLsizei length, gl::GLchar const* message, void const* user_param)
+    {
+        auto const src_str = [source]() {
+            switch (source)
+            {
+            case gl::GL_DEBUG_SOURCE_API: return "API";
+            case gl::GL_DEBUG_SOURCE_WINDOW_SYSTEM: return "WINDOW SYSTEM";
+            case gl::GL_DEBUG_SOURCE_SHADER_COMPILER: return "SHADER COMPILER";
+            case gl::GL_DEBUG_SOURCE_THIRD_PARTY: return "THIRD PARTY";
+            case gl::GL_DEBUG_SOURCE_APPLICATION: return "APPLICATION";
+            case gl::GL_DEBUG_SOURCE_OTHER: return "OTHER";
+            default: return "UNKNOWN";
+            }
+        }();
+
+        auto const type_str = [type]() {
+            switch (type)
+            {
+            case gl::GL_DEBUG_TYPE_ERROR: return "ERROR";
+            case gl::GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: return "DEPRECATED_BEHAVIOR";
+            case gl::GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR: return "UNDEFINED_BEHAVIOR";
+            case gl::GL_DEBUG_TYPE_PORTABILITY: return "PORTABILITY";
+            case gl::GL_DEBUG_TYPE_PERFORMANCE: return "PERFORMANCE";
+            case gl::GL_DEBUG_TYPE_MARKER: return "MARKER";
+            case gl::GL_DEBUG_TYPE_OTHER: return "OTHER";
+            default: return "UNKNOWN";
+            }
+        }();
+
+        auto const severity_str = [severity]() {
+            switch (severity) {
+            case gl::GL_DEBUG_SEVERITY_NOTIFICATION: return "NOTIFICATION";
+            case gl::GL_DEBUG_SEVERITY_LOW: SK_BREAK; return "LOW";
+            case gl::GL_DEBUG_SEVERITY_MEDIUM: SK_BREAK; return "MEDIUM";
+            case gl::GL_DEBUG_SEVERITY_HIGH: SK_BREAK; return "HIGH";
+            default: return "UNKNOWN";
+            }
+        }();
+        std::cout << src_str << ", " << type_str << ", " << severity_str << ", " << id << ": " << message << '\n';
+    }
     
     std::thread::id main_thread_id;
 } // ::
 
 cGLRenderer::cGLRenderer()
 {
+    main_thread_id = std::this_thread::get_id();
+    
     glbinding::initialize( 0, &Platform::get_proc_address, true );
     for( auto& function : glbinding::Binding::functions() )
     {
@@ -80,15 +123,19 @@ cGLRenderer::cGLRenderer()
         }
     } );
     //**/
+    gl::glDebugMessageCallback( &message_callback, nullptr );
     
     cAsset_Manager::get().AddFileLoaderForExtensions(
         { "frag", "vert", "comp" }, &loadGLSL );
-    
-    main_thread_id = std::this_thread::get_id();
+
+    m_fallback_vertex_buffer_ = std::make_unique< cUnsafe_Buffer >( "Fallback Vertex Buffer", 128, 0, Buffer::eType::kVertex, false, false );
+    m_fallback_vertex_buffer_->Clear();
+    m_fallback_vertex_buffer_->Upload( true );
 } // cRenderer
 
 cGLRenderer::~cGLRenderer()
 {
+    m_fallback_vertex_buffer_.reset();
     cAsset_Manager::get().RemoveFileLoaders( { "frag", "vert", "comp" } );
 }
 

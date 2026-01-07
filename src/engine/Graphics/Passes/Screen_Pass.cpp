@@ -44,13 +44,14 @@ bool cScreen_Pass::Begin()
     auto& frame_buffer = m_window_->GetWindowContext().GetBack();
     
     frame_buffer.Begin( viewport, scissor );
+    frame_buffer.Clear( Rendering::eClear::kAll );
     
     m_material_meta_->LockAsset();
     
     m_material_->Update();
     frame_buffer.UseMaterial( *m_material_ );
     
-    frame_buffer.BindVertexBuffer( 0, m_screen_vertex_buffer_ );
+    frame_buffer.BindVertexBuffer( 0, &m_screen_vertex_buffer_ );
 
     const bool res = frame_buffer.DrawAuto();
     if( !res )

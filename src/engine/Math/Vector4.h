@@ -89,8 +89,6 @@ namespace sk::Math
 		constexpr operator cVector< 2, T2 >(){ return cVector< 2, T2 >( *this ); }
 		template <typename T2>
 		constexpr operator cVector< 3, T2 >(){ return cVector< 3, T2 >( *this ); }
-		template <typename T2>
-		constexpr operator cVector< 4, T2 >(){ return cVector< 4, T2 >( *this ); }
 
 		// Casting if color
 		explicit constexpr operator uint32_t(){ return bgra(); }

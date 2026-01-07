@@ -13,6 +13,11 @@
 
 // TODO: Move shared pointers to Memory folder
 
+namespace sk::Object
+{
+	class iComponent;
+}
+
 namespace sk
 {
 	namespace Ptr_logic
@@ -211,7 +216,14 @@ namespace sk
 
 			if( m_data_ )
 			{
-				m_ptr_  = static_cast< Ty* >( m_data_->get_ptr() );
+				if constexpr( false && std::is_base_of_v< Object::iComponent, Ty > )
+				{
+					m_ptr_ = reinterpret_cast< Ty* >( static_cast< std::byte* >( m_data_->get_ptr() ) + 0x20 );
+				}
+				else
+				{
+					m_ptr_ = static_cast< Ty* >( m_data_->get_ptr() );
+				}
 				inc();
 			}
 		} // cShared_ptr

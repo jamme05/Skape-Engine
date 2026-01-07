@@ -65,11 +65,14 @@ namespace sk::Graphics::Rendering
         void Begin( const sViewport& _viewport, const sScissor& _scissor );
         void End();
 
+        // Can only be called between Begin and End
         void Clear( uint8_t _clear );
 
         // The target NEEDS to be able to survive.
         void Bind( size_t _index, const cShared_ptr< cRender_Target >& _target, bool _force = false );
         void Bind( const cShared_ptr< cDepth_Target >& _depth_target, bool _force = false );
+
+        auto GetRenderTarget( size_t _index ) const -> const cShared_ptr< cRender_Target >&;
 
         void UnbindRenderTargetAt( size_t _index );
         void UnbindDepthTarget();
@@ -78,7 +81,7 @@ namespace sk::Graphics::Rendering
         void Resize( const cVector2u32& _new_resolution );
         
         // ApplyMaterial has to be called before this
-        void BindVertexBuffer( size_t _binding, const cDynamic_Buffer& _buffer );
+        void BindVertexBuffer( size_t _binding, const cDynamic_Buffer* _buffer );
         void UnbindVertexBuffers();
         // ApplyMaterial has to be called before this
         void BindIndexBuffer( const cDynamic_Buffer& _buffer );

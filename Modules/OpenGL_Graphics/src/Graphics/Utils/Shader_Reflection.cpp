@@ -61,9 +61,9 @@ void cShader_Reflection::fetch_attributes()
             &name_length, &size, &type, a_name_buffer );
         
         attribute.name   = std::string_view( a_name_buffer, name_length );
-        attribute.index  = i;
+        attribute.index  = gl::glGetAttribLocation( m_program_, a_name_buffer );
         // Size may be array size here.
-        attribute.stride = static_cast< uint16_t >( size );
+        attribute.elements = static_cast< uint8_t >( size );
         attribute.flags  = a_name_buffer[ 0 ] == '_' ? kHidden : 0;
 
         type_info_t sk_type;
@@ -98,7 +98,8 @@ void cShader_Reflection::fetch_attributes()
         
         attribute.type       = sk_type;
         attribute.gl_type    = gl_type;
-        attribute.components = components;
+        attribute.components = static_cast< uint8_t >( components );
+        attribute.stride     = static_cast< uint32_t >( sk_type->size );
     }
     
     SK_FREE( a_name_buffer );
@@ -107,13 +108,17 @@ void cShader_Reflection::fetch_attributes()
 void cShader_Reflection::fetch_uniforms()
 {
     gl::GLint nr_of_uniforms;
-    gl::glGetProgramiv( m_program_, gl::GL_ACTIVE_UNIFORM_BLOCKS, &nr_of_uniforms );
-    
+    gl::glGetProgramiv( m_program_, gl::GL_ACTIVE_UNIFORMS, &nr_of_uniforms );
+
     for( int_fast32_t i = 0; i < nr_of_uniforms; i++ )
     {
-        if( m_locked_uniforms_.contains( i ) )
-            continue;
+        gl::GLsizei name_length;
+        gl::glGetActiveUniformName( m_program_, i, static_cast< gl::GLsizei >( m_max_block_name_size_ ),
+            &name_length, m_uniform_name_buffer_ );
         
+        if( m_locked_uniforms_.contains( std::string_view( m_uniform_name_buffer_, name_length ) ) )
+            continue;
+
         auto uniform = get_uniform( i );
         
         std::visit( [ this ]< class Ty >( Ty& _value )
@@ -174,7 +179,7 @@ void cShader_Reflection::fetch_blocks()
             uniform.location = offset;
             offset += uniform.byte_size;
             
-            m_locked_uniforms_.insert( uniform.location );
+            m_locked_uniforms_.insert( uniform.name );
             block.uniforms[ uniform.name.hash() ] = std::move( uniform );
         }
         
@@ -293,7 +298,7 @@ auto cShader_Reflection::create_sampler( const gl::GLenum _type,
     sampler.type = _type;
     sampler.name = std::string_view( m_uniform_name_buffer_, _name_length );
     sampler.pretty_name = make_pretty( sampler.name );
-    sampler.location = static_cast< uint16_t >( _index );
+    sampler.location = static_cast< uint16_t >( gl::glGetUniformLocation( m_program_, sampler.name.string().c_str() ) );
     sampler.flags    = m_uniform_name_buffer_[ 0 ] == '_' ? kHidden : 0;
     return sampler;
 }
@@ -301,6 +306,8 @@ auto cShader_Reflection::create_sampler( const gl::GLenum _type,
 auto cShader_Reflection::create_texture( const gl::GLenum _type,
     const gl::GLsizei _name_length, const gl::GLuint _index ) const -> sTexture
 {
+    SK_WARNING( sk::Severity::kGraphics, "Warning: Textures are deprecated. Do not use this!!" )
+    SK_BREAK;
     sTexture texture;
     texture.type = _type;
     texture.name = std::string_view( m_uniform_name_buffer_, _name_length );

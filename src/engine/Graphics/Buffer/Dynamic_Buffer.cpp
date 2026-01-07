@@ -26,7 +26,7 @@ namespace sk::Graphics
     {} // cDynamic_Buffer
     
     cDynamic_Buffer::cDynamic_Buffer( const std::string& _name, Buffer::eType _type, bool _is_normalized, size_t _raw_size, size_t _raw_stride )
-    : m_raw_size_( 0 )
+    : m_raw_size_( _raw_size )
     , m_buffer_type_( _type )
     , m_type_size_( 0 )
     , m_item_type_( nullptr )

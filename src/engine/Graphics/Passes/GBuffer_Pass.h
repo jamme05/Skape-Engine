@@ -23,6 +23,8 @@ namespace sk::Graphics::Passes
         void Destroy() override;
         
         void RenderWithCamera( const Object::Components::cCameraComponent& _camera ) const;
+
+        auto& GetFront() const { return m_render_context_->GetFront(); }
         
     private:
         std::unique_ptr< Rendering::cRender_Context > m_render_context_;

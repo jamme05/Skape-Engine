@@ -18,7 +18,7 @@ namespace sk::Object::Components
 	, m_type( _type )
 	{
 		calculateProjectionMatrix();
-		Scene::cCameraManager::get().registerCamera( get_shared() );
+		Scene::cCameraManager::get().registerCamera( get_shared().Cast< cCameraComponent >() );
 	} // cCamera
 
 	void cCameraComponent::renderTo( Graphics::Rendering::cRender_Context& _context )
@@ -34,12 +34,12 @@ namespace sk::Object::Components
 
 	void cCameraComponent::enabled( void )
 	{
-		Scene::cCameraManager::get().setCameraEnabled( get_shared(), true );
+		Scene::cCameraManager::get().setCameraEnabled( get_shared().Cast< cCameraComponent >(), true );
 	} // enabled
 
 	void cCameraComponent::disabled( void )
 	{
-		Scene::cCameraManager::get().setCameraEnabled( get_shared(), false );
+		Scene::cCameraManager::get().setCameraEnabled( get_shared().Cast< cCameraComponent >(), false );
 	} // disabled
 	void cCameraComponent::update( void )
 	{

@@ -24,6 +24,7 @@
 #include "Reflection/RuntimeStruct.h"
 #include "Scene/Scene.h"
 #include "Scene/Components/MeshComponent.h"
+#include "Scene/Components/SpinComponent.h"
 #include "Scene/Managers/SceneManager.h"
 #include "Scene/Objects/CameraFlight.h"
 
@@ -72,7 +73,7 @@ void cApp::create( void )
 	auto list_1 = asset_m.loadFile( "models/humanforscale.glb" );
 	auto list_2 = asset_m.loadFile( "models/heheToiletwithtextures.glb" );
 	const auto shader_frag = *asset_m.loadFile( "shaders/gpass.frag" ).begin();
-	const auto shader_vert = *asset_m.loadFile( "shaders/gpass.vert" ).begin();
+	const auto shader_vert = *asset_m.loadFile( "shaders/default.vert" ).begin();
 	asset_m.loadFile( "shaders/screen.vert" );
 	asset_m.loadFile( "shaders/deferred.frag" );	
 	
@@ -94,18 +95,22 @@ void cApp::create( void )
 	m_scene->create_object< sk::Object::cCameraFlight >( "Camera Free Flight" )->setAsMain();
 
 	auto mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 2" );
-	mesh->GetTransform().getPosition() = { 1.0f, 0.0f, 3.5f };
+	mesh->GetTransform().getPosition() = { 1.0f, 0.0f, -3.5f };
 	mesh->GetTransform().update();
+	auto spin_component = mesh->AddComponent< sk::Object::Components::cSpinComponent >();
 	auto component = mesh->AddComponent< sk::Object::Components::cMeshComponent >( christopher_m, mat1 );
 	component->enabled();
 	component->GetTransform().update();
+	component->SetParent( spin_component );
 
 	mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 3" );
-	mesh->GetTransform().getPosition() = { -2.0f, 0.0f, 3.5f };
+	mesh->GetTransform().getPosition() = { -2.0f, 0.0f, -3.5f };
 	mesh->GetTransform().update();
+	spin_component = mesh->AddComponent< sk::Object::Components::cSpinComponent >();
 	component = mesh->AddComponent< sk::Object::Components::cMeshComponent >( toilet_m, mat2 );
 	component->enabled();
 	component->GetTransform().update();
+	component->SetParent( spin_component );
 
 	sk::cSceneManager::get().registerScene( m_scene );
 } // create

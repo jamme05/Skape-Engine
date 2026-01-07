@@ -2,11 +2,13 @@
 
 out vec4 FragColor;
 
+
+
 in vec4 WorldPos;
 in vec3 WorldNormal;
 in vec2 TexCoord;
 
 void main()
 {
-    FragColor = WorldPos;
+    FragColor = vec4( TexCoord, 0, 1 );
 }

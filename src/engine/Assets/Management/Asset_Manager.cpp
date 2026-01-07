@@ -25,6 +25,7 @@ namespace sk
 {
 	cAsset_Manager::cAsset_Manager()
 	{
+		// TODO: Add some future way that uses a platform dependant function to get the executable path.
 		// We're expected to be inside [Project Root]/Build/Project/startup
 		// And we need to move to [Project Root]/game
 		if( auto current_path = std::filesystem::current_path(); current_path.filename() == "startup" )
@@ -507,19 +508,49 @@ namespace sk
 			
 			for( size_t i = 0; i < _attribute_count; i++ )
 			{
-				const auto& [ name, accessorIndex ] = _attributes[ i ];
+				const auto& [ pmr_name, accessorIndex ] = _attributes[ i ];
 
 				auto& accessor = _asset.accessors[ accessorIndex ];
 
-				auto buffer = sk::make_shared< Graphics::cDynamic_Buffer >( std::format( "{}: {}", _mesh.GetName(), std::string_view{ name } ),
-					Graphics::Buffer::eType::kVertex, accessor.normalized );
+				auto buffer = sk::make_shared< Graphics::cDynamic_Buffer >(
+					std::format( "{}: {}", _mesh.GetName(), std::string_view{ pmr_name } ),
+					Graphics::Buffer::eType::kVertex, accessor.normalized
+				);
+
+				cStringID name = std::string_view{ pmr_name }; 
 
 				buffer->AlignAs( get_accessor_type( accessor ), false );
 				buffer->Resize( accessor.count );
 				
 				fill_vertex_buffer( *buffer, _asset, accessor );
 
-				vertex_buffers.emplace( str_hash{ name }, buffer );
+				vertex_buffers.emplace( name, buffer );
+
+				switch( name.hash() )
+				{
+				case str_hash( "POSITION" ):
+				{
+					static constexpr cStringID kAliases[] = { "Position", "aPosition" };
+					for( auto& alias : kAliases )
+						vertex_buffers.emplace( alias, buffer );
+				}
+				break;
+				case str_hash( "NORMAL" ):
+				{
+					static constexpr cStringID kAliases[] = { "Normal", "aNormal" };
+					for( auto& alias : kAliases )
+						vertex_buffers.emplace( alias, buffer );
+				}
+				break;
+				case str_hash( "TEXCOORD_0" ):
+				{
+					static constexpr cStringID kAliases[] = { "TexCoord", "aTexCoord", "UV", "aUV" };
+					for( auto& alias : kAliases )
+						vertex_buffers.emplace( alias, buffer );
+				}
+				break;
+				default: break;
+				}
 			}
 		}
 	} // ::

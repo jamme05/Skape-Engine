@@ -36,7 +36,7 @@ namespace sk::Assets
         };
         
         using buffer_t     = cShared_ptr< Graphics::cDynamic_Buffer >;
-        using buffer_map_t = unordered_map< str_hash, buffer_t >;
+        using buffer_map_t = unordered_map< cStringID, buffer_t >;
 
         cMesh( const std::string& _name );
         ~cMesh() override;

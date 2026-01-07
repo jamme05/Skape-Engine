@@ -6,17 +6,11 @@
 
 #include "Material.h"
 
+#include "Assets/Texture.h"
 #include "Graphics/Utils/Shader_Link.h"
 #include "Graphics/Utils/Shader_Reflection.h"
 
 using namespace sk::Assets;
-
-namespace 
-{
-    // From: https://en.cppreference.com/w/cpp/utility/variant/visit
-    template< class... Ts >
-    struct sVisitor : Ts... { using Ts::operator()...; };
-} // ::
 
 cMaterial::cBlock::cBlock( const cMaterial& _owner, std::string _name, const block_t* _info, const size_t _binding )
 : m_pretty_name_( std::move( _name ) )
@@ -81,6 +75,48 @@ auto cMaterial::GetBlock( const cStringID& _name ) -> cBlock*
     return &itr->second;
 }
 
+void cMaterial::SetTexture( const cStringID& _name, std::nullptr_t )
+{
+    const auto itr = m_sampler_map_.find( _name );
+    
+    SK_BREAK_IF( sk::Severity::kEngine, itr == m_sampler_map_.end(),
+        TEXT( "Warning: Unable to find texture binding with the name, {}", _name.view() ) )
+
+    const auto& sampler = itr->second;
+
+    sampler->texture = sInvalid{};
+}
+
+void cMaterial::SetTexture( const cStringID& _name, const cShared_ptr< Graphics::Rendering::cRender_Target >& _texture )
+{
+    const auto itr = m_sampler_map_.find( _name );
+    
+    SK_BREAK_IF( sk::Severity::kEngine, itr == m_sampler_map_.end(),
+        TEXT( "Warning: Unable to find texture binding with the name, {}", _name.view() ) )
+
+    const auto& sampler = itr->second;
+    auto& target = sampler->texture;
+    if( _texture != nullptr )
+        target = _texture;
+    else
+        target = sInvalid{};
+}
+
+void cMaterial::SetTexture( const cStringID& _name, const cShared_ptr< cAsset_Meta >& _texture_meta )
+{
+    const auto itr = m_sampler_map_.find( _name );
+    
+    SK_BREAK_IF( sk::Severity::kEngine, itr == m_sampler_map_.end(),
+        TEXT( "Warning: Unable to find texture binding with the name, {}", _name.view() ) )
+
+    const auto& sampler = itr->second;
+    auto& target = sampler->texture;
+    if( _texture_meta != nullptr )
+        target = cAsset_Ref< cTexture >{ nullptr, _texture_meta };
+    else
+        target = sInvalid{};
+}
+
 auto cMaterial::GetShaderLink() const -> const Graphics::Utils::cShader_Link&
 {
     return m_shader_link_;
@@ -101,7 +137,10 @@ void cMaterial::create_data()
 {
     using namespace sk::Graphics::Utils;
 
-    for( auto reflection = m_shader_link_.GetReflection(); auto& raw_block : reflection->GetBlockVec() )
+    auto reflection = m_shader_link_.GetReflection();
+
+    // Uniform Blocks
+    for( auto& raw_block : reflection->GetBlockVec() )
     {
         auto& block = m_block_map_[ raw_block->name ];
         block = cBlock{ *this, raw_block->pretty_name, raw_block, raw_block->binding };
@@ -175,5 +214,16 @@ void cMaterial::create_data()
             default: SK_BREAK; break; // Not supported.
             }
         }
+    }
+
+    // Samplers/Textures
+    auto& samplers = reflection->GetSamplers();
+    m_textures_.resize( samplers.size() );
+    
+    size_t i = 0;
+    for( auto& sampler : samplers | std::views::values )
+    {
+        auto& texture = m_textures_[ i++ ] = { .index = i, .sampler = &sampler, .texture = sInvalid{} };
+        m_sampler_map_[ sampler.name ] = &texture;
     }
 }

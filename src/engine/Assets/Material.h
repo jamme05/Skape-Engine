@@ -13,13 +13,20 @@
 #include <Graphics/Buffer/Dynamic_Buffer.h>
 
 #include "Access/Asset_Ref.h"
+#include "Assets/Texture.h"
 #include "Graphics/Utils/Shader_Link.h"
 #include "Math/Matrix4x4.h"
 #include "Math/Vector4.h"
 
 
+namespace sk::Graphics::Rendering
+{
+    class cRender_Target;
+}
+
 namespace sk::Graphics::Utils
 {
+    struct sSampler;
     struct sUniform;
     struct sBlock;
     class cShader_Reflection;
@@ -107,6 +114,7 @@ namespace sk::Assets
             
             const cMaterial* m_owner_;
         };
+        struct sInvalid{};
         
         explicit cMaterial( Graphics::Utils::cShader_Link&& _shader_link );
         
@@ -114,6 +122,11 @@ namespace sk::Assets
         
         auto  GetBlock( const cStringID& _name ) -> cBlock*;
         auto& GetBlocks() const { return m_block_map_; }
+
+        void  SetTexture( const cStringID& _name, std::nullptr_t );
+        void  SetTexture( const cStringID& _name, const cShared_ptr< Graphics::Rendering::cRender_Target >& _texture );
+        void  SetTexture( const cStringID& _name, const cShared_ptr< cAsset_Meta >& _texture_meta );
+        auto& GetTextures() const { return m_textures_; }
         
         auto GetShaderLink() const -> const Graphics::Utils::cShader_Link&;
         
@@ -122,19 +135,31 @@ namespace sk::Assets
         void Update();
         
     private:
-        using block_map_t  = unordered_map< str_hash, cBlock >;
-        using block_vec_t  = vector< cBlock* >;
-        using reflection_t = cShared_ptr< Graphics::Utils::cShader_Reflection >;
-        using shader_ptr_t = cAsset_Ref< cShader, eAsset_Ref_Mode::kManual >;
+        struct sTexture
+        {
+            using sampler_t = const Graphics::Utils::sSampler*;
+            using variant_t = std::variant< sInvalid, cAsset_Ref< cTexture >, cShared_ptr< Graphics::Rendering::cRender_Target > >;
+            size_t    index;
+            sampler_t sampler;
+            variant_t texture;
+        };
+        
+        using block_map_t   = unordered_map< str_hash, cBlock >;
+        using block_vec_t   = vector< cBlock* >;
+        using sampler_map_t = unordered_map< str_hash, sTexture* >;
+        using reflection_t  = cShared_ptr< Graphics::Utils::cShader_Reflection >;
+        using shader_ptr_t  = cAsset_Ref< cShader, eAsset_Ref_Mode::kManual >;
+        using texture_vec_t = std::vector< sTexture >;
         
         void create_data();
         
-        block_map_t m_block_map_;
-        block_vec_t m_block_vec_;
+        block_map_t   m_block_map_;
+        block_vec_t   m_block_vec_;
+        sampler_map_t m_sampler_map_;
+
+        texture_vec_t m_textures_;
         
         Graphics::Utils::cShader_Link m_shader_link_;
-        
-        std::mutex m_access_mutex_;
     };
     
     bool cMaterial::cBlock::SetUniform( const cStringID& _name, const auto& _value )

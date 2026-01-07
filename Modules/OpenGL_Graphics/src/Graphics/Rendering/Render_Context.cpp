@@ -73,7 +73,7 @@ namespace sk::Graphics::Rendering
 
         m_front_index_ = ++m_frame_ % m_frame_buffers_.size();
 
-        m_front_ = m_frame_buffers_[ ++m_front_index_ ];
+        m_front_ = m_frame_buffers_[ m_front_index_ ];
 
         m_front_->BeginFrame();
     } // Swap

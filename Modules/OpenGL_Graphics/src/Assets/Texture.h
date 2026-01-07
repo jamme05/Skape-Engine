@@ -80,6 +80,9 @@ namespace sk::Assets
         // TODO: Texture settings/Sampler
         cTexture( const std::string& _name, const void* _buffer, size_t _size );
 
+        // Internal usage only
+        auto& get_texture() const { return m_buffer_; }
+
     sk_private:
         uint8_t         m_channels_;
         cVector2u32     m_size_;

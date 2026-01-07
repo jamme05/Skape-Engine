@@ -24,11 +24,14 @@ namespace sk::Object
 {
 	typedef uint64_t hash_t;
 
-	GENERATE_CLASS( iComponent )
+	GENERATE_CLASS( iComponent ), public cShared_from_this< iComponent >
 	{
 		CREATE_CLASS_IDENTIFIERS( iComponent, runtime_class_iComponent )
 	protected:
-		iComponent() = default;
+		iComponent()
+		{
+			m_self_ = get_weak();
+		}
 	public:
 
 		iComponent( iComponent const& ) = delete;
@@ -75,7 +78,19 @@ namespace sk::Object
 		[[ nodiscard ]]
 		auto& GetTransform() const { return m_transform; }
 
-		void SetParent( const cShared_ptr< iComponent >& _component ){ m_parent = _component; m_transform.setParent( ( _component != nullptr ) ? &_component->GetTransform() : nullptr ); }
+		void SetParent( const cShared_ptr< iComponent >& _component )
+		{
+			// TODO: Complete rewrite after lunch :)
+			if( m_parent && !m_parent.Lock()->m_children.empty() )
+			{
+				if( const auto itr = std::ranges::find( m_parent->m_children, m_self_.Lock() ); itr != m_parent->m_children.end() )
+					m_parent->m_children.erase( itr );
+			}
+			m_parent = _component;
+			if( _component )
+				_component->m_children.emplace_back( m_self_.Lock() );
+			m_transform.setParent( ( _component != nullptr ) ? &_component->GetTransform() : nullptr );
+		}
 
 	protected:
 		virtual void setEnabled( const bool _is_enabled ){ m_enabled = _is_enabled; }
@@ -90,12 +105,14 @@ namespace sk::Object
 		bool m_enabled  = true;
 		// Internal will hide it from the editor.
 		bool m_internal = false;
+
+		cWeak_Ptr< iComponent > m_self_;
 		friend class iObject;
 	};
 
 	// TODO: Check if type is necessary
 	template< class Ty, class ClassTy, uint16_t Events >
-	class cComponent : public iComponent, public Event::cEventListener, public cShared_from_this< Ty >
+	class cComponent : public iComponent, public Event::cEventListener
 	{
 #define HAS_EVENT( Func, Val ) if constexpr( !std::is_same_v< decltype( &Ty::Func ), decltype( &iComponent::Func ) > ) events |= (Val)
 		constexpr static uint16_t detect_events( void )
@@ -117,7 +134,6 @@ namespace sk::Object
 		// Used to disable events not finished yet overriden.
 		// Registers all overriden events as callable events.
 		cComponent()
-		: iComponent()
 		{
 			register_events();
 		} // cComponent

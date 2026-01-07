@@ -10,6 +10,9 @@
 #include <Assets/Management/Asset_Manager.h>
 #include <Graphics/Renderer.h>
 
+#include "Buffer/Unsafe_Buffer.h"
+#include "Utils/Shader_Link.h"
+
 
 namespace sk::Assets
 {
@@ -36,12 +39,16 @@ namespace sk::Graphics
         ~cGLRenderer() override;
         
         static void AddGLTask( const std::function< void() >& _function, bool _wait = true );
+
+        auto& GetFallbackVertexBuffer() const { return *m_fallback_vertex_buffer_; }
         
         void Update() override;
     private:
         void addGLTask( const std::function< void() >& _function, bool _wait );
+
+        std::unique_ptr< cUnsafe_Buffer > m_fallback_vertex_buffer_;
+        
         std::mutex           m_task_mtx_;
         std::vector< sTask > m_tasks_;
-        
     };
 } // sk::Graphics

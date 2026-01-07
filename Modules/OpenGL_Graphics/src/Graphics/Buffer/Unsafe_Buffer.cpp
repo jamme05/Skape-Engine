@@ -105,13 +105,11 @@ namespace sk::Graphics
 
             m_flags_ |= kInitialized;
 
-            if( m_byte_size_ > 0 )
-            {
-                gl::glNamedBufferData( m_buffer_.buffer, static_cast< gl::GLsizeiptr >( m_byte_size_ ), nullptr,
-                    IsStatic() ? gl::GLenum::GL_STATIC_DRAW : gl::GLenum::GL_DYNAMIC_DRAW );
+            gl::glNamedBufferData( m_buffer_.buffer, static_cast< gl::GLsizeiptr >( m_byte_size_ ), nullptr,
+                IsStatic() ? gl::GLenum::GL_STATIC_DRAW : gl::GLenum::GL_DYNAMIC_DRAW );
 
+            if( m_byte_size_ > 0 )
                 m_data_ = SK_ALLOC( m_byte_size_ );
-            }
         } );
     } // Create
 

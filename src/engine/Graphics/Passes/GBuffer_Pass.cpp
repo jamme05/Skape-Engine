@@ -17,7 +17,7 @@ using namespace sk::Graphics::Passes;
 
 void cGBuffer_Pass::Init()
 {
-    m_render_context_ = std::make_unique< Rendering::cRender_Context >( 2, 4 );
+    m_render_context_ = std::make_unique< Rendering::cRender_Context >( 2, 3 );
     
     auto resolution = getPipeline().GetWindow()->GetResolution();
     
@@ -64,6 +64,7 @@ void cGBuffer_Pass::RenderWithCamera( const Object::Components::cCameraComponent
     auto& frame_buffer = m_render_context_->GetBack();
     
     frame_buffer.Begin( _camera.getViewport(), _camera.getScissor() );
+    frame_buffer.Clear( Rendering::eClear::kAll );
 
     for( auto [ fst, lst ] = layer_manager.GetMeshesIn( _camera.GetLayers() ); fst != lst; ++fst )
     {

@@ -22,13 +22,8 @@ void sk::Object::iObject::SetRoot( const cShared_ptr< iComponent >& _new_root_co
     else if( _new_root_component->m_parent == m_root )
         _new_root_component->SetParent( nullptr );
 
-    for( auto& component : m_components_ | std::views::values )
-    {
-        if( component == _new_root_component )
-            continue;
-        
-        component->SetParent( _new_root_component );
-    }
+    while( !m_root->m_children.empty() )
+        m_root->m_children.front()->SetParent( _new_root_component );
     
     m_root = _new_root_component;
 }

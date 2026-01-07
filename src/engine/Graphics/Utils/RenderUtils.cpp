@@ -80,7 +80,9 @@ bool Utils::RenderMesh( const Object::Components::cCameraComponent& _camera, Ren
     for( auto& attribute : attributes )
     {
         if( auto itr = vertex_buffers.find( attribute.name ); itr != vertex_buffers.end() )
-            _frame_buffer.BindVertexBuffer( attribute.index, *itr->second );
+            _frame_buffer.BindVertexBuffer( attribute.index, itr->second );
+        else
+            _frame_buffer.BindVertexBuffer( attribute.index, nullptr );
     }
     
     _frame_buffer.BindIndexBuffer( *_mesh.GetIndexBuffer() );
