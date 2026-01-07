@@ -97,14 +97,12 @@ namespace sk::Severity
 } // sk::Severity::
 
 // TODO: Add runtime variant.
+#define SK_PASSTHROUGH_0_( SeverityVariable, SeverityValue, ... ){ \
+    static constexpr bool SeverityVariable = sk::Severity::IsConst( SeverityValue ) && sk::Severity::IsEnabled( SeverityValue ); \
+    if( SeverityVariable || sk::Severity::IsEnabled( SeverityValue ) ){ __VA_ARGS__ } }
+
 #define SK_PASSTHROUGH( SeverityValue, ... ) \
-    { \
-    static auto res = [&](){ __VA_ARGS__ }; \
-    /* If the severity is to be decided at compile time */\
-    if constexpr( sk::Severity::IsConst( SeverityValue ) )\
-    { if constexpr( sk::Severity::IsEnabled( SeverityValue ) ) res(); } \
-    else if( sk::Severity::IsEnabled( SeverityValue ) ) res(); \
-    }
+    SK_PASSTHROUGH_0_( CONCAT( kSeverityVal_,__COUNTER__ ), SeverityValue, __VA_ARGS__ )
 
 #define SK_PASSTHROUGH_RET( SeverityValue, Condition, ... ) \
     { \
