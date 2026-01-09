@@ -42,7 +42,7 @@ sk::Assets::Jobs::cAsset_Job_Manager::~cAsset_Job_Manager()
 void sk::Assets::Jobs::cAsset_Job_Manager::Sync()
 {
     m_paused_.store( true );
-    for( auto available = m_available_.load(); available > 0; available = m_available_.load() )
+    for( auto tail = m_tail_.load(); tail != m_head_.load(); tail = m_tail_.load() )
     {
         Graphics::cRenderer::get().Update();
         std::this_thread::sleep_for( std::chrono::milliseconds{ 10 } );
@@ -80,11 +80,13 @@ auto sk::Assets::Jobs::cAsset_Job_Manager::WaitForTask( const std::atomic_bool& 
         new_tail = 0;
         m_tail_.store( new_tail );
     }
+    m_tail_.notify_one();
     
     auto task = sTask{};
     std::swap( task, m_tasks_[ new_tail ] );
     
     --m_currently_getting_work_;
+    m_currently_getting_work_.notify_one();
 
     return task;
 }
@@ -131,9 +133,14 @@ void sk::Assets::Jobs::cAsset_Job_Manager::resize( const size_t _new_size )
     const auto head = m_head_.load();
     auto tail = m_tail_.load();
     
+    // TODO: Figure out why the distance between the head and the tail is so huge.
     for( size_t i = 0; tail != head; ++tail, i++ )
+    {
+        tail = tail % m_tasks_.size();
         new_vec[ i ] = m_tasks_[ tail ];
+    }
     m_tasks_.swap( new_vec );
+    m_tail_.store( 0 );
     
     m_currently_resizing_.store( false );
     m_currently_resizing_.notify_all();
