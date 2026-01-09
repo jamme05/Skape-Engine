@@ -77,7 +77,7 @@ bool cAsset_Ptr_Base::SetAsset( const cShared_ptr< cAsset_Meta >& _meta )
     if( IsLoaded() )
         Unload();
     
-    if( m_meta_.get() != _meta && m_meta_.is_valid() )
+    if( m_meta_ != _meta && m_meta_.is_valid() )
         unsubscribe();
     
     m_meta_ = validate_asset( _meta );

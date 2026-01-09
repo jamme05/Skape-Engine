@@ -303,19 +303,19 @@ namespace sk
 			return m_data_ == _right.m_data_;
 		}
 
-		operator bool( void ) const { return ( m_data_ != nullptr ); }
+		operator bool() const { return ( m_data_ != nullptr ); }
 
-		Ty& operator  *( void ){ return *get(); }
-		Ty* operator ->( void ){ return  get(); }
+		Ty& operator  *(){ return *get(); }
+		Ty* operator ->(){ return  get(); }
 
-		Ty& operator  *( void ) const { return *get(); }
-		Ty* operator ->( void ) const { return  get(); }
+		Ty& operator  *() const { return *get(); }
+		Ty* operator ->() const { return  get(); }
 
-		operator Ty*   ( void )       { return get(); }
-		operator Ty*   ( void ) const { return get(); }
+		explicit operator Ty*()       { return get(); }
+		explicit operator Ty*() const { return get(); }
 
-		Ty* get( void )       { return m_ptr_; }
-		Ty* get( void ) const { return m_ptr_; }
+		Ty* get()       { return m_ptr_; }
+		Ty* get() const { return m_ptr_; }
 
 		// TODO: Make safer version.
 		// Safe enough? You can go up/down in the polymorphic family tree?
