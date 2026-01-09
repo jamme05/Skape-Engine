@@ -14,7 +14,7 @@ namespace sk::Object
 {
 	cCameraFlight::cCameraFlight( const std::string& _name, const float _movement_speed, const float _rotation_speed )
 	: cCamera( _name )
-	, iListener( Input::kStick | Input::kButton | Input::kKey | Input::kMouseButton | Input::kMouseAbsolute, 1, true )
+	, iListener( Input::kStick | Input::kButton | Input::kKey | Input::kMouseButton | Input::kMouseRelative, 1, true )
 	, m_speeds( _movement_speed, _rotation_speed )
 	{
 		RegisterListener< cCameraFlight >( kUpdate, &cCameraFlight::update );
