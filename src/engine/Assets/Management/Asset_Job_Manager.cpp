@@ -41,24 +41,17 @@ sk::Assets::Jobs::cAsset_Job_Manager::~cAsset_Job_Manager()
 
 void sk::Assets::Jobs::cAsset_Job_Manager::Sync()
 {
-    m_paused_.store( true );
     for( auto tail = m_tail_.load(); tail != m_head_.load(); tail = m_tail_.load() )
     {
         Graphics::cRenderer::get().Update();
         std::this_thread::sleep_for( std::chrono::milliseconds{ 10 } );
     }
-    
-    m_paused_.store( false );
-    m_paused_.notify_all();
 }
 
 auto sk::Assets::Jobs::cAsset_Job_Manager::WaitForTask( const std::atomic_bool& _working_ref ) -> sTask
 {
     if( m_currently_resizing_.load() )
         m_currently_resizing_.wait( true );
-    
-    if( m_paused_.load() )
-        m_paused_.wait( true );
     
     if( const auto tail = m_tail_.load(); tail == m_head_.load() )
         m_head_.wait( tail );
@@ -71,8 +64,6 @@ auto sk::Assets::Jobs::cAsset_Job_Manager::WaitForTask( const std::atomic_bool& 
     
     if( m_available_.load() != 0 )
         --m_available_;
-    if( m_paused_.load() )
-        m_available_.notify_one();
     
     auto new_tail = ++m_tail_;
     if( new_tail >= m_tasks_.size() )
@@ -104,13 +95,16 @@ bool sk::Assets::Jobs::cAsset_Job_Manager::IsShuttingDown() const
 void sk::Assets::Jobs::cAsset_Job_Manager::push_task( const sTask& _task )
 {
     // TODO: Figure out a way to resize the task list.
-    auto new_head = m_head_.load() + 1;
-    if( new_head == m_tasks_.size() )
+    const auto requested_head = m_head_.load() + 1;
+    
+    auto new_head = requested_head % m_tasks_.size();
+    
+    if( new_head == m_tail_.load() )
         resize( m_tasks_.size() * 2 );
     else if( const auto half_size = m_tasks_.size() / 2; m_available_.load() < half_size && half_size > 64 )
         resize( std::max< size_t >( half_size, distance() ) );
     
-    new_head = new_head % m_tasks_.size();
+    new_head = requested_head % m_tasks_.size();
 
     m_tasks_[ new_head ] = _task;
     

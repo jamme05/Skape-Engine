@@ -43,7 +43,6 @@ namespace sk::Assets::Jobs
         
         std::atomic_uint16_t m_currently_getting_work_;
         std::atomic_bool     m_currently_resizing_;
-        std::atomic_bool     m_paused_;
         std::atomic_bool     m_shutting_down_;
 
         size_t      m_worker_count_;
