@@ -2,7 +2,7 @@
 
 #pragma once
 
-#if SK_PLATFORM_SUPPORTS_KEYBOARD
+#ifdef SK_PLATFORM_SUPPORTS_KEYBOARD
 #include <Input/Keyboard_Include.h>
 #else // SK_PLATFORM_SUPPORTS_KEYBOARD
 #include <cstdint>

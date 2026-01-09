@@ -44,6 +44,7 @@ namespace sk::Platform
         [[ nodiscard ]]
         cVector2u32 GetResolution () const override;
         float       GetAspectRatio() const override;
+        void        SetMouseCapture( bool _capture ) override;
         
         auto GetWindowContext() const -> Graphics::Rendering::cWindow_Context& override;
         void SwapBuffers() override;
@@ -60,6 +61,7 @@ namespace sk::Platform
         static SDL_AppResult handle_event( const SDL_KeyboardEvent& _event );
         static SDL_AppResult handle_event( const SDL_GamepadButtonEvent& _event );
         static SDL_AppResult handle_event( const SDL_MouseMotionEvent& _event );
+        static SDL_AppResult handle_event( const SDL_MouseButtonEvent& _event );
     private:
         bool        m_visible_;
         cVector2u32 m_size_;

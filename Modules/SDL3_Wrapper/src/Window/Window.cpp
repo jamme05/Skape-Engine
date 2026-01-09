@@ -56,6 +56,7 @@ void SDL_AppQuit( void* _app_state, SDL_AppResult _result )
 // Window functions:
 namespace sk::Platform
 {
+    // TODO: Assign the main window.
     cSDL_Window* cSDL_Window::g_main_window_ = nullptr;
 
     SDL_AppResult cSDL_Window::handle_event( void* _event )
@@ -67,6 +68,9 @@ namespace sk::Platform
         case SDL_EVENT_GAMEPAD_BUTTON_UP:
         case SDL_EVENT_GAMEPAD_BUTTON_DOWN: return handle_event( event.gbutton );
         case SDL_EVENT_MOUSE_MOTION: return handle_event( event.motion );
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+        case SDL_EVENT_MOUSE_BUTTON_DOWN: return handle_event( event.button );
+        case SDL_EVENT_QUIT: return SDL_APP_SUCCESS;
         default:
             break;
         }
@@ -109,11 +113,43 @@ namespace sk::Platform
         return SDL_APP_CONTINUE;
     } // handle_event
 
+    namespace 
+    {
+        cVector2f prev_mouse_position = {};
+    } // ::
+
     SDL_AppResult cSDL_Window::handle_event( const SDL_MouseMotionEvent& _event )
     {
-        // TODO: Mouse move input event
-        return SDL_APP_CONTINUE;
+        const auto window     = SDL_GetWindowFromID( _event.windowID );
+        const auto event_type = SDL_GetWindowRelativeMouseMode( window ) ? Input::eInputType::kMouseRelative : Input::eInputType::kMouseAbsolute;
+        
+        // TODO: Have some way to identify the window on our events.
+        Input::sMouseEvent event;
+        event.analog = Input::eAnalog::kMouse;
+        event.previous_position = prev_mouse_position;
+        event.relative          = cVector2f{ _event.yrel, _event.xrel };
+        event.current_position  = cVector2f{ _event.y, _event.x };
+        prev_mouse_position     = event.current_position;
+        event.button            = 0;
+        event.presses           = 0;
+        
+        return ( Input::input_event( event_type, event ) ) ? SDL_APP_SUCCESS : SDL_APP_CONTINUE;
     } // handle_event
+    
+    SDL_AppResult cSDL_Window::handle_event( const SDL_MouseButtonEvent& _event )
+    {
+        const auto event_type = ( _event.type == SDL_EVENT_MOUSE_BUTTON_UP ) ? Input::kMouse_Up : Input::kMouse_Down;
+        
+        Input::sMouseEvent event;
+        event.analog = Input::eAnalog::kNone;
+        event.previous_position = prev_mouse_position;
+        event.current_position  = prev_mouse_position;
+        event.relative          = cVector2f{};
+        event.button            = _event.button;
+        event.presses           = _event.clicks;
+        
+        return ( Input::input_event( event_type, event ) ) ? SDL_APP_SUCCESS : SDL_APP_CONTINUE;
+    }
 
     iWindow* CreateWindow( const std::string& _name, const cVector2u32& _size )
     {
@@ -151,4 +187,10 @@ namespace sk::Platform
     {
         return m_aspect_ratio_;
     } // GetAspectRatio
+    
+    void cSDL_Window::SetMouseCapture( const bool _capture )
+    {
+        // TODO: Add more handling.
+        SDL_SetWindowRelativeMouseMode( m_window_, _capture );
+    }
 } // sk::Platform::

@@ -25,7 +25,7 @@ cSDL_Window::cSDL_Window( const std::string& _name, const cVector2u32& _resoluti
     SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, SK_OPENGL_MAJOR_VERSION );
     SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, SK_OPENGL_MINOR_VERSION );
 
-    const SDL_WindowFlags flags = _flags | SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY;
+    const SDL_WindowFlags flags = _flags | SDL_WINDOW_OPENGL | SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_RESIZABLE;
     m_window_ = SDL_CreateWindow( _name.c_str(), static_cast< int >( _resolution.x ), static_cast< int >( _resolution.y ), flags );
     SK_ERR_IF( m_window_ == nullptr,
         TEXT( "ERROR: Unable to create a window.\n Reason: {}", SDL_GetError() ) )

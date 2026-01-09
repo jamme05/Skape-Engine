@@ -36,6 +36,7 @@ namespace sk::Platform
         [[ nodiscard ]]
         virtual cVector2u32 GetResolution () const = 0;
         virtual float       GetAspectRatio() const = 0;
+        virtual void        SetMouseCapture( bool _capture ) = 0;
         
         virtual auto GetWindowContext() const -> Graphics::Rendering::cWindow_Context& = 0;
         

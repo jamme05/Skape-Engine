@@ -2,7 +2,7 @@
 
 #pragma once
 
-#if SK_PLATFORM_SUPPORTS_GAMEPAD
+#ifdef SK_PLATFORM_SUPPORTS_GAMEPAD
 #include <Input/Gamepad_Include.h>
 #else // SK_PLATFORM_SUPPORTS_GAMEPAD
 #include <cstdint>

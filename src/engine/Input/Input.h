@@ -26,26 +26,29 @@ namespace sk::Input
 
 	enum eInputType : uint32_t
 	{
-		kKey_Down    = 0x00000001,
-		kKey_Up      = 0x00000002,
-		kKey         = kKey_Down | kKey_Up,
-		kMouse       = 0x00000004,
-		kMouse_Down  = 0x00000008,
-		kMouse_Up    = 0x00000010,
-		kButton_Down = 0x00000020,
-		kButton_Up   = 0x00000040,
-		kButton      = kButton_Down | kButton_Up,
-		kStick       = 0x00000080,
-		kAnalog      = 0x00000100,
+		kKey_Down      = 0x00000001,
+		kKey_Up        = 0x00000002,
+		kKey           = kKey_Down | kKey_Up,
+		kMouseAbsolute = 0x00000004,
+		kMouseRelative = 0x00000008,
+		kMouse_Down    = 0x00000010,
+		kMouse_Up      = 0x00000020,
+		kMouseButton   = kMouse_Down | kMouse_Up,
+		kMouse         = kMouseAbsolute | kMouseRelative | kMouseButton,
+		kButton_Down   = 0x00000040,
+		kButton_Up     = 0x00000080,
+		kButton        = kButton_Down | kButton_Up,
+		kStick         = 0x00000100,
+		kAnalog        = 0x00000200,
 
 		// Custom Events.
-		kCustom0     = 0x00000200,
-		kCustom1     = 0x00000400,
-		kCustom2     = 0x00000800,
-		kCustom3     = 0x00001000,
-		kCustom4     = 0x00002000,
-		kCustom5     = 0x00004000,
-		kCustom6     = 0x00008000,
+		kCustom0     = 0x02000000,
+		kCustom1     = 0x04000000,
+		kCustom2     = 0x08000000,
+		kCustom3     = 0x10000000,
+		kCustom4     = 0x20000000,
+		kCustom5     = 0x40000000,
+		kCustom6     = 0x80000000,
 		
 		kAll         = 0xffffffff,
 	}; // eType
@@ -71,6 +74,7 @@ namespace sk::Input
 
 	enum class eAnalog : uint8_t
 	{
+		kNone,
 		kMouse,
 		kLeft,
 		kRight,
@@ -83,6 +87,7 @@ namespace sk::Input
 		const sEvent* current_event;
 	};
 
+	// TODO: Document the events.
 	struct sPadEvent : sRawEvent
 	{
 		uint32_t  button          = kNone;
@@ -99,6 +104,9 @@ namespace sk::Input
 		eAnalog analog = eAnalog::kMouse;
 		cVector2f current_position  = { };
 		cVector2f previous_position = { };
+		cVector2f relative          = { };
+		uint8_t   button            = kNone;
+		uint8_t   presses           = 0;
 	};
 
 	struct sKeyboardMods

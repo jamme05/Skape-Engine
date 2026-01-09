@@ -7,7 +7,7 @@ module = {
     Name = "SDL3",
     Setup_Workspace = function( mod )
         filter( mod.Filter )
-        defines( { "SK_WINDOW_SDL3", "SK_WINDOW_SDL=3" } )
+        defines( { "SK_WINDOW_SDL3", "SK_WINDOW_SDL=3", "SK_PLATFORM_SUPPORTS_GAMEPAD", "SK_PLATFORM_SUPPORTS_KEYBOARD", "SK_PLATFORM_SUPPORTS_MOUSE" } )
     end,
 
     Init = function( module_name )
