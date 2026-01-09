@@ -227,6 +227,7 @@ namespace sk::Math
 
 		static void inversed_fast( const cMatrix< 4, 4, float >& _in, cMatrix< 4, 4, float >& _out )
 		{
+			// TODO: Fix the math. Turns out the inversed fast doesn't fully work.
 			const auto as_m  = reinterpret_cast< const __m64* >( &_in );
 			__m64*     out_m = reinterpret_cast<       __m64* >( &_out );
 
