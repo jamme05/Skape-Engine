@@ -49,6 +49,7 @@ namespace sk
 	{
 		auto& job_manager = Assets::Jobs::cAsset_Job_Manager::get();
 		
+		job_manager.m_shutting_down_.store( true );
 		Assets::Jobs::sTask task;
 		task.type = Assets::Jobs::eJobType::kUnload;
 		
@@ -67,11 +68,17 @@ namespace sk
 			const auto path   = assets.begin()->GetAbsolutePath();
 			const auto loader = GetFileLoader( assets.begin()->m_ext_ );
 			
+			if( loader == nullptr )
+			{
+				for( auto& asset : assets )
+					asset->setAsset( nullptr );
+				continue;
+			}
+			
 			task.data = ::new( Memory::alloc_fast( sizeof( Assets::Jobs::sAssetTask ) ) ) Assets::Jobs::sAssetTask{
 				.path    = path.view(), 
 				.affected_assets = assets,
-				.loader = loader,
-				.source = this,
+				.loader       = loader,
 			};
 			
 			job_manager.push_task( task );

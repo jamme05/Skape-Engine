@@ -87,7 +87,6 @@ void cAsset_Meta::Reload()
         .path    = m_absolute_path_.view(), 
         .affected_assets = manager.GetAssetsByPrecisePath( m_absolute_path_ ),
         .loader = manager.GetFileLoader( m_ext_ ),
-        .source = this,
     };
     
     Assets::Jobs::cAsset_Job_Manager::get().push_task( task );
@@ -208,7 +207,6 @@ void cAsset_Meta::push_load_task( const bool _load, const void* _source ) const
         .path   = m_absolute_path_.view(),
         .affected_assets = affected,
         .loader = loader,
-        .source = _source,
     };
     
     Jobs::cAsset_Job_Manager::get().push_task( task );

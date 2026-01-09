@@ -62,8 +62,11 @@ void sk::Assets::Jobs::cAsset_Worker::load_asset( sAssetTask& _task, const bool 
 
 void sk::Assets::Jobs::cAsset_Worker::unload_asset( sAssetTask& _task )
 {
-    for( auto& meta : _task.affected_assets )
-        meta->m_dispatcher_.push_event( *meta, eEventType::kUnload );
+    if( !manager->IsShuttingDown() )
+    {
+        for( auto& meta : _task.affected_assets )
+            meta->m_dispatcher_.push_event( *meta, eEventType::kUnload );
+    }
     
     _task.loader( _task.path, _task.affected_assets, eAssetTask::kUnloadAsset );
 

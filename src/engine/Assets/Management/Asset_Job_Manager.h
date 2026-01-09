@@ -24,11 +24,13 @@ namespace sk::Assets::Jobs
         auto WaitForTask( const std::atomic_bool& _working_ref ) -> sTask;
         
         auto GetWorkerCount() const -> size_t;
+        
+        bool IsShuttingDown() const;
 
     private:
         void push_task( const sTask& _task );
         void resize   ( size_t _new_size );
-        auto distance () -> size_t;
+        auto distance () const -> size_t;
 
         using workers_t = cAsset_Worker*;
         
@@ -42,6 +44,7 @@ namespace sk::Assets::Jobs
         std::atomic_uint16_t m_currently_getting_work_;
         std::atomic_bool     m_currently_resizing_;
         std::atomic_bool     m_paused_;
+        std::atomic_bool     m_shutting_down_;
 
         size_t      m_worker_count_;
 		workers_t   m_workers_;

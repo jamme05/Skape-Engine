@@ -2,6 +2,10 @@
 
 #include <Assets/Workers/Asset_Loader.h>
 
+#include "Graphics/Renderer.h"
+
+#include <chrono>
+
 sk::Assets::Jobs::cAsset_Job_Manager::cAsset_Job_Manager()
 {
     m_tasks_.resize( 64 );
@@ -39,7 +43,10 @@ void sk::Assets::Jobs::cAsset_Job_Manager::Sync()
 {
     m_paused_.store( true );
     for( auto available = m_available_.load(); available > 0; available = m_available_.load() )
-        m_available_.wait( available );
+    {
+        Graphics::cRenderer::get().Update();
+        std::this_thread::sleep_for( std::chrono::milliseconds{ 10 } );
+    }
     
     m_paused_.store( false );
     m_paused_.notify_all();
@@ -62,7 +69,8 @@ auto sk::Assets::Jobs::cAsset_Job_Manager::WaitForTask( const std::atomic_bool& 
 
     ++m_currently_getting_work_;
     
-    --m_available_;
+    if( m_available_.load() != 0 )
+        --m_available_;
     if( m_paused_.load() )
         m_available_.notify_one();
     
@@ -84,6 +92,11 @@ auto sk::Assets::Jobs::cAsset_Job_Manager::WaitForTask( const std::atomic_bool& 
 auto sk::Assets::Jobs::cAsset_Job_Manager::GetWorkerCount() const -> size_t
 {
     return m_worker_count_;
+}
+
+bool sk::Assets::Jobs::cAsset_Job_Manager::IsShuttingDown() const
+{
+    return m_shutting_down_.load();
 }
 
 void sk::Assets::Jobs::cAsset_Job_Manager::push_task( const sTask& _task )
@@ -117,19 +130,16 @@ void sk::Assets::Jobs::cAsset_Job_Manager::resize( const size_t _new_size )
     std::vector< sTask > new_vec( _new_size );
     const auto head = m_head_.load();
     auto tail = m_tail_.load();
+    
     for( size_t i = 0; tail != head; ++tail, i++ )
-    {
-        tail = tail % m_tasks_.size();
-        
         new_vec[ i ] = m_tasks_[ tail ];
-    }
     m_tasks_.swap( new_vec );
     
     m_currently_resizing_.store( false );
     m_currently_resizing_.notify_all();
 }
 
-auto sk::Assets::Jobs::cAsset_Job_Manager::distance() -> size_t
+auto sk::Assets::Jobs::cAsset_Job_Manager::distance() const -> size_t
 {
     const auto head = m_head_.load();
     const auto tail = m_tail_.load();

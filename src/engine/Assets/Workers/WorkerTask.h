@@ -35,7 +35,6 @@ namespace sk::Assets::Jobs
         // All assets being affected
         cAsset_List   affected_assets;
         load_func_t   loader;
-        const void*   source;
     };
                 
     struct sListenerTask
