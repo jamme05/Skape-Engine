@@ -12,6 +12,7 @@
 #include <SDL3/SDL.h>
 
 #include "Graphics/Rendering/Window_Context.h"
+#include "Platform/Time.h"
 
 using namespace sk::Platform;
 
@@ -29,11 +30,15 @@ cSDL_Window::cSDL_Window( const std::string& _name, const cVector2u32& _resoluti
     m_window_ = SDL_CreateWindow( _name.c_str(), static_cast< int >( _resolution.x ), static_cast< int >( _resolution.y ), flags );
     SK_ERR_IF( m_window_ == nullptr,
         TEXT( "ERROR: Unable to create a window.\n Reason: {}", SDL_GetError() ) )
+    
+    add_self();
 } // cSDL_Window
 
 
 cSDL_Window::~cSDL_Window()
 {
+    remove_self();
+    
     for( const auto& context : m_contexts_ )
         SDL_GL_DestroyContext( context );
     
@@ -67,6 +72,11 @@ void cSDL_Window::PopContext()
 {
     SDL_GL_DestroyContext( m_contexts_.back() );
     m_contexts_.pop_back();
+}
+
+bool cSDL_Window::WasResizedThisFrame() const
+{
+    return m_resized_on_frame_ == Time::Frame;
 }
 
 function_ptr_t sk::Platform::get_proc_address( const char* _name )

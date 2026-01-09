@@ -44,6 +44,8 @@ namespace sk::Platform
         
         virtual void PushContext() = 0;
         virtual void PopContext () = 0;
+        
+        virtual bool WasResizedThisFrame() const = 0;
     };
 
     extern iWindow* CreateWindow ( const std::string& _name, const cVector2u32& _size = {} );

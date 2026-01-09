@@ -2,6 +2,7 @@
 
 #include "GBuffer_Pass.h"
 
+#include "App.h"
 #include "Debugging/Macros/Assert.h"
 #include "Graphics/Pipelines/Pipeline.h"
 #include "Graphics/Rendering/Depth_Target.h"
@@ -39,8 +40,12 @@ void cGBuffer_Pass::Init()
 
 bool cGBuffer_Pass::Begin()
 {
+    auto  main_window    = cApp::get().GetMainWindow();
     auto& camera_manager = Scene::cCameraManager::get();
     auto& main_camera    = *camera_manager.getMainCamera();
+    
+    if( main_window->WasResizedThisFrame() )
+        m_render_context_->Resize( main_window->GetResolution() );
     
     RenderWithCamera( main_camera );
     

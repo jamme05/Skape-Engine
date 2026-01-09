@@ -15,6 +15,8 @@ namespace sk::Time
         
         float real_f  = 0.0f;
         float delta_f = 0.0f;
+        
+        uint64_t frame = 0;
     } // ::
     
     const float  &Delta = delta_f;
@@ -22,6 +24,8 @@ namespace sk::Time
     
     const float  &Real = real_f;
     const double &Real_D = real;
+    
+    const uint64_t &Frame = frame;
     
     // TODO: Maybe hide the init?
     void init()
@@ -43,5 +47,7 @@ namespace sk::Time
         delta_f = static_cast< float >( delta );
         
         prev = now;
+        
+        frame++;
     }
 } // sk::Time::

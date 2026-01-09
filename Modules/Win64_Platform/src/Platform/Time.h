@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <cstdint>
+
 namespace sk::Time
 {
     extern const float  &Delta;
@@ -13,6 +15,8 @@ namespace sk::Time
     
     extern const float  &Real;
     extern const double &Real_D;
+    
+    extern const uint64_t &Frame;
     
     void init();
     void Update();

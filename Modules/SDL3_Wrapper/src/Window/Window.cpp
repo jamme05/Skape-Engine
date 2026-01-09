@@ -14,6 +14,8 @@
 #include <SDL3/SDL_main.h>
 #include <SDL3/SDL.h>
 
+#include "Platform/Time.h"
+
 // SDL Functions:
 SDL_AppResult SDL_AppInit( void** _app_state, int _argc, char** _argv )
 {
@@ -58,6 +60,13 @@ namespace sk::Platform
 {
     // TODO: Assign the main window.
     cSDL_Window* cSDL_Window::g_main_window_ = nullptr;
+    
+    namespace 
+    {
+        std::map< SDL_WindowID, cSDL_Window* > window_map;
+        
+        cVector2f prev_mouse_position = {};
+    } // ::
 
     SDL_AppResult cSDL_Window::handle_event( void* _event )
     {
@@ -70,11 +79,25 @@ namespace sk::Platform
         case SDL_EVENT_MOUSE_MOTION: return handle_event( event.motion );
         case SDL_EVENT_MOUSE_BUTTON_UP:
         case SDL_EVENT_MOUSE_BUTTON_DOWN: return handle_event( event.button );
+        case SDL_EVENT_WINDOW_RESIZED: return handle_event( event.window );
         case SDL_EVENT_QUIT: return SDL_APP_SUCCESS;
         default:
             break;
         }
 
+        return SDL_APP_CONTINUE;
+    }
+
+    SDL_AppResult cSDL_Window::handle_event( const SDL_WindowEvent& _event )
+    {
+        const auto itr = window_map.find( _event.windowID );
+        
+        switch( _event.type )
+        {
+        case SDL_EVENT_WINDOW_RESIZED: itr->second->resize( cVector2u32{ _event.data1, _event.data2 } );
+        default: break;
+        }
+        
         return SDL_APP_CONTINUE;
     }
 
@@ -113,11 +136,6 @@ namespace sk::Platform
         return SDL_APP_CONTINUE;
     } // handle_event
 
-    namespace 
-    {
-        cVector2f prev_mouse_position = {};
-    } // ::
-
     SDL_AppResult cSDL_Window::handle_event( const SDL_MouseMotionEvent& _event )
     {
         const auto window     = SDL_GetWindowFromID( _event.windowID );
@@ -127,7 +145,12 @@ namespace sk::Platform
         Input::sMouseEvent event;
         event.analog = Input::eAnalog::kMouse;
         event.previous_position = prev_mouse_position;
-        event.relative          = cVector2f{ _event.yrel, _event.xrel };
+        // We need it to be conservative due to SDL never having it return with a relative of 0
+        event.relative          = cVector2f
+        {
+            Math::abs( _event.yrel ) < 2 ? 0 : _event.yrel,
+            Math::abs( _event.xrel ) < 2 ? 0 : _event.xrel
+        };
         event.current_position  = cVector2f{ _event.y, _event.x };
         prev_mouse_position     = event.current_position;
         event.button            = 0;
@@ -149,6 +172,24 @@ namespace sk::Platform
         event.presses           = _event.clicks;
         
         return ( Input::input_event( event_type, event ) ) ? SDL_APP_SUCCESS : SDL_APP_CONTINUE;
+    }
+
+    void cSDL_Window::add_self()
+    {
+        const auto id = SDL_GetWindowID( m_window_ );
+        window_map[ id ] = this;
+    }
+
+    void cSDL_Window::remove_self() const
+    {
+        const auto id = SDL_GetWindowID( m_window_ );
+        window_map.erase( id );
+    }
+
+    void cSDL_Window::resize( const cVector2u32 _new_resolution )
+    {
+        m_size_ = _new_resolution;
+        m_resized_on_frame_ = Time::Frame;
     }
 
     iWindow* CreateWindow( const std::string& _name, const cVector2u32& _size )

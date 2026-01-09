@@ -52,21 +52,30 @@ namespace sk::Platform
         void PushContext() override;
         void PopContext() override;
         
+        bool WasResizedThisFrame() const override;
+        
         // For internal usage.
         auto get_window() const { return m_window_; }
 
+        // TODO: Maybe move these outside of the window class?
         // Void type to skip include I guess
         static SDL_AppResult handle_event( void* _event );
 
+        static SDL_AppResult handle_event( const SDL_WindowEvent& _event );
         static SDL_AppResult handle_event( const SDL_KeyboardEvent& _event );
         static SDL_AppResult handle_event( const SDL_GamepadButtonEvent& _event );
         static SDL_AppResult handle_event( const SDL_MouseMotionEvent& _event );
         static SDL_AppResult handle_event( const SDL_MouseButtonEvent& _event );
     private:
+        void add_self();
+        void remove_self() const;
+        void resize( cVector2u32 _new_resolution );
+        
         bool        m_visible_;
         cVector2u32 m_size_;
         float       m_aspect_ratio_;
         SDL_Window* m_window_;
+        uint64_t    m_resized_on_frame_ = 0;
         
         std::unique_ptr< Graphics::Rendering::cWindow_Context > m_window_context_;
         
