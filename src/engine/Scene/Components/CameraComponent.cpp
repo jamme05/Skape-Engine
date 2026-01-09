@@ -50,20 +50,7 @@ namespace sk::Object::Components
 
 	void cCameraComponent::calculateProjectionMatrix( void )
 	{
-		const bool vertical = m_camera_settings.aspect > 1.0f;
-
-		// TODO: Check if there's a less "tengine" way of doing this.
-		const auto cotan = 1.0f / Math::tan( Math::degToRad( m_camera_settings.fov / 2.0f ) );
-		const auto depth = m_camera_settings.far - m_camera_settings.near;
-		const auto xx    = vertical ? ( -cotan / m_camera_settings.aspect ) : ( -cotan );
-		const auto yy    = vertical ? ( cotan ) : ( cotan * m_camera_settings.aspect );
-
-		m_projection = {
-			cVector4f( xx, 0.0f, 0.0f, 0.0f ),
-			cVector4f( 0.0f, yy, 0.0f, 0.0f ),
-			cVector4f( 0.0f, 0.0f, ( m_camera_settings.near + m_camera_settings.far ) / depth, 1.0f ),
-			cVector4f( 0.0f, 0.0f, -2.0f * m_camera_settings.far * m_camera_settings.near / depth, 0.0f ),
-		};
+		m_projection = Math::Matrix4x4::AspectPerspective( m_camera_settings.aspect, m_camera_settings.fov, m_camera_settings.near, m_camera_settings.far );
 	} // calculateProjectionMatrix
 } // sk::Object::Components::
 
