@@ -136,6 +136,9 @@ void sk::cStringIDManager::destroyRegistry( const str_hash& _registry )
     
     // We will be going from back to front and purge everything that has been "destroyed"
     // The registry will always be larger than the available spots so this is fine.
+    
+    // TODO: Fix pruning.
+    /*
     uint32_t prune = 0;
     for( size_t i = 0; i < m_available_spots_.size(); ++i )
     {
@@ -147,6 +150,7 @@ void sk::cStringIDManager::destroyRegistry( const str_hash& _registry )
     
     m_available_spots_.erase( m_available_spots_.begin(), m_available_spots_.begin() + prune );
     m_registries_.erase( m_registries_.begin() + prune, m_registries_.end() );
+    */
 }
 
 ////////////////////////////////////////////////
