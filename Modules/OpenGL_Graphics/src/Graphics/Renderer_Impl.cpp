@@ -37,6 +37,9 @@ namespace
         // It'll always only have one meta.
         auto& meta = *_metas.begin();
         
+        if( _task == Assets::eAssetTask::kUnloadAsset )
+            return;
+        
         auto file_size = std::filesystem::file_size( _path );
         auto buffer = new char[ file_size ];
         
@@ -122,7 +125,7 @@ cGLRenderer::cGLRenderer()
             SK_WARNING( sk::Severity::kGraphics, "OpenGL Error: {}", static_cast< size_t >( error ) )
         }
     } );
-    //**/
+    //*/
     gl::glDebugMessageCallback( &message_callback, nullptr );
     
     cAsset_Manager::get().AddFileLoaderForExtensions(
@@ -136,7 +139,9 @@ cGLRenderer::cGLRenderer()
 cGLRenderer::~cGLRenderer()
 {
     m_fallback_vertex_buffer_.reset();
-    cAsset_Manager::get().RemoveFileLoaders( { "frag", "vert", "comp" } );
+    
+    // No need to remove loaders as the asset manager is already shut down.
+    // cAsset_Manager::get().RemoveFileLoaders( { "frag", "vert", "comp" } );
 }
 
 void cGLRenderer::AddGLTask( const std::function< void() >& _function, const bool _wait )

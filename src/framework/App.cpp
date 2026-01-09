@@ -201,9 +201,13 @@ void cApp::destroy() const
 	for( const auto& window : m_windows )
 		SK_DELETE( window );
 
-	sk::Graphics::cRenderer::shutdown();
-
 	sk::cAsset_Manager::shutdown();
+
+	// I don't really like the choice of having the renderer shut down after the asset system,
+	// with the asset system being started before the renderer.
+	// TODO: Add some RegisterRendererListeners function or something in the future.
+	sk::Graphics::cRenderer::shutdown();
+	sk::cStringIDManager::shutdown();
 
 } // _destroy
 
