@@ -14,7 +14,7 @@ namespace sk::Object
 {
 	cCameraFlight::cCameraFlight( const std::string& _name, const float _movement_speed, const float _rotation_speed )
 	: cCamera( _name )
-	, iListener( Input::kStick | Input::kButton | Input::kKey | Input::kMouse, 1, true )
+	, iListener( Input::kStick | Input::kButton | Input::kKey | Input::kMouseButton | Input::kMouseAbsolute, 1, true )
 	, m_speeds( _movement_speed, _rotation_speed )
 	{
 		RegisterListener< cCameraFlight >( kUpdate, &cCameraFlight::update );
@@ -24,11 +24,13 @@ namespace sk::Object
 	{
 		switch( _type )
 		{
-		case Input::kStick:       handleStickEvent ( _event );        break;
-		case Input::kButton_Down: handleButtonEvent( _event, false ); break;
-		case Input::kButton_Up:   handleButtonEvent( _event, true  ); break;
-		case Input::kKey_Down:    handleKeyEvent   ( _event, false ); break;
-		case Input::kKey_Up:      handleKeyEvent   ( _event, true  ); break;
+		case Input::kStick:         handleStickEvent ( _event );        break;
+		case Input::kButton_Down:   handleButtonEvent( _event, false ); break;
+		case Input::kButton_Up:     handleButtonEvent( _event, true  ); break;
+		case Input::kKey_Down:      handleKeyEvent   ( _event, false ); break;
+		case Input::kKey_Up:        handleKeyEvent   ( _event, true  ); break;
+		case Input::kMouseRelative: handleMouseEvent ( _event );        break;
+		case Input::kMouseButton:   handleMouseEvent ( _event );        break;
 		default: break;
 		}
 
@@ -109,5 +111,6 @@ namespace sk::Object
 
 	void cCameraFlight::handleMouseEvent( const Input::sEvent& _event )
 	{
+		m_rotation = _event.mouse->relative;
 	}
 } // sk::Object::
