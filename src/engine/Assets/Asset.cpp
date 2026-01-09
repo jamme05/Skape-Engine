@@ -246,7 +246,13 @@ void cAsset_Meta::setAsset( cAsset* _asset )
     m_flags_ &= ~kLoaded & ~kLoading;
     
     if( m_asset_ != nullptr )
-        SK_DELETE( m_asset_ );
+    {
+        // There seems to be some sort of race condition
+        // So this ensures that the asset gets unreferenced before this thread gets stuck waiting for the memory tracker.
+        const auto tmp = m_asset_;
+        m_asset_ = nullptr;
+        SK_DELETE( tmp );
+    }
     
     m_asset_ = _asset;
     

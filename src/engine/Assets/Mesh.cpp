@@ -18,10 +18,8 @@ namespace sk::Assets
 
     cMesh::~cMesh()
     {
-        SK_DELETE( m_indices_ );
-
-        for( const auto& buffer : m_vertex_buffers_ | std::views::values )
-            SK_DELETE( buffer );
+        m_indices_ = nullptr;
+        m_vertex_buffers_.clear();
     }
 
     void cMesh::CreateIndexBufferFrom( const eIndexType _type, const void* _data, const size_t _item_count )
