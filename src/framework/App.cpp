@@ -16,6 +16,7 @@
 #include "Graphics/Pipelines/Deferred_Pipeline.h"
 #include "Graphics/Pipelines/Forward_Pipeline.h"
 #include "Graphics/Pipelines/Pipeline.h"
+#include "Input/Mouse_Include.h"
 #include "Math/Types.h"
 #include "Memory/Tracker/Tracker.h"
 #include "Misc/UUID.h"
@@ -32,7 +33,7 @@
 cApp* cApp::m_running_instance_ = nullptr;
 
 cApp::cApp( void )
-: iListener( sk::Input::eInputType::kAll, 10, true )
+: iListener( sk::Input::eInputType::kKey | sk::Input::kMouse_Down, 10, true )
 {
 	m_running_instance_ = this;
 	sk::Input::setLogInputs( false );
@@ -61,8 +62,22 @@ cApp::~cApp( void )
 
 sk::Input::response_t cApp::onInput( const uint32_t _type, const sk::Input::sEvent& _event )
 {
+	static bool captured = false;
+	if( _type == sk::Input::kMouse_Down && _event.mouse->button == sk::Input::Mouse::kLeft )
+	{
+		m_main_window_->SetMouseCapture( true );
+		captured = true;
+	}
 	if( _type == sk::Input::kKey_Down && _event.keyboard->key == sk::Input::Keyboard::kEscape )
-		return sk::Input::eResponse::kQuit;
+	{
+		if( captured )
+		{
+			m_main_window_->SetMouseCapture( false );
+			captured = false;
+		}
+		else
+			return sk::Input::eResponse::kQuit;
+	}
 
 	return true;
 } // onInput
@@ -104,7 +119,6 @@ void cApp::create( void )
 	component->GetTransform().getRotation() = { -90.0f, 0.0f, 0.0f };
 	component->GetTransform().update();
 	component->SetParent( spin_component );
-	
 		
 	auto mat2 = asset_m.CreateAsset< sk::Assets::cMaterial >( "Material Test 2",
 		sk::Graphics::Utils::cShader_Link{ shader_vert, shader_frag } );
@@ -217,8 +231,10 @@ void cApp::print_types( void )
 	}
 }
 
-void cApp::destroy() const
+void cApp::destroy()
 {
+	m_scene = nullptr;
+	
 	sk::cSceneManager::shutdown();
 	for( const auto& window : m_windows )
 		SK_DELETE( window );

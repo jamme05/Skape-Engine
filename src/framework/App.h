@@ -56,9 +56,6 @@ public:
 
 	auto GetMainWindow() const { return m_main_window_; }
 
-	sk::cShared_ptr< sk::Assets::cShader > m_mesh_pair = nullptr;
-	sk::cShared_ptr< sk::Assets::cShader > m_post_pair = nullptr;
-
 	sk::cShared_ptr< sk::cScene > m_scene = nullptr;
 
 	using window_t = sk::Platform::iWindow*;
@@ -66,7 +63,7 @@ public:
 	static cApp* getRunningInstance(){ return m_running_instance_; }
 	
 private:
-	void destroy( void ) const;
+	void destroy();
 	
 	window_t     m_main_window_ = nullptr;
 	static cApp* m_running_instance_;
