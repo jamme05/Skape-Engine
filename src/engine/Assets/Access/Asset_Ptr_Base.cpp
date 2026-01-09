@@ -30,8 +30,8 @@ cAsset_Ptr_Base::cAsset_Ptr_Base( const cAsset_Ptr_Base& _other )
 
 cAsset_Ptr_Base::~cAsset_Ptr_Base()
 {
-    if( IsLoaded() )
-        Unload();
+    SK_BREAK_IF( sk::Severity::kEngine,
+        IsLoaded(), "You HAVE to unload the asset ptr inside of the derived class. This is due to the virtual table" )
 }
 
 cAsset_Ptr_Base& cAsset_Ptr_Base::operator=( const cAsset_Ptr_Base& _other )

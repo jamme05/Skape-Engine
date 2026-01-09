@@ -92,8 +92,8 @@ namespace sk
     template< reflected Ty > requires std::is_base_of_v<cAsset, Ty>
     cAsset_Ptr< Ty >::~cAsset_Ptr()
     {
-        if( m_meta_.is_valid() )
-            unsubscribe();
+        if( IsLoaded() )
+            SetAsset( nullptr );
     }
 
     template< reflected Ty > requires std::is_base_of_v< cAsset, Ty >

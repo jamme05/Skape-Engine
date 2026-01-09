@@ -35,8 +35,8 @@ cAsset_Raw_Ptr::cAsset_Raw_Ptr( cAsset_Raw_Ptr&& _other ) noexcept
 
 cAsset_Raw_Ptr::~cAsset_Raw_Ptr()
 {
-    if( m_meta_.is_valid() )
-        unsubscribe();
+    if( IsLoaded() )
+        SetAsset( nullptr );
 }
 
 cAsset_Raw_Ptr& cAsset_Raw_Ptr::operator=( const cAsset_Raw_Ptr& _other )

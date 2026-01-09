@@ -131,8 +131,8 @@ namespace sk
     template< reflected Ty, eAsset_Ref_Mode Mode > requires std::is_base_of_v<cAsset, Ty>
     cAsset_Ref< Ty, Mode >::~cAsset_Ref()
     {
-        if( base_t::m_meta_.is_valid() )
-            unsubscribe();
+        if( base_t::IsLoaded() )
+            base_t::SetAsset( nullptr );
     }
 
     template< reflected Ty, eAsset_Ref_Mode Mode > requires std::is_base_of_v< cAsset, Ty >
