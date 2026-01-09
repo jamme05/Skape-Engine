@@ -135,7 +135,13 @@ namespace sk::Graphics
         m_data_ = nullptr;
 
         if( IsInitialized() )
-            gl::glDeleteBuffers( 1, &m_buffer_.buffer );
+        {
+            cGLRenderer::AddGLTask( [ buffer = m_buffer_.buffer ]
+            {
+                gl::glDeleteBuffers( 1, &buffer );
+            }, false );
+            m_buffer_.buffer = 0;
+        }
 
         m_flags_ &= ~kInitialized;
     } // Free
