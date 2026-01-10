@@ -63,6 +63,7 @@ namespace sk::Object
 			auto component = sk::make_shared< Ty >( std::forward< Args >( _args )... );
 
 			component->m_object = get_weak();
+			component->m_uuid_  = GenerateRandomUUID();
 			component->SetParent( m_root );
 
 			if constexpr( std::is_base_of_v< Components::cMeshComponent, Ty > )
@@ -109,8 +110,9 @@ namespace sk::Object
 			auto component = sk::make_shared< Ty >();
 
 			component->m_object = get_weak();
-			component->SetParent( m_root );
+			component->m_uuid_  = GenerateRandomUUID();
 			component->m_internal = true;
+			component->SetParent( m_root );
 			
 			m_internal_components_.insert( std::pair{ Ty::getStaticType(), component } );
 

@@ -216,14 +216,7 @@ namespace sk
 
 			if( m_data_ )
 			{
-				if constexpr( false && std::is_base_of_v< Object::iComponent, Ty > )
-				{
-					m_ptr_ = reinterpret_cast< Ty* >( static_cast< std::byte* >( m_data_->get_ptr() ) + 0x20 );
-				}
-				else
-				{
-					m_ptr_ = static_cast< Ty* >( m_data_->get_ptr() );
-				}
+				m_ptr_ = static_cast< Ty* >( m_data_->get_ptr() );
 				inc();
 			}
 		} // cShared_ptr
@@ -656,9 +649,10 @@ namespace sk
 		// NOTE: USE WITH CARE, be sure that you know what you're doing.
 		template< class Ot >
 		requires std::is_base_of_v< Ty, Ot >
-		cWeak_Ptr< Ot > cast( void )
+		cWeak_Ptr< Ot > Cast()
 		{
-			cShared_ptr< Ot > other{};
+			// TODO: Introduce a dynamic cast here
+			cWeak_Ptr< Ot > other{};
 			other.m_data_ = m_data_;
 			inc_weak();
 

@@ -10,9 +10,10 @@
 
 #include "Math/Matrix4x4.h"
 #include "Math/Transform.h"
-#include "Reflection/RuntimeClass.h"
 #include "Misc/Hashing.h"
 #include "Misc/Smart_Ptrs.h"
+#include "Misc/UUID.h"
+#include "Reflection/RuntimeClass.h"
 #include "Scene/Managers/EventManager.h"
 
 namespace sk::Object
@@ -77,6 +78,8 @@ namespace sk::Object
 		auto& GetTransform()       { return m_transform; }
 		[[ nodiscard ]]
 		auto& GetTransform() const { return m_transform; }
+		
+		auto& GetUUID() const { return m_uuid_; }
 
 		void SetParent( const cShared_ptr< iComponent >& _component )
 		{
@@ -98,10 +101,12 @@ namespace sk::Object
 		cTransform                               m_transform = {};
 		cWeak_Ptr< iComponent >                  m_parent    = nullptr;
 		cWeak_Ptr< iObject >                     m_object    = nullptr;
+		// TODO: Have the UUID be able to be loaded from a scene file in the future.
 
 		std::vector< cShared_ptr< iComponent > > m_children = { }; // TODO: Add get children function
 
 	private: // TODO: Move parts to cpp, find way to make actual constexpr
+		cUUID                                    m_uuid_     = {};
 		bool m_enabled  = true;
 		// Internal will hide it from the editor.
 		bool m_internal = false;

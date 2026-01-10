@@ -100,7 +100,7 @@ namespace sk::Graphics
     } // ~cBuffer
 
     template< class Ty, Buffer::eType Type >
-    auto cBuffer< Ty, Type >::data()->Ty*
+    auto cBuffer< Ty, Type >::data() -> Ty*
     {
         return static_cast< Ty* >( m_buffer_.Data() );
     } // data
@@ -108,7 +108,7 @@ namespace sk::Graphics
     template< class Ty, Buffer::eType Type >
     auto cBuffer< Ty, Type >::data() const -> const Ty*
     {
-        return static_cast< const Ty* >( m_buffer_.LockData() );
+        return static_cast< const Ty* >( m_buffer_.Data() );
     } // data
 
     template< class Ty, Buffer::eType Type >
@@ -144,7 +144,7 @@ namespace sk::Graphics
     template< class Ty >
     using cConstant_Buffer = cBuffer< Ty, Buffer::eType::kConstant >;
     template< class Ty >
-    using cStructed_Buffer = cBuffer< Ty, Buffer::eType::kStructured >;
+    using cStructured_Buffer = cBuffer< Ty, Buffer::eType::kStructured >;
     template< class Ty >
     using cVertex_Buffer = cBuffer< Ty, Buffer::eType::kVertex >;
 

@@ -25,6 +25,7 @@
 #include "Reflection/RuntimeClass.h"
 #include "Reflection/RuntimeStruct.h"
 #include "Scene/Scene.h"
+#include "Scene/Components/LightComponent.h"
 #include "Scene/Components/MeshComponent.h"
 #include "Scene/Components/SpinComponent.h"
 #include "Scene/Managers/SceneManager.h"
@@ -132,6 +133,10 @@ void cApp::create( void )
 	component->enabled();
 	component->GetTransform().update();
 	component->SetParent( spin_component );
+	
+	auto light_object = m_scene->create_object< sk::Object::iObject >( "Directional Light" );
+	auto directional_light = light_object->AddComponent< sk::Object::Components::cLightComponent >();
+	light_object->GetTransform().GetRotation() = { -45.0f, 0.0f, 0.0f };
 	
 	// Fuck it we ball
 	constexpr auto kGridWidth = 15;

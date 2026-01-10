@@ -17,6 +17,8 @@
 
 #include <Scene/Components/CameraComponent.h>
 
+#include "Light_Manager.h"
+
 
 namespace sk
 {
@@ -28,6 +30,7 @@ namespace sk
 		cEventManager::init();
 		Scene::cCameraManager::init();
 		Scene::cLayer_Manager::init();
+		Scene::cLight_Manager::init();
 	}
 	cSceneManager::~cSceneManager()
 	{
@@ -35,6 +38,7 @@ namespace sk
 		cEventManager::shutdown();
 		Scene::cCameraManager::shutdown();
 		Scene::cLayer_Manager::shutdown();
+		Scene::cLight_Manager::shutdown();
 	} // ~cSceneManager
 
 	void cSceneManager::registerScene( const cShared_ptr< cScene >& _scene )
