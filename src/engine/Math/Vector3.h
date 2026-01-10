@@ -69,16 +69,9 @@ namespace sk::Math
 		explicit constexpr operator cVector< 2, T>() { return cVector< 2, T>(*this); }
 		explicit constexpr operator cVector< 4, T>() { return cVector< 4, T>(*this); }
 
-		template <typename T2>
-		explicit constexpr operator cVector< 2, T2>() { return cVector< 2, T2>(*this); }
-		template <typename T2>
-		explicit constexpr operator cVector< 3, T2>() { return cVector< 3, T2>(*this); } // Infinite loop?
-		template <typename T2>
-		explicit constexpr operator cVector< 4, T2>() { return cVector< 4, T2>(*this); }
-
 		// Operators:
-		constexpr cVector  operator-(void) const { return { -x, -y, -z }; }
-		constexpr cVector& operator=(const cVector& _v){ x = _v.x; y = _v.z; z = _v.z; return *this; }
+		constexpr cVector  operator-() const { return { -x, -y, -z }; }
+		constexpr cVector& operator=(const cVector& _v) = default;
 		constexpr cVector& operator=( cVector&& ) = default;
 
 
@@ -90,8 +83,8 @@ namespace sk::Math
 
 		template <typename T2> cVector operator*(const T2 _t) const { return { static_cast<T>(x * _t), static_cast<T>(y * _t), static_cast<T>(z * _t) }; }
 
-		constexpr cVector& operator++(void) { ++x; ++y; ++z; return *this; }
-		constexpr cVector& operator--(void) { --x; --y; --z; return *this; }
+		constexpr cVector& operator++() { ++x; ++y; ++z; return *this; }
+		constexpr cVector& operator--() { --x; --y; --z; return *this; }
 
 		constexpr cVector& operator+=(const cVector& _v){ x += _v.x; y += _v.y; z += _v.z; return *this; }
 		constexpr cVector& operator-=(const cVector& _v){ x -= _v.x; y -= _v.y; z -= _v.z; return *this; }

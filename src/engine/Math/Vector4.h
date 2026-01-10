@@ -41,7 +41,7 @@ namespace sk::Math
 		// Constructors:
 
 		// Default constructor
-		constexpr cVector(void) = default;
+		constexpr cVector() = default;
 		// Sets all axis to x
 		constexpr explicit cVector(const T _x) : x(_x), y(_x), z(_x), w(_x) {}
 		// Sets all axis
@@ -84,17 +84,11 @@ namespace sk::Math
 		// Construct from array/pointer
 		explicit constexpr cVector(const T _p[4]) : x(_p[0]), y(_p[1]), z(_p[2]), w(_p[3]) {}
 
-		// Cast to other Vectors:
-		template <typename T2>
-		constexpr operator cVector< 2, T2 >(){ return cVector< 2, T2 >( *this ); }
-		template <typename T2>
-		constexpr operator cVector< 3, T2 >(){ return cVector< 3, T2 >( *this ); }
-
 		// Casting if color
 		explicit constexpr operator uint32_t(){ return bgra(); }
 
 		// Operators:
-		constexpr cVector operator-(void) const { return { -x, -y, -z, -w }; }
+		constexpr cVector operator-() const { return { -x, -y, -z, -w }; }
 
 		constexpr cVector& operator=( const cVector& ) = default;
 		constexpr cVector& operator=( cVector&& )      = default;
@@ -109,8 +103,8 @@ namespace sk::Math
 		template <typename T2>
 		constexpr cVector operator/(const T2 _t) const { return { static_cast<T>(x / _t), static_cast<T>(y / _t), static_cast<T>(z / _t), static_cast<T>(w / _t) }; }
 
-		constexpr cVector& operator++(void) { ++x; ++y; ++z; ++w; return *this; }
-		constexpr cVector& operator--(void) { --x; --y; --z; --w; return *this; }
+		constexpr cVector& operator++() { ++x; ++y; ++z; ++w; return *this; }
+		constexpr cVector& operator--() { --x; --y; --z; --w; return *this; }
 
 		constexpr cVector& operator+=(const cVector& _v) { x += _v.x; y += _v.y; z += _v.z; w += _v.w; return *this; }
 		constexpr cVector& operator-=(const cVector& _v) { x -= _v.x; y -= _v.y; z -= _v.z; w -= _v.w; return *this; }

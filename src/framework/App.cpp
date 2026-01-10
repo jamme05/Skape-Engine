@@ -112,34 +112,28 @@ void cApp::create( void )
 	mat1.second->SetTexture( "mainTexture", christopher_t );
 
 	auto mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 2" );
-	mesh->GetTransform().getPosition() = { 0.2f, 0.0f, 1.1f };
-	mesh->GetTransform().update();
-	auto spin_component = mesh->AddComponent< sk::Object::Components::cSpinComponent >( sk::cVector3f{ 0.0f, 10.0f, 0.0f } );
+	mesh->GetTransform().SetPosition( { 0.0f, -16.0f, 90.0f } );
 	auto component = mesh->AddComponent< sk::Object::Components::cMeshComponent >( christopher_m, mat1.first );
 	component->enabled();
-	component->GetTransform().getRotation() = { -90.0f, 0.0f, 0.0f };
-	component->GetTransform().update();
-	component->SetParent( spin_component );
+	component->SetScale( sk::cVector3f{ 100.0f } );
 		
 	auto mat2 = asset_m.CreateAsset< sk::Assets::cMaterial >( "Material Test 2",
 		sk::Graphics::Utils::cShader_Link{ shader_vert, shader_frag } );
 	mat2.second->SetTexture( "mainTexture", toilet_t );
 
 	mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 3" );
-	mesh->GetTransform().getPosition() = { -0.1f, 0.0f, 2.5f };
-	mesh->GetTransform().update();
-	spin_component = mesh->AddComponent< sk::Object::Components::cSpinComponent >( sk::cVector3f{ 0.0f, 5.0f, 0.0f } );
+	mesh->GetTransform().SetPosition( { -0.1f, 0.0f, 2.5f } );
+	auto spin_component = mesh->AddComponent< sk::Object::Components::cSpinComponent >( sk::cVector3f{ 0.0f, 5.0f, 0.0f } );
 	component = mesh->AddComponent< sk::Object::Components::cMeshComponent >( toilet_m, mat2.first );
 	component->enabled();
-	component->GetTransform().update();
 	component->SetParent( spin_component );
 	
 	auto light_object = m_scene->create_object< sk::Object::iObject >( "Directional Light" );
 	auto directional_light = light_object->AddComponent< sk::Object::Components::cLightComponent >();
-	light_object->GetTransform().GetRotation() = { -45.0f, 0.0f, 0.0f };
+	light_object->GetTransform().SetRotation( { -45.0f, 0.0f, 0.0f } );
 	
 	// Fuck it we ball
-	constexpr auto kGridWidth = 15;
+	constexpr auto kGridWidth = 5;
 	std::random_device rd;
 	std::mt19937 gen( rd() );
 	std::uniform_real_distribution dis( -25.0f, 25.0f );
@@ -148,13 +142,11 @@ void cApp::create( void )
 		for( int64_t y = -kGridWidth; y < kGridWidth; ++y )
 		{
 			auto mesh_object = m_scene->create_object< sk::Object::iObject >( "Clone" );
-			mesh_object->GetTransform().getPosition() = { x * 2, 0.0f, y * 2 };
-			mesh_object->GetTransform().update();
+			mesh_object->GetTransform().SetPosition( { x * 2, 0.0f, y * 2 } );
 			auto spin = mesh_object->AddComponent< sk::Object::Components::cSpinComponent >( sk::cVector3f{ 0.0f, dis( gen ), 0.0f } );
 			auto mesh_component = mesh_object->AddComponent< sk::Object::Components::cMeshComponent >( christopher_m, mat1.first );
 			mesh_component->enabled();
-			mesh_component->GetTransform().getRotation() = { -90.0f, 0.0f, 0.0f };
-			mesh_component->GetTransform().update();
+			mesh_component->SetRotation( { -90.0f, 0.0f, 0.0f } );
 			mesh_component->SetParent( spin );
 		}
 	}

@@ -31,7 +31,8 @@ namespace sk::Object
 	protected:
 		iComponent()
 		{
-			m_self_ = get_weak();
+			m_self_      = get_weak();
+			m_transform_ = sk::make_shared< cTransform >();
 		}
 	public:
 
@@ -39,10 +40,11 @@ namespace sk::Object
 
 		~iComponent() override
 		{
-			m_object = nullptr;
-			m_children.clear();
+			m_object_ = nullptr;
+			m_children_.clear();
 		}
 
+		// TODO: Make them protected
 		// Event bases
 		virtual void update      (){}
 		virtual void render      (){}
@@ -51,65 +53,71 @@ namespace sk::Object
 		virtual void debug_render(){}
 
 		[[ nodiscard ]]
-		bool         GetEnabled() const { return m_enabled; }
+		bool         GetEnabled() const { return m_enabled_; }
 		virtual void SetEnabled( bool _is_enabled ) = 0;
 
 		[[ nodiscard ]]
-		bool         GetIsInternal() const { return m_internal; }
+		bool         GetIsInternal() const { return m_internal_; }
 
 		virtual void PostEvent( uint16_t _event ) = 0;
 
 		[[ nodiscard ]]
-		auto& GetPosition()       { return m_transform.getPosition(); }
+		auto& GetPosition()       { return m_transform_->GetPosition(); }
 		[[ nodiscard ]]
-		auto& GetPosition() const { return m_transform.getPosition(); }
+		auto& GetPosition() const { return m_transform_->GetPosition(); }
+		void  SetPosition( const cVector3f& _position ){ m_transform_->SetPosition( _position ); }
 
 		[[ nodiscard ]]
-		auto& GetRotation()       { return m_transform.getRotation(); }
+		auto& GetRotation()       { return m_transform_->GetRotation(); }
 		[[ nodiscard ]]
-		auto& GetRotation() const { return m_transform.getRotation(); }
+		auto& GetRotation() const { return m_transform_->GetRotation(); }
+		void  SetRotation( const cVector3f& _rotation ){ m_transform_->SetRotation( _rotation ); }
 
 		[[ nodiscard ]]
-		auto& GetScale()       { return m_transform.getScale(); }
+		auto& GetScale()       { return m_transform_->GetScale(); }
 		[[ nodiscard ]]
-		auto& GetScale() const { return m_transform.getScale(); }
+		auto& GetScale() const { return m_transform_->GetScale(); }
+		void  SetScale( const cVector3f& _scale ){ m_transform_->SetScale( _scale ); }
 
 		[[ nodiscard ]]
-		auto& GetTransform()       { return m_transform; }
+		auto& GetTransform() const { return *m_transform_; }
+		
 		[[ nodiscard ]]
-		auto& GetTransform() const { return m_transform; }
+		auto& GetSharedTransform() const { return m_transform_; }
 		
 		auto& GetUUID() const { return m_uuid_; }
 
 		void SetParent( const cShared_ptr< iComponent >& _component )
 		{
 			// TODO: Complete rewrite after lunch :)
-			if( m_parent && !m_parent.Lock()->m_children.empty() )
+			if( m_parent_ && !m_parent_.Lock()->m_children_.empty() )
 			{
-				if( const auto itr = std::ranges::find( m_parent->m_children, m_self_.Lock() ); itr != m_parent->m_children.end() )
-					m_parent->m_children.erase( itr );
+				if( const auto itr = std::ranges::find( m_parent_->m_children_, m_self_.Lock() ); itr != m_parent_->m_children_.end() )
+					m_parent_->m_children_.erase( itr );
 			}
-			m_parent = _component;
+			m_parent_ = _component;
 			if( _component )
-				_component->m_children.emplace_back( m_self_.Lock() );
-			m_transform.setParent( ( _component != nullptr ) ? &_component->GetTransform() : nullptr );
+				_component->m_children_.emplace_back( m_self_.Lock() );
+			m_transform_->SetParent( ( _component != nullptr ) ? _component->m_transform_ : nullptr );
 		}
 
 	protected:
-		virtual void setEnabled( const bool _is_enabled ){ m_enabled = _is_enabled; }
+		virtual void setEnabled( const bool _is_enabled ){ m_enabled_ = _is_enabled; }
 		
-		cTransform                               m_transform = {};
-		cWeak_Ptr< iComponent >                  m_parent    = nullptr;
-		cWeak_Ptr< iObject >                     m_object    = nullptr;
+		cShared_ptr< cTransform > m_transform_;
+		cWeak_Ptr< iComponent >   m_parent_    = nullptr;
+		cWeak_Ptr< iObject >      m_object_    = nullptr;
 		// TODO: Have the UUID be able to be loaded from a scene file in the future.
 
-		std::vector< cShared_ptr< iComponent > > m_children = { }; // TODO: Add get children function
+		// TODO: Make the children into an unordered map
+		std::vector< cShared_ptr< iComponent > > m_children_ = { }; // TODO: Add get children function
 
 	private: // TODO: Move parts to cpp, find way to make actual constexpr
-		cUUID                                    m_uuid_     = {};
-		bool m_enabled  = true;
+		
+		cUUID m_uuid_     = {};
+		bool  m_enabled_  = true;
 		// Internal will hide it from the editor.
-		bool m_internal = false;
+		bool  m_internal_ = false;
 
 		cWeak_Ptr< iComponent > m_self_;
 		friend class iObject;
@@ -120,7 +128,7 @@ namespace sk::Object
 	class cComponent : public iComponent, public Event::cEventListener
 	{
 #define HAS_EVENT( Func, Val ) if constexpr( !std::is_same_v< decltype( &Ty::Func ), decltype( &iComponent::Func ) > ) events |= (Val)
-		constexpr static uint16_t detect_events( void )
+		constexpr static uint16_t detect_events()
 		{
 			uint16_t events = kNone;
 
@@ -162,7 +170,7 @@ namespace sk::Object
 
 		// Compile time postEvent
 		template< uint16_t Event >
-		constexpr void postEvent( void ) // TODO: Add some sort of event input. Maybe Args?
+		constexpr void postEvent() // TODO: Add some sort of event input. Maybe Args?
 		{
 			constexpr auto mask = Event & kEventMask;
 			// Constexpr "switch" as we only expect a single event at a time.
@@ -174,9 +182,20 @@ namespace sk::Object
 		} // postEvent
 
 	private:
-		void register_events( void )
+		void update_internal()
 		{
-			if constexpr( kEventMask & kUpdate      ) RegisterListener( kUpdate,      &Ty::update       );
+			if constexpr( kEventMask & kUpdate )
+			{
+				update();
+			}
+			
+			if( m_transform_->IsDirty() )
+				m_transform_->Update();
+		}
+		
+		void register_events()
+		{
+			RegisterListener( kUpdate, &cComponent::update_internal );
 			if constexpr( kEventMask & kRender      ) RegisterListener( kRender,      &Ty::render       );
 			if constexpr( kEventMask & kDebugRender ) RegisterListener( kDebugRender, &Ty::debug_render );
 		} // register_events

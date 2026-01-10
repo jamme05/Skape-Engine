@@ -61,7 +61,7 @@ void sk::Graphics::Passes::cForward_Pass::RenderWithCamera( const Object::Compon
             continue;
 
         const bool res = Utils::RenderMesh( _camera, frame_buffer,
-            *mesh->GetMaterial(), mesh->GetTransform().getWorld(), *mesh->GetMesh() );
+            *mesh->GetMaterial(), mesh->GetTransform().GetWorld(), *mesh->GetMesh() );
         if( !res )
             SK_BREAK;
     }

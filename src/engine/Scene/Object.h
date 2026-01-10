@@ -62,8 +62,8 @@ namespace sk::Object
 		{
 			auto component = sk::make_shared< Ty >( std::forward< Args >( _args )... );
 
-			component->m_object = get_weak();
-			component->m_uuid_  = GenerateRandomUUID();
+			component->m_object_ = get_weak();
+			component->m_uuid_   = GenerateRandomUUID();
 			component->SetParent( m_root );
 
 			if constexpr( std::is_base_of_v< Components::cMeshComponent, Ty > )
@@ -74,13 +74,14 @@ namespace sk::Object
 			return component;
 		} // addComponent
 
+		// TODO: Have get component actually get a component instead of creating one.
 		template< class Ty, class... Args >
 		requires std::is_base_of_v< iComponent, Ty >
 		auto GetComponent( Args&&... _args ) -> cShared_ptr< Ty >
 		{
 			auto component = sk::make_shared< Ty >( std::forward< Args >( _args )... );
 
-			component->m_object = get_weak();
+			component->m_object_ = get_weak();
 			component->setParent( m_root );
 
 			if constexpr( std::is_base_of_v< Components::cMeshComponent, Ty > )
@@ -109,9 +110,9 @@ namespace sk::Object
 			
 			auto component = sk::make_shared< Ty >();
 
-			component->m_object = get_weak();
-			component->m_uuid_  = GenerateRandomUUID();
-			component->m_internal = true;
+			component->m_object_   = get_weak();
+			component->m_uuid_     = GenerateRandomUUID();
+			component->m_internal_ = true;
 			component->SetParent( m_root );
 			
 			m_internal_components_.insert( std::pair{ Ty::getStaticType(), component } );

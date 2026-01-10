@@ -83,7 +83,7 @@ void cGBuffer_Pass::RenderWithCamera( const Object::Components::cCameraComponent
 
         // TODO: Add a local render function that's more optimized
         const bool res = Utils::RenderMesh( _camera, frame_buffer,
-            *mesh->GetMaterial(), mesh->GetTransform().getWorld(), *mesh->GetMesh() );
+            *mesh->GetMaterial(), mesh->GetTransform().GetWorld(), *mesh->GetMesh() );
         if( !res )
             SK_BREAK;
     }

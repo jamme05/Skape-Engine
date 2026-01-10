@@ -43,8 +43,8 @@ namespace sk::Object::Components
 	} // disabled
 	void cCameraComponent::update( void )
 	{
-		m_transform.update();
-		m_transform.getWorld().inversed( m_view_proj_inv );
+		m_transform_->Update();
+		m_transform_->GetWorld().inversed( m_view_proj_inv );
 		m_view_proj_inv = m_view_proj_inv * m_projection;
 	} // update
 

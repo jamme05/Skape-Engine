@@ -40,9 +40,9 @@ namespace sk::Object
 	void cCameraFlight::update( void )
 	{
 		// TODO: Make transform vector.
-		GetPosition() += Time::Delta * m_speeds.x * ( GetTransform().getWorldRight() * m_position.x + GetTransform().getWorldUp() * m_position.y + GetTransform().getWorldFront() * m_position.z );
+		GetPosition() += Time::Delta * m_speeds.x * ( GetTransform().GetWorldRight() * m_position.x + GetTransform().GetWorldUp() * m_position.y + GetTransform().GetWorldFront() * m_position.z );
 		GetRotation() += Time::Delta * m_speeds.y * cVector3f{ m_rotation.x, m_rotation.y, 0.0f };
-		GetTransform().update();
+		GetTransform().MarkDirty();
 		cCamera::update();
 	} // update
 

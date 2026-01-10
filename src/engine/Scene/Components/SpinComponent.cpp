@@ -10,9 +10,9 @@ cSpinComponent::cSpinComponent( cVector3f _speed )
 
 void cSpinComponent::update()
 {
-    GetTransform().getRotation() += m_speed_ * Time::Delta;
-    GetTransform().update();
+    GetTransform().GetRotation() += m_speed_ * Time::Delta;
+    GetTransform().MarkDirty();
 
-    for( auto& child : m_children )
-        child->GetTransform().update();
+    for( auto& child : m_children_ )
+        child->GetTransform().MarkDirty();
 }
