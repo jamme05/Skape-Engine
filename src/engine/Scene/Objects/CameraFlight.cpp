@@ -29,7 +29,7 @@ namespace sk::Object
 		case Input::kButton_Up:     handleButtonEvent( _event, true  ); break;
 		case Input::kKey_Down:      handleKeyEvent   ( _event, false ); break;
 		case Input::kKey_Up:        handleKeyEvent   ( _event, true  ); break;
-		case Input::kMouseRelative: handleMouseEvent ( _event );        break;
+		case Input::kMouseRelative:
 		case Input::kMouseButton:   handleMouseEvent ( _event );        break;
 		default: break;
 		}

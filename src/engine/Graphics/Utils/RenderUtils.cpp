@@ -47,7 +47,7 @@ void Utils::ShutdownUtils()
 bool Utils::RenderMesh( const Object::Components::cCameraComponent& _camera, Rendering::cFrame_Buffer& _frame_buffer,
     Assets::cMaterial& _material, const cMatrix4x4f& _world_matrix, Assets::cMesh& _mesh )
 {
-    auto& link = const_cast< cShader_Link& >( _material.GetShaderLink() );
+    const auto& link = const_cast< cShader_Link& >( _material.GetShaderLink() );
     SK_ERR_IFN( link.IsReady(),
         "Error: Link isn't ready yet, make sure to only call this function once Material.IsReady() returns true." )
     

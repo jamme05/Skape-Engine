@@ -70,7 +70,7 @@ void cGBuffer_Pass::RenderWithCamera( const Object::Components::cCameraComponent
     
     frame_buffer.Begin( _camera.getViewport(), _camera.getScissor() );
     frame_buffer.Clear( Rendering::eClear::kAll );
-
+    
     for( auto [ fst, lst ] = layer_manager.GetMeshesIn( _camera.GetLayers() ); fst != lst; ++fst )
     {
         if( !fst.IsValid() )
@@ -81,6 +81,7 @@ void cGBuffer_Pass::RenderWithCamera( const Object::Components::cCameraComponent
         if( !mesh->IsReady() )
             continue;
 
+        // TODO: Add a local render function that's more optimized
         const bool res = Utils::RenderMesh( _camera, frame_buffer,
             *mesh->GetMaterial(), mesh->GetTransform().getWorld(), *mesh->GetMesh() );
         if( !res )
