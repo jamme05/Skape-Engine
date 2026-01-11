@@ -72,10 +72,10 @@ namespace sk::Graphics
             auto Data() -> void* override;
             auto Data() const -> void* override;
             
-            void Read     ( void* _out, size_t _max_size = 0 ) const override;
-            void ReadRaw  ( void* _out, size_t _max_size = 0 ) const override;
-            void Update   ( const void* _data, size_t _size ) override;
-            void UpdateSeg( const void* _data, size_t _size, size_t _offset ) override;
+            void Read   ( void* _out, size_t _max_size = 0 ) const override;
+            void ReadRaw( void* _out, size_t _max_size = 0 ) const override;
+            void Update ( const void* _data, size_t _size ) override;
+            void UpdateSegment( const void* _data, size_t _size, size_t _offset ) override;
             [[ nodiscard ]]
             auto GetSize() const -> size_t override { return m_byte_size_; }
             void Resize ( size_t _byte_size ) override;
@@ -103,7 +103,9 @@ namespace sk::Graphics
 
             sRaw_Buffer m_buffer_;
 
+            // TODO: Allow the user to control the capacity more.
             size_t m_byte_size_ = 0;
+            size_t m_capacity_  = 0;
             void*  m_data_ = nullptr;
             size_t m_stride_ = 0;
             

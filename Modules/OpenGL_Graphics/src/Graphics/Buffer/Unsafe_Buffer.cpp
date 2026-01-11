@@ -23,10 +23,11 @@ namespace sk::Graphics
     : cUnsafe_Buffer( std::move( _name ), _byte_size, _stride, kTypeConverter[ static_cast< size_t >( _type ) ], _is_normalized, _is_static )
     {} // cUnsafe_Buffer
 
-    cUnsafe_Buffer::cUnsafe_Buffer( std::string _name, const size_t _byte_size, const size_t _stride, gl::GLenum _type, const bool _is_normalized, const bool _is_static )
+    cUnsafe_Buffer::cUnsafe_Buffer( std::string _name, const size_t _byte_size, const size_t _stride, const gl::GLenum _type, const bool _is_normalized, const bool _is_static )
     : m_flags_( kInitialized | ( _is_normalized ? kNormalized : kNone ) | ( _is_static ? kStatic : kNone ) )
     , m_buffer_{ .type = _type, .size = _byte_size }
     , m_byte_size_( _byte_size )
+    , m_capacity_( Math::ceilToPow2( _byte_size ) )
     , m_stride_( _stride )
     , m_name_( std::move( _name ) )
     {
@@ -51,6 +52,7 @@ namespace sk::Graphics
 
         m_flags_     = _other.m_flags_;
         m_byte_size_ = _other.m_byte_size_;
+        m_capacity_  = _other.m_capacity_;
         m_name_      = _other.m_name_ + " Copy";
 
         create();
@@ -72,6 +74,7 @@ namespace sk::Graphics
         // Should be safe?
         m_flags_     = _other.m_flags_;
         m_byte_size_ = _other.m_byte_size_;
+        m_capacity_  = _other.m_capacity_;
         m_name_      = std::move( _other.m_name_ );
         m_buffer_    = _other.m_buffer_;
         m_data_      = _other.m_data_;
@@ -108,8 +111,8 @@ namespace sk::Graphics
             gl::glNamedBufferData( m_buffer_.buffer, static_cast< gl::GLsizeiptr >( m_byte_size_ ), nullptr,
                 IsStatic() ? gl::GLenum::GL_STATIC_DRAW : gl::GLenum::GL_DYNAMIC_DRAW );
 
-            if( m_byte_size_ > 0 )
-                m_data_ = SK_ALLOC( m_byte_size_ );
+            if( m_capacity_ > 0 )
+                m_data_ = SK_ALLOC( m_capacity_ );
         } );
     } // Create
 
@@ -175,6 +178,7 @@ namespace sk::Graphics
     : m_flags_( _other.m_flags_ )
     , m_buffer_( _other.m_buffer_ )
     , m_byte_size_( _other.m_byte_size_ )
+    , m_capacity_( _other.m_capacity_ )
     , m_data_( _other.m_data_ )
     , m_name_( std::move( _other.m_name_ ) )
     {
@@ -215,19 +219,23 @@ namespace sk::Graphics
     {
         SK_BREAK_RET_IF( sk::Severity::kGraphics | 100,
             IsStatic() && m_byte_size_ > 0, TEXT( "ERROR: The buffer is static." ) )
-        
-        m_data_ = SK_REALLOC( m_data_, _size );
+
+        if( const auto new_capacity = Math::ceilToPow2( _size ); new_capacity != m_capacity_ )
+        {
+            m_capacity_  = new_capacity;
+            m_data_      = SK_REALLOC( m_data_, m_capacity_ );
+        }
         m_byte_size_ = _size;
 
         m_is_updated_.store( true );
         memcpy( m_data_, _data, _size );
     } // Update
 
-    void cUnsafe_Buffer::UpdateSeg( const void* _data, const size_t _size, const size_t _offset )
+    void cUnsafe_Buffer::UpdateSegment( const void* _data, const size_t _size, const size_t _offset )
     {
         SK_BREAK_RET_IF( sk::Severity::kGraphics | 10,
             m_byte_size_ == 0, TEXT( "ERROR: Trying to set segment on empty Buffer." ) )
-
+        
         SK_BREAK_RET_IF( sk::Severity::kGraphics | 100,
             IsStatic(), TEXT( "ERROR: The buffer is static." ) )
 
@@ -246,14 +254,19 @@ namespace sk::Graphics
     {
         SK_BREAK_RET_IF( sk::Severity::kGraphics | 100,
             IsStatic(), TEXT( "ERROR: The buffer is static." ) )
-
-        if( m_byte_size_ == _byte_size )
-            return;
+        
+        m_is_updated_.store( m_byte_size_ != _byte_size );
         
         m_byte_size_ = _byte_size;
+
+        const auto new_capacity = Math::ceilToPow2( m_byte_size_ );
         
-        m_is_updated_.store( true );
-        m_data_ = SK_REALLOC( m_data_, _byte_size );
+        if( new_capacity == m_capacity_ )
+            return;
+        
+        m_capacity_ = new_capacity;
+        
+        m_data_ = SK_REALLOC( m_data_, m_capacity_ );
     } // Resize
 
     void cUnsafe_Buffer::SetStride( const size_t _new_stride )

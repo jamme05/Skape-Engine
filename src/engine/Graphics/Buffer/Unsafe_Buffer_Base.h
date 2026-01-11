@@ -88,7 +88,7 @@ namespace sk::Graphics
          * @param _size 
          * @param _offset 
          */
-        virtual void   UpdateSeg( const void* _data, size_t _size, size_t _offset = 0 ) = 0;
+        virtual void   UpdateSegment( const void* _data, size_t _size, size_t _offset = 0 ) = 0;
         [[ nodiscard ]]
         virtual size_t GetSize() const = 0;
         virtual void   Resize ( size_t _byte_size ) = 0;
