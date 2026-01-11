@@ -42,11 +42,14 @@
 #define SK_BREAK { ( void ) std::raise( SIGINT ); }
 #endif // !defined( SK_BREAK )
 
+#define SK_ASSERT_TEMPLATE( Condition, Method, Text, ... ) \
+    if( Condition ){ [[ unlikely ]] EXTRACT_TEXT( Method, Text ); __VA_ARGS__ }
+
 #define SK_ASSERT_TEMPLATE_IF_RET( Method, Condition, Severity, Text, ... ) \
-    SK_PASSTHROUGH_RET( Severity, Condition, EXTRACT_TEXT( Method, Text ); __VA_OPT__( __VA_ARGS__ ; ) )
+    SK_PASSTHROUGH( Severity, SK_ASSERT_TEMPLATE( Condition, Method, Text, __VA_OPT__( __VA_ARGS__ ; ) ) )
 
 #define SK_ASSERT_TEMPLATE_IF( Method, Condition, Severity, Text, ... ) \
-    SK_PASSTHROUGH( Severity, if( Condition ){ [[ unlikely ]] EXTRACT_TEXT( Method, Text ); __VA_ARGS__ } )
+    SK_PASSTHROUGH( Severity, SK_ASSERT_TEMPLATE( Condition, Method, Text, __VA_ARGS__ ) )
 
 #define SK_CONST_ASSERT_TEMPLATE_IF_RET( Method, Condition, Text, ... ) \
     if constexpr( Condition ){ [[ unlikely ]] EXTRACT_TEXT( Method, Text ); return __VA_OPT__( __VA_ARGS__ ; ) }
