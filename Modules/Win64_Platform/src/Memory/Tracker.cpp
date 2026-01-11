@@ -232,6 +232,13 @@ private:
     	// Do a normal alloc in case no block provided.
     	if( _block == nullptr )
     		return alloc( _size, _location );
+    	
+    	// Just free if size is 0
+    	if( _size == 0 )
+    	{
+    		free( _block, _location );
+    		return nullptr;
+    	}
 
     	// Get the entry.
     	const auto prev_entry = static_cast< sTracker_entry* >( _block ) - 1;
