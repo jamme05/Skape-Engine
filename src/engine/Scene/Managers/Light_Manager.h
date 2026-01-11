@@ -17,6 +17,10 @@ namespace sk::Scene
 
         struct alignas( 16 ) sLightSettings
         {
+            static constexpr auto kConstantDirectionalMax = 2;
+            static constexpr auto kConstantPointMax       = 4;
+            static constexpr auto kConstantSpotMax        = 4;
+            
             uint32_t directional_light_count;
             uint32_t point_light_count;
             uint32_t spot_light_count;
@@ -24,24 +28,23 @@ namespace sk::Scene
             // Extended means to use a structured buffer instead of the faster uniform buffer
             uint32_t uses_extended;
             // The user should at MOST have two directional lights, so we keep that as the safe range.
-            Light::sDirectionalLight directional_light[ 2 ];
+            Light::sDirectionalLight directional_light[ kConstantDirectionalMax ];
+            Light::sPointLight       point_light      [ kConstantPointMax ];
+            Light::sSpotLight        spot_light       [ kConstantSpotMax ];
             // TODO: Decide how many other lights we should have.
-        };
-
-        struct alignas( 16 ) sShadowCaster
-        {
-            cVector2f   atlas_start;
-            cVector2f   atlas_end;
-            cMatrix4x4f light_matrix;
         };
         
         cLight_Manager();
+        
+        void Update();
 
         [[ nodiscard ]] auto  GetLights       () const -> const light_vec_t&;
         [[ nodiscard ]] auto  GetShadowCasters() const -> const light_vec_t&;
         
         [[ nodiscard ]] auto& GetLightBuffer       () const { return m_light_settings_buffer_; }
         [[ nodiscard ]] auto& GetDirectionalBuffer () const { return m_directional_buffer_;    }
+        [[ nodiscard ]] auto& GetPointBuffer       () const { return m_point_buffer_;          }
+        [[ nodiscard ]] auto& GetSpotBuffer        () const { return m_spot_buffer_;           }
         [[ nodiscard ]] auto& GetShadowCasterBuffer() const { return m_shadow_caster_buffer_;  }
     private:
         void register_light  ( light_ptr_t _light );
@@ -51,20 +54,30 @@ namespace sk::Scene
         void add_shadow_caster   ( const light_ptr_t& _light );
         void remove_shadow_caster( const light_ptr_t& _light );
         
+        void mark_buffer_dirty( Light::eType _type );
+        void mark_shadow_buffer_dirty();
+        
+        void compute_atlas();
+        
         using settings_buffer_t    = Graphics::cConstant_Buffer< sLightSettings >;
         using directional_buffer_t = Graphics::cStructured_Buffer< Light::sDirectionalLight >;
         using point_buffer_t       = Graphics::cStructured_Buffer< Light::sPointLight >;
         using spot_buffer_t        = Graphics::cStructured_Buffer< Light::sSpotLight >;
-        using shadow_buffer_t      = Graphics::cStructured_Buffer< sShadowCaster >;
+        using shadow_buffer_t      = Graphics::cStructured_Buffer< Light::sShadowCaster >;
         
         light_vec_t m_lights_;
         light_vec_t m_shadow_casters_;
         
-        settings_buffer_t    m_light_settings_buffer_;
+        settings_buffer_t m_light_settings_buffer_;
+        shadow_buffer_t   m_shadow_caster_buffer_;
+        
         directional_buffer_t m_directional_buffer_;
         point_buffer_t       m_point_buffer_;
         spot_buffer_t        m_spot_buffer_;
-        shadow_buffer_t      m_shadow_caster_buffer_;
+        
+        std::vector< size_t > m_directional_light_indices_;
+        std::vector< size_t > m_point_light_indices_;
+        std::vector< size_t > m_spot_light_indices_;
         
     };
 } // sk::Scene::

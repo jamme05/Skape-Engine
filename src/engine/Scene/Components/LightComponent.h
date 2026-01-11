@@ -69,6 +69,13 @@ namespace sk::Scene::Light
         // The index that contains this lights shadow casting info
         int32_t   shadow_cast_index;
     };
+    
+    struct alignas( 16 ) sShadowCaster
+    {
+        cVector2f   atlas_start;
+        cVector2f   atlas_end;
+        cMatrix4x4f light_matrix;
+    };
 } // sk::Scene::Light::
 
 namespace sk::Object::Components
@@ -79,8 +86,11 @@ namespace sk::Object::Components
         
         friend class sk::Scene::cLight_Manager;
     public:
+        struct sInvalid{};
+        
         using type_t     = sk::Scene::Light::eType;
         using settings_t = sk::Scene::Light::sSettings;
+        using data_ptr_t = std::variant< sInvalid, Scene::Light::sDirectionalLight*, Scene::Light::sPointLight*, Scene::Light::sSpotLight* >;
         using data_t     = std::variant< Scene::Light::sDirectionalLight, Scene::Light::sPointLight, Scene::Light::sSpotLight >;
         
         explicit cLightComponent( const settings_t& _settings = {} );
@@ -106,18 +116,24 @@ namespace sk::Object::Components
     private:
         void fix_data();
         
-        void fix_directional_data();
-        void fix_point_data();
-        void fix_spot_data();
+        void fix_directional_data( Scene::Light::sDirectionalLight& _data ) const;
+        void fix_point_data( Scene::Light::sPointLight& _data ) const;
+        void fix_spot_data( Scene::Light::sSpotLight& _data ) const;
         
         void update_data();
         
-        data_t      m_data_;
-        settings_t  m_settings_;
+        void init_data();
         
-        uint32_t    m_registered_index_  = std::numeric_limits< uint32_t >::max();
-        uint32_t    m_shadow_data_index_ = std::numeric_limits< uint32_t >::max();
-        uint32_t    m_data_index_        = std::numeric_limits< uint32_t >::max();
+        data_t     m_data_;
+        data_ptr_t m_data_ptr_;
+        
+        Scene::Light::sShadowCaster* m_shadow_info_ = nullptr;
+        
+        settings_t m_settings_;
+        
+        uint32_t m_registered_index_  = std::numeric_limits< uint32_t >::max();
+        uint32_t m_shadow_data_index_ = std::numeric_limits< uint32_t >::max();
+        uint32_t m_data_index_        = std::numeric_limits< uint32_t >::max();
         
         cMatrix4x4f m_view_proj_matrix_;
         
