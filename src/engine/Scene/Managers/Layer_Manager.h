@@ -4,12 +4,11 @@
 
 #include <unordered_map>
 
-#include <Misc/Singleton.h>
 #include <Misc/Hashing.h>
+#include <Misc/Singleton.h>
 #include <Misc/Smart_Ptrs.h>
-
-#include "Misc/StringID.h"
-#include "Scene/Object.h"
+#include <Misc/StringID.h>
+#include <Scene/Object.h>
 
 namespace sk::Object::Components
 {
