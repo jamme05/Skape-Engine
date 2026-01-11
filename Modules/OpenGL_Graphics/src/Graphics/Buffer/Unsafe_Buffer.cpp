@@ -272,6 +272,11 @@ namespace sk::Graphics
         m_stride_ = _new_stride;
     }
 
+    void cUnsafe_Buffer::SetChanged()
+    {
+        m_is_updated_.store( false );
+    }
+
     void cUnsafe_Buffer::Upload( const bool _force )
     {
         SK_BREAK_RET_IF( sk::Severity::kConstGraphics | 10,

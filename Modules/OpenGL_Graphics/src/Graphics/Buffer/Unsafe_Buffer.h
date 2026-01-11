@@ -83,7 +83,8 @@ namespace sk::Graphics
             auto GetStride() const -> size_t override { return m_stride_; }
             void SetStride( size_t _new_stride ) override;
             
-            void Upload ( bool _force ) override;
+            void SetChanged() override;
+            void Upload( bool _force ) override;
 
             void Copy ( const iUnsafe_Buffer& _other ) override;
             void Steal( iUnsafe_Buffer&& _other ) noexcept override;
