@@ -250,6 +250,8 @@ void cApp::run()
 	sk::cSceneManager::get().update();
 	auto& pipeline = *sk::Graphics::cRenderer::get().GetPipeline();
 	
+	// TODO: Have the input manager push a mouse relative event with the relative being at 0, 0 every frame
+	
 	sk::Graphics::cRenderer::get().Update();
 	
 	pipeline.Execute();

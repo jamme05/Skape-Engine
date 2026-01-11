@@ -577,7 +577,7 @@ namespace sk
 
 		auto& operator=( cShared_ptr< Ty >&& _right ) noexcept
 		{
-			dec_weak(); // TODO: Make sure that it's counting correctly.
+			dec_weak();
 			m_data_ = std::move( _right ).m_data_;
 			_right.m_data_ = nullptr;
 			dec(); // Decrease due to stealing shared ptr

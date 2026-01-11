@@ -54,8 +54,8 @@ namespace sk::Math
 		constexpr cMatrix operator-(const cMatrix& _m) const { return { _m.x - x, _m.y - y, _m.z - z, _m.w - w }; }
 		constexpr cMatrix operator*(const cMatrix& _m) const { return { (_m.x * x.x) + (_m.y * x.y) + (_m.z * x.z) + (_m.w * x.w), (_m.x * y.x) + (_m.y * y.y) + (_m.z * y.z) + (_m.w * y.w), (_m.x * z.x) + (_m.y * z.y) + (_m.z * z.z) + (_m.w * z.w), (_m.x * w.x) + (_m.y * w.y) + (_m.z * w.z) + (_m.w * w.w) }; }
 
-		constexpr cMatrix& operator= ( const cMatrix&  _m )          { x = _m.x; y = _m.y; z = _m.z; w = _m.w; return *this; }
-		constexpr cMatrix& operator= (       cMatrix&& _m ) noexcept { x = _m.x; y = _m.y; z = _m.z; w = _m.w; return *this; }
+		constexpr cMatrix& operator= ( const cMatrix&  _m )          = default;
+		constexpr cMatrix& operator= (       cMatrix&& _m ) noexcept = default;
 
 		template< class Ty2 >
 		constexpr cMatrix& operator= ( const cMatrix< 4, 4, Ty2 >&  _m ){ x = _m.x; y = _m.y; z = _m.z; w = _m.w; return *this; }
