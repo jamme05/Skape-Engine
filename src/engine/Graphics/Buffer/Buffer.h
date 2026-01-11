@@ -35,7 +35,10 @@ namespace sk::Graphics
         ~cBuffer();
         
         static constexpr auto getByteSize( const size_t _count ){ return Memory::get_aligned( _count * kTypeSize, Memory::kShaderAlign ); }
-
+        
+        void MarkDirty();
+        void Upload( bool _force = false );
+        
         auto Data() -> Ty*;
         auto Data() const -> const Ty*;
         
@@ -50,13 +53,19 @@ namespace sk::Graphics
         template< class... Args >
         requires std::constructible_from< Ty, Args... >
         size_t EmplaceBack( Args&&... _value );
-        void   PopBack( Ty* _removed_value );
+        void   PopBack( Ty* _removed_value = nullptr );
         
         auto Front() -> Ty&;
         auto Front() const -> const Ty&;
         
         auto Back() -> Ty&;
         auto Back() const -> const Ty&;
+        
+        auto operator->() -> Ty*;
+        auto operator->() const -> const Ty*;
+        
+        auto operator*() -> Ty&;
+        auto operator*() const -> const Ty&;
         
         auto operator=( const cBuffer& _other ) -> cBuffer&;
         cBuffer& operator=( cBuffer&& _other ) noexcept;
@@ -121,6 +130,18 @@ namespace sk::Graphics
     } // ~cBuffer
 
     template< class Ty, Buffer::eType Type >
+    void cBuffer< Ty, Type >::MarkDirty()
+    {
+        m_buffer_.SetChanged();
+    }
+
+    template< class Ty, Buffer::eType Type >
+    void cBuffer< Ty, Type >::Upload( const bool _force )
+    {
+        m_buffer_.Upload( _force );
+    }
+
+    template< class Ty, Buffer::eType Type >
     auto cBuffer< Ty, Type >::Data() -> Ty*
     {
         return static_cast< Ty* >( m_buffer_.Data() );
@@ -147,9 +168,7 @@ namespace sk::Graphics
     template< class Ty, Buffer::eType Type >
     void cBuffer< Ty, Type >::Resize( const size_t _new_size )
     {
-        if( _new_size < m_size_ )
-            return;
-        
+        m_size_ = _new_size;
         m_buffer_.Resize( getByteSize( _new_size ) );
     }
 
@@ -178,7 +197,7 @@ namespace sk::Graphics
         auto index = Size() - 1;
         
         if( _removed_value != nullptr )
-            _removed_value = Data()[ index ];
+            *_removed_value = Data()[ index ];
         
         Resize( index );
     }
@@ -205,6 +224,30 @@ namespace sk::Graphics
     auto cBuffer< Ty, Type >::Back() const -> const Ty&
     {
         return Data()[ Size() - 1 ];
+    }
+
+    template< class Ty, Buffer::eType Type >
+    auto cBuffer< Ty, Type >::operator->() -> Ty*
+    {
+        return Data();
+    }
+
+    template< class Ty, Buffer::eType Type >
+    auto cBuffer< Ty, Type >::operator->() const -> const Ty*
+    {
+        return Data();
+    }
+
+    template< class Ty, Buffer::eType Type >
+    auto cBuffer< Ty, Type >::operator*() -> Ty&
+    {
+         return *Data();
+    }
+
+    template< class Ty, Buffer::eType Type >
+    auto cBuffer< Ty, Type >::operator*() const -> const Ty&
+    {
+        return *Data();
     }
 
     template< class Ty, Buffer::eType Type >
