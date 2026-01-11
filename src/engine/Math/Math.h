@@ -118,7 +118,9 @@ namespace sk
 			if( _val <= Ty( 2 ) )
 				return _val;
 			
-			return pow2< Ty >( sizeof( Ty ) - std::countr_zero( _val ) - 1 );
+			static constexpr auto kBitSize = sizeof( Ty ) * 8;
+			
+			return pow2< Ty >( kBitSize - std::countl_zero( _val ) - 1 );
 		}
 
 		// Returns the nearest power of two.
@@ -128,7 +130,9 @@ namespace sk
 			if( _val <= Ty( 2 ) )
 				return _val;
 			
-			const uint8_t bits = sizeof( Ty ) - std::countr_zero( _val );
+			static constexpr auto kBitSize = sizeof( Ty ) * 8;
+			
+			const uint8_t bits = kBitSize - std::countl_zero( _val );
 			
 			// The defining bit is the bit behind the bit furthest to the right.
 			// If the number has this bit, it means that we will ciel, otherwise we floor.
@@ -139,12 +143,16 @@ namespace sk
 
 		// Returns the nearest power of two that's greater than this value.
 		template< std::integral Ty >
-		constexpr Ty ceilToPow2( const Ty _val )
+		constexpr Ty ceilToPow2( Ty _val )
 		{
 			if( _val <= Ty( 2 ) )
 				return _val;
+			
+			--_val;
+			
+			static constexpr auto kBitSize = sizeof( Ty ) * 8;
 
-			return pow2< Ty >( sizeof( Ty ) - std::countr_zero( _val ) );
+			return pow2< Ty >( kBitSize - std::countl_zero( _val ) );
 		}
 
 		template< class T >
