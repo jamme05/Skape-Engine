@@ -8,8 +8,6 @@
 
 #include <Graphics/Buffer/Dynamic_Buffer.h>
 
-#include <ranges>
-
 namespace sk::Assets
 {
     cMesh::cMesh( const std::string& _name )

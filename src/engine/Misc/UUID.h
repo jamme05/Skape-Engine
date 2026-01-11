@@ -9,7 +9,6 @@
 #include <cstdint>
 
 #include <Misc/Hashing.h>
-
 #include <Seralization/Serializable.h>
 
 namespace sk

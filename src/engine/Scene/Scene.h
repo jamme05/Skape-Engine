@@ -6,8 +6,9 @@
 
 #pragma once
 
-#include "Object.h"
-#include "Assets/Asset.h"
+
+#include <Assets/Asset.h>
+#include <Scene/Object.h>
 
 namespace sk
 {

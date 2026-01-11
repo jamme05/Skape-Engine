@@ -6,9 +6,8 @@
 
 #pragma once
 
+#include <Assets/Utils/Event.h>
 #include <Misc/Smart_Ptrs.h>
-
-#include "Assets/Utils/Event.h"
 
 namespace sk
 {

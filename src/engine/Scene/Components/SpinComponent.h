@@ -1,4 +1,7 @@
+
+
 #pragma once
+
 #include "Component.h"
 
 namespace sk::Object::Components

@@ -6,8 +6,6 @@
 
 #include "Model.h"
 
-#include <Assets/Mesh.h>
-
 namespace sk::Assets
 {
     cModel::cModel()

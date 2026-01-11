@@ -4,8 +4,8 @@
 
 #include <glbinding/gl/functions.h>
 
-#include "Shader_Reflection.h"
-#include "Assets/Material.h"
+#include <Assets/Material.h>
+#include <Graphics/Utils/Shader_Reflection.h>
 
 sk::Graphics::Utils::cShader_Link::cShader_Link(
     const cShared_ptr< cAsset_Meta >& _vertex_shader,

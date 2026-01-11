@@ -1,7 +1,9 @@
-﻿#pragma once
-#include <functional>
+﻿
+
+#pragma once
+
 #include <memory>
-#include <string>
+#include <vector>
 
 #include <Graphics/Passes/Render_Pass.h>
 

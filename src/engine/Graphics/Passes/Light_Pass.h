@@ -1,9 +1,11 @@
 ﻿
 
 #pragma once
+
 #include "Render_Pass.h"
-#include "Assets/Material.h"
-#include "Assets/Access/Asset_Ref.h"
+
+#include <Assets/Material.h>
+#include <Assets/Access/Asset_Ref.h>
 
 namespace sk::Graphics::Passes
 {

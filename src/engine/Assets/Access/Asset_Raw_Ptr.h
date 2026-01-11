@@ -10,7 +10,6 @@
 #include <Assets/Access/Asset_Ptr_Base.h>
 #include <Scene/Managers/EventManager.h>
 
-
 namespace sk
 {
     class cAsset;

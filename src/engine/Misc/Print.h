@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <iostream>
+#include <format>
 
 namespace sk
 {
@@ -27,31 +27,33 @@ namespace sk
 
     void println();
 
+    // Don't forward the args into the std::make_format args
+    // It will cause an error.
     template< class... Args >
     static void print( std::FILE* const _stream, const std::format_string< Args... > _fmt_str, Args&&... _args )
     {
-        auto result_str = std::vformat( _fmt_str.get(), std::make_format_args( std::forward< Args >( _args )... ) );
+        auto result_str = std::vformat( _fmt_str.get(), std::make_format_args( _args... ) );
         print_internal( _stream, result_str.c_str(), false );
     }
 
     template< class... Args >
     static void print( const std::format_string< Args... > _fmt_str, Args&&... _args )
     {
-        auto result_str = std::vformat( _fmt_str.get(), std::make_format_args( std::forward< Args >( _args )... ) );
+        auto result_str = std::vformat( _fmt_str.get(), std::make_format_args( _args... ) );
         print_internal( stdout, result_str, false );
     }
 
     template< class... Args >
     static void println( std::FILE* const _stream, const std::format_string< Args... > _fmt_str, Args&&... _args )
     {
-        auto result_str = std::vformat( _fmt_str.get(), std::make_format_args( std::forward< Args >( _args )... ) );
+        auto result_str = std::vformat( _fmt_str.get(), std::make_format_args( _args... ) );
         print_internal( _stream, result_str, true );
     }
 
     template< class... Args >
     static void println( const std::format_string< Args... > _fmt_str, Args&&... _args )
     {
-        auto result_str = std::vformat( _fmt_str.get(), std::make_format_args( std::forward< Args >( _args )... ) );
+        auto result_str = std::vformat( _fmt_str.get(), std::make_format_args( _args... ) );
         print_internal( stdout, result_str.c_str(), true );
     }
 } // sk::

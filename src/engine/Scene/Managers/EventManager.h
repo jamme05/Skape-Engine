@@ -11,12 +11,10 @@
 
 #include <Containers/Map.h>
 #include <Containers/Vector.h>
-
 #include <Misc/Hashing.h>
-#include <Misc/Singleton.h>
 #include <Misc/Print.h>
+#include <Misc/Singleton.h>
 #include <Misc/Smart_Ptrs.h>
-
 #include <Reflection/RuntimeClass.h>
 
 namespace sk

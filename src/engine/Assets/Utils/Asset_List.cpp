@@ -8,7 +8,7 @@
 
 #include <utility>
 
-#include "Assets/Asset.h"
+#include <Assets/Asset.h>
 
 namespace sk::Assets
 {

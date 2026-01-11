@@ -9,11 +9,9 @@
 #include <glbinding/gl/enum.h>
 #include <glbinding/gl/types.h>
 
-#include <Misc/Smart_Ptrs.h>
-
-#include "Math/Vector2.h"
-#include "Math/Vector3.h"
-#include "Math/Vector4.h"
+#include <Math/Vector2.h>
+#include <Math/Vector3.h>
+#include <Math/Vector4.h>
 
 namespace sk::Assets
 {

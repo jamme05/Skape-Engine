@@ -5,31 +5,28 @@
 #include <print>
 #include <random>
 
+#include <Assets/Asset.h>
+#include <Assets/Texture.h>
 #include <Assets/Management/Asset_Manager.h>
 #include <Assets/Utils/Asset_List.h>
 #include <Graphics/Renderer.h>
+#include <Graphics/Pipelines/Deferred_Pipeline.h>
+#include <Graphics/Pipelines/Pipeline.h>
 #include <Graphics/Rendering/Render_Context.h>
-#include "Assets/Asset.h"
-#include "Assets/Texture.h"
-#include "Assets/Management/Asset_Job_Manager.h"
-#include "Graphics/Renderer_Impl.h"
-#include "Graphics/Pipelines/Deferred_Pipeline.h"
-#include "Graphics/Pipelines/Forward_Pipeline.h"
-#include "Graphics/Pipelines/Pipeline.h"
-#include "Input/Mouse_Include.h"
-#include "Math/Types.h"
-#include "Memory/Tracker/Tracker.h"
-#include "Misc/UUID.h"
-#include "Platform/Time.h"
-#include "Platform/Window/Window_Base.h"
-#include "Reflection/RuntimeClass.h"
-#include "Reflection/RuntimeStruct.h"
-#include "Scene/Scene.h"
-#include "Scene/Components/LightComponent.h"
-#include "Scene/Components/MeshComponent.h"
-#include "Scene/Components/SpinComponent.h"
-#include "Scene/Managers/SceneManager.h"
-#include "Scene/Objects/CameraFlight.h"
+#include <Input/Mouse_Include.h>
+#include <Math/Types.h>
+#include <Memory/Tracker/Tracker.h>
+#include <Misc/UUID.h>
+#include <Platform/Time.h>
+#include <Platform/Window/Window_Base.h>
+#include <Reflection/RuntimeClass.h>
+#include <Reflection/RuntimeStruct.h>
+#include <Scene/Scene.h>
+#include <Scene/Components/LightComponent.h>
+#include <Scene/Components/MeshComponent.h>
+#include <Scene/Components/SpinComponent.h>
+#include <Scene/Managers/SceneManager.h>
+#include <Scene/Objects/CameraFlight.h>
 
 cApp* cApp::m_running_instance_ = nullptr;
 
@@ -100,15 +97,15 @@ void cApp::create( void )
 	sk::Graphics::cRenderer::get().SetPipeline( SK_SINGLE( sk::Graphics::cDeferred_Pipeline, m_main_window_ ) );
 
 	const auto christopher_t = list_1.GetAssetOfType< sk::Assets::cTexture >();
-	auto christopher_m = list_1.GetAssetOfType< sk::Assets::cMesh    >();
+	auto christopher_m       = list_1.GetAssetOfType< sk::Assets::cMesh    >();
 	const auto toilet_t      = list_2.GetAssetOfType< sk::Assets::cTexture >();
-	auto toilet_m      = list_2.GetAssetOfType< sk::Assets::cMesh    >();
+	auto toilet_m            = list_2.GetAssetOfType< sk::Assets::cMesh    >();
 
 	m_scene = sk::make_shared< sk::cScene >();
 	m_scene->create_object< sk::Object::cCameraFlight >( "Camera Free Flight" )->setAsMain();
 	
 	auto mat1 = asset_m.CreateAsset< sk::Assets::cMaterial >( "Material Test",
-	sk::Graphics::Utils::cShader_Link{ shader_vert, shader_frag } );
+		sk::Graphics::Utils::cShader_Link{ shader_vert, shader_frag } );
 	mat1.second->SetTexture( "mainTexture", christopher_t );
 
 	auto mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 2" );

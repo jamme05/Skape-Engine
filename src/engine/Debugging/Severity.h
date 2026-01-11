@@ -7,7 +7,6 @@
 #pragma once
 
 #include <cstdint>
-#include <print>
 
 namespace sk::Severity
 {

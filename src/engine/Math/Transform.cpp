@@ -1,8 +1,6 @@
 ﻿
 #include "Transform.h"
 
-#include "Platform/Time.h"
-
 using namespace sk;
 
 void cTransform::SetPosition( const cVector3f& _position )

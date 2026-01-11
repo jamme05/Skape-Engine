@@ -1,8 +1,6 @@
 ﻿
 #include "StringID.h"
 
-#include <queue>
-
 ////////////////////////////////////////////////
 
 sk::cStringIDManager::sStringRegistry::sStringRegistry( const sStringRegistry& _other )

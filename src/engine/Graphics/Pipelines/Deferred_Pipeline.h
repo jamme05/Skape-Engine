@@ -2,10 +2,8 @@
 
 #pragma once
 
+#include <Assets/Material.h>
 #include <Graphics/Pipelines/Pipeline.h>
-
-#include "Assets/Material.h"
-#include "Assets/Management/Asset_Manager.h"
 
 namespace sk::Graphics::Passes
 {

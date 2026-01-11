@@ -7,7 +7,6 @@
 #pragma once
 
 #include <cstdint>
-#include <cstdlib>
 #include <type_traits>
 
 namespace sk::Memory
@@ -15,8 +14,8 @@ namespace sk::Memory
 	enum eAlignment : uint16_t
 	{
 		kDisableAlign = 1,
-		kB16Align     = 16,   // 16-byte aka Vector 4 aligned.
-		kShaderAlign  = kB16Align, // 16-byte aka Vector 4 aligned.
+		kB16Align     = 16,   // 16-byte aka float4 aligned.
+		kShaderAlign  = kB16Align, // 16-byte aka float4 aligned.
 		kB32Align     = 32,   // 32-byte aligned
 		kB64Align     = 64,   // 64-byte aligned
 		kB128Align    = 128,  // 128-byte aligned

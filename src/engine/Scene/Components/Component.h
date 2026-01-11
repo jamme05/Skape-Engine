@@ -6,15 +6,13 @@
 
 #pragma once
 
-#include <string>
-
-#include "Math/Matrix4x4.h"
-#include "Math/Transform.h"
-#include "Misc/Hashing.h"
-#include "Misc/Smart_Ptrs.h"
-#include "Misc/UUID.h"
-#include "Reflection/RuntimeClass.h"
-#include "Scene/Managers/EventManager.h"
+#include <Math/Matrix4x4.h>
+#include <Math/Transform.h>
+#include <Misc/Hashing.h>
+#include <Misc/Smart_Ptrs.h>
+#include <Misc/UUID.h>
+#include <Reflection/RuntimeClass.h>
+#include <Scene/Managers/EventManager.h>
 
 namespace sk::Object
 {

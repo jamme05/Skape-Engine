@@ -7,12 +7,8 @@
 #pragma once
 
 #include <Containers/Map.h>
-
-#include <Reflection/Type_Hash.h>
-
 #include <Misc/Smart_Ptrs.h>
-
-#include <fastgltf/core.hpp>
+#include <Reflection/Type_Hash.h>
 
 namespace sk
 {

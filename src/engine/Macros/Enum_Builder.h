@@ -10,8 +10,8 @@
 
 #include "For_Each.h"
 
-#include "Containers/Const/String.h"
 #include <Containers/Const/Const_Map.h>
+#include <Containers/Const/String.h>
 
 #define TYPE_ENUM_2( Name, Type ) internal_ ## Name : Type
 #define TYPE_ENUM_1( Name ) internal_ ## Name : uint8_t

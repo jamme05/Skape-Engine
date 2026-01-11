@@ -4,9 +4,9 @@
 
 #include <Graphics/Passes/Render_Pass.h>
 
-#include "Assets/Material.h"
-#include "Assets/Access/Asset_Ref.h"
-#include "Graphics/Buffer/Dynamic_Buffer.h"
+#include <Assets/Material.h>
+#include <Assets/Access/Asset_Ref.h>
+#include <Graphics/Buffer/Dynamic_Buffer.h>
 
 namespace sk
 {

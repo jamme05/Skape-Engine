@@ -7,8 +7,7 @@
 #include "CameraFlight.h"
 
 #include <Input/Gamepad.h>
-
-#include "Platform/Time.h"
+#include <Platform/Time.h>
 
 namespace sk::Object
 {

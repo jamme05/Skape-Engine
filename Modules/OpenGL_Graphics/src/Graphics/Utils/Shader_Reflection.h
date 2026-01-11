@@ -7,10 +7,9 @@
 
 #include <glbinding/gl/types.h>
 
+#include <Containers/Vector.h>
 #include <Misc/StringID.h>
 #include <Reflection/Types.h>
-
-#include "Containers/Vector.h"
 
 namespace sk::Graphics::Utils
 {

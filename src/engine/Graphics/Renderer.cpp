@@ -6,9 +6,8 @@
 
 #include "Renderer.h"
 
-#include "Memory/Tracker/Tracker.h"
-
 #include <Graphics/Pipelines/Pipeline.h>
+#include <Memory/Tracker/Tracker.h>
 
 // Won't the graphics context have to live within each window?
 // Figure out a way to either pick a context depending on the active window,

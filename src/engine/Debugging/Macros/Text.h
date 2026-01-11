@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include <Macros/Manipulation.h>
 #include <Debugging/Macros/Warning.h>
+#include <Macros/Manipulation.h>
 #include <Misc/Print.h>
 
 #define THIS_T()
 #define THIS_T_IS_TEXT ,1
 
-#define RAW_TEXT( ... ) std::format( __VA_ARGS__ )
+#define RAW_TEXT( ... ) sk::format( __VA_ARGS__ )
 #define PRINT_TEXT( ... ) sk::print( __VA_ARGS__ )
 #define PRINTLN_TEXT( ... ) sk::println( __VA_ARGS__ )
 #define WARN_TEXT( ... ) sk::println( stderr, __VA_ARGS__ )

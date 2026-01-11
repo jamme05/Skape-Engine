@@ -9,8 +9,8 @@
 #include <bit>
 #include <cstdint>
 #include <math.h>
-#include <valarray>
 #include <numbers>
+#include <valarray>
 
 namespace sk
 {

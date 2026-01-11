@@ -6,16 +6,11 @@
 
 #include "Shader.h"
 
-#include <Math/Types.h>
-
 #include <glbinding/gl/functions.h>
 
-#include "Graphics/Buffer/Dynamic_Buffer.h"
-#include "Math/Matrix3x3.h"
-
+#include <Graphics/Renderer_Impl.h>
+#include <Graphics/Buffer/Dynamic_Buffer.h>
 #include <Graphics/Utils/Shader_Reflection.h>
-
-#include "Graphics/Renderer_Impl.h"
 
 namespace sk::Assets
 {

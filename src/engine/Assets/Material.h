@@ -7,16 +7,15 @@
 #pragma once
 
 #include <variant>
+
 #include <Assets/Asset.h>
 #include <Assets/Shader.h>
-#include <Assets/Access/Asset_Ptr.h>
+#include <Assets/Texture.h>
+#include <Assets/Access/Asset_Ref.h>
 #include <Graphics/Buffer/Dynamic_Buffer.h>
-
-#include "Access/Asset_Ref.h"
-#include "Assets/Texture.h"
-#include "Graphics/Utils/Shader_Link.h"
-#include "Math/Matrix4x4.h"
-#include "Math/Vector4.h"
+#include <Graphics/Utils/Shader_Link.h>
+#include <Math/Matrix4x4.h>
+#include <Math/Vector4.h>
 
 
 namespace sk::Graphics::Rendering

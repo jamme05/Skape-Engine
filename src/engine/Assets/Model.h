@@ -8,12 +8,10 @@
 
 #include <fastgltf/types.hpp>
 
-#include "Assets/Asset.h"
-
-#include "Containers/Vector.h"
-
-#include "Math/Transform.h"
-#include "Math/Vector4.h"
+#include <Assets/Asset.h>
+#include <Containers/Vector.h>
+#include <Math/Transform.h>
+#include <Math/Vector4.h>
 
 namespace sk::Assets
 {

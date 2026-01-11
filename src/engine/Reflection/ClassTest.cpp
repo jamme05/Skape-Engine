@@ -4,6 +4,7 @@
  *
  */
 
+#include <Misc/Smart_Ptrs.h>
 #include <Reflection/RuntimeClass.h>
 
 // TODO: Move test to it's own file.

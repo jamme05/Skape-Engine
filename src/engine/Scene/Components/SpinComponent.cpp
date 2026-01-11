@@ -1,6 +1,7 @@
+
 #include "SpinComponent.h"
 
-#include "Platform/Time.h"
+#include <Platform/Time.h>
 
 using namespace sk::Object::Components;
 

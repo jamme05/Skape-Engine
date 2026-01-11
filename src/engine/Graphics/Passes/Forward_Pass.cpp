@@ -1,14 +1,15 @@
-﻿#include "Forward_Pass.h"
+﻿
 
+#include "Forward_Pass.h"
+
+#include <Graphics/Rendering/Frame_Buffer.h>
+#include <Graphics/Rendering/Window_Context.h>
+#include <Graphics/Utils/RenderUtils.h>
+#include <Platform/Window/Window_Base.h>
+#include <Scene/Components/CameraComponent.h>
+#include <Scene/Components/MeshComponent.h>
+#include <Scene/Managers/Layer_Manager.h>
 #include <Scene/Managers/SceneManager.h>
-
-#include "Graphics/Rendering/Frame_Buffer.h"
-#include "Graphics/Rendering/Window_Context.h"
-#include "Graphics/Utils/RenderUtils.h"
-#include "Platform/Window/Window_Base.h"
-#include "Scene/Components/CameraComponent.h"
-#include "Scene/Components/MeshComponent.h"
-#include "Scene/Managers/cLayer_Manager.h"
 
 sk::Graphics::Passes::cForward_Pass::cForward_Pass( Platform::iWindow* _window )
 : m_window_( _window )

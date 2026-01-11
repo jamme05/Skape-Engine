@@ -11,7 +11,6 @@
 #include <Assets/Access/Asset_Ptr.h>
 #include <Scene/Components/Component.h>
 
-
 namespace sk::Assets
 {
 	class cMaterial;

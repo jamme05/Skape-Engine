@@ -6,10 +6,8 @@
 
 #include "Asset.h"
 
-#include <typeindex>
-#include <Assets/Management/Asset_Manager.h>
 #include <Assets/Management/Asset_Job_Manager.h>
-
+#include <Assets/Management/Asset_Manager.h>
 #include <Seralization/SerializedObject.h>
 
 using namespace sk;

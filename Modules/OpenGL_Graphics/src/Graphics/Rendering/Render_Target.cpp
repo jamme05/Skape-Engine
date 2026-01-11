@@ -8,6 +8,8 @@
 
 #include <glbinding/gl/functions.h>
 
+#include <Debugging/Macros/Assert.h>
+
 namespace sk::Graphics::Rendering
 {
     cRender_Target::cRender_Target( const cVector2u32& _resolution, const eFormat _format, const cColor& _clear_color, const bool _auto_resize )

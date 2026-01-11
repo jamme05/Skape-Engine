@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <Reflection/Types.h>
 #include <Containers/Const/Linked_Array.h>
+#include <Reflection/Types.h>
 
 namespace sk::Reflection::Registry
 {

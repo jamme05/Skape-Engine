@@ -5,7 +5,6 @@
  */
 
 #pragma once
-#include <algorithm>
 
 namespace sk
 {

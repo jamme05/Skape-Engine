@@ -7,19 +7,17 @@
 
 #pragma once
 
+#include <unordered_set>
+
 #include <fastgltf/core.hpp>
 
 #include <Assets/Asset.h>
+#include <Assets/Access/Asset_Ptr.h>
+#include <Assets/Access/Asset_Ref.h>
 #include <Assets/Utils/Asset_List.h>
-
 #include <Containers/Map.h>
-#include <Containers/Vector.h>
-
 #include <Misc/Singleton.h>
 #include <Misc/Smart_Ptrs.h>
-
-#include "Assets/Access/Asset_Ptr.h"
-#include "Assets/Access/Asset_Ref.h"
 
 
 namespace sk

@@ -9,13 +9,13 @@
 #include <glbinding/gl/enum.h>
 #include <glbinding/gl/functions.h>
 
-#include "Depth_Target.h"
-#include "Render_Target.h"
-#include "Scissor.h"
-#include "Viewport.h"
-#include "Graphics/Renderer_Impl.h"
-#include "Graphics/Buffer/Unsafe_Buffer.h"
-#include "Graphics/Utils/Shader_Reflection.h"
+#include <Graphics/Renderer_Impl.h>
+#include <Graphics/Buffer/Unsafe_Buffer.h>
+#include <Graphics/Rendering/Depth_Target.h>
+#include <Graphics/Rendering/Render_Target.h>
+#include <Graphics/Rendering/Scissor.h>
+#include <Graphics/Rendering/Viewport.h>
+#include <Graphics/Utils/Shader_Reflection.h>
 
 using namespace sk::Graphics::Rendering;
 

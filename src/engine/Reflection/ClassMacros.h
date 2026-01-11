@@ -124,9 +124,6 @@ class Class : public sk::get_inherits_t< FIRST( __VA_ARGS__ ) > \
 	namespace ClassName { \
 		using class_type = ClassType; \
 		static_assert( ParentValidator( ClassName, ParentClass ) ); \
-		typedef sk::cShared_ptr< ClassType > ptr_t; \
-		typedef sk::cWeak_Ptr< ClassType >   weak_t; \
-		typedef sk::cShared_Ref< ClassType > ref_t; \
 		CREATE_RUNTIME_CLASS_VALUE( ClassType, ClassName, ParentClass ) \
 		ExtrasMacro( ClassName __VA_OPT__( , ) __VA_ARGS__ ) \
 		typedef CREATE_RUNTIME_CLASS_TYPE( ClassType, ClassName, ParentClass ) runtime_class_t; \

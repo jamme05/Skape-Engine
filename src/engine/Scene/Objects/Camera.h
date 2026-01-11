@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "Scene/Object.h"
-#include "Scene/Components/CameraComponent.h"
+#include <Scene/Object.h>
+#include <Scene/Components/CameraComponent.h>
 
 namespace sk::Object
 {
@@ -16,9 +16,10 @@ namespace sk::Object
 	public:
 		explicit cCamera( const std::string& _name );
 
-		void setAsMain( void ) const;
+		void setAsMain() const;
 
-		Components::CameraComponent::ptr_t m_camera;
+	protected:
+		cShared_ptr< Components::cCameraComponent > m_camera_;
 	};
 } // sk::Object
 

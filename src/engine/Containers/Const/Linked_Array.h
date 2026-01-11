@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <Containers/Const/Array.h>
-
 namespace sk
 {
     template< typename Ty >

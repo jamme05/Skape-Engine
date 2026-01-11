@@ -6,14 +6,10 @@
 
 #pragma once
 
-#include <pmmintrin.h>
-
 #include "Matrix.h"
 
 #include "Vector3.h"
 #include "Vector4.h"
-
-#include "Matrix_helper.h"
 
 namespace sk
 {

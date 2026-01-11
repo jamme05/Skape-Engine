@@ -6,10 +6,9 @@
 
 #include "App.h"
 
-#include <Memory/Tracker/Tracker.h>
 #include <Skape_Main.h>
-
-#include "Platform/Time.h"
+#include <Memory/Tracker/Tracker.h>
+#include <Platform/Time.h>
 
 namespace sk::App
 {

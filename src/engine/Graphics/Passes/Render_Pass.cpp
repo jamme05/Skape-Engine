@@ -1,4 +1,6 @@
-﻿#include "Render_Pass.h"
+﻿
+
+#include "Render_Pass.h"
 
 auto sk::Graphics::Passes::iPass::getPipeline() const -> cPipeline&
 {

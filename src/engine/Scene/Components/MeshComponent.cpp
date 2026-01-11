@@ -6,10 +6,6 @@
 
 #include "MeshComponent.h"
 
-#include "CameraComponent.h"
-#include "Assets/Texture.h"
-#include "Scene/Managers/SceneManager.h"
-
 namespace sk::Object::Components
 {
 	cMeshComponent::cMeshComponent( const cShared_ptr< cAsset_Meta >& _mesh, const cShared_ptr< cAsset_Meta >& _material )

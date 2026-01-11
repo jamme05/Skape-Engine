@@ -6,13 +6,10 @@
 
 #pragma once
 
-#include <Assets/Utils/Asset_List.h>
 #include <Assets/Management/Asset_Manager.h>
 #include <Graphics/Renderer.h>
-
-#include "Buffer/Unsafe_Buffer.h"
-#include "Utils/Shader_Link.h"
-
+#include <Graphics/Buffer/Unsafe_Buffer.h>
+#include <Graphics/Utils/Shader_Link.h>
 
 namespace sk::Assets
 {

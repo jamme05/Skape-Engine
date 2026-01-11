@@ -6,8 +6,6 @@
 
 #include "Dynamic_Buffer.h"
 
-#include <chrono>
-
 using namespace std;
 // TYPE UNSAFE BUFFER
 

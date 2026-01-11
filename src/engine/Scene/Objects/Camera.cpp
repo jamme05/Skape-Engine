@@ -5,11 +5,10 @@
  */
 
 #include "Camera.h"
-#include "Scene/Components/CameraComponent.h"
 
-#include <Graphics/Renderer_Impl.h>
-#include <Window/Window.h>
+#include <Scene/Components/CameraComponent.h>
 #include <Scene/Managers/CameraManager.h> 
+#include <Window/Window.h>
 
 #include "App.h"
 
@@ -33,12 +32,12 @@ namespace sk::Object
 			.far = 2000.0f
 		};
 
-		m_camera = AddComponent< Components::cCameraComponent >( viewport, scissor, settings, Components::cCameraComponent::eType::kPerspective );
-		SetRoot( m_camera );
+		m_camera_ = AddComponent< Components::cCameraComponent >( viewport, scissor, settings, Components::cCameraComponent::eType::kPerspective );
+		SetRoot( m_camera_ );
 	}
 
 	void cCamera::setAsMain( void ) const
 	{
-		Scene::cCameraManager::get().setMainCamera( m_camera );
+		Scene::cCameraManager::get().setMainCamera( m_camera_ );
 	} // setAsMain
 } // sk::Object::

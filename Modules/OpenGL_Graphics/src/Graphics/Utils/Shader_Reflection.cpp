@@ -1,16 +1,17 @@
-﻿#include "Shader_Reflection.h"
+﻿
+
+#include "Shader_Reflection.h"
 
 #include <glbinding/gl/enum.h>
 #include <glbinding/gl/functions.h>
 
+#include <Assets/Shader.h>
 #include <Math/Matrix.h>
 #include <Math/Matrix3x3.h>
 #include <Math/Matrix4x4.h>
 #include <Math/Vector2.h>
 #include <Math/Vector3.h>
 #include <Math/Vector4.h>
-
-#include "Assets/Shader.h"
 
 using namespace sk::Graphics::Utils;
 

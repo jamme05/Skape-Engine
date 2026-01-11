@@ -9,10 +9,7 @@
 #include <Containers/Vector.h>
 #include <glbinding/gl/types.h>
 
-#include <Misc/Smart_Ptrs.h>
-
-#include "Graphics/Buffer/Unsafe_Buffer_Base.h"
-#include "Math/Vector2.h"
+#include <Math/Vector2.h>
 
 namespace sk::Graphics
 {

@@ -10,16 +10,13 @@
 
 #include <fastgltf/tools.hpp>
 
-#include <Assets/Management/Asset_Job_Manager.h>
 #include <Assets/Mesh.h>
 #include <Assets/Model.h>
 #include <Assets/Texture.h>
+#include <Assets/Management/Asset_Job_Manager.h>
 #include <Assets/Utils/Asset_List.h>
-#include <Assets/Access/Asset_Ptr.h>
 #include <Graphics/Buffer/Dynamic_Buffer.h>
 #include <Scene/Managers/CameraManager.h>
-
-
 
 namespace sk
 {

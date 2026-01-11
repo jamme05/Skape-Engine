@@ -10,11 +10,10 @@
 #include <glbinding/glbinding.h>
 #include <glbinding/gl/functions.h>
 
+#include <Assets/Shader.h>
+#include <Assets/Management/Asset_Job_Manager.h>
 #include <Assets/Management/Asset_Manager.h>
 #include <Platform/Platform_Base.h>
-
-#include "Assets/Shader.h"
-#include "Assets/Management/Asset_Job_Manager.h"
 
 using namespace sk;
 using namespace sk::Graphics;

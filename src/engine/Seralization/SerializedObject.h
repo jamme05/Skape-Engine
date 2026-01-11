@@ -6,8 +6,8 @@
 
 #include <simdjson/simdjson.h>
 
+#include <Misc/Smart_Ptrs.h>
 #include <Misc/StringID.h>
-
 #include <Reflection/RuntimeClass.h>
 
 namespace sk

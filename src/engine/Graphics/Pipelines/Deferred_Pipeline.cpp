@@ -2,12 +2,12 @@
 
 #include "Deferred_Pipeline.h"
 
-#include "Assets/Management/Asset_Manager.h"
-#include "Graphics/Passes/GBuffer_Pass.h"
-#include "Graphics/Passes/Screen_Pass.h"
-#include "Graphics/Rendering/Frame_Buffer.h"
-#include "Graphics/Rendering/Render_Target.h"
-#include "Platform/Window/Window_Base.h"
+#include <Assets/Management/Asset_Manager.h>
+#include <Graphics/Passes/GBuffer_Pass.h>
+#include <Graphics/Passes/Screen_Pass.h>
+#include <Graphics/Rendering/Frame_Buffer.h>
+#include <Graphics/Rendering/Render_Target.h>
+#include <Platform/Window/Window_Base.h>
 
 using namespace sk::Graphics;
 

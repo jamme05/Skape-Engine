@@ -6,22 +6,20 @@
 
 #pragma once
 
-#include "Misc/Smart_Ptrs.h"
-
 #include <ranges>
-#include "Containers/Vector.h"
-#include "Containers/Map.h"
 
-#include "Components/Component.h"
-#include "Components/TransformComponent.h"
+#include <Containers/Map.h>
+#include <Containers/Vector.h>
+#include <Misc/Smart_Ptrs.h>
+#include <Misc/StringID.h>
 #include <Reflection/RuntimeClass.h>
-
-#include "Misc/StringID.h"
+#include <Scene/Components/Component.h>
+#include <Scene/Components/TransformComponent.h>
 
 namespace sk::Object::Components
 {
 	class cMeshComponent;
-}
+} // sk::Object::Components::
 
 namespace sk
 {

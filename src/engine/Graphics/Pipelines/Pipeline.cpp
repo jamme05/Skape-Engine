@@ -1,11 +1,10 @@
 ﻿#include "Pipeline.h"
 
 #include <Debugging/Debugging.h>
+#include <Graphics/Renderer_Impl.h>
 #include <Graphics/Passes/Render_Pass.h>
-
-#include "Graphics/Renderer_Impl.h"
-#include "Scene/Managers/EventManager.h"
-#include "Scene/Managers/SceneManager.h"
+#include <Scene/Managers/EventManager.h>
+#include <Scene/Managers/SceneManager.h>
 
 sk::Graphics::cPipeline::cPipeline( Platform::iWindow* _window )
 : m_window_( _window )
