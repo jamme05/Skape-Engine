@@ -1,11 +1,10 @@
 ﻿#pragma once
-#include <unordered_map>
 
-#include "Graphics/Buffer/Buffer.h"
-#include "Math/Vector3.h"
-#include "Misc/Singleton.h"
-#include "Misc/UUID.h"
-#include "Scene/Components/LightComponent.h"
+#include <Graphics/Buffer/Buffer.h>
+#include <Math/Vector3.h>
+#include <Misc/Singleton.h>
+#include <Misc/UUID.h>
+#include <Scene/Components/LightComponent.h>
 
 namespace sk::Scene
 {
@@ -26,6 +25,7 @@ namespace sk::Scene
             uint32_t uses_extended;
             // The user should at MOST have two directional lights, so we keep that as the safe range.
             Light::sDirectionalLight directional_light[ 2 ];
+            // TODO: Decide how many other lights we should have.
         };
 
         struct alignas( 16 ) sShadowCaster
@@ -34,6 +34,8 @@ namespace sk::Scene
             cVector2f   atlas_end;
             cMatrix4x4f light_matrix;
         };
+        
+        cLight_Manager();
 
         [[ nodiscard ]] auto  GetLights       () const -> const light_vec_t&;
         [[ nodiscard ]] auto  GetShadowCasters() const -> const light_vec_t&;
@@ -50,7 +52,9 @@ namespace sk::Scene
         void remove_shadow_caster( const light_ptr_t& _light );
         
         using settings_buffer_t    = Graphics::cConstant_Buffer< sLightSettings >;
-        using directional_buffer_t = Graphics::cStructured_Buffer< sLightSettings >;
+        using directional_buffer_t = Graphics::cStructured_Buffer< Light::sDirectionalLight >;
+        using point_buffer_t       = Graphics::cStructured_Buffer< Light::sPointLight >;
+        using spot_buffer_t        = Graphics::cStructured_Buffer< Light::sSpotLight >;
         using shadow_buffer_t      = Graphics::cStructured_Buffer< sShadowCaster >;
         
         light_vec_t m_lights_;
@@ -58,6 +62,8 @@ namespace sk::Scene
         
         settings_buffer_t    m_light_settings_buffer_;
         directional_buffer_t m_directional_buffer_;
+        point_buffer_t       m_point_buffer_;
+        spot_buffer_t        m_spot_buffer_;
         shadow_buffer_t      m_shadow_caster_buffer_;
         
     };

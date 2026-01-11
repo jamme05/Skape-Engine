@@ -167,7 +167,7 @@ namespace sk::Graphics
         auto index = Size();
         Resize( index + 1 );
         
-        std::construct_at( Data + index, std::forward< Args >( _value )... );
+        std::construct_at( Data() + index, std::forward< Args >( _value )... );
         ::new( Data() + index ) Ty{ std::forward< Args >( _value )... };
         return index;
     }

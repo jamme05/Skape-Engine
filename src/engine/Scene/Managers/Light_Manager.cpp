@@ -2,7 +2,23 @@
 
 #include "Light_Manager.h"
 
-#include "Scene/Components/LightComponent.h"
+#include <Scene/Components/LightComponent.h>
+
+namespace 
+{
+    // From: https://en.cppreference.com/w/cpp/utility/variant/visit
+    template< class... Ts >
+    struct sVisitor : Ts... { using Ts::operator()...; };
+} // ::
+
+sk::Scene::cLight_Manager::cLight_Manager()
+: m_light_settings_buffer_( "Light Settings Buffer", false )
+, m_directional_buffer_( "Directional Light Buffer", false )
+, m_point_buffer_( "Point Light Buffer", false )
+, m_spot_buffer_( "Spot Light Buffer", false )
+, m_shadow_caster_buffer_( "Shadow Caster Buffer", false )
+{
+}
 
 auto sk::Scene::cLight_Manager::GetLights() const -> const light_vec_t&
 {
@@ -17,7 +33,24 @@ auto sk::Scene::cLight_Manager::GetShadowCasters() const -> const light_vec_t&
 void sk::Scene::cLight_Manager::register_light( light_ptr_t _light )
 {
     m_lights_.emplace_back( _light );
-    _light->m_data_index_ = m_lights_.size() - 1;
+    _light->m_registered_index_ = static_cast< uint32_t >( m_lights_.size() - 1 );
+    
+    sVisitor visitor{
+        [ & ]( const Light::sDirectionalLight& _data )
+        {
+            _light->m_data_index_ = static_cast< uint32_t >( m_directional_buffer_.EmplaceBack( _data ) );
+        },
+        [ & ]( const Light::sPointLight& _data )
+        {
+            _light->m_data_index_ = static_cast< uint32_t >( m_point_buffer_.EmplaceBack( _data ) );
+        },
+        [ & ]( const Light::sSpotLight& _data )
+        {
+            _light->m_data_index_ = static_cast< uint32_t >( m_spot_buffer_.EmplaceBack( _data ) );
+        }
+    };
+    
+    std::visit( visitor, _light->GetData() );
     
     if( _light->GetSettings().casts_shadows )
         add_shadow_caster( _light );

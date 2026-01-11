@@ -2,8 +2,9 @@
 
 #pragma once
 
-#include "Component.h"
-#include "Assets/Utils/Asset_List.h"
+#include <variant>
+
+#include <Scene/Components/Component.h>
 
 namespace sk::Scene
 {
@@ -23,12 +24,14 @@ namespace sk::Scene::Light
     {
         eType type          = eType::kDirectional;
         bool  casts_shadows = true;
+        
+        cColor color = Color::kWhite;
             
         // Directional
         float intensity = 1.0f;
             
         // Point/Spot
-        float range = 10.0f;
+        float radius = 10.0f;
             
         // Spot
         float inner_angle = 45.0f;
@@ -41,30 +44,30 @@ namespace sk::Scene::Light
         cVector4f color;
         cVector3f direction;
         // The index that contains this lights shadow casting info
-        uint32_t  shadow_cast_index;
+        int32_t   shadow_cast_index;
     };
     
     struct alignas( 16 ) sPointLight
     {
         // color = light.color * light.intensity
         cVector3f color;
-        cVector3f position;
         float     radius;
+        cVector3f position;
         // The index that contains this lights shadow casting info
-        uint32_t  shadow_cast_index;
+        int32_t   shadow_cast_index;
     };
     
     struct alignas( 16 ) sSpotLight
     {
         // color = light.color * light.intensity
         cVector3f color;
-        // Length of direction is the radius.
+        // direction = world_position * radius
         cVector3f direction;
         cVector3f position;
-        // The index that contains this lights shadow casting info
         float     inner_angle;
         float     outer_angle;
-        uint32_t  shadow_cast_index;
+        // The index that contains this lights shadow casting info
+        int32_t   shadow_cast_index;
     };
 } // sk::Scene::Light::
 
@@ -78,26 +81,44 @@ namespace sk::Object::Components
     public:
         using type_t     = sk::Scene::Light::eType;
         using settings_t = sk::Scene::Light::sSettings;
+        using data_t     = std::variant< Scene::Light::sDirectionalLight, Scene::Light::sPointLight, Scene::Light::sSpotLight >;
         
         explicit cLightComponent( const settings_t& _settings = {} );
         ~cLightComponent() override;
         
         void update() override;
-
-        [[ nodiscard ]]
-        auto GetSettings() const -> const settings_t&;
-        void SetSettings( const settings_t& _settings );
         
         // TODO: Add more functions to get/set values inside of the settings.
         [[ nodiscard ]]
+        auto GetSettings() const -> const settings_t&;
+        [[ nodiscard ]]
         auto GetType() const -> type_t;
+        
+        void SetSettings( const settings_t& _settings );
         void SetType( type_t _type );
+        
 
-        [[ nodiscard ]] auto GetViewProjMatrix() const -> const cMatrix4x4f&;
+        [[ nodiscard ]]
+        auto GetViewProjMatrix() const -> const cMatrix4x4f&;
+        [[ nodiscard ]]
+        auto GetData() const -> const data_t&;
+        
     private:
+        void fix_data();
+        
+        void fix_directional_data();
+        void fix_point_data();
+        void fix_spot_data();
+        
+        void update_data();
+        
+        data_t      m_data_;
         settings_t  m_settings_;
+        
+        uint32_t    m_registered_index_  = std::numeric_limits< uint32_t >::max();
         uint32_t    m_shadow_data_index_ = std::numeric_limits< uint32_t >::max();
-        size_t      m_data_index_        = std::numeric_limits< size_t >::max();
+        uint32_t    m_data_index_        = std::numeric_limits< uint32_t >::max();
+        
         cMatrix4x4f m_view_proj_matrix_;
         
     };

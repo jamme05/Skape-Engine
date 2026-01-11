@@ -206,7 +206,7 @@ namespace sk::Graphics
 
         validate_type< Ty >();
 
-        m_buffer_->UpdateSeg( std::addressof( std::forward< Ty >( _element ) ), m_type_size_, _index * m_type_size_ );
+        m_buffer_->UpdateSegment( std::addressof( std::forward< Ty >( _element ) ), m_type_size_, _index * m_type_size_ );
     }
 
     template< class Ty >
