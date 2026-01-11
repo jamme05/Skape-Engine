@@ -31,6 +31,7 @@ namespace sk::Graphics
         auto GetWindow() const { return m_window_; }
 
         template< class Ty, class... Args >
+        requires std::constructible_from< Ty, Args... >
         Ty&  AddPass( Args&&... _args );
         void AddPass( std::unique_ptr< Passes::iPass >&& _pass );
         [[ nodiscard ]]
@@ -45,6 +46,7 @@ namespace sk::Graphics
     };
 
     template< class Ty, class ... Args >
+    requires std::constructible_from< Ty, Args... >
     Ty& cPipeline::AddPass( Args&&... _args )
     {
         auto pass = std::make_unique< Ty >( std::forward< Args >( _args )... );

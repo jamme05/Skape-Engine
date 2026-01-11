@@ -67,6 +67,7 @@ namespace sk::Memory::Internal
 	// Un-tracked alloc, use only for internal stuff.
 	// Use malloc for direct allocations.
 	template< typename Ty, typename... Args >
+	requires std::constructible_from< Ty, Args... >
 	static Ty* alloc( Args... _args )
 	{
 		Ty* ptr = static_cast< Ty* >( ::malloc( byte_size< Ty, default_alignment > ) );

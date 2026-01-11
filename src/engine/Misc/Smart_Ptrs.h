@@ -683,6 +683,7 @@ namespace sk
 		void complete() const { m_self_.m_data_->completed(); }
 		
 		template< class Ty2, class ...Args >
+		requires std::constructible_from< Ty2, Args... >
 		friend auto make_shared( Args&&... ) -> cShared_ptr< Ty2 >;
 	};
 	template< class Ty >
@@ -700,14 +701,11 @@ namespace sk
 		cShared_from_this()
 		: iShared_From_this( SK_SINGLE( Ptr_logic::cData< Ty >, static_cast< Ty* >( this ) ) )
 		{} // cShared_from_this
-
-	private:
-		template< class Ty2, class ...Args >
-		friend auto make_shared( Args&&... ) -> cShared_ptr< Ty2 >;
 	};
 
 	// TODO: Replace cShared_ptr with std::shared_ptr to allow for optimizations.
 	template< class Ty, class... Args >
+	requires std::constructible_from< Ty, Args... >
 	auto make_shared( Args&&... _args ) -> cShared_ptr< Ty >
 	{
 		// TODO

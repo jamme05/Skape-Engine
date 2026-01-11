@@ -47,6 +47,7 @@ namespace sk::Memory
 	extern void* realloc_fast( void* _block, size_t _size, eAlignment _alignment = default_alignment );
 
 	template< typename Ty, typename... Args >
+	requires std::constructible_from< Ty, Args... >
 	static Ty* alloc( const size_t _count, const std::source_location& _location, Args&&... _args )
 	{
 		const size_t size = get_size< Ty >( _count ) + sizeof( size_t );

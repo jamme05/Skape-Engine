@@ -177,7 +177,7 @@ namespace sk
 		}
 		
 		template< class Ty, class... Args >
-		requires std::is_base_of_v< cAsset, Ty >
+		requires ( std::is_base_of_v< cAsset, Ty > && std::constructible_from< Ty, Args... > )
 		auto CreateAsset( std::string_view _name, Args&&... _args ) -> std::pair< cShared_ptr< cAsset_Meta >, Ty* >
 		{
 			cShared_ptr< cAsset_Meta > meta = sk::make_shared< cAsset_Meta >( _name, kTypeInfo< Ty > );
