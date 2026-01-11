@@ -41,9 +41,9 @@ namespace sk
 		if( event_manager == nullptr )
 			return; // Return if event manager already has gotten destroyed.
 
-		for( auto& listener : m_listeners )
+		for( auto& [ event, function_info ] : m_listeners )
 		{
-			event_manager->unregisterEvent( listener.first, listener.second.second );
+			event_manager->unregisterEvent( event, function_info.second );
 		}
 	} // ~cEventListener
 

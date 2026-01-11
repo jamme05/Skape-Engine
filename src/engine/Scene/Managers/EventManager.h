@@ -1010,10 +1010,13 @@ namespace sk
 
 				cWeak_Ptr< Ty > weak_ptr;
 
-				if constexpr( std::is_base_of_v< cShared_from_this< Ty >, Ty > )
-					weak_ptr = static_cast< Ty* >( this )->get_weak();
+				if constexpr( std::is_base_of_v< iShared_From_this, Ty > )
+					weak_ptr = static_cast< Ty* >( this )->get_weak().template Cast< Ty >();
 				else // Thanks to it unregistering all events, this is a safe option.
+				{
+					// TODO: Remove this option.
 					weak_ptr = cWeak_Ptr< Ty >::make_unsafe( static_cast< Ty* >( this ) );
+				}
 
 				std::pair< bool, size_t > res = cEventManager::get().registerLister< Ty, Args... >( _identity, _function, weak_ptr );
 				if( !res.first )
