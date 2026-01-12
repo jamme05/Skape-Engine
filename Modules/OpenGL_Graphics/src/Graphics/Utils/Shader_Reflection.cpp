@@ -172,19 +172,25 @@ void cShader_Reflection::fetch_blocks()
         gl::glGetActiveUniformBlockiv( m_program_, i, gl::GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES, indices.data() );
         
         block.uniforms.reserve( static_cast< size_t >( nr_of_uniforms ) );
-        uint32_t offset = 0;
+
+        std::vector< gl::GLint > offsets( nr_of_uniforms );
+
+        // The reinterpret cast SHOULD be fine as none of the indices SHOULD be negative
+        gl::glGetActiveUniformsiv( m_program_, 1, reinterpret_cast< const gl::GLuint* >( indices.data() ), gl::GL_UNIFORM_OFFSET, offsets.data() );
+        
+        uint32_t block_size = 0;
         for( int_fast32_t u = 0; u < nr_of_uniforms; u++ )
         {
             auto uniform = std::get< sUniform >( get_uniform( indices[ u ] ) );
             
-            uniform.location = offset;
-            offset += uniform.byte_size;
+            uniform.location = offsets[ u ];
+            block_size      += uniform.byte_size;
             
             m_locked_uniforms_.insert( uniform.name );
             block.uniforms[ uniform.name.hash() ] = std::move( uniform );
         }
         
-        block.size = offset;
+        block.size = block_size;
         
         m_block_vec_[ i ] = &block;
     }
