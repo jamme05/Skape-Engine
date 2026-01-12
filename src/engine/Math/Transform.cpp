@@ -39,6 +39,10 @@ bool cTransform::IsDirty( const bool _recursive ) const
 
     if( m_is_dirty_ )
         return true;
+
+    // TODO: Figure out if we can skip the recursive check,
+    // maybe have a forced transform update during render instead of update
+    // and during that time we allow it to be locked as dirty without checking recursively multiple times
     
     if( _recursive && m_parent_.is_valid() )
     {
