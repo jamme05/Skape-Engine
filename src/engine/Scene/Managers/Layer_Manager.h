@@ -239,6 +239,7 @@ namespace sk::Scene
         using hash_to_i_map_t = map< str_hash, uint64_t >;
         using layer_vec_t     = vector< sLayer >;
 
+        size_t          m_internal_component_index_ = std::numeric_limits< size_t >::max();
         hash_to_i_map_t m_name_to_layer_;
         layer_vec_t     m_layers_;
     };

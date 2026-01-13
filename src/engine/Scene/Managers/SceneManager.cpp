@@ -11,6 +11,7 @@
 #include <Graphics/Rendering/Render_Context.h>
 #include <Scene/Components/CameraComponent.h>
 #include <Scene/Managers/CameraManager.h>
+#include <Scene/Managers/Internal_Component_Manager.h>
 #include <Scene/Managers/Layer_Manager.h>
 #include <Scene/Managers/Light_Manager.h>
 
@@ -25,14 +26,17 @@ namespace sk
 		Scene::cCameraManager::init();
 		Scene::cLayer_Manager::init();
 		Scene::cLight_Manager::init();
+		Scene::cInternal_Component_Manager::init();
 	}
 	cSceneManager::~cSceneManager()
 	{
 		m_scenes.clear();
-		cEventManager::shutdown();
+		
+		Scene::cInternal_Component_Manager::shutdown();
+		Scene::cLight_Manager::shutdown();
 		Scene::cCameraManager::shutdown();
 		Scene::cLayer_Manager::shutdown();
-		Scene::cLight_Manager::shutdown();
+		cEventManager::shutdown();
 	} // ~cSceneManager
 
 	void cSceneManager::registerScene( const cShared_ptr< cScene >& _scene )

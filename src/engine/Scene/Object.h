@@ -15,6 +15,8 @@
 #include <Reflection/RuntimeClass.h>
 #include <Scene/Components/Component.h>
 #include <Scene/Components/TransformComponent.h>
+#include <Scene/Managers/Internal_Component_Manager.h>
+
 
 namespace sk::Object::Components
 {
@@ -93,18 +95,50 @@ namespace sk::Object
 		// TODO: Add a way to remove the component
 
 		// TODO: Reformat this comment.
-		// Internal components are hidden by the editor and are mainly used to contain additional data on the object for systems.
-		// You are only allowed to have a single internal component of a type at a time.
-		// Due to being able to get the component without reconstructing it, it will be limited to using the default constructor.
-		// Along with this you will have to verify that all values are valid.
-		// ALSO, it isn't recommended to reuse the same internal component between multiple systems as it can cause collisions.
-		// Boolean value says if it was created during this call or not.
+		// 
+		// 
+		// 
+		// 
+		// 
+		// If _req
+
+		/**
+		 * 
+		 * @tparam Ty The type of the component, has to inherit iComponent and have a default constructor.
+		 * @param _requested_index [in/out] The index that the component is expected to be at,
+		 * otherwise have the value as std::numeric_limits< size_t >::max() and it'll be set to the correct index.
+		 * When calling this it is recommended to store the requested index.
+		 * NOTE: Doing the first call without having this as std::numeric_limits< size_t >::max() is undefined behavior.
+		 * @return A pair where first is if the component was created this call, second is the component itself.
+		 * 
+		 * Internal components are hidden by the editor and are mainly used to contain additional data on the object for systems.
+		 * You are only allowed to have a single internal component of a type at a time.
+		 * Due to being able to get the component without reconstructing it, it will be limited to using the default constructor.
+		 * Along with this you will have to verify that all values are valid.
+		 * ALSO, it isn't recommended to reuse the same internal component between multiple systems as it can cause collisions.
+		 * 
+		 */
 		template< class Ty >
 		requires ( std::is_base_of_v< iComponent, Ty > && std::is_default_constructible_v< Ty >)
-		auto AddOrGetInternalComponent() -> std::pair< bool, cShared_ptr< Ty > >
+		auto AddOrGetInternalComponent( size_t& _requested_index ) -> std::pair< bool, cShared_ptr< Ty > >
 		{
-			if( const auto itr = m_internal_components_.find( Ty::getStaticType() ); itr != m_internal_components_.end() )
-				return { false, itr->second.template Cast< Ty >() };
+			if( _requested_index == std::numeric_limits< size_t >::max() )
+				_requested_index = Scene::cInternal_Component_Manager::get().GetComponentIndex< Ty >();
+			
+			if( m_internal_components_.size() <= _requested_index )
+				m_internal_components_.resize( _requested_index + 1 );
+			
+			if( auto& component = m_internal_components_[ _requested_index ]; component != nullptr )
+			{
+				if( dynamic_cast< Ty* >( component.get() ) != nullptr )
+					return { false, component.Cast< Ty >() };
+				
+				SK_WARNING( sk::Severity::kEngine, "The requested index is currently trying to access another types internal component." )
+				SK_BREAK;
+				
+				_requested_index = std::numeric_limits< size_t >::max();
+				return AddOrGetInternalComponent< Ty >( _requested_index );
+			}
 			
 			auto component = sk::make_shared< Ty >();
 
@@ -113,7 +147,7 @@ namespace sk::Object
 			component->m_internal_ = true;
 			component->SetParent( m_root );
 			
-			m_internal_components_.insert( std::pair{ Ty::getStaticType(), component } );
+			m_internal_components_[ _requested_index ] = component;
 
 			return { true, component };
 		} // addComponent
@@ -169,7 +203,7 @@ namespace sk::Object
 		vector             < cShared_ptr< iObject > >              m_children_   = { };
 		unordered_multimap< type_hash, cShared_ptr< iComponent > > m_components_ = { };
 		// Internal components are stored separately as there can only be one of a type.
-		unordered_map< type_hash, cShared_ptr< iComponent >  >     m_internal_components_ = { };
+		vector< cShared_ptr< iComponent >  > m_internal_components_ = { };
 		// We have the mesh components separately to allow for a faster lookup.
 		vector< cShared_ptr< Components::cMeshComponent > >        m_mesh_components_;
 

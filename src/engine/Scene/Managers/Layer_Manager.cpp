@@ -80,7 +80,7 @@ void sk::Scene::cLayer_Manager::RemoveLayer( const uint64_t _layer )
 
 void sk::Scene::cLayer_Manager::AddObject( const cShared_ptr< Object::iObject >& _object )
 {
-    auto [ was_created, component ] = _object->AddOrGetInternalComponent< Object::Components::cLayer_Info_Component >();
+    auto [ was_created, component ] = _object->AddOrGetInternalComponent< Object::Components::cLayer_Info_Component >( m_internal_component_index_ );
     if( !was_created && component->m_index_ != std::numeric_limits< uint64_t >::max() )
         removeObjectAt( component->m_layer_index_, component->m_index_ );
     
@@ -94,7 +94,7 @@ void sk::Scene::cLayer_Manager::AddObject( const cShared_ptr< Object::iObject >&
 
 void sk::Scene::cLayer_Manager::RemoveObject( const cShared_ptr< Object::iObject >& _object )
 {
-    auto [ was_created, component ] = _object->AddOrGetInternalComponent< Object::Components::cLayer_Info_Component >();
+    auto [ was_created, component ] = _object->AddOrGetInternalComponent< Object::Components::cLayer_Info_Component >( m_internal_component_index_ );
     if( was_created )
         return;
     
