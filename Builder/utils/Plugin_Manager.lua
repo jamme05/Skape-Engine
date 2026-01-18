@@ -39,15 +39,15 @@ function Get_Plugin_Links()
         end
         table.insert( _links, plugin.Name )
     end, true )
-    ForeachPlugin( function( plugin )
-        local _links = {}
-        filter( plugin.Filter )
+    -- ForeachPlugin( function( plugin )
+    --     local _links = {}
+    --     filter( plugin.Filter )
 
-        if( plugin.IncludeLibs ~= nil ) then
-            table.insert( _links, plugin.IncludeLibs( plugin.Dir ) )
-        end
-        table.insert( _links, plugin.Name )
-    end, false )
+    --     if( plugin.IncludeLibs ~= nil ) then
+    --         table.insert( _links, plugin.IncludeLibs( plugin.Dir ) )
+    --     end
+    --     table.insert( _links, plugin.Name )
+    -- end, false )
     links( _links )
     filter()
 end
@@ -86,11 +86,11 @@ end
 function Plugin_Setup( plugin_name, library_dirs, includes )
     return function( plugin, plugin_dir ) -- Make the plugin dir be the absolute path.
     project( plugin_name )
-        location( "Build/Plugins/" .. plugin_name )
+        location( "Build/Plugins/" .. plugin_dir )
         filter( plugin.Filter )
         kind "StaticLib"
         language "C++"
-        targetdir( "bin/Plugins/" .. plugin_name )
+        targetdir( "bin/Plugins/" .. plugin_dir )
 
         defines { "SK_IS_PLUGIN=1" }
     
@@ -114,7 +114,6 @@ function Load_Plugin( partial_plugin )
 
     local build_file = plugin_json[ "BuildFile" ] or "Build.lua"
 
-    local plugin = {}
     include( plugin_dir .. "/" .. build_file )
     plugin.Raw    = plugin_json
     plugin.Dir    = partial_plugin.Dir
@@ -129,7 +128,11 @@ function Load_Plugin( partial_plugin )
     if( plugin.Init ~= nil ) then
         plugin.Init( plugin_dir )
     end
-    table.insert( plugins, plugin )
+    if( plugin_json[ "Type" ] == "Static" ) then
+        table.insert( stat_plugins, plugin )
+    else
+        table.insert( dyn_plugins, plugin )
+    end
 end
 
 function ValidatePlugins()
@@ -152,7 +155,7 @@ function Load_Plugins()
     ValidatePlugins()
 end
 
-function Get_Supported_Platforms()
+function Get_Supported_Platforms_2()
     local platforms_parser = {}
     ForeachPlugin( function( plugin )
         -- Only platform in case it's coming from a platform plugin.
@@ -170,7 +173,7 @@ function Get_Supported_Platforms()
     return platforms
 end
 
-function Setup_Workspace()
+function Setup_Plugin_Workspace()
     ForeachPlugin( function( plugin ) plugin.Setup_Workspace( plugin ) end, true )
     ForeachPlugin( function( plugin ) plugin.Setup_Workspace( plugin ) end, false )
     filter()
