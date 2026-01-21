@@ -1,5 +1,5 @@
 project(SkapePlayground)
 
-add_subdirectory(engine)
-add_subdirectory(framework)
-add_subdirectory(startup)
+include(sk/CmakeLists.txt)
+include(framework/CmakeLists.txt)
+include(startup/CmakeLists.txt)
