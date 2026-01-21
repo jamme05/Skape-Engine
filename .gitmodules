@@ -1,11 +1,11 @@
 [submodule "external/fastgltf"]
 	path = external/fastgltf
 	url = https://github.com/spnda/fastgltf.git
-[submodule "Modules/OpenGL_Graphics/glbinding"]
-	path = Modules/OpenGL_Graphics/glbinding
+[submodule "Plugins/OpenGL_Graphics/glbinding"]
+	path = Plugins/OpenGL_Graphics/glbinding
 	url = https://github.com/cginternals/glbinding.git
-[submodule "Modules/Vulkan_Graphics/Vulkan-Hpp"]
-	path = Modules/Vulkan_Graphics/Vulkan-Hpp
+[submodule "Plugins/Vulkan_Graphics/Vulkan-Hpp"]
+	path = Plugins/Vulkan_Graphics/Vulkan-Hpp
 	url = https://github.com/KhronosGroup/Vulkan-Hpp.git
 [submodule "Plugins/SDL3_Wrapper/SDL"]
 	path = Plugins/SDL3_Wrapper/SDL
