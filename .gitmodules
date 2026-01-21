@@ -7,3 +7,6 @@
 [submodule "Modules/Vulkan_Graphics/Vulkan-Hpp"]
 	path = Modules/Vulkan_Graphics/Vulkan-Hpp
 	url = https://github.com/KhronosGroup/Vulkan-Hpp.git
+[submodule "Plugins/SDL3_Wrapper/SDL"]
+	path = Plugins/SDL3_Wrapper/SDL
+	url = https://github.com/libsdl-org/SDL.git
