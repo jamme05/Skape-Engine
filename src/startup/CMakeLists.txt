@@ -4,10 +4,10 @@ add_executable(Startup)
 
 target_sources(Startup
   PRIVATE
-  main.cpp
+    startup/main.cpp
 )
 
 target_link_libraries(Startup
   PRIVATE
-    SkapeEngine
+    Framework
 )
