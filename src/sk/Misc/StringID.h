@@ -2,10 +2,10 @@
 
 #pragma once
 
-#include <unordered_map>
+#include <sk/Misc/Hashing.h>
+#include <sk/Misc/Singleton.h>
 
-#include <Misc/Hashing.h>
-#include <Misc/Singleton.h>
+#include <unordered_map>
 
 namespace sk
 {

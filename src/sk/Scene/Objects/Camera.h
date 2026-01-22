@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <Scene/Object.h>
-#include <Scene/Components/CameraComponent.h>
+#include <sk/Scene/Object.h>
+#include <sk/Scene/Components/CameraComponent.h>
 
 namespace sk::Object
 {

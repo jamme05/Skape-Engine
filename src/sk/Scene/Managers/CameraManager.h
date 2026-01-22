@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <Misc/Singleton.h>
-#include <Misc/Smart_Ptrs.h>
-#include <Scene/Object.h>
+#include <sk/Misc/Singleton.h>
+#include <sk/Misc/Smart_Ptrs.h>
+#include <sk/Scene/Object.h>
 
 namespace sk::Object::Components
 {

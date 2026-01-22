@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <Debugging/Macros/Warning.h>
-#include <Macros/Manipulation.h>
-#include <Misc/Print.h>
+#include <sk/Debugging/Macros/Warning.h>
+#include <sk/Macros/Manipulation.h>
+#include <sk/Misc/Print.h>
 
 #define THIS_T()
 #define THIS_T_IS_TEXT ,1

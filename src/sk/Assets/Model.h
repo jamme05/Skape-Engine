@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include <fastgltf/types.hpp>
+#include <sk/Assets/Asset.h>
+#include <sk/Containers/Vector.h>
+#include <sk/Math/Transform.h>
+#include <sk/Math/Vector4.h>
 
-#include <Assets/Asset.h>
-#include <Containers/Vector.h>
-#include <Math/Transform.h>
-#include <Math/Vector4.h>
+#include <fastgltf/types.hpp>
 
 namespace sk::Assets
 {

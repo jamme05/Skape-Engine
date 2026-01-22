@@ -6,7 +6,7 @@
 
 #include "Mesh.h"
 
-#include <Graphics/Buffer/Dynamic_Buffer.h>
+#include <sk/Graphics/Buffer/Dynamic_Buffer.h>
 
 namespace sk::Assets
 {

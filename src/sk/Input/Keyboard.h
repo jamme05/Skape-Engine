@@ -3,7 +3,7 @@
 #pragma once
 
 #ifdef SK_PLATFORM_SUPPORTS_KEYBOARD
-#include <Input/Keyboard_Include.h>
+#include <sk/Input/Keyboard_Include.h>
 #else // SK_PLATFORM_SUPPORTS_KEYBOARD
 #include <cstdint>
 namespace sk::Input::Keyboard

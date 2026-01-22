@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <Containers/Const/Array.h>
-#include <Math/Math.h>
+#include <sk/Containers/Const/Array.h>
+#include <sk/Math/Math.h>
 
 // TODO: Make a template specialization for array< char, Size >.
 

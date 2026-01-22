@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Macros/For_Each.h>
+#include <sk/Macros/For_Each.h>
 
 #define VEC2_COMBINATION( X, Y )       X##Y
 #define VEC3_COMBINATION( X, Y, Z )    X##Y##Z

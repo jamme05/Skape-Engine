@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <Containers/Vector.h>
-#include <glbinding/gl/types.h>
+#include <sk/Containers/Vector.h>
+#include <sk/Math/Vector2.h>
 
-#include <Math/Vector2.h>
+#include <glbinding/gl/types.h>
 
 namespace sk::Graphics
 {

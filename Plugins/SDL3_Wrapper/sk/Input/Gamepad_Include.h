@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <cstdint>
-
 #include <SDL3/SDL_gamepad.h>
+
+#include <cstdint>
 
 namespace sk::Input::Gamepad
 {

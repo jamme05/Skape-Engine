@@ -6,12 +6,12 @@
 
 #include "RenderUtils.h"
 
-#include <Assets/Material.h>
-#include <Assets/Mesh.h>
-#include <Graphics/Renderer.h>
-#include <Graphics/Rendering/Frame_Buffer.h>
-#include <Graphics/Utils/Shader_Reflection.h>
-#include <Scene/Components/CameraComponent.h>
+#include <sk/Assets/Material.h>
+#include <sk/Assets/Mesh.h>
+#include <sk/Graphics/Renderer.h>
+#include <sk/Graphics/Rendering/Frame_Buffer.h>
+#include <sk/Graphics/Utils/Shader_Reflection.h>
+#include <sk/Scene/Components/CameraComponent.h>
 
 using namespace sk::Graphics;
 

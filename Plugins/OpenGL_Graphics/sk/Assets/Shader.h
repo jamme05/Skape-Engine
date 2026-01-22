@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include <sk/Assets/Asset.h>
+
 #include <glbinding/gl/enum.h>
 #include <glbinding/gl/types.h>
-
-#include <Assets/Asset.h>
 
 namespace sk::Graphics::Utils
 {

@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <Macros/For_Each.h>
-#include <Macros/Manipulation.h>
-#include <Reflection/Types.h>
+#include <sk/Macros/For_Each.h>
+#include <sk/Macros/Manipulation.h>
+#include <sk/Reflection/Types.h>
 
 #define UNWRAP_M( ... ) __VA_ARGS__
 #define GET_MEMBER_M( Type, Name, ... ) Type Name ;

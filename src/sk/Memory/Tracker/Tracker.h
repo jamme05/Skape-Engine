@@ -6,12 +6,12 @@
 
 #pragma once
 
+#include <sk/Macros/Enum_Builder.h>
+#include <sk/Memory/Memory.h>
+#include <sk/Misc/Singleton.h>
+
 #include <mutex>
 #include <source_location>
-
-#include <Macros/Enum_Builder.h>
-#include <Memory/Memory.h>
-#include <Misc/Singleton.h>
 
 namespace sk::Memory
 {

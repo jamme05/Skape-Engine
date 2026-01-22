@@ -6,9 +6,9 @@
 
 #include "Render_Target.h"
 
-#include <glbinding/gl/functions.h>
+#include <sk/Debugging/Macros/Assert.h>
 
-#include <Debugging/Macros/Assert.h>
+#include <glbinding/gl/functions.h>
 
 namespace sk::Graphics::Rendering
 {

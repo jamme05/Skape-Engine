@@ -2,9 +2,9 @@
 
 #pragma once
 
-#include <variant>
+#include <sk/Scene/Components/Component.h>
 
-#include <Scene/Components/Component.h>
+#include <variant>
 
 namespace sk::Scene
 {

@@ -6,14 +6,14 @@
 
 #include "Texture.h"
 
-#include <glbinding/gl/enum.h>
-#include <glbinding/gl/functions.h>
+#include <sk/Graphics/Renderer_Impl.h>
 
 // TODO: Move stb to OpenGL library.
 // TODO: Look at https://github.com/nothings/stb/blob/master/stb_image.h for importing textures.
 #include <stb_image.h>
 
-#include "Graphics/Renderer_Impl.h"
+#include <glbinding/gl/enum.h>
+#include <glbinding/gl/functions.h>
 
 namespace sk::Assets
 {

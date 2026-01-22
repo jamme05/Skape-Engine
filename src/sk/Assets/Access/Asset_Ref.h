@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <type_traits>
+#include <sk/Assets/Access/Asset_Ptr_Base.h>
+#include <sk/Scene/Managers/EventManager.h>
 
-#include <Assets/Access/Asset_Ptr_Base.h>
-#include <Scene/Managers/EventManager.h>
+#include <type_traits>
 
 namespace sk
 {

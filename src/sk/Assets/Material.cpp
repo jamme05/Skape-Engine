@@ -6,9 +6,9 @@
 
 #include "Material.h"
 
-#include <Assets/Texture.h>
-#include <Graphics/Utils/Shader_Link.h>
-#include <Graphics/Utils/Shader_Reflection.h>
+#include <sk/Assets/Texture.h>
+#include <sk/Graphics/Utils/Shader_Link.h>
+#include <sk/Graphics/Utils/Shader_Reflection.h>
 
 using namespace sk::Assets;
 

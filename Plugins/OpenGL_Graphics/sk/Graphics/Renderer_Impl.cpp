@@ -6,14 +6,14 @@
 
 #include "Renderer_Impl.h"
 
+#include <sk/Assets/Shader.h>
+#include <sk/Assets/Management/Asset_Job_Manager.h>
+#include <sk/Assets/Management/Asset_Manager.h>
+#include <sk/Platform/Platform_Base.h>
+
 #include <glbinding/Binding.h>
 #include <glbinding/glbinding.h>
 #include <glbinding/gl/functions.h>
-
-#include <Assets/Shader.h>
-#include <Assets/Management/Asset_Job_Manager.h>
-#include <Assets/Management/Asset_Manager.h>
-#include <Platform/Platform_Base.h>
 
 using namespace sk;
 using namespace sk::Graphics;

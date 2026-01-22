@@ -4,8 +4,8 @@
 
 #include "Render_Pass.h"
 
-#include <Assets/Material.h>
-#include <Assets/Access/Asset_Ref.h>
+#include <sk/Assets/Material.h>
+#include <sk/Assets/Access/Asset_Ref.h>
 
 namespace sk::Graphics::Passes
 {

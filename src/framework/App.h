@@ -1,11 +1,11 @@
 #pragma once
 
-#include <unordered_set>
+#include <sk/Input/Input.h>
+#include <sk/Misc/Singleton.h>
+#include <sk/Reflection/RuntimeStruct.h>
+#include <sk/Scene/Scene.h>
 
-#include <Input/Input.h>
-#include <Misc/Singleton.h>
-#include <Reflection/RuntimeStruct.h>
-#include <Scene/Scene.h>
+#include <unordered_set>
 
 namespace sk::Graphics
 {

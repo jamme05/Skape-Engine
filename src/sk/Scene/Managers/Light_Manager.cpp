@@ -2,7 +2,7 @@
 
 #include "Light_Manager.h"
 
-#include <Scene/Components/LightComponent.h>
+#include <sk/Scene/Components/LightComponent.h>
 
 namespace 
 {

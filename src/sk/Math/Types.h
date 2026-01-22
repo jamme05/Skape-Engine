@@ -11,7 +11,7 @@
 #include "Vector4.h"
 #include "Matrix4x4.h"
 
-#include <Reflection/Types.h>
+#include <sk/Reflection/Types.h>
 
 REGISTER_TYPE( sk::cVector2f, "Vector 2 ( float )" )
 REGISTER_TYPE( sk::cVector2d, "Vector 2 ( double )" )

@@ -2,9 +2,9 @@
 
 #pragma once
 
-#include <cstdint>
-
 #include <SDL3/SDL_mouse.h>
+
+#include <cstdint>
 
 namespace sk::Input::Mouse
 {

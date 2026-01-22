@@ -10,14 +10,14 @@
 #error You aren't allowed to access the type registry directly. Include <Reflection/Types.h> instead.
 #endif // !SK_ALLOW_DIRECT_REGISTRY_ACCESS
 
-#include <Containers/Map.h>
-#include <Containers/Const/Array.h>
-#include <Containers/Const/Linked_Array.h>
-#include <Macros/Enum_Builder.h>
-#include <Macros/Manipulation.h>
-#include <Misc/Counter.h>
-#include <Misc/Hashing.h>
-#include <Reflection/Type_Hash.h>
+#include <sk/Containers/Map.h>
+#include <sk/Containers/Const/Array.h>
+#include <sk/Containers/Const/Linked_Array.h>
+#include <sk/Macros/Enum_Builder.h>
+#include <sk/Macros/Manipulation.h>
+#include <sk/Misc/Counter.h>
+#include <sk/Misc/Hashing.h>
+#include <sk/Reflection/Type_Hash.h>
 
 namespace sk
 {

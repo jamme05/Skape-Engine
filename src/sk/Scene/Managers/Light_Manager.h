@@ -1,10 +1,10 @@
 ﻿#pragma once
 
-#include <Graphics/Buffer/Buffer.h>
-#include <Math/Vector3.h>
-#include <Misc/Singleton.h>
-#include <Misc/UUID.h>
-#include <Scene/Components/LightComponent.h>
+#include <sk/Graphics/Buffer/Buffer.h>
+#include <sk/Math/Vector3.h>
+#include <sk/Misc/Singleton.h>
+#include <sk/Misc/UUID.h>
+#include <sk/Scene/Components/LightComponent.h>
 
 namespace sk::Scene
 {

@@ -10,7 +10,7 @@
 #include "Type_Registry.h"
 #undef SK_ALLOW_DIRECT_REGISTRY_ACCESS
 
-#include <Reflection/Manager/Type_Manager.h>
+#include <sk/Reflection/Manager/Type_Manager.h>
 
 REGISTER_TYPE( bool, "Boolean" )
 REGISTER_T_TYPE( int8, "Char" )

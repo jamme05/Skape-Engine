@@ -2,13 +2,13 @@
 
 #pragma once
 
-#include <unordered_map>
+#include <sk/Misc/Hashing.h>
+#include <sk/Misc/Singleton.h>
+#include <sk/Misc/Smart_Ptrs.h>
+#include <sk/Misc/StringID.h>
+#include <sk/Scene/Object.h>
 
-#include <Misc/Hashing.h>
-#include <Misc/Singleton.h>
-#include <Misc/Smart_Ptrs.h>
-#include <Misc/StringID.h>
-#include <Scene/Object.h>
+#include <unordered_map>
 
 namespace sk::Object::Components
 {

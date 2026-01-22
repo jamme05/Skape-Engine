@@ -6,14 +6,14 @@
 
 #include "Window.h"
 
+#include <framework/App.h>
+#include <sk/Skape_Main.h>
+#include <sk/Input/Input.h>
+#include <sk/Platform/Time.h>
+
 #define SDL_MAIN_USE_CALLBACKS
 #include <SDL3/SDL_main.h>
 #include <SDL3/SDL.h>
-
-#include <App.h>
-#include <Skape_Main.h>
-#include <Input/Input.h>
-#include <Platform/Time.h>
 
 // SDL Functions:
 SDL_AppResult SDL_AppInit( void** _app_state, int _argc, char** _argv )

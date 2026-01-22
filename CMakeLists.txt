@@ -1,9 +1,15 @@
 cmake_minimum_required(VERSION 4.0)
 
+# https://www.tutorialpedia.org/blog/how-do-i-tell-cmake-to-use-clang-on-windows/
+# clang-toolchain.cmake
+#set(CMAKE_C_COMPILER "clang")
+#set(CMAKE_CXX_COMPILER "clang++")
+
 project(Skape VERSION 0.1.0)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 
 set(SKAPE_INCLUDES)
 set(SKAPE_LIBRARIES)
@@ -16,6 +22,15 @@ set(SKAPE_PLATFORMS)
 set(SKAPE_GRAPHICS_LIBRARIES)
 
 set(AVAILABLE_PLUGINS)
+
+# TODO: Maybe make this into an include.
+
+set(ENGINE_INCLUDES
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/external/stb>
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/external/fastgltf/include>
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/external/fastgltf/deps>
+)
 
 macro(ListFiles)
   set(SearchRoot ${CMAKE_CURRENT_SOURCE_DIR})
@@ -42,6 +57,8 @@ endmacro()
 macro(SkapePlugin PluginName)
   project(${PluginName})
   add_library(${PluginName})
+  target_include_directories(${PluginName} PUBLIC ${ENGINE_INCLUDES})
+
   list(APPEND AVAILABLE_PLUGINS ${PluginName})
   set(AVAILABLE_PLUGINS ${AVAILABLE_PLUGINS} PARENT_SCOPE)
 endmacro()
@@ -118,6 +135,8 @@ if(NOT ${SKAPE_GRAPHICS} STREQUAL "Invalid")
   list(GET SKAPE_GRAPHICS_PLUGINS ${GraphicsApiIndex} GraphicsApiPlugin)
   set(SKAPE_GRAPHICS_PROJECT ${GraphicsApiPlugin})
 endif()
+
+add_subdirectory(external)
 
 # Create Skape Projects
 add_subdirectory(src)

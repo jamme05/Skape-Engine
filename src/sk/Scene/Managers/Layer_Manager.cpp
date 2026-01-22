@@ -1,7 +1,7 @@
 ﻿
 #include "Layer_Manager.h"
 
-#include <Scene/Components/Internal/Layer_Component.h>
+#include <sk/Scene/Components/Internal/Layer_Component.h>
 
 auto sk::Scene::cLayer_Manager::cObjectIterator::operator++() -> cObjectIterator&
 {
