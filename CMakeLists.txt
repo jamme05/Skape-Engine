@@ -1,10 +1,5 @@
 cmake_minimum_required(VERSION 4.0)
 
-# https://www.tutorialpedia.org/blog/how-do-i-tell-cmake-to-use-clang-on-windows/
-# clang-toolchain.cmake
-#set(CMAKE_C_COMPILER "clang")
-#set(CMAKE_CXX_COMPILER "clang++")
-
 project(Skape VERSION 0.1.0)
 
 set(CMAKE_CXX_STANDARD 23)

@@ -411,3 +411,5 @@ debug_info
 build
 src/core/*
 game/bin
+.cmake/
+CMakeFiles/
