@@ -22,20 +22,7 @@ namespace sk
 {
 	cAsset_Manager::cAsset_Manager()
 	{
-		// TODO: Add some future way that uses a platform dependant function to get the executable path.
-		// We're expected to be inside [Project Root]/Build/Project/startup
-		// And we need to move to [Project Root]/game
-		if( auto current_path = std::filesystem::current_path(); current_path.filename() == "startup" )
-		{
-			current_path = current_path.parent_path().parent_path().parent_path();
-			std::filesystem::current_path( current_path / "game" );
-		}
-		else if( current_path.parent_path().filename() == "game" )
-		{
-			// We may otherwise be in [Project Root]/game/bin
-			// In that case we only need to go down one directory.
-			std::filesystem::current_path( current_path.parent_path() );
-		}
+		std::filesystem::current_path( SK_ROOT_DIR );
 
 		loadEmbedded();
 

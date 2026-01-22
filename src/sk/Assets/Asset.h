@@ -16,7 +16,7 @@
 #include <sk/Scene/Managers/EventManager.h>
 #include <sk/Seralization/Serializable.h>
 
-#include <simdjson/simdjson.h>
+#include <simdjson.h>
 
 #include <any>
 #include <filesystem>

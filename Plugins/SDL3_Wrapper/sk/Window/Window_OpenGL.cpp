@@ -4,15 +4,15 @@
 
 #include "Window.h"
 
-#include <glbinding/glbinding.h>
+#include <sk/Debugging/Debugging.h>
+#include <sk/Graphics/Rendering/Window_Context.h>
+#include <sk/Memory/Tracker/Tracker.h>
+#include <sk/Platform/Platform_Base.h>
+#include <sk/Platform/Time.h>
 
 #include <SDL3/SDL.h>
 
-#include <Debugging/Debugging.h>
-#include <Graphics/Rendering/Window_Context.h>
-#include <Memory/Tracker/Tracker.h>
-#include <Platform/Platform_Base.h>
-#include <Platform/Time.h>
+#include <glbinding/glbinding.h>
 
 using namespace sk::Platform;
 

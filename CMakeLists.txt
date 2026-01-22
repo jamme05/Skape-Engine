@@ -5,7 +5,6 @@ project(Skape VERSION 0.1.0)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-
 set(SKAPE_INCLUDES)
 set(SKAPE_LIBRARIES)
 set(SKAPE_DEFINES)
@@ -18,13 +17,16 @@ set(SKAPE_GRAPHICS_LIBRARIES)
 
 set(AVAILABLE_PLUGINS)
 
+set(SKAPE_GAME_DIR ${CMAKE_SOURCE_DIR}/game/)
+set(SKAPE_GAME_BIN ${CMAKE_SOURCE_DIR}/game/)
+
 # TODO: Maybe make this into an include.
 
 set(ENGINE_INCLUDES
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/external/stb>
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/external/fastgltf/include>
-  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/external/fastgltf/deps>
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/external/simdjson/include>
 )
 
 macro(ListFiles)
@@ -47,6 +49,12 @@ macro(ListFiles)
     message("${Relative}")
   endforeach()
 endmacro()
+
+
+macro(UpdateGameDir NewRoot)
+  set(SKAPE_GAME_DIR ${NewRoot} PARENT_SCOPE)
+endmacro()
+
 
 
 macro(SkapePlugin PluginName)
@@ -130,6 +138,11 @@ if(NOT ${SKAPE_GRAPHICS} STREQUAL "Invalid")
   list(GET SKAPE_GRAPHICS_PLUGINS ${GraphicsApiIndex} GraphicsApiPlugin)
   set(SKAPE_GRAPHICS_PROJECT ${GraphicsApiPlugin})
 endif()
+
+foreach(PluginName IN LISTS SKAPE_PLUGINS_LINK)
+  target_link_libraries(${PluginName} PUBLIC ${SKAPE_PLATFORM_PROJECT} ${SKAPE_GRAPHICS_PROJECT})
+endforeach()
+
 
 add_subdirectory(external)
 
