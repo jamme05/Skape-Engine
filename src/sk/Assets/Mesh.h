@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <Assets/Asset.h>
-#include <Containers/Map.h>
+#include <sk/Assets/Asset.h>
+#include <sk/Containers/Map.h>
 
 namespace sk::Graphics
 {

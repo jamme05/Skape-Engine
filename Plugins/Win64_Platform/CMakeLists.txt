@@ -13,6 +13,5 @@ target_sources(Win64_Platform
     FILE_SET vulkanGraphicsIncludes
     TYPE HEADERS
     FILES
-      sk/Platform/Time.h
       sk/Types.h
 )

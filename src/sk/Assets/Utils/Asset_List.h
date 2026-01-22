@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <Containers/Map.h>
-#include <Misc/Smart_Ptrs.h>
-#include <Reflection/Type_Hash.h>
+#include <sk/Containers/Map.h>
+#include <sk/Misc/Smart_Ptrs.h>
+#include <sk/Reflection/Type_Hash.h>
 
 namespace sk
 {

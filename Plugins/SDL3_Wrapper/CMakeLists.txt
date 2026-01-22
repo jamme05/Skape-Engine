@@ -23,6 +23,6 @@ target_sources(SDL3_Wrapper
 )
 
 target_link_libraries(SDL3_Wrapper
-	PRIVATE
+	PUBLIC
 		SDL3::SDL3
 )

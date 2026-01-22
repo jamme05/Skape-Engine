@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include <Graphics/Passes/Render_Pass.h>
+#include <sk/Graphics/Passes/Render_Pass.h>
 
 namespace sk::Platform
 {

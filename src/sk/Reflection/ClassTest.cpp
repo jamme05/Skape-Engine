@@ -4,8 +4,8 @@
  *
  */
 
-#include <Misc/Smart_Ptrs.h>
-#include <Reflection/RuntimeClass.h>
+#include <sk/Misc/Smart_Ptrs.h>
+#include <sk/Reflection/RuntimeClass.h>
 
 // TODO: Move test to it's own file.
 SK_CLASS( Test )

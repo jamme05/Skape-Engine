@@ -6,16 +6,16 @@
 
 #pragma once
 
-#include <ranges>
+#include <sk/Containers/Map.h>
+#include <sk/Containers/Vector.h>
+#include <sk/Misc/Smart_Ptrs.h>
+#include <sk/Misc/StringID.h>
+#include <sk/Reflection/RuntimeClass.h>
+#include <sk/Scene/Components/Component.h>
+#include <sk/Scene/Components/TransformComponent.h>
+#include <sk/Scene/Managers/Internal_Component_Manager.h>
 
-#include <Containers/Map.h>
-#include <Containers/Vector.h>
-#include <Misc/Smart_Ptrs.h>
-#include <Misc/StringID.h>
-#include <Reflection/RuntimeClass.h>
-#include <Scene/Components/Component.h>
-#include <Scene/Components/TransformComponent.h>
-#include <Scene/Managers/Internal_Component_Manager.h>
+#include <ranges>
 
 
 namespace sk::Object::Components

@@ -2,17 +2,17 @@
 
 #include "GBuffer_Pass.h"
 
-#include <App.h>
-#include <Debugging/Macros/Assert.h>
-#include <Graphics/Pipelines/Pipeline.h>
-#include <Graphics/Rendering/Depth_Target.h>
-#include <Graphics/Rendering/Frame_Buffer.h>
-#include <Graphics/Utils/RenderUtils.h>
-#include <Platform/Window/Window_Base.h>
-#include <Scene/Components/CameraComponent.h>
-#include <Scene/Components/MeshComponent.h>
-#include <Scene/Managers/CameraManager.h>
-#include <Scene/Managers/Layer_Manager.h>
+#include <framework/App.h>
+#include <sk/Debugging/Macros/Assert.h>
+#include <sk/Graphics/Pipelines/Pipeline.h>
+#include <sk/Graphics/Rendering/Depth_Target.h>
+#include <sk/Graphics/Rendering/Frame_Buffer.h>
+#include <sk/Graphics/Utils/RenderUtils.h>
+#include <sk/Platform/Window/Window_Base.h>
+#include <sk/Scene/Components/CameraComponent.h>
+#include <sk/Scene/Components/MeshComponent.h>
+#include <sk/Scene/Managers/CameraManager.h>
+#include <sk/Scene/Managers/Layer_Manager.h>
 
 using namespace sk::Graphics::Passes;
 

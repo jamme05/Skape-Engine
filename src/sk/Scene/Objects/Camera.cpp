@@ -6,11 +6,10 @@
 
 #include "Camera.h"
 
-#include <Scene/Components/CameraComponent.h>
-#include <Scene/Managers/CameraManager.h> 
-#include <Window/Window.h>
-
-#include "App.h"
+#include <framework/App.h>
+#include <sk/Scene/Components/CameraComponent.h>
+#include <sk/Scene/Managers/CameraManager.h> 
+#include <sk/Window/Window.h>
 
 namespace sk::Object
 {

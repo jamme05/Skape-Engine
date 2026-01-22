@@ -7,13 +7,13 @@
 
 #include "SceneManager.h"
 
-#include <Graphics/Rendering/Frame_Buffer.h>
-#include <Graphics/Rendering/Render_Context.h>
-#include <Scene/Components/CameraComponent.h>
-#include <Scene/Managers/CameraManager.h>
-#include <Scene/Managers/Internal_Component_Manager.h>
-#include <Scene/Managers/Layer_Manager.h>
-#include <Scene/Managers/Light_Manager.h>
+#include <sk/Graphics/Rendering/Frame_Buffer.h>
+#include <sk/Graphics/Rendering/Render_Context.h>
+#include <sk/Scene/Components/CameraComponent.h>
+#include <sk/Scene/Managers/CameraManager.h>
+#include <sk/Scene/Managers/Internal_Component_Manager.h>
+#include <sk/Scene/Managers/Layer_Manager.h>
+#include <sk/Scene/Managers/Light_Manager.h>
 
 namespace sk
 {

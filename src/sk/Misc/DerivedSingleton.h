@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <Debugging/Debugging.h>
-#include <Memory/Memory.h>
+#include <sk/Debugging/Debugging.h>
+#include <sk/Memory/Memory.h>
 
 namespace sk
 {

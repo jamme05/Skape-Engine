@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Math/Vector2.h>
+#include <sk/Math/Vector2.h>
 
 namespace sk::Graphics::Rendering
 {

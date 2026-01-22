@@ -6,9 +6,9 @@
 
 #include "CameraManager.h"
 
-#include <Graphics/Renderer_Impl.h>
-#include <Scene/Components/CameraComponent.h>
-#include <Scene/Managers/SceneManager.h>
+#include <sk/Graphics/Renderer_Impl.h>
+#include <sk/Scene/Components/CameraComponent.h>
+#include <sk/Scene/Managers/SceneManager.h>
 
 namespace sk::Scene
 {

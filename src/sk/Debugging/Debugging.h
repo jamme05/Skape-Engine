@@ -8,6 +8,6 @@
 
 #include <print>
 
-#include <Debugging/Macros/Assert.h>
-#include <Debugging/Macros/Text.h>
-#include <Debugging/Macros/Warning.h>
+#include <sk/Debugging/Macros/Assert.h>
+#include <sk/Debugging/Macros/Text.h>
+#include <sk/Debugging/Macros/Warning.h>

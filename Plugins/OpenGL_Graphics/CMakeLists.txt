@@ -2,6 +2,13 @@ SkapePlugin(OpenGL_Graphics)
 
 SkapeAddGraphicsSupport(OpenGL OpenGL_Graphics)
 
+add_subdirectory(glbinding)
+
+target_link_libraries(OpenGL_Graphics
+  PUBLIC
+  glbinding::glbinding
+)
+
 target_sources(OpenGL_Graphics
 	PRIVATE
     sk/Assets/Shader.cpp

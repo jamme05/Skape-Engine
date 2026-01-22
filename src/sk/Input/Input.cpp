@@ -4,12 +4,12 @@
  *
  */
 
+#include "Input.h"
+
+#include <sk/Memory/Tracker/Tracker.h>
 
 #include <mutex>
 #include <print>
-
-#include "Input.h"
-#include <Memory/Tracker/Tracker.h>
 
 namespace sk
 {

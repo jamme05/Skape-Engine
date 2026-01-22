@@ -7,9 +7,9 @@
 #pragma once
 
 
-#include <Graphics/Buffer/Unsafe_Buffer.h>
-#include <Math/Math.h>
-#include <Memory/Memory.h>
+#include <sk/Graphics/Buffer/Unsafe_Buffer.h>
+#include <sk/Math/Math.h>
+#include <sk/Memory/Memory.h>
 
 // TYPE SAFE BUFFER
 

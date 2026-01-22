@@ -6,11 +6,11 @@
 
 #include "Unsafe_Buffer.h"
 
-#include <glbinding/gl/gl.h>
+#include <sk/Debugging/Debugging.h>
+#include <sk/Graphics/Renderer_Impl.h>
+#include <sk/Memory/Tracker/Tracker.h>
 
-#include <Debugging/Debugging.h>
-#include <Graphics/Renderer_Impl.h>
-#include <Memory/Tracker/Tracker.h>
+#include <glbinding/gl/gl.h>
 
 namespace sk::Graphics
 {

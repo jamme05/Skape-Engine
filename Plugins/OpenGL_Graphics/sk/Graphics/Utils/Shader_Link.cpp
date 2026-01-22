@@ -2,10 +2,10 @@
 
 #include "Shader_Link.h"
 
-#include <glbinding/gl/functions.h>
+#include <sk/Assets/Material.h>
+#include <sk/Graphics/Utils/Shader_Reflection.h>
 
-#include <Assets/Material.h>
-#include <Graphics/Utils/Shader_Reflection.h>
+#include <glbinding/gl/functions.h>
 
 sk::Graphics::Utils::cShader_Link::cShader_Link(
     const cShared_ptr< cAsset_Meta >& _vertex_shader,

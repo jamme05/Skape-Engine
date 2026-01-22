@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include <Assets/Shader.h>
-#include <Assets/Access/Asset_Ref.h>
+#include <sk/Assets/Shader.h>
+#include <sk/Assets/Access/Asset_Ref.h>
 
 namespace sk::Assets
 {

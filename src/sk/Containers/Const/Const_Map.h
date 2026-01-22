@@ -7,8 +7,8 @@
 #pragma once
 
 // TODO: Use forward declare instead?
-#include <Containers/Const/Array.h>
-#include <Misc/Hashing.h>
+#include <sk/Containers/Const/Array.h>
+#include <sk/Misc/Hashing.h>
 
 #include <utility>
 

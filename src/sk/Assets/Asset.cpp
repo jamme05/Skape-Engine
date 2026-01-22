@@ -6,9 +6,9 @@
 
 #include "Asset.h"
 
-#include <Assets/Management/Asset_Job_Manager.h>
-#include <Assets/Management/Asset_Manager.h>
-#include <Seralization/SerializedObject.h>
+#include <sk/Assets/Management/Asset_Job_Manager.h>
+#include <sk/Assets/Management/Asset_Manager.h>
+#include <sk/Seralization/SerializedObject.h>
 
 using namespace sk;
 

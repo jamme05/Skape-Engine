@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <Math/Matrix4x4.h>
-#include <Misc/Smart_Ptrs.h>
+#include <sk/Math/Matrix4x4.h>
+#include <sk/Misc/Smart_Ptrs.h>
 
 namespace sk
 {

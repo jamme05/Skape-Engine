@@ -2,7 +2,7 @@
 #pragma once
 
 #ifdef SK_PLATFORM_SUPPORTS_MOUSE
-#include <Input/Mouse_Include.h>
+#include <sk/Input/Mouse_Include.h>
 #else // SK_PLATFORM_SUPPORTS_KEYBOARD
 #include <cstdint>
 namespace sk::Input::Mouse

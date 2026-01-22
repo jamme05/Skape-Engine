@@ -6,15 +6,15 @@
 
 #pragma once
 
+#include <sk/Debugging/Debugging.h>
+#include <sk/Macros/Manipulation.h>
+#include <sk/Misc/Hashing.h>
+#include <sk/Misc/Offsetof.h>
+#include <sk/Reflection/ClassMacros.h>
+#include <sk/Reflection/Types.h>
+
 #include <functional>
 #include <print>
-
-#include <Debugging/Debugging.h>
-#include <Macros/Manipulation.h>
-#include <Misc/Hashing.h>
-#include <Misc/Offsetof.h>
-#include <Reflection/ClassMacros.h>
-#include <Reflection/Types.h>
 
 namespace sk
 {

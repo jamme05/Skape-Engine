@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <Assets/Asset.h>
-#include <Assets/Access/Asset_Ptr_Base.h>
-#include <Scene/Managers/EventManager.h>
+#include <sk/Assets/Asset.h>
+#include <sk/Assets/Access/Asset_Ptr_Base.h>
+#include <sk/Scene/Managers/EventManager.h>
 
 namespace sk
 {

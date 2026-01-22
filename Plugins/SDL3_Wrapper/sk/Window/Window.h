@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <SDL3/SDL_init.h>
+#include <sk/Misc/Singleton.h>
+#include <sk/Misc/Smart_Ptrs.h>
+#include <sk/Platform/Window/Window_Base.h>
 
-#include <Misc/Singleton.h>
-#include <Misc/Smart_Ptrs.h>
-#include <Platform/Window/Window_Base.h>
+#include <SDL3/SDL_init.h>
 
 namespace sk::Graphics::Rendering
 {

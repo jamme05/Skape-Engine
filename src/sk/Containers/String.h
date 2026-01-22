@@ -4,8 +4,8 @@
 
 // TODO: Replace this file in the future.
 
-#include <string>
+#include <sk/Reflection/Types.h>
 
-#include <Reflection/Types.h>
+#include <string>
 
 REGISTER_TYPE( std::string, "String" )

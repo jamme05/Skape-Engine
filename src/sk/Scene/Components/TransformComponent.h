@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Scene/Components/Component.h>
+#include <sk/Scene/Components/Component.h>
 
 namespace sk::Object::Components
 {

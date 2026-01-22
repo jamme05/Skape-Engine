@@ -6,9 +6,10 @@
 
 #pragma once
 
+#include <sk/Input/Keyboard_Include.h>
+#include <sk/Math/Vector2.h>
+
 #include <variant>
-#include <Input/Keyboard_Include.h>
-#include <Math/Vector2.h>
 
 namespace sk::Platform
 {

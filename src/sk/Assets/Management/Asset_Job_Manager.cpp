@@ -2,10 +2,10 @@
 
 #include "Asset_Job_Manager.h"
 
-#include <chrono>
+#include <sk/Assets/Workers/Asset_Loader.h>
+#include <sk/Graphics/Renderer.h>
 
-#include <Assets/Workers/Asset_Loader.h>
-#include <Graphics/Renderer.h>
+#include <chrono>
 
 sk::Assets::Jobs::cAsset_Job_Manager::cAsset_Job_Manager()
 {

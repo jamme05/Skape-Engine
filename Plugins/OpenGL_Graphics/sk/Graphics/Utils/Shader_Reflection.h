@@ -1,15 +1,16 @@
-﻿#pragma once
+﻿
+#pragma once
 
+
+#include <sk/Containers/Vector.h>
+#include <sk/Misc/StringID.h>
+#include <sk/Reflection/Types.h>
+
+#include <glbinding/gl/types.h>
 
 #include <cstdint>
 #include <set>
 #include <variant>
-
-#include <glbinding/gl/types.h>
-
-#include <Containers/Vector.h>
-#include <Misc/StringID.h>
-#include <Reflection/Types.h>
 
 namespace sk::Graphics::Utils
 {

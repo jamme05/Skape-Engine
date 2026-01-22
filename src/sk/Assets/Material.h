@@ -6,16 +6,16 @@
 
 #pragma once
 
-#include <variant>
+#include <sk/Assets/Asset.h>
+#include <sk/Assets/Shader.h>
+#include <sk/Assets/Texture.h>
+#include <sk/Assets/Access/Asset_Ref.h>
+#include <sk/Graphics/Buffer/Dynamic_Buffer.h>
+#include <sk/Graphics/Utils/Shader_Link.h>
+#include <sk/Math/Matrix4x4.h>
+#include <sk/Math/Vector4.h>
 
-#include <Assets/Asset.h>
-#include <Assets/Shader.h>
-#include <Assets/Texture.h>
-#include <Assets/Access/Asset_Ref.h>
-#include <Graphics/Buffer/Dynamic_Buffer.h>
-#include <Graphics/Utils/Shader_Link.h>
-#include <Math/Matrix4x4.h>
-#include <Math/Vector4.h>
+#include <variant>
 
 
 namespace sk::Graphics::Rendering

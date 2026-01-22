@@ -4,8 +4,8 @@
 
 #include <memory>
 
-#include <Graphics/Passes/Render_Pass.h>
-#include <Graphics/Rendering/Render_Context.h>
+#include <sk/Graphics/Passes/Render_Pass.h>
+#include <sk/Graphics/Rendering/Render_Context.h>
 
 namespace sk::Object::Components
 {

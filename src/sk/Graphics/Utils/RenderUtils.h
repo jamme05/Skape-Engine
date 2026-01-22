@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Math/Matrix4x4.h>
+#include <sk/Math/Matrix4x4.h>
 
 namespace sk::Object::Components
 {

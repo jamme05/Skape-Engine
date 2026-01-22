@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <Graphics/Buffer/Unsafe_Buffer.h>
-#include <Reflection/Types.h>
+#include <sk/Graphics/Buffer/Unsafe_Buffer.h>
+#include <sk/Reflection/Types.h>
 
 // TYPE UNSAFE BUFFER
 

@@ -2,8 +2,8 @@
 
 #include "Forward_Pipeline.h"
 
-#include <Graphics/Passes/Forward_Pass.h>
-#include <Platform/Window/Window_Base.h>
+#include <sk/Graphics/Passes/Forward_Pass.h>
+#include <sk/Platform/Window/Window_Base.h>
 
 sk::Graphics::cForward_Pipeline::cForward_Pipeline( Platform::iWindow* _window )
 : cPipeline( _window )

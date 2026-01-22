@@ -2,9 +2,6 @@
 
 #include "App.h"
 
-#include <print>
-#include <random>
-
 #include <sk/Assets/Asset.h>
 #include <sk/Assets/Texture.h>
 #include <sk/Assets/Management/Asset_Manager.h>
@@ -27,6 +24,9 @@
 #include <sk/Scene/Components/SpinComponent.h>
 #include <sk/Scene/Managers/SceneManager.h>
 #include <sk/Scene/Objects/CameraFlight.h>
+
+#include <print>
+#include <random>
 
 cApp* cApp::m_running_instance_ = nullptr;
 

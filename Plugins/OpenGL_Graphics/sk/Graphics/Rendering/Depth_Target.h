@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include <glbinding/gl/types.h>
+#include <sk/Math/Vector2.h>
+#include <sk/Math/Vector3.h>
+#include <sk/Math/Vector4.h>
+#include <sk/Misc/Smart_Ptrs.h>
 
-#include <Math/Vector2.h>
-#include <Math/Vector3.h>
-#include <Math/Vector4.h>
-#include <Misc/Smart_Ptrs.h>
+#include <glbinding/gl/types.h>
 
 namespace sk::Assets
 {

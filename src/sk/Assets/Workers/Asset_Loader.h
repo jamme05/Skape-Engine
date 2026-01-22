@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <thread>
+#include <sk/Assets/Asset.h>
+#include <sk/Assets/Workers/WorkerTask.h>
+#include <sk/Misc/Smart_Ptrs.h>
 
-#include <Assets/Asset.h>
-#include <Assets/Workers/WorkerTask.h>
-#include <Misc/Smart_Ptrs.h>
+#include <thread>
 
 
 namespace sk

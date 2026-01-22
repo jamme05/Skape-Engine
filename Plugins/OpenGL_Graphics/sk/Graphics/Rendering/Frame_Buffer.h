@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include <glbinding/gl/types.h>
+#include <sk/Assets/Material.h>
+#include <sk/Containers/Vector.h>
+#include <sk/Graphics/Buffer/Dynamic_Buffer.h>
+#include <sk/Math/Vector2.h>
+#include <sk/Misc/Smart_Ptrs.h>
 
-#include <Assets/Material.h>
-#include <Containers/Vector.h>
-#include <Graphics/Buffer/Dynamic_Buffer.h>
-#include <Math/Vector2.h>
-#include <Misc/Smart_Ptrs.h>
+#include <glbinding/gl/types.h>
 
 namespace sk::Graphics::Rendering
 {

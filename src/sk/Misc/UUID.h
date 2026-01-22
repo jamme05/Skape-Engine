@@ -8,8 +8,8 @@
 
 #include <cstdint>
 
-#include <Misc/Hashing.h>
-#include <Seralization/Serializable.h>
+#include <sk/Misc/Hashing.h>
+#include <sk/Seralization/Serializable.h>
 
 namespace sk
 {

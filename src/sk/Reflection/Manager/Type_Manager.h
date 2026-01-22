@@ -6,11 +6,13 @@
 
 #pragma once
 
-#include <Misc/Singleton.h>
+#include <sk/Misc/Singleton.h>
 
 #define SK_ALLOW_DIRECT_REGISTRY_ACCESS
-#include <Reflection/Type_Registry.h>
+#include <sk/Reflection/Type_Registry.h>
 #undef SK_ALLOW_DIRECT_REGISTRY_ACCESS
+
+#include <unordered_map>
 
 namespace sk::Reflection
 {

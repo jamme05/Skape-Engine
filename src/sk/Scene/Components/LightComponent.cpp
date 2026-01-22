@@ -2,7 +2,7 @@
 
 #include "LightComponent.h"
 
-#include "Scene/Managers/Light_Manager.h"
+#include <sk/Scene/Managers/Light_Manager.h>
 
 using namespace sk::Object::Components;
 using namespace sk::Scene::Light;

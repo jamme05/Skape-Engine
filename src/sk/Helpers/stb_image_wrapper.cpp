@@ -6,7 +6,7 @@
 
 // ReSharper disable CppUnusedIncludeDirective
 
-#include <Memory/Tracker/Tracker.h>
+#include <sk/Memory/Tracker/Tracker.h>
 
 #define STBI_MALLOC( S )     sk::Memory::Tracker::alloc( S )
 #define STBI_REALLOC( B, S ) sk::Memory::Tracker::realloc( B, S )

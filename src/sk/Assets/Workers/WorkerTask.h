@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <Assets/Asset.h>
-#include <Assets/Management/Asset_Manager.h>
-#include <Misc/Smart_Ptrs.h>
+#include <sk/Assets/Asset.h>
+#include <sk/Assets/Management/Asset_Manager.h>
+#include <sk/Misc/Smart_Ptrs.h>
 
 namespace sk::Assets::Jobs
 {

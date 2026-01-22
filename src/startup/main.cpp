@@ -4,11 +4,11 @@
  *
  */
 
-#include "App.h"
+#include <framework/App.h>
 
-#include <Skape_Main.h>
-#include <Memory/Tracker/Tracker.h>
-#include <Platform/Time.h>
+#include <sk/Skape_Main.h>
+#include <sk/Memory/Tracker/Tracker.h>
+#include <sk/Platform/Time.h>
 
 namespace sk::App
 {

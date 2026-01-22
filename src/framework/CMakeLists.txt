@@ -5,8 +5,7 @@ add_library(Framework)
 target_link_libraries(Framework
   PRIVATE
     SkapeEngine
-    ${SKAPE_PLATFORM_PROJECT}
-    ${SKAPE_GRAPHICS_PROJECT}
+    ${SKAPE_PLUGINS_LINK}
 )
 
 target_sources(Framework

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Graphics/Pipelines/Pipeline.h>
+#include <sk/Graphics/Pipelines/Pipeline.h>
 
 namespace sk::Platform
 {

@@ -3,10 +3,14 @@ project(SkapeEngine)
 add_library(SkapeEngine)
 
 target_link_libraries(SkapeEngine
-  PRIVATE
+  PUBLIC
+    stb_image
     ${SKAPE_PLATFORM_PROJECT}
     ${SKAPE_GRAPHICS_PROJECT}
+    ${SKAPE_PLUGINS_LINK}
 )
+
+target_include_directories(SkapeEngine INTERFACE ${ENGINE_INCLUDES})
 
 target_sources(SkapeEngine
   PRIVATE
@@ -138,6 +142,7 @@ target_sources(SkapeEngine
       sk/Misc/StringID.h
       sk/Misc/UUID.h
       sk/Platform/Platform_Base.h
+      sk/Platform/Time.h
       sk/Platform/Window/Window_Base.h
       sk/Reflection/ClassMacros.h
       sk/Reflection/Enum.h

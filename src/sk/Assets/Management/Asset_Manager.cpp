@@ -6,17 +6,17 @@
 
 #include "Asset_Manager.h"
 
-#include <any>
+#include <sk/Assets/Mesh.h>
+#include <sk/Assets/Model.h>
+#include <sk/Assets/Texture.h>
+#include <sk/Assets/Management/Asset_Job_Manager.h>
+#include <sk/Assets/Utils/Asset_List.h>
+#include <sk/Graphics/Buffer/Dynamic_Buffer.h>
+#include <sk/Scene/Managers/CameraManager.h>
 
 #include <fastgltf/tools.hpp>
 
-#include <Assets/Mesh.h>
-#include <Assets/Model.h>
-#include <Assets/Texture.h>
-#include <Assets/Management/Asset_Job_Manager.h>
-#include <Assets/Utils/Asset_List.h>
-#include <Graphics/Buffer/Dynamic_Buffer.h>
-#include <Scene/Managers/CameraManager.h>
+#include <any>
 
 namespace sk
 {

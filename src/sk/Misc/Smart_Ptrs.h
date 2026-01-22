@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include <sk/Memory/Tracker/Tracker.h>
+
 #include <atomic>
 #include <memory>
-
-#include <Memory/Tracker/Tracker.h>
 
 // TODO: Move shared pointers to Memory folder
 

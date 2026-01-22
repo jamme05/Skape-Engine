@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include <type_traits>
-#include <Macros/Manipulation.h>
+#include <sk/Macros/Manipulation.h>
+#include <sk/Reflection/Type_Hash.h>
 
-#include "Type_Hash.h"
+#include <type_traits>
 
 namespace sk
 {

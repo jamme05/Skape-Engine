@@ -6,8 +6,8 @@
 
 #include "Asset_Ptr_Base.h"
 
-#include <Assets/Asset.h>
-#include <Graphics/Renderer.h>
+#include <sk/Assets/Asset.h>
+#include <sk/Graphics/Renderer.h>
 
 using namespace sk;
 

@@ -6,8 +6,8 @@
 
 #include "CameraComponent.h"
 
-#include <Scene/Managers/CameraManager.h>
-#include <Scene/Managers/SceneManager.h>
+#include <sk/Scene/Managers/CameraManager.h>
+#include <sk/Scene/Managers/SceneManager.h>
 
 namespace sk::Object::Components
 {

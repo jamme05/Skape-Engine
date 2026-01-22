@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <Debugging/Severity.h>
-#include <Debugging/Macros/Text.h>
-#include <Macros/Manipulation.h>
+#include <sk/Debugging/Severity.h>
+#include <sk/Debugging/Macros/Text.h>
+#include <sk/Macros/Manipulation.h>
 
 #define NOTHING void()
 #define NOT_NOTHING
