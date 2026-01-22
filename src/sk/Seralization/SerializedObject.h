@@ -6,7 +6,7 @@
 #include <sk/Misc/StringID.h>
 #include <sk/Reflection/RuntimeClass.h>
 
-#include <simdjson/simdjson.h>
+#include <simdjson.h>
 
 #include <variant>
 

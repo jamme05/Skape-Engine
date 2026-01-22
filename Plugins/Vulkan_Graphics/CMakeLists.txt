@@ -2,6 +2,9 @@ SkapePlugin(Vulkan_Graphics)
 
 SkapeAddGraphicsSupport(Vulkan Vulkan_Graphics)
 
+target_compile_definitions(Vulkan_Graphics PUBLIC SK_GRAPHICS_VULKAN)
+
+
 target_sources(Vulkan_Graphics
 	PRIVATE
     sk/Assets/Mesh.cpp

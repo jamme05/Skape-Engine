@@ -11,3 +11,8 @@ target_link_libraries(Startup
   PRIVATE
     Framework
 )
+
+set_target_properties(Startup
+  PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/game"
+)

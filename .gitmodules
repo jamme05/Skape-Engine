@@ -10,3 +10,6 @@
 [submodule "Plugins/SDL3_Wrapper/SDL"]
 	path = Plugins/SDL3_Wrapper/SDL
 	url = https://github.com/libsdl-org/SDL.git
+[submodule "external/simdjson"]
+	path = external/simdjson
+	url = https://github.com/simdjson/simdjson.git

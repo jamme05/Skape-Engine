@@ -2,8 +2,12 @@ project(SkapeEngine)
 
 add_library(SkapeEngine STATIC)
 
+target_compile_definitions(SkapeEngine PUBLIC "SK_ROOT_DIR=\"${SKAPE_GAME_DIR}\"")
+
 target_link_libraries(SkapeEngine
   PUBLIC
+    fastgltf::fastgltf
+    simdjson::simdjson
     stb_image
     ${SKAPE_PLATFORM_PROJECT}
     ${SKAPE_GRAPHICS_PROJECT}
@@ -177,3 +181,15 @@ target_sources(SkapeEngine
       sk/Skape_Main.h
 )
 
+
+add_custom_command(
+	TARGET SkapeEngine POST_BUILD
+	COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_FILE:fastgltf> "${SKAPE_GAME_BIN}"
+	VERBATIM
+)
+
+add_custom_command(
+	TARGET SkapeEngine POST_BUILD
+	COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_FILE:simdjson> "${SKAPE_GAME_BIN}"
+	VERBATIM
+)
