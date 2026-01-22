@@ -56,7 +56,7 @@ endmacro()
 
 macro(SkapePlugin PluginName)
   project(${PluginName})
-  add_library(${PluginName})
+  add_library(${PluginName} STATIC)
   target_include_directories(${PluginName} PUBLIC ${ENGINE_INCLUDES})
 
   list(APPEND AVAILABLE_PLUGINS ${PluginName})
