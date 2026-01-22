@@ -236,7 +236,7 @@ namespace sk
 
 	auto cAsset_Manager::getAbsolutePath( const std::filesystem::path& _path ) -> std::filesystem::path
 	{
-		return std::filesystem::path( SK_GAME_DIR ) /= _path;
+		return std::filesystem::current_path() /= _path;
 	} // getAbsolutePath
 
 	void cAsset_Manager::makeAbsolutePath( std::filesystem::path& _path )

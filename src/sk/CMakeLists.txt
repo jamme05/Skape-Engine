@@ -1,6 +1,6 @@
 project(SkapeEngine)
 
-add_library(SkapeEngine)
+add_library(SkapeEngine STATIC)
 
 target_link_libraries(SkapeEngine
   PUBLIC

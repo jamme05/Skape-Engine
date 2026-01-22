@@ -1,9 +1,9 @@
 project(Framework)
 
-add_library(Framework)
+add_library(Framework STATIC)
 
 target_link_libraries(Framework
-  PRIVATE
+  PUBLIC
     SkapeEngine
     ${SKAPE_PLUGINS_LINK}
 )

@@ -10,6 +10,7 @@
 #include <sk/Graphics/Pipelines/Deferred_Pipeline.h>
 #include <sk/Graphics/Pipelines/Pipeline.h>
 #include <sk/Graphics/Rendering/Render_Context.h>
+#include <sk/Input/Keyboard.h>
 #include <sk/Input/Mouse.h>
 #include <sk/Math/Types.h>
 #include <sk/Memory/Tracker/Tracker.h>
