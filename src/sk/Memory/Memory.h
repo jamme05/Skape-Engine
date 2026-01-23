@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <type_traits>
+#include <stdlib.h>
 
 namespace sk::Memory
 {

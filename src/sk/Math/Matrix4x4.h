@@ -11,6 +11,9 @@
 #include "Vector3.h"
 #include "Vector4.h"
 
+#include <cstdio>
+#include <xmmintrin.h>
+
 namespace sk
 {
 	namespace Math
@@ -99,7 +102,7 @@ namespace sk::Math
 				transposed_fast( *this, result );
 			else
 			{
-				printf( "Warning: Matrix isn't of type float, so doesn't have support for transposed_fast" );
+				std::printf( "Warning: Matrix isn't of type float, so doesn't have support for transposed_fast" );
 				transposed( result );
 			}
 			return result;

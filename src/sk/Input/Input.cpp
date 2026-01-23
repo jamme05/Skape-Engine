@@ -10,6 +10,7 @@
 
 #include <mutex>
 #include <print>
+#include <vector>
 
 namespace sk
 {

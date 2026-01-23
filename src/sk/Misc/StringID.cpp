@@ -1,6 +1,9 @@
 ﻿
 #include "StringID.h"
 
+#include <algorithm>
+#include <ostream>
+
 ////////////////////////////////////////////////
 
 sk::cStringIDManager::sStringRegistry::sStringRegistry( const sStringRegistry& _other )

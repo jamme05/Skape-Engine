@@ -9,6 +9,8 @@
 #include <sk/Containers/Const/Array.h>
 #include <sk/Math/Math.h>
 
+#include <cfloat>
+
 // TODO: Make a template specialization for array< char, Size >.
 
 namespace sk

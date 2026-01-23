@@ -12,6 +12,8 @@
 
 #include <SDL3/SDL_init.h>
 
+#include <vector>
+
 namespace sk::Graphics::Rendering
 {
     class cWindow_Context;

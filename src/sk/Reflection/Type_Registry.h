@@ -19,6 +19,9 @@
 #include <sk/Misc/Hashing.h>
 #include <sk/Reflection/Type_Hash.h>
 
+#include <sstream>
+#include <vector>
+
 namespace sk
 {
     class iRuntimeClass;
