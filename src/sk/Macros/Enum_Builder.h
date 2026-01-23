@@ -6,12 +6,13 @@
 
 #pragma once
 
-#include <cstdint>
-
 #include "For_Each.h"
 
 #include <sk/Containers/Const/Const_Map.h>
 #include <sk/Containers/Const/String.h>
+
+#include <cstdint>
+#include <optional>
 
 #define TYPE_ENUM_2( Name, Type ) internal_ ## Name : Type
 #define TYPE_ENUM_1( Name ) internal_ ## Name : uint8_t
@@ -219,7 +220,7 @@ namespace sk::Reflection::Enum
 		{
 			_display_name = _name;
 			if( *_display_name == '_' )
-				__nop();
+				; // __nop();
 			else if( *_display_name == 'k' )
 			{
 				++_display_name;

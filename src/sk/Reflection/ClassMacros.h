@@ -29,7 +29,7 @@
 	template< class Ty > struct _xxx_sk_access< std::integral_constant< Ty, CONCAT( _xxx_sk_access_counter_, Counter ) > >{ \
 		static constexpr auto kAccess = access_point{ \
 			.m_access = sk::Reflection::cMember::eType::kPrivate, .m_point = nullptr }; }; \
-	[[ msvc::no_unique_address, maybe_unused ]] access_point::point _xxx_sk_point_placeholder; \
+	[[ no_unique_address, maybe_unused ]] access_point::point _xxx_sk_point_placeholder; \
 	template< class > struct variable_registry { \
 		static constexpr auto kMemberHolder = sk::Reflection::cMemberVariableHolder{ &class_type::_xxx_sk_point_placeholder };\
 		static constexpr auto kMember = sk::Reflection::sPartial_Member< class_type, decltype( kMemberHolder ) >{ \
@@ -343,7 +343,7 @@ class Class : public sk::get_inherits_t< FIRST( __VA_ARGS__ ) > \
 
 #define REGISTER_MEMBER_DIRECT_2_( Member, Registry, CounterVar, CounterValue, Point, HolderPack, ... ) \
 		static constexpr auto CounterVar = CounterValue; \
-		[[ msvc::no_unique_address, maybe_unused ]] access_point::point Point; \
+		[[ no_unique_address, maybe_unused ]] access_point::point Point; \
 		template< class Ty > struct Registry< std::integral_constant< Ty, CounterVar > > { \
 		using enum sk::Reflection::cMember::eType::eRaw; \
 		using prev_t = Registry< std::integral_constant< Ty, CounterVar -1 > >; \
@@ -697,7 +697,7 @@ class Class : public sk::get_inherits_t< FIRST( __VA_ARGS__ ) > \
 #define SK_CONSTRUCTOR_O( Function, ... )
 
 #define SK_ACCESS_CREATOR( Instance, Access ) \
-	[[ msvc::no_unique_address, maybe_unused ]] access_point::point CONCAT( _xxx_sk_point_, Instance ); \
+	[[ no_unique_address, maybe_unused ]] access_point::point CONCAT( _xxx_sk_point_, Instance ); \
 	static constexpr auto CONCAT( _xxx_sk_access_counter_, Instance ) = access_point::counter_t::next(); \
 	template< class Ty > struct _xxx_sk_access< std::integral_constant< Ty, CONCAT( _xxx_sk_access_counter_, Instance ) > >{ \
 		static constexpr auto kAccess = access_point{ \

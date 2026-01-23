@@ -10,6 +10,8 @@
 #include <sk/Misc/Smart_Ptrs.h>
 #include <sk/Reflection/Type_Hash.h>
 
+#include <vector>
+
 namespace sk
 {
 	class iRuntimeClass;

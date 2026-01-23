@@ -4,13 +4,13 @@
  *
  */
 
-
-#include <unordered_set>
-
 #include <sk/Memory/Tracker/Tracker.h>
 
-// The order has to be changed from the standard here due to window having min and max as defines
 #include <Windows.h>
+
+#include <atomic>
+#include <unordered_set>
+#include <vector>
 
 namespace sk::Memory
 {

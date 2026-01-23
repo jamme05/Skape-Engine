@@ -5,7 +5,9 @@
 #include <sk/Misc/Hashing.h>
 #include <sk/Misc/Singleton.h>
 
+#include <atomic>
 #include <unordered_map>
+#include <vector>
 
 namespace sk
 {
