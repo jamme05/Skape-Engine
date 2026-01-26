@@ -13,6 +13,6 @@
 [submodule "external/simdjson"]
 	path = external/simdjson
 	url = https://github.com/simdjson/simdjson.git
-[submodule "Plugins/JoltPhysics/JoltPhysics"]
-	path = Plugins/JoltPhysics/JoltPhysics
+[submodule "Plugins/JoltPhysics_Wrapper/JoltPhysics"]
+	path = Plugins/JoltPhysics_Wrapper/JoltPhysics
 	url = https://github.com/jrouwe/JoltPhysics.git
