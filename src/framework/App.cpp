@@ -31,7 +31,7 @@
 
 cApp* cApp::m_running_instance_ = nullptr;
 
-cApp::cApp( void )
+cApp::cApp()
 : iListener( sk::Input::eInputType::kKey | sk::Input::kMouse_Down, 10, true )
 {
 	m_running_instance_ = this;
@@ -53,7 +53,7 @@ cApp::cApp( void )
 	sk::cSceneManager::init();
 } // cApp
 
-cApp::~cApp( void )
+cApp::~cApp()
 {
 	destroy();
 	m_scene = nullptr;
@@ -90,7 +90,7 @@ void cApp::create( void )
 	const auto shader_frag = *asset_m.loadFile( "shaders/gpass.frag" ).begin();
 	const auto shader_vert = *asset_m.loadFile( "shaders/default.vert" ).begin();
 	asset_m.loadFile( "shaders/screen.vert" );
-	asset_m.loadFile( "shaders/deferred.frag" );	
+	asset_m.loadFile( "shaders/deferred.frag" );
 	
 	// TODO: Create a material instance class.
 	

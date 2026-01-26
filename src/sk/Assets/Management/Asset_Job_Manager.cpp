@@ -21,7 +21,7 @@ sk::Assets::Jobs::cAsset_Job_Manager::cAsset_Job_Manager()
     for( size_t i = 0; i < m_worker_count_; ++i )
     {
         auto& worker = m_workers_[ i ];
-        worker.m_working_.store( true );
+        worker.m_active_.store( true );
         worker.m_thread_ = std::thread{ &cAsset_Worker::worker, &worker };
     }
 }
@@ -31,7 +31,7 @@ sk::Assets::Jobs::cAsset_Job_Manager::~cAsset_Job_Manager()
     Sync();
     
     for( size_t i = 0; i < m_worker_count_; ++i )
-        m_workers_[ i ].m_working_.store( false );
+        m_workers_[ i ].m_active_.store( false );
 
     m_head_.store( m_tasks_.size() + 1 );
     m_head_.notify_all();
@@ -42,11 +42,17 @@ sk::Assets::Jobs::cAsset_Job_Manager::~cAsset_Job_Manager()
 
 void sk::Assets::Jobs::cAsset_Job_Manager::Sync()
 {
-    for( auto tail = m_tail_.load(); tail != m_head_.load(); tail = m_tail_.load() )
+    while( IsDoingWork() )
     {
         Graphics::cRenderer::get().Update();
         std::this_thread::sleep_for( std::chrono::milliseconds{ 10 } );
     }
+}
+
+bool sk::Assets::Jobs::cAsset_Job_Manager::IsDoingWork() const
+{
+    return std::any_of( m_workers_, m_workers_ + m_worker_count_,
+        []( auto& _worker ){ return _worker.m_working_.load(); } );
 }
 
 auto sk::Assets::Jobs::cAsset_Job_Manager::WaitForTask( const std::atomic_bool& _working_ref ) -> sTask
