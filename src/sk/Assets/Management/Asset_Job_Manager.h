@@ -21,6 +21,8 @@ namespace sk::Assets::Jobs
         
         void Sync();
 
+        bool IsDoingWork() const;
+
         auto WaitForTask( const std::atomic_bool& _working_ref ) -> sTask;
         
         auto GetWorkerCount() const -> size_t;

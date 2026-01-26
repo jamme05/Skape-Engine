@@ -45,8 +45,10 @@ namespace sk
 			
 			queued.insert( path_hash );
 			
-			auto assets = GetAssetsByPrecisePath( path_hash );
-			
+			Assets::cAsset_List assets;
+			for( auto [ fst, lst ] = m_asset_path_map_.equal_range( path_hash ); fst != lst; ++fst )
+				assets.AddAsset( fst->second );
+
 			// It's ugly but it works
 			// TODO: Use stringID instead of str_hash in places like these.
 			const auto path   = assets.begin()->GetAbsolutePath();
@@ -100,50 +102,40 @@ namespace sk
 		return assets;
 	} // getAssetsByName
 
-	auto cAsset_Manager::GetAssetByPath( const std::string_view& _path ) -> cShared_ptr< cAsset_Meta >
+	auto cAsset_Manager::GetAssetByPath( const std::filesystem::path& _path ) -> cShared_ptr< cAsset_Meta >
 	{
-		if( _path[ 0 ] != '.' )
-		{
-			std::string new_path( _path.size() + 2, 0 );
-			
-			if( _path[ 1 ] == '/' )
-				new_path = '.' + std::string{ _path };
-			else
-				new_path = "./" + std::string{ _path };
-			
-			return getAssetByPrecisePath( new_path );
-		}
-		
-		return getAssetByPrecisePath( _path );
+		if( _path.is_relative() )
+			return GetAssetByPathHash( std::string_view{ ( std::filesystem::current_path() / _path ).make_preferred().string() } );
+
+		return GetAssetByPathHash( std::string_view{ _path.string() } );
 	} // getAssetByPath
 
-	auto cAsset_Manager::getAssetsByPath( const std::string_view& _path ) -> Assets::cAsset_List
+	auto cAsset_Manager::GetAssetsByPath( const std::filesystem::path& _path ) -> Assets::cAsset_List
 	{
-		if( _path[ 0 ] != '.' )
-		{
-			std::string new_path( _path.size() + 2, 0 );
-			
-			if( _path[ 1 ] != '/' )
-				new_path = '.' + std::string{ _path };
-			else
-				new_path = "./" + std::string{ _path };
-			
-			return GetAssetsByPrecisePath( new_path );
-		}
-		
-		return GetAssetsByPrecisePath( _path );
+		if( _path.is_relative() )
+			return GetAssetsByPathHash( std::string_view{ ( std::filesystem::current_path() / _path ).string() } );
+
+		return GetAssetsByPathHash( std::string_view{ _path.string() } );
 	} // getAssetsByPath
 	
-	auto cAsset_Manager::getAssetByPrecisePath( const str_hash& _path_hash ) -> cShared_ptr<cAsset_Meta>
+	auto cAsset_Manager::GetAssetByPathHash( const cStringID& _path_hash ) -> cShared_ptr< cAsset_Meta >
 	{
+		// TODO: Decide if we're going to correct the path here.
+		if( const auto path = std::filesystem::path{ _path_hash.view() }; path.is_relative() )
+			return GetAssetByPath( path );
+
 		if( const auto itr = m_asset_path_map_.find( _path_hash ); itr != m_asset_path_map_.end() )
 			return itr->second;
 
 		return nullptr;
 	}
 
-	auto cAsset_Manager::GetAssetsByPrecisePath( const str_hash& _path_hash ) -> Assets::cAsset_List
+	auto cAsset_Manager::GetAssetsByPathHash( const cStringID& _path_hash ) -> Assets::cAsset_List
 	{
+		// TODO: Decide if we're going to correct the path here.
+		if( const auto path = std::filesystem::path{ _path_hash.view() }; path.is_relative() )
+			return GetAssetsByPath( path );
+
 		Assets::cAsset_List assets;
 		for( auto [ fst, lst ] = m_asset_path_map_.equal_range( _path_hash ); fst != lst; ++fst )
 			assets.AddAsset( fst->second );
@@ -223,7 +215,7 @@ namespace sk
 
 	auto cAsset_Manager::getAbsolutePath( const std::filesystem::path& _path ) -> std::filesystem::path
 	{
-		return std::filesystem::current_path() /= _path;
+		return ( std::filesystem::current_path() /= _path ).make_preferred();
 	} // getAbsolutePath
 
 	void cAsset_Manager::makeAbsolutePath( std::filesystem::path& _path )

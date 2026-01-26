@@ -31,14 +31,15 @@ namespace sk::Assets::Jobs
         using listener_t = std::function< void( cAsset_Meta&, eEventType ) >;
 
     private:
-        static void worker( const cAsset_Worker* _loader );
+        static void worker( cAsset_Worker* _loader );
         static void do_work( const sTask& _work );
         static void load_asset( sAssetTask& _task, bool _refresh );
         static void unload_asset( sAssetTask& _task );
         static void push_event( sListenerTask& _task );
         
         std::atomic_bool m_working_ = false;
-        
+        std::atomic_bool m_active_  = false;
+
         std::thread m_thread_;
     };
 } // sk::

@@ -19,14 +19,18 @@ sk::Assets::Jobs::cAsset_Worker::cAsset_Worker()
         manager = cAsset_Job_Manager::getPtr();
 }
 
-void sk::Assets::Jobs::cAsset_Worker::worker( const cAsset_Worker* _loader )
+void sk::Assets::Jobs::cAsset_Worker::worker( cAsset_Worker* _loader )
 {
     auto& self = *_loader;
 
-    while( self.m_working_ )
+    while( self.m_active_ )
     {
-        if( auto task = manager->WaitForTask( self.m_working_ ); task.type != eJobType::kNone )
+        if( auto task = manager->WaitForTask( self.m_active_ ); task.type != eJobType::kNone )
+        {
+            self.m_working_.store( true );
             do_work( task );
+            self.m_working_.store( false );
+        }
     }
 }
 
