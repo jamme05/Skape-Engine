@@ -9,14 +9,6 @@ set(SKAPE_INCLUDES)
 set(SKAPE_LIBRARIES)
 set(SKAPE_DEFINES)
 
-set(SKAPE_PLATFORM_PLUGINS)
-set(SKAPE_GRAPHICS_PLUGINS)
-
-set(SKAPE_PLATFORMS)
-set(SKAPE_GRAPHICS_LIBRARIES)
-
-set(AVAILABLE_PLUGINS)
-
 set(SKAPE_GAME_DIR ${CMAKE_SOURCE_DIR}/game/)
 set(SKAPE_GAME_BIN ${CMAKE_SOURCE_DIR}/game/)
 
@@ -29,6 +21,8 @@ set(ENGINE_INCLUDES
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/external/simdjson/include>
 )
 
+
+# TODO: Move to a utils file
 macro(ListFiles)
   set(SearchRoot ${CMAKE_CURRENT_SOURCE_DIR})
   set(Args ${ARGN})
@@ -50,41 +44,13 @@ macro(ListFiles)
   endforeach()
 endmacro()
 
-
 macro(UpdateGameDir NewRoot)
   set(SKAPE_GAME_DIR ${NewRoot} PARENT_SCOPE)
 endmacro()
 
 
+include(Plugins/CMakeLists.txt)
 
-macro(SkapePlugin PluginName)
-  project(${PluginName})
-  add_library(${PluginName} STATIC)
-  target_include_directories(${PluginName} PUBLIC ${ENGINE_INCLUDES})
-
-  list(APPEND AVAILABLE_PLUGINS ${PluginName})
-  set(AVAILABLE_PLUGINS ${AVAILABLE_PLUGINS} PARENT_SCOPE)
-endmacro()
-
-
-macro(SkapeAddPlatformSupport Platform Plugin)
-  list(APPEND SKAPE_PLATFORMS ${Platform})
-  list(APPEND SKAPE_PLATFORM_PLUGINS ${Plugin})
-  set(SKAPE_PLATFORMS ${SKAPE_PLATFORMS} PARENT_SCOPE)
-  set(SKAPE_PLATFORM_PLUGINS ${SKAPE_PLATFORM_PLUGINS} PARENT_SCOPE)
-endmacro()
-
-macro(SkapeAddGraphicsSupport GraphicsLibrary Plugin)
-  list(APPEND SKAPE_GRAPHICS_LIBRARIES ${GraphicsLibrary})
-  list(APPEND SKAPE_GRAPHICS_PLUGINS ${Plugin})
-  set(SKAPE_GRAPHICS_LIBRARIES ${SKAPE_GRAPHICS_LIBRARIES} PARENT_SCOPE)
-  set(SKAPE_GRAPHICS_PLUGINS ${SKAPE_GRAPHICS_PLUGINS} PARENT_SCOPE)
-endmacro()
-
-set(SKAPE_PLUGINS_BUILD "Win64_Platform;OpenGL_Graphics;SDL3_Wrapper" CACHE STRING "The plugins to build")
-set(SKAPE_PLUGINS_LINK "SDL3_Wrapper" CACHE STRING "The plugins to link. Excluding Platform and Graphics plugins.")
-
-add_subdirectory(Plugins)
 
 list(LENGTH SKAPE_PLATFORM_PLUGINS PlatformPluginCount)
 if(PlatformPluginCount EQUAL 0)

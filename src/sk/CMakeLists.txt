@@ -34,6 +34,10 @@ add_subdirectory(sk/Macros)
 add_subdirectory(sk/Math)
 add_subdirectory(sk/Memory)
 add_subdirectory(sk/Misc)
+add_subdirectory(sk/Platform)
+add_subdirectory(sk/Reflection)
+add_subdirectory(sk/Scene)
+add_subdirectory(sk/Seralization)
 
 # Copy fastgltf and simdjson dynlibs into the runtime dir.
 add_custom_command(

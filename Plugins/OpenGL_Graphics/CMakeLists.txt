@@ -20,7 +20,7 @@ target_sources(OpenGL_Graphics
     FILE_SET openGlGraphicsIncludes
 		TYPE HEADERS
     BASE_DIRS
-      sk/
+      ./
 )
 
 add_subdirectory(sk)

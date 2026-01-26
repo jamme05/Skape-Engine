@@ -9,7 +9,7 @@ target_sources(Win64_Platform
     FILE_SET openGlGraphicsIncludes
 		TYPE HEADERS
     BASE_DIRS
-      sk/
+      ./
 )
 
 add_subdirectory(sk)

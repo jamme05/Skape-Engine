@@ -1,14 +1,57 @@
 project(Plugins)
 
+
+# Plugin Variables
+
+set(SKAPE_PLATFORM_PLUGINS)
+set(SKAPE_GRAPHICS_PLUGINS)
+
+set(SKAPE_PLATFORMS)
+set(SKAPE_GRAPHICS_LIBRARIES)
+
+set(AVAILABLE_PLUGINS)
+
+set(SKAPE_PLUGINS_BUILD "Win64_Platform;OpenGL_Graphics;SDL3_Wrapper" CACHE STRING "The plugins to build")
+set(SKAPE_PLUGINS_LINK "SDL3_Wrapper" CACHE STRING "The plugins to link. Excluding Platform and Graphics plugins.")
+
+
+# Plugin Setup Macros
+
+macro(SkapePlugin PluginName)
+  project(${PluginName})
+  add_library(${PluginName} STATIC)
+  target_include_directories(${PluginName} PUBLIC ${ENGINE_INCLUDES})
+
+  list(APPEND AVAILABLE_PLUGINS ${PluginName})
+  set(AVAILABLE_PLUGINS ${AVAILABLE_PLUGINS} PARENT_SCOPE)
+endmacro()
+
+macro(SkapeAddPlatformSupport Platform Plugin)
+  list(APPEND SKAPE_PLATFORMS ${Platform})
+  list(APPEND SKAPE_PLATFORM_PLUGINS ${Plugin})
+  set(SKAPE_PLATFORMS ${SKAPE_PLATFORMS} PARENT_SCOPE)
+  set(SKAPE_PLATFORM_PLUGINS ${SKAPE_PLATFORM_PLUGINS} PARENT_SCOPE)
+endmacro()
+
+macro(SkapeAddGraphicsSupport GraphicsLibrary Plugin)
+  list(APPEND SKAPE_GRAPHICS_LIBRARIES ${GraphicsLibrary})
+  list(APPEND SKAPE_GRAPHICS_PLUGINS ${Plugin})
+  set(SKAPE_GRAPHICS_LIBRARIES ${SKAPE_GRAPHICS_LIBRARIES} PARENT_SCOPE)
+  set(SKAPE_GRAPHICS_PLUGINS ${SKAPE_GRAPHICS_PLUGINS} PARENT_SCOPE)
+endmacro()
+
+
+# Plugin Setup
+
 foreach(PluginName IN LISTS SKAPE_PLUGINS_BUILD)
   # This prevents an error if SKAPE_BUILD_PLUGINS ends with ';'
   if(NOT PluginName)
     continue()
   endif()
   
-  set(SkapePluginPath "${CMAKE_CURRENT_SOURCE_DIR}/${PluginName}")
+  set(SkapePluginPath "${CMAKE_CURRENT_SOURCE_DIR}/Plugins/${PluginName}")
   if(IS_READABLE "${SkapePluginPath}/CMakeLists.txt")
-    add_subdirectory(${PluginName})
+    add_subdirectory("Plugins/${PluginName}")
     # message("${SkapePluginPath} YEs")
   else()
     message("Error: Plugin with name \"${PluginName}\" not found!")
@@ -29,15 +72,3 @@ foreach(PluginName IN LISTS SKAPE_PLUGINS_LINK)
     message("Error: Can't link plugin with name \"${PluginName}\" as it won't be built.")
   endif()
 endforeach()
-
-
-# Push to root
-# TODO: Make a macro that pushes all.
-set(AVAILABLE_PLUGINS ${AVAILABLE_PLUGINS} PARENT_SCOPE)
-
-set(SKAPE_PLATFORMS ${SKAPE_PLATFORMS} PARENT_SCOPE)
-set(SKAPE_PLATFORM_PLUGINS ${SKAPE_PLATFORM_PLUGINS} PARENT_SCOPE)
-set(SKAPE_GRAPHICS_LIBRARIES ${SKAPE_GRAPHICS_LIBRARIES} PARENT_SCOPE)
-set(SKAPE_GRAPHICS_PLUGINS ${SKAPE_GRAPHICS_PLUGINS} PARENT_SCOPE)
-
-UpdateGameDir(${SKAPE_GAME_DIR})

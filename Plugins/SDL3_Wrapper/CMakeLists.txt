@@ -11,7 +11,7 @@ target_sources(SDL3_Wrapper
     FILE_SET openGlGraphicsIncludes
 		TYPE HEADERS
     BASE_DIRS
-      sk/
+      ./
 )
 
 add_subdirectory(sk)
