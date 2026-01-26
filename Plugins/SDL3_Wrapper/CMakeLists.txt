@@ -7,22 +7,14 @@ target_compile_definitions(SDL3_Wrapper PUBLIC SK_CUSTOM_MAIN SK_PLATFORM_SUPPOR
 add_subdirectory(SDL EXCLUDE_FROM_ALL)
 
 target_sources(SDL3_Wrapper
-	PRIVATE
-		sk/Types.cpp
-		sk/Window/Window.cpp
-		sk/Window/Window_OpenGL.cpp
-		sk/Window/Window_VK.cpp
-
 	PUBLIC
-    FILE_SET sdl3WrapperIncludes
-    TYPE HEADERS
-    FILES
-			sk/Input/Gamepad_Include.h
-			sk/Input/Keyboard_Include.h
-			sk/Input/Mouse_Include.h
-			sk/Types.h
-			sk/Window/Window.h
+    FILE_SET openGlGraphicsIncludes
+		TYPE HEADERS
+    BASE_DIRS
+      sk/
 )
+
+add_subdirectory(sk)
 
 target_link_libraries(SDL3_Wrapper
 	PUBLIC

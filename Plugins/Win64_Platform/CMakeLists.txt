@@ -5,15 +5,11 @@ SkapeAddPlatformSupport(Win64 Win64_Platform)
 target_compile_definitions(Win64_Platform PUBLIC SK_PLATFORM_WINDOWS)
 
 target_sources(Win64_Platform
-	PRIVATE
-    sk/Memory/Tracker.cpp
-    sk/Platform/Platform.cpp
-    sk/Platform/Time.cpp
-    sk/Types.cpp
-
-  PUBLIC
-    FILE_SET vulkanGraphicsIncludes
-    TYPE HEADERS
-    FILES
-      sk/Types.h
+	PUBLIC
+    FILE_SET openGlGraphicsIncludes
+		TYPE HEADERS
+    BASE_DIRS
+      sk/
 )
+
+add_subdirectory(sk)
