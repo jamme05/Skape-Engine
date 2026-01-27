@@ -33,14 +33,14 @@ namespace sk::Object::Components
 		void disabled() override;
 		bool IsReady() const;
 
-		auto GetMesh() const -> Assets::cMesh*;
-		auto GetMaterial() const -> Assets::cMaterial*;
+		auto GetMesh() -> Assets::cMesh*;
+		auto GetMaterial() -> Assets::cMaterial*;
 		void SetMesh( const cShared_ptr< cAsset_Meta >& _mesh );
 		void SetMaterial( const cShared_ptr< cAsset_Meta >& _material );
 
 	private:
-		cAsset_Ptr< Assets::cMesh >     m_mesh_;
-		cAsset_Ptr< Assets::cMaterial > m_material_;
+		cAsset_Ref< Assets::cMesh, eAsset_Ref_Mode::kManual >     m_mesh_;
+		cAsset_Ref< Assets::cMaterial, eAsset_Ref_Mode::kManual > m_material_;
 	};
 } // sk::Object::Components
 

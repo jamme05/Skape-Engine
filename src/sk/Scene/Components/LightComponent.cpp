@@ -81,6 +81,11 @@ auto cLightComponent::GetData() const -> const data_t&
     return m_data_;
 }
 
+auto cLightComponent::GetShadowCasterData() const -> const caster_t*
+{
+    return m_shadow_info_;
+}
+
 auto cLightComponent::GetViewProjMatrix() const -> const cMatrix4x4f&
 {
     return m_view_proj_matrix_;
@@ -175,8 +180,8 @@ void cLightComponent::update_data()
     
     if( m_shadow_info_ != nullptr )
     {
-        m_shadow_info_->light_matrix = GetViewProjMatrix();
-        manager.mark_shadow_buffer_dirty();
+        m_shadow_info_->light_view_proj = GetViewProjMatrix();
+        manager.mark_shadow_buffer_dirty( true );
     }
 }
 

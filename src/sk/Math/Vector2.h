@@ -73,6 +73,11 @@ namespace sk::Math
 		constexpr cVector operator/(const cVector& _v) const { return { x / _v.x, y / _v.y }; }
 
 		template <typename T2> requires std::is_integral_v< T2 >
+		constexpr cVector operator*(const cVector2< T2 >& _v) const { return { x * _v.x, y * _v.y }; }
+		template <typename T2>
+		constexpr cVector operator*(const cVector2< T2 >& _v) const { return { x * static_cast< T >( _v.x ), y * static_cast< T >( _v.y ) }; }
+
+		template <typename T2> requires std::is_integral_v< T2 >
 		constexpr cVector operator/(const cVector2< T2 >& _v) const { return { x / _v.x, y / _v.y }; }
 		template <typename T2>
 		constexpr cVector operator/(const cVector2< T2 >& _v) const { return { x / static_cast< T >( _v.x ), y / static_cast< T >( _v.y ) }; }

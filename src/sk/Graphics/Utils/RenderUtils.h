@@ -29,6 +29,6 @@ namespace sk::Graphics::Utils
     void InitUtils();
     void ShutdownUtils();
     
-    bool RenderMesh( const Object::Components::cCameraComponent& _camera, Rendering::cFrame_Buffer &_frame_buffer, Assets::cMaterial &_material,
+    bool RenderMesh( const cMatrix4x4f &_camera_view_proj, Rendering::cFrame_Buffer &_frame_buffer, Assets::cMaterial &_material,
         const cMatrix4x4f &_world_matrix, Assets::cMesh &_mesh );
 } // sk::Graphics::Utils

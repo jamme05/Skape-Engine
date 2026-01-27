@@ -43,7 +43,7 @@ void Utils::ShutdownUtils()
     renderer = nullptr;
 }
 
-bool Utils::RenderMesh( const Object::Components::cCameraComponent& _camera, Rendering::cFrame_Buffer& _frame_buffer,
+bool Utils::RenderMesh( const cMatrix4x4f &_camera_view_proj, Rendering::cFrame_Buffer& _frame_buffer,
     Assets::cMaterial& _material, const cMatrix4x4f& _world_matrix, Assets::cMesh& _mesh )
 {
     const auto& link = const_cast< cShader_Link& >( _material.GetShaderLink() );

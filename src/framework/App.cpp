@@ -81,7 +81,7 @@ sk::Input::response_t cApp::onInput( const uint32_t _type, const sk::Input::sEve
 	return true;
 } // onInput
 
-void cApp::create( void )
+void cApp::create()
 {
 	auto& asset_m = sk::cAsset_Manager::get();
 
@@ -126,10 +126,25 @@ void cApp::create( void )
 	component->enabled();
 	component->SetParent( spin_component );
 	
+	sk::Scene::Light::sSettings light_settings{};
 	auto light_object = m_scene->create_object< sk::Object::iObject >( "Directional Light" );
+	light_settings.shadow_resolution = 512;
+	light_settings.casts_shadows     = true;
 	auto directional_light = light_object->AddComponent< sk::Object::Components::cLightComponent >();
 	light_object->GetTransform().SetRotation( { -45.0f, 0.0f, 0.0f } );
-	
+
+	light_object = m_scene->create_object< sk::Object::iObject >( "Point Light" );
+	light_settings.casts_shadows     = false;
+	light_settings.shadow_resolution = 256;
+	auto point_light = light_object->AddComponent< sk::Object::Components::cLightComponent >();
+	light_object->GetTransform().SetRotation( { -45.0f, 0.0f, 0.0f } );
+
+	light_object = m_scene->create_object< sk::Object::iObject >( "Spot Light" );
+	light_settings.casts_shadows     = true;
+	light_settings.shadow_resolution = 256;
+	auto spot_light = light_object->AddComponent< sk::Object::Components::cLightComponent >();
+	light_object->GetTransform().SetRotation( { -45.0f, 0.0f, 0.0f } );
+
 	// Fuck it we ball
 	constexpr auto kGridWidth = 5;
 	std::random_device rd;
@@ -152,7 +167,7 @@ void cApp::create( void )
 	sk::cSceneManager::get().registerScene( m_scene );
 } // create
 
-void cApp::print_types( void )
+void cApp::print_types()
 {
 	std::vector< sk::cUUID > uuids{ 1024 };
 	for( auto& uuid : uuids )

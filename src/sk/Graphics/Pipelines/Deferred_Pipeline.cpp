@@ -9,6 +9,8 @@
 #include <sk/Graphics/Rendering/Render_Target.h>
 #include <sk/Platform/Window/Window_Base.h>
 
+#include "sk/Graphics/Passes/Light_Pass.h"
+
 using namespace sk::Graphics;
 
 cDeferred_Pipeline::cDeferred_Pipeline( Platform::iWindow* _window )
@@ -28,9 +30,11 @@ void cDeferred_Pipeline::Initialize()
         "Deferred Screen Material", Utils::cShader_Link{ screen_shader, deferred_shader }
     );
     m_screen_material_ = material_meta;
-    
+
+    AddPass< Passes::cLight_Pass >();
+
     AddPass< Passes::cScreen_Pass >( m_window_, material_meta );
-    
+
     cPipeline::Initialize();
 }
 

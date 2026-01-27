@@ -18,6 +18,8 @@ sk::Scene::cLight_Manager::cLight_Manager()
 , m_point_buffer_( "Point Light Buffer", false )
 , m_spot_buffer_( "Spot Light Buffer", false )
 {
+    // TODO: Dynamic atlas size.
+    m_atlas_size_ = 512;
 }
 
 void sk::Scene::cLight_Manager::Update()
@@ -27,32 +29,49 @@ void sk::Scene::cLight_Manager::Update()
     settings.point_light_count       = static_cast< uint32_t >( m_point_light_indices_      .size() );
     settings.spot_light_count        = static_cast< uint32_t >( m_spot_light_indices_       .size() );
     settings.uses_extended           = 0;
-    
-    if( settings.directional_light_count <= sLightSettings::kConstantDirectionalMax )
-        std::copy_n( m_directional_buffer_.Data(), settings.directional_light_count, settings.directional_light );
-    else
+
+    if( m_directional_buffer_.IsDirty() )
     {
-        settings.uses_extended |= 0x01;
-        m_directional_buffer_.Upload();
+        if( settings.directional_light_count <= sLightSettings::kConstantDirectionalMax )
+            std::copy_n( m_directional_buffer_.Data(), settings.directional_light_count, settings.directional_light );
+        else
+        {
+            settings.uses_extended |= 0x01;
+            m_directional_buffer_.Upload();
+        }
     }
-    
-    if( settings.point_light_count <= sLightSettings::kConstantPointMax )
-        std::copy_n( m_point_buffer_.Data(), settings.point_light_count, settings.point_light );
-    else
+
+    if( m_point_buffer_.IsDirty() )
     {
-        settings.uses_extended |= 0x02;
-        m_point_buffer_.Upload();
+        if( settings.point_light_count <= sLightSettings::kConstantPointMax )
+            std::copy_n( m_point_buffer_.Data(), settings.point_light_count, settings.point_light );
+        else
+        {
+            settings.uses_extended |= 0x02;
+            m_point_buffer_.Upload();
+        }
     }
-    
-    if( settings.spot_light_count <= sLightSettings::kConstantSpotMax )
-        std::copy_n( m_spot_buffer_.Data(), settings.spot_light_count, settings.spot_light );
-    else
+
+    if( m_spot_buffer_.IsDirty() )
     {
-        settings.uses_extended |= 0x04;
-        m_spot_buffer_.Upload();
+        if( settings.spot_light_count <= sLightSettings::kConstantSpotMax )
+            std::copy_n( m_spot_buffer_.Data(), settings.spot_light_count, settings.spot_light );
+        else
+        {
+            settings.uses_extended |= 0x04;
+            m_spot_buffer_.Upload();
+        }
     }
-    
+
+    if( !m_preserve_atlas_ )
+        compute_atlas();
+
     m_shadow_caster_buffer_.Upload();
+}
+
+auto sk::Scene::cLight_Manager::GetAtlasSize() const -> cVector2u32
+{
+    return m_computed_atlas_size_;
 }
 
 auto sk::Scene::cLight_Manager::GetLights() const -> const light_vec_t&
@@ -107,9 +126,11 @@ void sk::Scene::cLight_Manager::update_light( light_ptr_t _light, const Light::s
         
         return;
     }
+
+    auto& settings = _light->GetSettings();
     
     const bool was_shadow_caster = _previous_settings.casts_shadows;
-    if( const bool casts_shadows = _light->GetSettings().casts_shadows; was_shadow_caster && !casts_shadows )
+    if( const bool casts_shadows = settings.casts_shadows; was_shadow_caster && !casts_shadows )
     {
         // No longer a shadow caster, remove
         remove_shadow_caster( _light );
@@ -118,6 +139,16 @@ void sk::Scene::cLight_Manager::update_light( light_ptr_t _light, const Light::s
     {
         // New shadow caster, add
         add_shadow_caster( _light );
+    }
+
+    if( was_shadow_caster && settings.casts_shadows && _previous_settings.shadow_resolution != settings.shadow_resolution )
+    {
+        if( !Memory::is_power_of_two( settings.shadow_resolution ) )
+        {
+            SK_BREAK;
+            _light->m_settings_.shadow_resolution = Math::roundToPow2( settings.shadow_resolution );
+        }
+        m_preserve_atlas_ = false;
     }
 }
 
@@ -184,16 +215,30 @@ void sk::Scene::cLight_Manager::unregister_light( light_ptr_t _light )
 
 void sk::Scene::cLight_Manager::add_shadow_caster( const light_ptr_t& _light )
 {
+    if( _light->m_settings_.type == Light::eType::kPoint )
+    {
+        SK_WARNING( sk::Severity::kEngine, "Warning: Point lights can't be shadow casters!" );
+        _light->m_settings_.casts_shadows = false;
+        return;
+    }
+
     _light->m_shadow_data_index_ = static_cast< uint32_t >( m_shadow_casters_.size() );
     m_shadow_casters_.emplace_back( _light );
+
+    if( const auto settings = _light->GetSettings(); !Memory::is_power_of_two( settings.shadow_resolution ) )
+    {
+        SK_BREAK;
+        _light->m_settings_.shadow_resolution = Math::roundToPow2( settings.shadow_resolution );
+    }
     
     m_shadow_caster_buffer_.EmplaceBack( Light::sShadowCaster{
-        .atlas_start  = { 0.0f, 0.0f },
-        .atlas_end    = { 1.0f, 1.0f },
-        .light_matrix = _light->GetViewProjMatrix()
+        .atlas_start  = { 0, 0 },
+        .atlas_end    = { 0, 0 },
+        .light_view_proj = _light->GetViewProjMatrix()
     } );
     
     _light->m_shadow_info_ = &m_shadow_caster_buffer_.Back();
+    m_preserve_atlas_ = false;
 }
 
 void sk::Scene::cLight_Manager::remove_shadow_caster( const light_ptr_t& _light )
@@ -210,6 +255,8 @@ void sk::Scene::cLight_Manager::remove_shadow_caster( const light_ptr_t& _light 
     
     _light->m_shadow_data_index_ = std::numeric_limits< uint32_t >::max();
     _light->m_shadow_info_       = nullptr;
+
+    m_preserve_atlas_ = false;
 }
 
 void sk::Scene::cLight_Manager::mark_buffer_dirty( const Light::eType _type )
@@ -228,12 +275,59 @@ void sk::Scene::cLight_Manager::mark_buffer_dirty( const Light::eType _type )
     }
 }
 
-void sk::Scene::cLight_Manager::mark_shadow_buffer_dirty()
+void sk::Scene::cLight_Manager::mark_shadow_buffer_dirty( const bool _preserve_atlas )
 {
+    m_preserve_atlas_ &= _preserve_atlas;
     m_shadow_caster_buffer_.MarkDirty();
 }
 
 void sk::Scene::cLight_Manager::compute_atlas()
 {
-    // TODO: Compute the shadow atlas
+    m_preserve_atlas_ = true;
+    // From: https://lisyarus.github.io/blog/posts/texture-packing.html
+
+    const auto count = m_shadow_casters_.size();
+
+    // First: Resolution, Second: Shadow Caster Index
+    using shadow_size_vec_t = std::vector< std::pair< uint32_t, uint32_t > >;
+
+    shadow_size_vec_t sorted_sizes( count );
+
+    for( size_t i = 0; i < sorted_sizes.size(); ++i )
+        sorted_sizes[ i ] = std::make_pair( m_shadow_casters_[ i ]->m_settings_.shadow_resolution, i );
+
+    std::ranges::sort( sorted_sizes, []( const auto& _a, const auto& _b ){ return _a.first > _b.first; } );
+
+    // TODO: Figure out a better way to guess the atlas width.
+    // Or find an algorithm that takes it into consideration.
+    // Or decide a constant max width.
+    const auto largest_caster = sorted_sizes.front().first;
+    const auto atlas_width_guess = largest_caster * 2;
+
+    std::vector< cVector2u32 > ladder;
+
+    cVector2u32 pen{ 0, 0 };
+
+    for( auto& [ resolution, caster_index ] : sorted_sizes )
+    {
+        auto& data = m_shadow_caster_buffer_[ caster_index ];
+        data.atlas_start = { pen.x, pen.y };
+        data.atlas_end   = { pen.x + resolution, pen.y + resolution };
+
+        if( !ladder.empty() && ladder.back().y == pen.y + resolution )
+            ladder.back().x = pen.x;
+        else
+            ladder.emplace_back( pen.x, pen.y + resolution );
+
+        if( pen.x == atlas_width_guess )
+        {
+            ladder.pop_back();
+
+            pen.y += resolution;
+            if( !ladder.empty() )
+                pen.x = ladder.back().x;
+            else
+                pen.x = 0;
+        }
+    }
 }

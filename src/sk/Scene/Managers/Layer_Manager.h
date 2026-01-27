@@ -119,6 +119,7 @@ namespace sk::Scene
             using reference         = value_type&;
             using iterator_category = std::forward_iterator_tag;
 
+            // TODO: Handle empty layers. With them the object won't be valid.
             [[ nodiscard ]] bool IsValid() const
             {
                 return !getMeshes().empty();

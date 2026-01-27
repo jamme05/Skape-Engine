@@ -386,7 +386,7 @@ namespace sk
 			static size_t get_function_hash( const void* _ptr )
 			{
 				// Function hashes will always have a binary 1 in the start.
-				return Hashing::fnv1a_64( reinterpret_cast< const char* >( &_ptr ), sizeof( _ptr ) ) | 1llu;
+				return reinterpret_cast< size_t& >( _ptr );
 			}
 
 		protected:
@@ -583,8 +583,11 @@ namespace sk
 				std::scoped_lock lock{ m_write_mtx_ };
 				
 				if( m_listeners_.contains( id ) )
+				{
+					std::println( "Listener with id: {} already exists.", id );
 					return id;
-				
+				}
+
 				m_listeners_.insert( std::make_pair( id, _listener.function ) );
 				return id;
 			} // add_listener

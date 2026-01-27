@@ -58,7 +58,6 @@ bool cScreen_Pass::Begin()
             SK_BREAK;
     }
     
-    
     m_material_meta_->UnlockAsset();
     
     frame_buffer.UnbindVertexBuffers();

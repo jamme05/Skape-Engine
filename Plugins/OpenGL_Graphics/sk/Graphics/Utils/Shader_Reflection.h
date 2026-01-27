@@ -109,6 +109,17 @@ namespace sk::Graphics::Utils
         uint16_t flags;
     };
 
+    struct sBuffer
+    {
+        cStringID   name;
+        std::string pretty_name;
+
+        // 0 = "infinite"
+        uint32_t size;
+        uint16_t binding;
+        uint16_t flags;
+    };
+
     class cShader_Reflection
     {
     public:
@@ -126,6 +137,7 @@ namespace sk::Graphics::Utils
         void fetch_attributes();
         void fetch_uniforms();
         void fetch_blocks();
+        void fetch_buffer_bindings();
         
         void add( sUniform& _uniform );
         void add( sTexture& _texture );
@@ -158,8 +170,9 @@ namespace sk::Graphics::Utils
         unordered_map< str_hash, sUniform > m_global_uniforms_;
         unordered_map< str_hash, sBlock >   m_block_map_;
         vector< sBlock* >                   m_block_vec_;
-        
+
         unordered_map< str_hash, sTexture > m_textures_;
         unordered_map< str_hash, sSampler > m_samplers_;
+        unordered_map< str_hash, sBuffer >  m_buffers_;
     };
 } // sk::Graphics::Utils::

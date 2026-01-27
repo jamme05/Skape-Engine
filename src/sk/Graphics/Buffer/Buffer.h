@@ -37,7 +37,10 @@ namespace sk::Graphics
         static constexpr auto getByteSize( const size_t _count ){ return Memory::get_aligned( _count * kTypeSize, Memory::kShaderAlign ); }
         
         void MarkDirty();
+        bool IsDirty() const;
         void Upload( bool _force = false );
+
+        auto GetBuffer() const -> const iUnsafe_Buffer&;
         
         auto Data() -> Ty*;
         auto Data() const -> const Ty*;
@@ -60,6 +63,12 @@ namespace sk::Graphics
         
         auto Back() -> Ty&;
         auto Back() const -> const Ty&;
+
+        auto begin() -> Ty*;
+        auto begin() const -> const Ty*;
+
+        auto end() -> Ty*;
+        auto end() const -> const Ty*;
         
         auto operator->() -> Ty*;
         auto operator->() const -> const Ty*;
@@ -72,6 +81,7 @@ namespace sk::Graphics
 
         auto operator[]( size_t _index ) -> Ty&;
         auto operator[]( size_t _index ) const -> const Ty&;
+
     private:
         size_t         m_size_;
         cUnsafe_Buffer m_buffer_;
@@ -136,9 +146,21 @@ namespace sk::Graphics
     }
 
     template< class Ty, Buffer::eType Type >
+    bool cBuffer< Ty, Type >::IsDirty() const
+    {
+        return m_buffer_.GetIsChanged();
+    }
+
+    template< class Ty, Buffer::eType Type >
     void cBuffer< Ty, Type >::Upload( const bool _force )
     {
         m_buffer_.Upload( _force );
+    }
+
+    template< class Ty, Buffer::eType Type >
+    auto cBuffer< Ty, Type >::GetBuffer() const -> const iUnsafe_Buffer&
+    {
+        return m_buffer_;
     }
 
     template< class Ty, Buffer::eType Type >
@@ -224,6 +246,30 @@ namespace sk::Graphics
     auto cBuffer< Ty, Type >::Back() const -> const Ty&
     {
         return Data()[ Size() - 1 ];
+    }
+
+    template< class Ty, Buffer::eType Type >
+    auto cBuffer< Ty, Type >::begin() -> Ty*
+    {
+        return Data();
+    }
+
+    template< class Ty, Buffer::eType Type >
+    auto cBuffer< Ty, Type >::begin() const -> const Ty*
+    {
+        return Data();
+    }
+
+    template< class Ty, Buffer::eType Type >
+    auto cBuffer< Ty, Type >::end() -> Ty*
+    {
+        return Data() + Size();
+    }
+
+    template< class Ty, Buffer::eType Type >
+    auto cBuffer< Ty, Type >::end() const -> const Ty*
+    {
+        return Data() + Size();
     }
 
     template< class Ty, Buffer::eType Type >

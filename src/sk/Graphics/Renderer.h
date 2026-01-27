@@ -17,7 +17,7 @@ namespace sk::Graphics
 {
     class cPipeline;
 
-    // Will be overriden by Module
+    // Will be overridden by Module
     class cRenderer : public cBaseSingleton< cRenderer >
     {
     public:

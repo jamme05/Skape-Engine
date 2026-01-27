@@ -277,6 +277,11 @@ namespace sk::Graphics
         m_is_updated_.store( false );
     }
 
+    bool cUnsafe_Buffer::GetIsChanged() const
+    {
+        return m_is_updated_.load();
+    }
+
     void cUnsafe_Buffer::Upload( const bool _force )
     {
         SK_BREAK_RET_IF( sk::Severity::kConstGraphics | 10,

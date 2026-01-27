@@ -22,9 +22,10 @@ namespace sk::Scene::Light
 
     struct sSettings
     {
-        eType type          = eType::kDirectional;
-        bool  casts_shadows = true;
-        
+        eType    type              = eType::kDirectional;
+        bool     casts_shadows     = true;
+        uint16_t shadow_resolution = 256;
+
         cColor color = Color::kWhite;
             
         // Directional
@@ -59,22 +60,23 @@ namespace sk::Scene::Light
     
     struct alignas( 16 ) sSpotLight
     {
+        // Ordered this way due to possible padding.
         // color = light.color * light.intensity
         cVector3f color;
+        float     inner_angle;
         // direction = world_position * radius
         cVector3f direction;
-        cVector3f position;
-        float     inner_angle;
         float     outer_angle;
+        cVector3f position;
         // The index that contains this lights shadow casting info
         int32_t   shadow_cast_index;
     };
     
     struct alignas( 16 ) sShadowCaster
     {
-        cVector2f   atlas_start;
-        cVector2f   atlas_end;
-        cMatrix4x4f light_matrix;
+        cVector2u32 atlas_start;
+        cVector2u32 atlas_end;
+        cMatrix4x4f light_view_proj;
     };
 } // sk::Scene::Light::
 
@@ -92,12 +94,14 @@ namespace sk::Object::Components
         using settings_t = sk::Scene::Light::sSettings;
         using data_ptr_t = std::variant< sInvalid, Scene::Light::sDirectionalLight*, Scene::Light::sPointLight*, Scene::Light::sSpotLight* >;
         using data_t     = std::variant< Scene::Light::sDirectionalLight, Scene::Light::sPointLight, Scene::Light::sSpotLight >;
+        using caster_t   = Scene::Light::sShadowCaster;
         
         explicit cLightComponent( const settings_t& _settings = {} );
         ~cLightComponent() override;
         
         void update() override;
-        
+
+        // TODO: Allow layer selections.
         // TODO: Add more functions to get/set values inside of the settings.
         [[ nodiscard ]]
         auto GetSettings() const -> const settings_t&;
@@ -112,6 +116,8 @@ namespace sk::Object::Components
         auto GetViewProjMatrix() const -> const cMatrix4x4f&;
         [[ nodiscard ]]
         auto GetData() const -> const data_t&;
+        [[ nodiscard ]]
+        auto GetShadowCasterData() const -> const caster_t*;
         
     private:
         void fix_data();
@@ -127,7 +133,7 @@ namespace sk::Object::Components
         data_t     m_data_;
         data_ptr_t m_data_ptr_;
         
-        Scene::Light::sShadowCaster* m_shadow_info_ = nullptr;
+        caster_t* m_shadow_info_ = nullptr;
         
         settings_t m_settings_;
         

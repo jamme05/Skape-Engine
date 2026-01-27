@@ -93,6 +93,8 @@ void cAsset_Meta::Reload()
 size_t cAsset_Meta::AddListener( const dispatcher_t::event_t& _listener )
 {
     dispatch_if_loaded( _listener.function, nullptr, true );
+
+    std::println( "Adding listener to {}", m_absolute_path_.view() );
 			
     return m_dispatcher_.add_listener( _listener );
 }
@@ -145,6 +147,8 @@ void cAsset_Meta::addReferrer( void* _source, const cWeak_Ptr< iClass >& _referr
     
     if( IsLoadingOrLoaded() )
         return;
+
+    std::println( "Requesting load for asset with path {}", m_absolute_path_.view() );
     
     // We mark it early.
     m_flags_ |= kLoading;
@@ -215,6 +219,8 @@ void cAsset_Meta::dispatch_if_loaded( const dispatcher_t::listener_t& _listener,
     if( !IsLoaded() )
         return;
 
+    std::println( "Asset with path {} already loaded, subscribing to single event", m_name_.view() );
+
     const Assets::Jobs::sTask task
     {
         .type = Assets::Jobs::eJobType::kPushEvent,
@@ -242,8 +248,6 @@ void cAsset_Meta::setPath( std::filesystem::path _path )
 
 void cAsset_Meta::setAsset( cAsset* _asset )
 {
-    m_flags_ &= ~kLoaded & ~kLoading;
-    
     if( m_asset_ != nullptr )
     {
         // There seems to be some sort of race condition
@@ -258,7 +262,10 @@ void cAsset_Meta::setAsset( cAsset* _asset )
     if( m_asset_ != nullptr )
     {
         m_asset_->m_metadata_ = get_weak();
-        m_flags_ |= kLoaded;
+        m_flags_ |=  kLoaded;
+        m_flags_ &= ~kLoading;
     }
+    else
+        m_flags_ &= ~kLoaded & ~kLoading;
 }
 

@@ -37,14 +37,14 @@ namespace sk::Object::Components
 		return m_mesh_.IsLoaded() && m_material_.IsLoaded();
 	}
 
-	auto cMeshComponent::GetMesh() const -> Assets::cMesh*
+	auto cMeshComponent::GetMesh() -> Assets::cMesh*
 	{
-		return m_mesh_.GetAsset();
+		return m_mesh_.Get();
 	}
 
-	auto cMeshComponent::GetMaterial() const -> Assets::cMaterial*
+	auto cMeshComponent::GetMaterial() -> Assets::cMaterial*
 	{
-		return m_material_.GetAsset();
+		return m_material_.Get();
 	}
 
 	void cMeshComponent::SetMesh( const cShared_ptr< cAsset_Meta >& _mesh )

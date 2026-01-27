@@ -6,6 +6,11 @@
 #include <sk/Misc/UUID.h>
 #include <sk/Scene/Components/LightComponent.h>
 
+namespace sk::Graphics::Rendering
+{
+    class cRender_Target;
+}
+
 namespace sk::Scene
 {
     class cLight_Manager : public cSingleton< cLight_Manager >
@@ -18,8 +23,8 @@ namespace sk::Scene
         struct alignas( 16 ) sLightSettings
         {
             static constexpr auto kConstantDirectionalMax = 2;
-            static constexpr auto kConstantPointMax       = 4;
-            static constexpr auto kConstantSpotMax        = 4;
+            static constexpr auto kConstantPointMax       = 3;
+            static constexpr auto kConstantSpotMax        = 3;
             
             uint32_t directional_light_count;
             uint32_t point_light_count;
@@ -38,6 +43,8 @@ namespace sk::Scene
         
         void Update();
 
+        [[ nodiscard ]] auto  GetAtlasSize    () const -> cVector2u32;
+
         [[ nodiscard ]] auto  GetLights       () const -> const light_vec_t&;
         [[ nodiscard ]] auto  GetShadowCasters() const -> const light_vec_t&;
         
@@ -45,8 +52,9 @@ namespace sk::Scene
         [[ nodiscard ]] auto& GetDirectionalBuffer () const { return m_directional_buffer_;    }
         [[ nodiscard ]] auto& GetPointBuffer       () const { return m_point_buffer_;          }
         [[ nodiscard ]] auto& GetSpotBuffer        () const { return m_spot_buffer_;           }
-        [[ nodiscard ]] auto& GetShadowCasterBuffer() const { return m_shadow_caster_buffer_;  }
+        [[ nodiscard ]] auto& GetShadowCasterBuffer() const { return m_shadow_caster_buffer_; }
     private:
+        // TODO: Use light references instead of weak ptr.
         void register_light  ( light_ptr_t _light );
         void update_light    ( light_ptr_t _light, const Light::sSettings& _previous_settings );
         void unregister_light( light_ptr_t _light );
@@ -55,7 +63,7 @@ namespace sk::Scene
         void remove_shadow_caster( const light_ptr_t& _light );
         
         void mark_buffer_dirty( Light::eType _type );
-        void mark_shadow_buffer_dirty();
+        void mark_shadow_buffer_dirty( bool _preserve_atlas );
         
         void compute_atlas();
         
@@ -64,7 +72,8 @@ namespace sk::Scene
         using point_buffer_t       = Graphics::cStructured_Buffer< Light::sPointLight >;
         using spot_buffer_t        = Graphics::cStructured_Buffer< Light::sSpotLight >;
         using shadow_buffer_t      = Graphics::cStructured_Buffer< Light::sShadowCaster >;
-        
+        using render_target_t      = cShared_ptr< Graphics::Rendering::cRender_Target >;
+
         light_vec_t m_lights_;
         light_vec_t m_shadow_casters_;
         
@@ -78,6 +87,13 @@ namespace sk::Scene
         std::vector< size_t > m_directional_light_indices_;
         std::vector< size_t > m_point_light_indices_;
         std::vector< size_t > m_spot_light_indices_;
-        
+
+        render_target_t m_shadow_atlas_;
+
+        cVector2u32 m_computed_atlas_size_;
+        uint32_t    m_atlas_size_;
+        // If we should preserve the atlas between updates.
+        bool        m_preserve_atlas_;
+        // TODO: Remove padding
     };
 } // sk::Scene::

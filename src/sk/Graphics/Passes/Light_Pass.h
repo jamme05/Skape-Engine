@@ -7,6 +7,19 @@
 #include <sk/Assets/Material.h>
 #include <sk/Assets/Access/Asset_Ref.h>
 
+#include "sk/Graphics/Rendering/Scissor.h"
+#include "sk/Graphics/Rendering/Viewport.h"
+
+namespace sk::Graphics::Rendering
+{
+    class cRender_Context;
+}
+
+namespace sk::Object::Components
+{
+    class cLightComponent;
+} // sk::Object::Components
+
 namespace sk::Graphics::Passes
 {
     class cLight_Pass : public iPass
@@ -18,6 +31,12 @@ namespace sk::Graphics::Passes
         void Destroy() override;
         
     private:
+        void _shadowPass( const Object::Components::cLightComponent& _light );
+
+        static auto _getViewport( const Object::Components::cLightComponent& _light ) -> sViewport;
+        static auto _getScissor( const Object::Components::cLightComponent& _light ) -> sScissor;
+
+        std::unique_ptr< Rendering::cRender_Context > m_shadow_context_ = nullptr;
         cAsset_Ref< Assets::cMaterial > m_shadow_material_;
     };
 } // sk::Graphics::Passes::
