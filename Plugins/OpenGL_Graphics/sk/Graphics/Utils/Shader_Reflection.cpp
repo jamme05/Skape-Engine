@@ -25,6 +25,8 @@ cShader_Reflection::cShader_Reflection( const gl::GLuint _program )
 
     fetch_blocks();
     fetch_uniforms();
+
+    fetch_buffer_bindings();
     
     cleanup();
 }
@@ -208,11 +210,23 @@ void cShader_Reflection::fetch_buffer_bindings()
     for( int_fast32_t i = 0; i < nr_of_buffers; i++ )
     {
         static constexpr std::array kProperties{
-            gl::GL_NAME_LENGTH,
             gl::GL_BUFFER_BINDING,
             gl::GL_BUFFER_DATA_SIZE
         };
-        gl::glGetProgramResourceiv( m_program_, gl::GL_NAME_LENGTH, i, kProperties.size(), kProperties.data(),  )
+
+        struct sParams
+        {
+            gl::GLint binding;
+            gl::GLint data_size;
+        } params;
+
+        gl::glGetProgramResourceiv(
+            m_program_, gl::GL_SHADER_STORAGE_BLOCK, i,
+            kProperties.size(), kProperties.data(),
+            kProperties.size(), nullptr, &params.binding
+        );
+
+        SK_BREAK;
     }
 }
 

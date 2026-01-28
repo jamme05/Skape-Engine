@@ -3,7 +3,6 @@
 #include <sk/Graphics/Buffer/Buffer.h>
 #include <sk/Math/Vector3.h>
 #include <sk/Misc/Singleton.h>
-#include <sk/Misc/UUID.h>
 #include <sk/Scene/Components/LightComponent.h>
 
 namespace sk::Graphics::Rendering
@@ -33,10 +32,12 @@ namespace sk::Scene
             // Extended means to use a structured buffer instead of the faster uniform buffer
             uint32_t uses_extended;
             // The user should at MOST have two directional lights, so we keep that as the safe range.
-            Light::sDirectionalLight directional_light[ kConstantDirectionalMax ];
-            Light::sPointLight       point_light      [ kConstantPointMax ];
-            Light::sSpotLight        spot_light       [ kConstantSpotMax ];
+            Light::sDirectionalLight constant_directional_light[ kConstantDirectionalMax ];
+            Light::sPointLight       constant_point_light      [ kConstantPointMax ];
+            Light::sSpotLight        constant_spot_light       [ kConstantSpotMax ];
             // TODO: Decide how many other lights we should have.
+            cVector2u32 atlas_size;
+            // TODO: Fix padding.
         };
         
         cLight_Manager();

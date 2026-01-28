@@ -33,7 +33,7 @@ void sk::Scene::cLight_Manager::Update()
     if( m_directional_buffer_.IsDirty() )
     {
         if( settings.directional_light_count <= sLightSettings::kConstantDirectionalMax )
-            std::copy_n( m_directional_buffer_.Data(), settings.directional_light_count, settings.directional_light );
+            std::copy_n( m_directional_buffer_.Data(), settings.directional_light_count, settings.constant_directional_light );
         else
         {
             settings.uses_extended |= 0x01;
@@ -44,7 +44,7 @@ void sk::Scene::cLight_Manager::Update()
     if( m_point_buffer_.IsDirty() )
     {
         if( settings.point_light_count <= sLightSettings::kConstantPointMax )
-            std::copy_n( m_point_buffer_.Data(), settings.point_light_count, settings.point_light );
+            std::copy_n( m_point_buffer_.Data(), settings.point_light_count, settings.constant_point_light );
         else
         {
             settings.uses_extended |= 0x02;
@@ -55,7 +55,7 @@ void sk::Scene::cLight_Manager::Update()
     if( m_spot_buffer_.IsDirty() )
     {
         if( settings.spot_light_count <= sLightSettings::kConstantSpotMax )
-            std::copy_n( m_spot_buffer_.Data(), settings.spot_light_count, settings.spot_light );
+            std::copy_n( m_spot_buffer_.Data(), settings.spot_light_count, settings.constant_spot_light );
         else
         {
             settings.uses_extended |= 0x04;

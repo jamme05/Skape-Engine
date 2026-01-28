@@ -39,7 +39,7 @@ sk::Scene::cLayer_Manager::cLayer_Manager()
 void sk::Scene::cLayer_Manager::AddLayer( const uint64_t _layer, const cStringID& _name )
 {
     SK_BREAK_RET_IF( sk::Severity::kGeneral,
-        m_name_to_layer_.find( _name.hash() ) != m_name_to_layer_.end(),
+        m_name_to_layer_.contains( _name.hash() ),
         TEXT( "Layer with name {} has already been added.", _name.view() ) )
     
     SK_BREAK_RET_IFN( sk::Severity::kGeneral, Memory::is_power_of_two( _layer ),
@@ -113,7 +113,7 @@ auto sk::Scene::cLayer_Manager::GetLayerByName( const cStringID& _name ) const -
 auto sk::Scene::cLayer_Manager::GetObjectsIn( const uint64_t _layers ) const -> object_range_t
 {
     std::vector< const sLayer* > layers;
-    for( uint32_t shift = 0; m_layers_.size() >= shift; ++shift )
+    for( uint32_t shift = 0; m_layers_.size() > shift; ++shift )
     {
         if( ( _layers & ( 1 << shift ) ) == 0 )
             continue;

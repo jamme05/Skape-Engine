@@ -6,9 +6,8 @@
 
 #include <sk/Assets/Material.h>
 #include <sk/Assets/Access/Asset_Ref.h>
-
-#include "sk/Graphics/Rendering/Scissor.h"
-#include "sk/Graphics/Rendering/Viewport.h"
+#include <sk/Graphics/Rendering/Scissor.h>
+#include <sk/Graphics/Rendering/Viewport.h>
 
 namespace sk::Graphics::Rendering
 {
@@ -36,7 +35,7 @@ namespace sk::Graphics::Passes
         static auto _getViewport( const Object::Components::cLightComponent& _light ) -> sViewport;
         static auto _getScissor( const Object::Components::cLightComponent& _light ) -> sScissor;
 
-        std::unique_ptr< Rendering::cRender_Context > m_shadow_context_ = nullptr;
+        Rendering::cRender_Context*     m_shadow_context_ = nullptr;
         cAsset_Ref< Assets::cMaterial > m_shadow_material_;
     };
 } // sk::Graphics::Passes::

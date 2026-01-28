@@ -67,7 +67,7 @@ bool Utils::RenderMesh( const cMatrix4x4f &_camera_view_proj, Rendering::cFrame_
     object_block->SetUniform( kInverseWorldUniform, _world_matrix.inversed() );
     
     // Camera uniforms
-    camera_block->SetUniform( kViewProjUniform, _camera.getViewProjInv() );
+    camera_block->SetUniform( kViewProjUniform, _camera_view_proj );
     
     _material.Update();
     

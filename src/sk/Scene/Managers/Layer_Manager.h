@@ -122,7 +122,7 @@ namespace sk::Scene
             // TODO: Handle empty layers. With them the object won't be valid.
             [[ nodiscard ]] bool IsValid() const
             {
-                return !getMeshes().empty();
+                return getObject().is_valid() && !getMeshes().empty();
             }
             
             operator bool() const

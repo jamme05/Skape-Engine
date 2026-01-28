@@ -2,16 +2,15 @@
 
 #include "Light_Pass.h"
 
+#include <sk/Graphics/Rendering/Depth_Target.h>
 #include <sk/Graphics/Rendering/Frame_Buffer.h>
 #include <sk/Graphics/Rendering/Render_Context.h>
+#include <sk/Graphics/Rendering/Render_Target.h>
+#include <sk/Graphics/Rendering/Viewport.h>
 #include <sk/Graphics/Utils/RenderUtils.h>
+#include <sk/Scene/Components/MeshComponent.h>
 #include <sk/Scene/Managers/Layer_Manager.h>
 #include <sk/Scene/Managers/Light_Manager.h>
-
-#include "sk/Graphics/Rendering/Depth_Target.h"
-#include "sk/Graphics/Rendering/Render_Target.h"
-#include "sk/Graphics/Rendering/Viewport.h"
-#include "sk/Scene/Components/MeshComponent.h"
 
 
 using namespace sk::Graphics::Passes;
@@ -19,8 +18,8 @@ using namespace sk::Graphics::Passes;
 
 void cLight_Pass::Init()
 {
-    m_shadow_context_ = std::make_unique< Rendering::cRender_Context >();
-    for( auto& context : *m_shadow_context_ )
+    m_shadow_context_ = SK_SINGLE( Rendering::cRender_Context );
+    for( const auto& context : *m_shadow_context_ )
     {
         context->Bind( 0, sk::make_shared< Rendering::cRender_Target >(
             cVector2u32{ 1024 }, Rendering::cRender_Target::eFormat::kR16F ) );
@@ -51,7 +50,8 @@ void cLight_Pass::End()
 
 void cLight_Pass::Destroy()
 {
-    
+    SK_FREE( m_shadow_context_ );
+    m_shadow_context_ = nullptr;
 }
 
 void cLight_Pass::_shadowPass( const Object::Components::cLightComponent& _light )
