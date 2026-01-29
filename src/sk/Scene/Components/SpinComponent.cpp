@@ -11,7 +11,7 @@ cSpinComponent::cSpinComponent( cVector3f _speed )
 
 void cSpinComponent::update()
 {
-    GetTransform().GetRotation() += m_speed_ * Time::Delta;
+    GetTransform().GetLocalRotation() += m_speed_ * Time::Delta;
     GetTransform().MarkDirty();
 
     for( auto& child : m_children_ )

@@ -3,25 +3,46 @@
 
 using namespace sk;
 
-void cTransform::SetPosition( const cVector3f& _position )
+void cTransform::SetLocalPosition( const cVector3f& _position )
 {
     m_position_ = _position;
     
     MarkDirty();
 }
 
-void cTransform::SetRotation( const cVector3f& _rotation )
+void cTransform::SetLocalRotation( const cVector3f& _rotation )
 {
     m_rotation_ = _rotation;
     
     MarkDirty();
 }
 
-void cTransform::SetScale( const cVector3f& _scale )
+void cTransform::SetLocalScale( const cVector3f& _scale )
 {
     m_scale_ = _scale;
     
     MarkDirty();
+}
+
+auto cTransform::GetRightDir() const -> const cVector3f&
+{
+    const_cast< cTransform* >( this )->CacheNormalized();
+
+    return m_world_right_;
+}
+
+auto cTransform::GetUpDir() const -> const cVector3f&
+{
+    const_cast< cTransform* >( this )->CacheNormalized();
+
+    return m_world_up_;
+}
+
+auto cTransform::GetForwardDir() const -> const cVector3f&
+{
+    const_cast< cTransform* >( this )->CacheNormalized();
+
+    return m_world_forward_;
 }
 
 void cTransform::SetParent( const cWeak_Ptr< cTransform >& _parent )
@@ -82,5 +103,18 @@ void cTransform::Update( const bool _force )
     else
         m_world_ = local;
     
-    m_is_dirty_ = false;
+    m_is_dirty_       = false;
+    m_has_normalized_ = false;
+}
+
+void cTransform::CacheNormalized()
+{
+    if( m_has_normalized_ )
+        return;
+
+    m_world_right_   = m_world_.right.normalized();
+    m_world_up_      = m_world_.up.normalized();
+    m_world_forward_ = m_world_.forward.normalized();
+
+    m_has_normalized_ = true;
 }

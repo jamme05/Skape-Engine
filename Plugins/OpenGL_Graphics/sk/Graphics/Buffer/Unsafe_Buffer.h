@@ -26,7 +26,7 @@ namespace sk::Graphics
             struct sRaw_Buffer
             {
                 gl::GLenum type   = gl::GLenum::GL_INVALID_VALUE;
-                gl::GLuint buffer = 0;
+                gl::GLuint object = 0;
                 size_t     size   = 0;
             };
 

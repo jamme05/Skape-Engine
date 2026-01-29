@@ -17,6 +17,8 @@
 
 #include <variant>
 
+#include "sk/Graphics/Buffer/Buffer.h"
+
 
 namespace sk::Graphics::Rendering
 {
@@ -25,6 +27,7 @@ namespace sk::Graphics::Rendering
 
 namespace sk::Graphics::Utils
 {
+    struct sBuffer;
     struct sSampler;
     struct sUniform;
     struct sBlock;
@@ -90,6 +93,7 @@ namespace sk::Assets
             };
             
             using buffer_t      = Graphics::cUnsafe_Buffer;
+            using u_buffer_t    = Graphics::iUnsafe_Buffer;
             using block_t       = Graphics::Utils::sBlock;
             using uniform_map_t = std::unordered_map< str_hash, sUniform >;
             using uniform_vec_t = vector< sUniform* >;
@@ -97,17 +101,23 @@ namespace sk::Assets
             cBlock() = default;
             cBlock( const cMaterial& _owner, std::string _name, const block_t* _info, size_t _binding );
 
-            bool SetUniform( const cStringID& _name, const auto& _value );
+            bool SetUniform   ( const cStringID& _name, const auto& _value );
             bool SetUniformRaw( const cStringID& _name, const void* _data, size_t _size );
-            
+
+            void SetOverrideBuffer( const Graphics::iUnsafe_Buffer& _buffer );
+            void SetOverrideBuffer( std::nullptr_t );
+
             auto& GetUniformMap() const { return m_uniform_map_; }
             auto& GetUniformVec() const { return m_uniform_vec_; }
+
+            auto GetBuffer() const -> const Graphics::iUnsafe_Buffer& { return m_override_buffer_ ? *m_override_buffer_ : m_buffer_; }
             
         private:
-            std::string    m_pretty_name_;
-            const block_t* m_info_;
-            size_t         m_binding_;
-            buffer_t       m_buffer_;
+            std::string       m_pretty_name_;
+            const block_t*    m_info_;
+            size_t            m_binding_;
+            buffer_t          m_buffer_;
+            const u_buffer_t* m_override_buffer_ = nullptr;
             
             uniform_map_t m_uniform_map_;
             uniform_vec_t m_uniform_vec_;
@@ -131,13 +141,21 @@ namespace sk::Assets
         explicit cMaterial( Graphics::Utils::cShader_Link&& _shader_link );
         
         void Complete();
-        
-        auto  GetBlock( const cStringID& _name ) -> cBlock*;
-        auto& GetBlocks() const { return m_block_map_; }
 
-        void  SetTexture( const cStringID& _name, std::nullptr_t );
-        void  SetTexture( const cStringID& _name, const cShared_ptr< Graphics::Rendering::cRender_Target >& _texture );
-        void  SetTexture( const cStringID& _name, const cShared_ptr< cAsset_Meta >& _texture_meta );
+        auto  TryGetBlock( const cStringID& _name ) -> cBlock*;
+        auto  GetBlock   ( const cStringID& _name ) -> cBlock*;
+        auto& GetBlocks  () const { return m_block_map_; }
+
+        template< class Ty, Graphics::Buffer::eType Type >
+        void  SetBuffer ( const cStringID& _name, const Graphics::cBuffer< Ty, Type >& _buffer );
+        void  SetBuffer ( const cStringID& _name, const Graphics::cDynamic_Buffer&     _buffer );
+        void  SetBuffer ( const cStringID& _name, const Graphics::iUnsafe_Buffer&      _buffer );
+        void  SetBuffer ( const cStringID& _name, std::nullptr_t );
+        auto& GetBuffers() const { return m_buffers_; }
+
+        void  SetTexture ( const cStringID& _name, std::nullptr_t );
+        void  SetTexture ( const cStringID& _name, const cShared_ptr< Graphics::Rendering::cRender_Target >& _texture );
+        void  SetTexture ( const cStringID& _name, const cShared_ptr< cAsset_Meta >& _texture_meta );
         auto& GetTextures() const { return m_textures_; }
         
         void  SetDepthTest( eDepthTest _depth_test );
@@ -158,6 +176,14 @@ namespace sk::Assets
             sampler_t sampler;
             variant_t texture;
         };
+
+        struct sBuffer
+        {
+            using buffer_info_t = const Graphics::Utils::sBuffer*;
+            using buffer_t      = const Graphics::iUnsafe_Buffer*;
+            buffer_info_t buffer_info;
+            buffer_t      buffer;
+        };
         
         using block_map_t       = unordered_map< str_hash, cBlock >;
         using block_vec_t       = vector< cBlock* >;
@@ -166,6 +192,7 @@ namespace sk::Assets
         using sampler_map_t     = unordered_map< str_hash, sTexture* >;
         using texture_vec_t     = std::vector< sTexture >;
         using texture_ref_vec_t = std::vector< cAsset_Ref< cTexture > >;
+        using buffers_t         = unordered_map< str_hash, sBuffer >;
         
         void create_data();
         
@@ -173,6 +200,7 @@ namespace sk::Assets
         block_vec_t   m_block_vec_;
         sampler_map_t m_sampler_map_;
         texture_vec_t m_textures_;
+        buffers_t     m_buffers_;
 
         texture_ref_vec_t m_texture_refs_;
         
@@ -236,7 +264,12 @@ namespace sk::Assets
     
         return true;
     }
-    
+
+    template< class Ty, Graphics::Buffer::eType Type >
+    void cMaterial::SetBuffer( const cStringID& _name, const Graphics::cBuffer< Ty, Type >& _buffer )
+    {
+        SetBuffer( _name, _buffer.GetBuffer() );
+    }
 } // sk::Assets
 
 DECLARE_CLASS( sk::Assets::Material )

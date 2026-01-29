@@ -32,7 +32,7 @@ namespace sk::Math
 	public:
 		union{ cVector4<T> x = { T(1) , T(0) , T(0) , T(0) }, right;    };
 		union{ cVector4<T> y = { T(0) , T(1) , T(0) , T(0) }, up;       };
-		union{ cVector4<T> z = { T(0) , T(0) , T(1) , T(0) }, front;    };
+		union{ cVector4<T> z = { T(0) , T(0) , T(1) , T(0) }, forward;    };
 		union{ cVector4<T> w = { T(0) , T(0) , T(0) , T(1) }, position; };
 
 		// Default constructor
@@ -128,7 +128,7 @@ namespace sk::Math
 		constexpr void inversed( cMatrix& _out ) const
 		{
 			// From: https://stackoverflow.com/a/60374938
-			auto& m  = *this;
+			auto  m  = *this;
 			auto& im = _out;
 
 		    T A2323 = m(2, 2) * m(3, 3) - m(2, 3) * m(3, 2);
@@ -419,6 +419,17 @@ namespace sk::Math
 		}
 
 		template< class T >
+		constexpr cMatrix4x4< T > Translate( const cVector3< T >& _v )
+		{
+			return {
+				cVector3< T >{ 1, 0, 0 },
+				cVector3< T >{ 0, 1, 0 },
+				cVector3< T >{ 0, 0, 1 },
+				_v
+			};
+		}
+
+		template< class T >
 		constexpr cMatrix4x4< T > scale_rotate_translate( const cVector3< T >& _scale, const cVector3< T >& _rotation, const cVector3< T >& _location )
 		{
 			const auto& sx = _scale.x;
@@ -462,12 +473,11 @@ namespace sk::Math
 			);
 		}
 		
-		// The following functions are inspired by: https://www.songho.ca/opengl/gl_projectionmatrix.html#fov
-		// But modified to have the resulting Z between 0 and 1
 		template< class Ty >
 		requires std::is_floating_point_v< Ty >
 		constexpr cMatrix4x4< Ty > Ortho( Ty _left, Ty _right, Ty _top, Ty _bottom, Ty _near, Ty _far )
 		{
+			// From: https://www.songho.ca/opengl/gl_projectionmatrix.html
 			const auto right_add_left = _right + _left;
 			const auto right_sub_left = _right - _left;
 			const auto top_add_bottom = _top + _bottom;
@@ -476,30 +486,31 @@ namespace sk::Math
 			const auto far_sub_near   = _far - _near;
 			
 			return cMatrix4x4< Ty >(
-				cVector4< Ty >{ Ty( 2 ) / right_sub_left, Ty( 0 ), - right_add_left / right_sub_left },
-				cVector4< Ty >{ Ty( 0 ), Ty( 2 ) / top_sub_bottom, Ty( 0 ), - top_add_bottom / top_sub_bottom },
-				cVector4< Ty >{ Ty ( 0 ), Ty( 0 ), -2 / far_sub_near, - far_add_near / far_sub_near },
+				cVector4< Ty >{ Ty( 2 ) / right_sub_left, 0, 0, - right_add_left / right_sub_left },
+				cVector4< Ty >{ 0, 2 / top_sub_bottom, Ty( 0 ), - top_add_bottom / top_sub_bottom },
+				cVector4< Ty >{ 0, 0, -2 / far_sub_near, - far_add_near / far_sub_near },
 				cVector4< Ty >{ 0, 0, 0, 1 }
 			);
 		}
 		
-		// The following functions are inspired by:
-		// https://www.songho.ca/opengl/gl_projectionmatrix.html#fov
-		// https://zero-irp.github.io/ViewProj-Blog/part-2.2-projection-matrix/
 		template< class Ty >
 		requires std::is_floating_point_v< Ty >
 		constexpr cMatrix4x4< Ty > Ortho( const Ty _width, const Ty _height, const Ty _near, const Ty _far )
 		{
-			const auto half_width  = _width / Ty( 2 );
-			const auto half_height = _height / Ty( 2 );
-			
-			return Ortho< Ty >( -half_width, half_width, half_height, -half_height, _near, _far );
+			// From: https://www.songho.ca/opengl/gl_projectionmatrix.html
+			return cMatrix4x4< Ty >(
+				cVector4< Ty >{ Ty( 2 ) / _width, 0, 0, 0 },
+				cVector4< Ty >{ 0, Ty( 2 ) / _height, 0, 0 },
+				cVector4< Ty >{ 0, 0, -( Ty( 2 ) / ( _far - _near ) ), 0 },
+				cVector4< Ty >{ 0, 0, -( ( _far + _near ) / ( _far - _near ) ) , 1 }
+			);
 		}
-		
+
 		template< class Ty >
 		requires std::is_floating_point_v< Ty >
 		constexpr cMatrix4x4< Ty > Perspective( Ty _width, Ty _height, Ty _near, Ty _far )
 		{
+			// From: https://www.songho.ca/opengl/gl_projectionmatrix.html
 			// TODO: Have it work between 0 and 1
 			const auto depth = _far - _near;
 			_width  = _width / Ty( 2 );
@@ -517,6 +528,7 @@ namespace sk::Math
 		requires std::is_floating_point_v< Ty >
 		constexpr cMatrix4x4< Ty > AspectPerspective( Ty _aspect, Ty _fov, Ty _near, Ty _far )
 		{
+			// From: https://zero-irp.github.io/ViewProj-Blog/part-2.2-projection-matrix/
 			const auto tangent = Math::tan( Math::degToRad( _fov / 2 ) );
 			
 			return cMatrix4x4< Ty >(

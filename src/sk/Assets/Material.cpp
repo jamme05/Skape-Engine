@@ -46,6 +46,16 @@ bool cMaterial::cBlock::SetUniformRaw( const cStringID& _name, const void* _data
     return true;
 }
 
+void cMaterial::cBlock::SetOverrideBuffer( const Graphics::iUnsafe_Buffer& _buffer )
+{
+    m_override_buffer_ = &_buffer;
+}
+
+void cMaterial::cBlock::SetOverrideBuffer(std::nullptr_t)
+{
+    m_override_buffer_ = nullptr;
+}
+
 cMaterial::cMaterial( Graphics::Utils::cShader_Link&& _shader_link )
 : m_shader_link_( std::move( _shader_link ) )
 {
@@ -65,6 +75,13 @@ void cMaterial::Complete()
     m_shader_link_.Complete();
 }
 
+auto cMaterial::TryGetBlock(const cStringID& _name) -> cBlock*
+{
+    const auto itr = m_block_map_.find( _name );
+
+    return itr != m_block_map_.end() ? &itr->second : nullptr;
+}
+
 auto cMaterial::GetBlock( const cStringID& _name ) -> cBlock*
 {
     const auto itr = m_block_map_.find( _name );
@@ -73,6 +90,31 @@ auto cMaterial::GetBlock( const cStringID& _name ) -> cBlock*
         TEXT( "Warning: Unable to find uniform with the name, {}", _name.view() ), nullptr )
     
     return &itr->second;
+}
+
+void cMaterial::SetBuffer( const cStringID& _name, const Graphics::cDynamic_Buffer& _buffer )
+{
+    SetBuffer( _name, _buffer.GetBuffer() );
+}
+
+void cMaterial::SetBuffer( const cStringID& _name, const Graphics::iUnsafe_Buffer& _buffer )
+{
+    const auto itr = m_buffers_.find( _name );
+
+    SK_BREAK_RET_IF( sk::Severity::kEngine, itr == m_buffers_.end(),
+        TEXT( "Warning: Unable to find buffer with name: {}", _name.view() ) )
+
+    itr->second.buffer = &_buffer;
+}
+
+void cMaterial::SetBuffer( const cStringID& _name, std::nullptr_t )
+{
+    const auto itr = m_buffers_.find( _name );
+
+    SK_BREAK_RET_IF( sk::Severity::kEngine, itr == m_buffers_.end(),
+        TEXT( "Warning: Unable to find buffer with name: {}", _name.view() ) )
+
+    itr->second.buffer = nullptr;
 }
 
 void cMaterial::SetTexture( const cStringID& _name, std::nullptr_t )
@@ -141,6 +183,7 @@ bool cMaterial::IsReady() const
 
 void cMaterial::Update()
 {
+    // TODO: Look into keeping track if it has been changed?
     for( auto& block : m_block_map_ | std::views::values )
         block.m_buffer_.Upload( true );
 }
@@ -226,6 +269,13 @@ void cMaterial::create_data()
             default: SK_BREAK; break; // Not supported.
             }
         }
+    }
+
+    auto& buffers = reflection->GetBuffers();
+    m_buffers_.reserve( buffers.size() );
+    for( auto& buffer : buffers | std::views::values )
+    {
+        m_buffers_[ buffer.name ] = { .buffer_info = &buffer, .buffer = nullptr };
     }
 
     // Samplers/Textures

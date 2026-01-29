@@ -51,11 +51,11 @@ namespace sk::Scene::Light
     struct alignas( 16 ) sPointLight
     {
         // color = light.color * light.intensity
-        cVector3f color;
-        float     radius;
+        cVector4f color;
         cVector3f position;
+        float     radius;
         // The index that contains this lights shadow casting info
-        int32_t   shadow_cast_index;
+        int32_t   shadow_cast_indices[ 6 ];
     };
     
     struct alignas( 16 ) sSpotLight
@@ -101,6 +101,8 @@ namespace sk::Object::Components
         
         void update() override;
 
+        void UpdateViewProjectionMatrix();
+
         // TODO: Allow layer selections.
         // TODO: Add more functions to get/set values inside of the settings.
         [[ nodiscard ]]
@@ -127,14 +129,10 @@ namespace sk::Object::Components
         void fix_spot_data( Scene::Light::sSpotLight& _data ) const;
         
         void update_data();
-        
         void init_data();
         
         data_t     m_data_;
-        data_ptr_t m_data_ptr_;
-        
-        caster_t* m_shadow_info_ = nullptr;
-        
+
         settings_t m_settings_;
         
         uint32_t m_registered_index_  = std::numeric_limits< uint32_t >::max();

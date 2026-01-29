@@ -42,9 +42,9 @@ bool cScreen_Pass::Begin()
     
     auto& frame_buffer = m_window_->GetWindowContext().GetBack();
     
-    frame_buffer.Begin( viewport, scissor );
     frame_buffer.Clear( Rendering::eClear::kAll );
-    
+    frame_buffer.Begin( viewport, scissor );
+
     m_material_meta_->LockAsset();
     
     m_material_->Update();

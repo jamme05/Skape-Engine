@@ -100,12 +100,12 @@ namespace sk::Graphics
     {
         cGLRenderer::AddGLTask( [ & ]
         {
-            gl::glGenBuffers( 1, &m_buffer_.buffer );
-            gl::glBindBuffer( m_buffer_.type, m_buffer_.buffer );
+            gl::glGenBuffers( 1, &m_buffer_.object );
+            gl::glBindBuffer( m_buffer_.type, m_buffer_.object );
 
             m_flags_ |= kInitialized;
 
-            gl::glNamedBufferData( m_buffer_.buffer, static_cast< gl::GLsizeiptr >( m_byte_size_ ), nullptr,
+            gl::glNamedBufferData( m_buffer_.object, static_cast< gl::GLsizeiptr >( m_byte_size_ ), nullptr,
                 IsStatic() ? gl::GLenum::GL_STATIC_DRAW : gl::GLenum::GL_DYNAMIC_DRAW );
 
             if( m_capacity_ > 0 )
@@ -123,8 +123,8 @@ namespace sk::Graphics
         memcpy( m_data_, _other.m_data_, std::min( m_byte_size_, _other.m_byte_size_ ) );
 
         // TODO: Make a copy function?
-        gl::glBindBuffer( gl::GLenum::GL_COPY_READ_BUFFER, _other.m_buffer_.buffer );
-        gl::glBindBuffer( gl::GLenum::GL_COPY_WRITE_BUFFER, m_buffer_.buffer );
+        gl::glBindBuffer( gl::GLenum::GL_COPY_READ_BUFFER, _other.m_buffer_.object );
+        gl::glBindBuffer( gl::GLenum::GL_COPY_WRITE_BUFFER, m_buffer_.object );
         gl::glCopyBufferSubData( gl::GLenum::GL_COPY_READ_BUFFER, gl::GLenum::GL_COPY_WRITE_BUFFER,
             0, 0, static_cast< gl::GLsizeiptr >( m_byte_size_ ) );
     } // Copy
@@ -136,11 +136,11 @@ namespace sk::Graphics
 
         if( IsInitialized() )
         {
-            cGLRenderer::AddGLTask( [ buffer = m_buffer_.buffer ]
+            cGLRenderer::AddGLTask( [ buffer = m_buffer_.object ]
             {
                 gl::glDeleteBuffers( 1, &buffer );
             }, false );
-            m_buffer_.buffer = 0;
+            m_buffer_.object = 0;
         }
 
         m_flags_ &= ~kInitialized;
@@ -208,7 +208,7 @@ namespace sk::Graphics
         else
             _max_size = std::min( _max_size, m_buffer_.size );
         
-        gl::glGetNamedBufferSubData( m_buffer_.buffer, 0, static_cast< gl::GLsizeiptr >(
+        gl::glGetNamedBufferSubData( m_buffer_.object, 0, static_cast< gl::GLsizeiptr >(
             ( _max_size == 0 ? m_byte_size_ : Math::min( m_byte_size_, _max_size ) ) ), _out );
     } // ReadRaw
 
@@ -290,11 +290,11 @@ namespace sk::Graphics
         if( _force || m_is_updated_ )
         {
             if( m_byte_size_ == m_buffer_.size )
-                gl::glNamedBufferSubData( m_buffer_.buffer, 0,
+                gl::glNamedBufferSubData( m_buffer_.object, 0,
                     static_cast< gl::GLsizeiptr >( m_byte_size_ ), m_data_ );
             else
             {
-                glNamedBufferData( m_buffer_.buffer, static_cast< gl::GLsizeiptr >( m_byte_size_ ), m_data_,
+                glNamedBufferData( m_buffer_.object, static_cast< gl::GLsizeiptr >( m_byte_size_ ), m_data_,
                     IsStatic() ? gl::GLenum::GL_STATIC_DRAW : gl::GLenum::GL_DYNAMIC_DRAW );
                 
                 m_buffer_.size = m_byte_size_;

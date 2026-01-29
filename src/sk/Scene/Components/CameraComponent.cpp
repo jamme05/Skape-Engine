@@ -43,9 +43,12 @@ namespace sk::Object::Components
 	} // disabled
 	void cCameraComponent::update( void )
 	{
-		m_transform_->Update();
-		m_transform_->GetWorld().inversed( m_view_proj_inv );
-		m_view_proj_inv = m_view_proj_inv * m_projection;
+		if( m_transform_->IsDirty() )
+		{
+			m_transform_->Update();
+			m_transform_->GetWorld().inversed( m_view_proj_inv );
+			m_view_proj_inv *= m_projection;
+		}
 	} // update
 
 	void cCameraComponent::calculateProjectionMatrix( void )

@@ -60,22 +60,22 @@ namespace sk::Object
 		virtual void PostEvent( uint16_t _event ) = 0;
 
 		[[ nodiscard ]]
-		auto& GetPosition()       { return m_transform_->GetPosition(); }
+		auto& GetPosition()       { return m_transform_->GetLocalPosition(); }
 		[[ nodiscard ]]
-		auto& GetPosition() const { return m_transform_->GetPosition(); }
-		void  SetPosition( const cVector3f& _position ){ m_transform_->SetPosition( _position ); }
+		auto& GetPosition() const { return m_transform_->GetLocalPosition(); }
+		void  SetPosition( const cVector3f& _position ){ m_transform_->SetLocalPosition( _position ); }
 
 		[[ nodiscard ]]
-		auto& GetRotation()       { return m_transform_->GetRotation(); }
+		auto& GetRotation()       { return m_transform_->GetLocalRotation(); }
 		[[ nodiscard ]]
-		auto& GetRotation() const { return m_transform_->GetRotation(); }
-		void  SetRotation( const cVector3f& _rotation ){ m_transform_->SetRotation( _rotation ); }
+		auto& GetRotation() const { return m_transform_->GetLocalRotation(); }
+		void  SetRotation( const cVector3f& _rotation ){ m_transform_->SetLocalRotation( _rotation ); }
 
 		[[ nodiscard ]]
-		auto& GetScale()       { return m_transform_->GetScale(); }
+		auto& GetScale()       { return m_transform_->GetLocalScale(); }
 		[[ nodiscard ]]
-		auto& GetScale() const { return m_transform_->GetScale(); }
-		void  SetScale( const cVector3f& _scale ){ m_transform_->SetScale( _scale ); }
+		auto& GetScale() const { return m_transform_->GetLocalScale(); }
+		void  SetScale( const cVector3f& _scale ){ m_transform_->SetLocalScale( _scale ); }
 
 		[[ nodiscard ]]
 		auto& GetTransform() const { return *m_transform_; }

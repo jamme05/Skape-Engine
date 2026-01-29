@@ -97,6 +97,7 @@ void cFrame_Buffer::destroy() const
 
 void cFrame_Buffer::Clear( const uint8_t _clear )
 {
+    gl::glBindFramebuffer( gl::GL_FRAMEBUFFER, m_frame_buffer_ );
     if( m_render_targets_.empty() )
     {
         // TODO: Actually validate the clear.
@@ -118,6 +119,7 @@ void cFrame_Buffer::Clear( const uint8_t _clear )
         gl::glClearBufferfv( gl::GL_DEPTH, 0, &m_depth_target_->m_depth_clear_ );
     else if( _clear & kStencil )
         gl::glClearBufferiv( gl::GL_STENCIL, 0, &m_depth_target_->m_stencil_clear_ );
+    gl::glBindFramebuffer( gl::GL_FRAMEBUFFER, 0 );
 } // Clear
 
 void cFrame_Buffer::Bind( const size_t _index, const cShared_ptr< cRender_Target >& _target, const bool _force )
@@ -125,14 +127,18 @@ void cFrame_Buffer::Bind( const size_t _index, const cShared_ptr< cRender_Target
     SK_ERR_IF( _index > m_render_targets_.size(),
         TEXT( "ERROR: Frame buffer was only created for {} render targets.", m_render_targets_.size() ) )
 
+    const auto attachment = static_cast< gl::GLenum >( static_cast< size_t >( gl::GL_COLOR_ATTACHMENT0 ) + _index );
+
     if( m_render_targets_[ _index ] == _target && !_force )
+    {
+        gl::glNamedFramebufferTexture( m_frame_buffer_, attachment, _target->get_texture(), 0 );
         return;
+    }
 
     if( m_render_targets_[ _index ] )
         UnbindRenderTargetAt( _index );
 
     // The GL_COLOR_ATTACKMENTX are after one another. Making this safe.
-    const auto attachment = static_cast< gl::GLenum >( static_cast< size_t >( gl::GL_COLOR_ATTACHMENT0 ) + _index );
 
     // For the future: https://stackoverflow.com/a/17092208
     // It explains the difference between glFramebufferTexture and glFramebufferTexture2D, as well as a bit about cubemaps
@@ -153,7 +159,10 @@ void cFrame_Buffer::Bind( const size_t _index, const cShared_ptr< cRender_Target
 void cFrame_Buffer::Bind( const cShared_ptr< cDepth_Target >& _depth_target, const bool _force )
 {
     if( m_depth_target_ == _depth_target && !_force )
+    {
+        gl::glNamedFramebufferRenderbuffer( m_frame_buffer_, m_depth_type_, gl::GL_RENDERBUFFER, m_depth_target_->m_buffer_ );
         return;
+    }
 
     if( m_depth_target_ )
         UnbindDepthTarget();
@@ -175,6 +184,11 @@ auto cFrame_Buffer::GetRenderTarget( const size_t _index ) const -> const cShare
     return m_render_targets_[ _index ];
 }
 
+auto cFrame_Buffer::GetDepthTarget() const -> const cShared_ptr<cDepth_Target>&
+{
+    return m_depth_target_;
+}
+
 void cFrame_Buffer::BindVertexBuffer( const size_t _binding, const cDynamic_Buffer* _buffer )
 {
     gl::GLuint  buffer_object;
@@ -183,14 +197,14 @@ void cFrame_Buffer::BindVertexBuffer( const size_t _binding, const cDynamic_Buff
     {
         auto& buffer = static_cast< cUnsafe_Buffer& >( _buffer->GetBuffer() );
         buffer.Upload( false );
-        buffer_object = buffer.get_buffer().buffer;
+        buffer_object = buffer.get_buffer().object;
         stride = static_cast< gl::GLsizei >( buffer.GetStride() );
     }
     else
     {
         SK_WARNING( sk::Severity::kGraphics, "A default vertex buffer is currently not supported. Do check if there's any alternative vertex buffer that can be used." )
         SK_BREAK;
-        buffer_object = cGLRenderer::get().GetFallbackVertexBuffer().get_buffer().buffer;
+        buffer_object = cGLRenderer::get().GetFallbackVertexBuffer().get_buffer().object;
     }
     
     if( m_bound_vertex_buffers_.size() < _binding )
@@ -224,7 +238,7 @@ void cFrame_Buffer::BindIndexBuffer( const cDynamic_Buffer& _buffer )
     // TODO: Validate the buffer.
     
     gl::glBindVertexArray( m_vertex_array_ );
-    gl::glBindBuffer( gl::GL_ELEMENT_ARRAY_BUFFER, buffer.get_buffer().buffer );
+    gl::glBindBuffer( gl::GL_ELEMENT_ARRAY_BUFFER, buffer.get_buffer().object );
     gl::glBindVertexArray( 0 );
     
     m_bound_index_buffer_ = &_buffer;
@@ -275,10 +289,18 @@ bool cFrame_Buffer::UseMaterial( const Assets::cMaterial& _material )
         
     for( auto& block : _material.GetBlocks() | std::views::values )
     {
+        auto& buffer = static_cast< const cUnsafe_Buffer& >( block.GetBuffer() );
         m_assigned_blocks_.emplace_back( block.m_binding_ );
         gl::glUniformBlockBinding( link.get_program(), static_cast< gl::GLuint >( block.m_binding_ ), static_cast< gl::GLuint >( block.m_binding_ ) );
-        gl::glBindBufferBase( gl::GL_UNIFORM_BUFFER, static_cast< gl::GLuint >( block.m_binding_ ), block.m_buffer_.get_buffer().buffer );
+        gl::glBindBufferBase( gl::GL_UNIFORM_BUFFER, static_cast< gl::GLuint >( block.m_binding_ ), buffer.get_buffer().object );
     }
+
+    auto& buffers = _material.GetBuffers();
+    for( const auto& [ buffer_info, buffer ] : buffers | std::views::values )
+    {
+        gl::glBindBufferBase( gl::GL_SHADER_STORAGE_BUFFER, buffer_info->binding, buffer ? static_cast< const cUnsafe_Buffer* >( buffer )->get_buffer().object : 0 );
+    }
+    m_bound_buffers_ = buffers.size();
 
     constexpr sVisitor visitor{
         []( const cShared_ptr< cRender_Target >& _render_target ) -> std::optional< std::pair< gl::GLenum, gl::GLuint > >
@@ -316,6 +338,7 @@ bool cFrame_Buffer::UseMaterial( const Assets::cMaterial& _material )
             gl::glBindTexture( gl::GL_TEXTURE_2D, 0 );
         gl::glUniform1i( sampler->location, static_cast< gl::GLint >( i ) );
     }
+    m_bound_textures_ = textures.size();
 
     gl::glEnable( gl::GL_DEPTH_TEST );
     gl::GLenum depth_method = gl::GL_NEVER;
@@ -348,7 +371,16 @@ void cFrame_Buffer::ResetMaterial()
     
     for( const auto& block : m_assigned_blocks_ )
         gl::glBindBufferBase( gl::GL_UNIFORM_BUFFER, static_cast< gl::GLuint >( block ), 0 );
-    
+
+    for( size_t i = 0; i < m_bound_textures_; i++ )
+    {
+        gl::glActiveTexture( gl::GL_TEXTURE0 + i );
+        gl::glBindTexture( gl::GL_TEXTURE_2D, 0 );
+    }
+
+    for( gl::GLuint i = 0; i < m_bound_buffers_; i++ )
+        gl::glBindBufferBase( gl::GL_SHADER_STORAGE_BUFFER, i, 0 );
+
     gl::glUseProgram( 0 );
     
     m_assigned_blocks_.clear();
@@ -417,7 +449,6 @@ void cFrame_Buffer::UnbindRenderTargetAt( const size_t _index )
 
 void cFrame_Buffer::UnbindDepthTarget()
 {
-    
     // If the render target is unbound return all render target scales to normal.
     for( auto& render_target : m_render_targets_ )
     {
@@ -435,11 +466,14 @@ void cFrame_Buffer::Resize( const cVector2u32& _new_resolution )
 
     const auto render_targets = m_render_targets_;
     for( const auto& render_target : render_targets )
-        render_target->Resize( _new_resolution );
+        render_target->Resize( _new_resolution, true );
     
     create( m_frame_buffer_ == 0 );
 
+    m_depth_target_->Resize( _new_resolution );
+
     // Rebind all targets.
+    Bind( m_depth_target_ );
     m_render_targets_.clear();
     m_render_targets_.resize( render_targets.size() );
     for( size_t i = 0; i < render_targets.size(); ++i )

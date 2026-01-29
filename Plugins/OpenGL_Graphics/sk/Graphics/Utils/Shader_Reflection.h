@@ -130,6 +130,7 @@ namespace sk::Graphics::Utils
         [[ nodiscard ]] auto& GetBlockVec  () const { return m_block_vec_; }
         [[ nodiscard ]] auto& GetUniforms  () const { return m_global_uniforms_; }
         [[ nodiscard ]] auto& GetSamplers  () const { return m_samplers_; }
+        [[ nodiscard ]] auto& GetBuffers   () const { return m_buffers_; }
         
     private:
         void init();

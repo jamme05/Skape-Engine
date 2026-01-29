@@ -1,12 +1,10 @@
 #version 330 core
 
-out float FragColor;
-
-
+layout ( location = 0 ) out float FragDepth_0;
 
 in vec4 WorldPos;
 
 void main()
 {
-    FragColor = gl_FragCoord.z;
+    FragDepth_0 = gl_FragCoord.z;
 }

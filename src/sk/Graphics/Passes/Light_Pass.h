@@ -35,7 +35,8 @@ namespace sk::Graphics::Passes
         static auto _getViewport( const Object::Components::cLightComponent& _light ) -> sViewport;
         static auto _getScissor( const Object::Components::cLightComponent& _light ) -> sScissor;
 
-        Rendering::cRender_Context*     m_shadow_context_ = nullptr;
+        cVector2u32                     m_atlas_size       = { 1024, 1024 };
+        Rendering::cRender_Context*     m_shadow_context_  = nullptr;
         cAsset_Ref< Assets::cMaterial > m_shadow_material_;
     };
 } // sk::Graphics::Passes::

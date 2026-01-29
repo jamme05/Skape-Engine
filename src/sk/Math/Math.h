@@ -259,5 +259,47 @@ namespace sk
 			return _a > _b ? _a : _b;
 		}
 
+		template< class Ty >
+		requires std::is_floating_point_v< Ty >
+		constexpr Ty ceil( Ty _val )
+		{
+			return static_cast< Ty >( std::ceil( _val ) );
+		}
+
+		template< class To, class From >
+		requires std::is_floating_point_v< From >
+		constexpr To ceilTo( From _val )
+		{
+			return static_cast< To >( std::ceil( _val ) );
+		}
+
+		template< class Ty >
+		requires std::is_floating_point_v< Ty >
+		constexpr Ty round( Ty _val )
+		{
+			return static_cast< Ty >( std::round( _val ) );
+		}
+
+		template< class To, class From >
+		requires std::is_floating_point_v< From >
+		constexpr To roundTo( From _val )
+		{
+			return static_cast< To >( std::round( _val ) );
+		}
+
+		template< class Ty >
+		requires std::is_floating_point_v< Ty >
+		constexpr Ty floor( Ty _val )
+		{
+			return static_cast< Ty >( std::floor( _val ) );
+		}
+
+		template< class To, class From >
+		requires std::is_floating_point_v< From >
+		constexpr To floorTo( From _val )
+		{
+			return static_cast< To >( std::floor( _val ) );
+		}
+
 	} // Math::
 } // sk::

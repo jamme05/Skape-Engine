@@ -111,10 +111,15 @@ namespace sk::Math
 		constexpr cVector& operator*=(const cVector& _v) { x *= _v.x; y *= _v.y; z *= _v.z; w *= _v.w; return *this; }
 		constexpr cVector& operator/=(const cVector& _v) { x += _v.x; y += _v.y; z /= _v.z; w /= _v.w; return *this; }
 
+		constexpr cVector& operator+=(const cVector< 3, T >& _v) { x += _v.x; y += _v.y; z += _v.z; return *this; }
+		constexpr cVector& operator-=(const cVector< 3, T >& _v) { x -= _v.x; y -= _v.y; z -= _v.z; return *this; }
+		constexpr cVector& operator*=(const cVector< 3, T >& _v) { x *= _v.x; y *= _v.y; z *= _v.z; return *this; }
+		constexpr cVector& operator/=(const cVector< 3, T >& _v) { x += _v.x; y += _v.y; z /= _v.z; return *this; }
+
 		template <typename T2>
-		constexpr cVector& operator*=(const T2 _t) const { x *= static_cast<T>(_t); y *= static_cast<T>(_t); z *= static_cast<T>(_t); w *= static_cast<T>(_t); return *this; }
+		constexpr cVector& operator*=(const T2 _t) { x *= static_cast<T>(_t); y *= static_cast<T>(_t); z *= static_cast<T>(_t); w *= static_cast<T>(_t); return *this; }
 		template <typename T2>
-		constexpr cVector& operator/=(const T2 _t) const { x /= static_cast<T>(_t); y /= static_cast<T>(_t); z /= static_cast<T>(_t); w *= static_cast<T>(_t); return *this; }
+		constexpr cVector& operator/=(const T2 _t) { x /= static_cast<T>(_t); y /= static_cast<T>(_t); z /= static_cast<T>(_t); w *= static_cast<T>(_t); return *this; }
 
 		constexpr bool operator==(const cVector& _v) { return (x == _v.x && y == _v.y && z == _v.z && w == _v.w); }
 		constexpr bool operator!=(const cVector& _v) { return !(*this == _v); }
@@ -137,6 +142,7 @@ namespace sk::Math
 		constexpr	cVector&			normalize(const T _l) { *this *= _l > T(0) ? (T(1) / _l) : T(0); return *this; }
 		// Returns a makes out vector into normalized version of self
 		inline		void                normalize( cVector& _out ) { return _out = cVector( *this ).normalize(length()); }
+		auto                            normalized() const { return cVector{ *this }.normalize(); }
 		// Returns the normalized direction from self towards position
 		inline		cVector4<T>		dir(const cVector4<T>& _p) { return (_p - *this).normalize(); }
 

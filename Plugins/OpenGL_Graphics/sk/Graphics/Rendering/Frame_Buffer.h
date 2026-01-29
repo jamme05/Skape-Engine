@@ -72,6 +72,7 @@ namespace sk::Graphics::Rendering
         void Bind( const cShared_ptr< cDepth_Target >& _depth_target, bool _force = false );
 
         auto GetRenderTarget( size_t _index ) const -> const cShared_ptr< cRender_Target >&;
+        auto GetDepthTarget() const -> const cShared_ptr< cDepth_Target >&;
 
         void UnbindRenderTargetAt( size_t _index );
         void UnbindDepthTarget();
@@ -104,6 +105,9 @@ namespace sk::Graphics::Rendering
         
         gl::GLuint m_vertex_array_    = 0;
         uint32_t   m_attribute_count_ = 0;
+        uint32_t   m_bound_textures_  = 0;
+        uint32_t   m_bound_buffers_   = 0;
+
         std::vector< size_t > m_assigned_blocks_;
         
         std::vector< const cDynamic_Buffer* > m_bound_vertex_buffers_;

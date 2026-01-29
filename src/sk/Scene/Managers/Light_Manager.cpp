@@ -4,6 +4,8 @@
 
 #include <sk/Scene/Components/LightComponent.h>
 
+#include "sk/Graphics/Rendering/Render_Target.h"
+
 namespace 
 {
     // From: https://en.cppreference.com/w/cpp/utility/variant/visit
@@ -94,19 +96,16 @@ void sk::Scene::cLight_Manager::register_light( light_ptr_t _light )
         {
             m_directional_light_indices_.emplace_back( _light->m_registered_index_ );
             _light->m_data_index_ = static_cast< uint32_t >( m_directional_buffer_.EmplaceBack( _data ) );
-            _light->m_data_ptr_   = &m_directional_buffer_.Back();
         },
         [ & ]( const Light::sPointLight& _data )
         {
             m_point_light_indices_.emplace_back( _light->m_registered_index_ );
             _light->m_data_index_ = static_cast< uint32_t >( m_point_buffer_.EmplaceBack( _data ) );
-            _light->m_data_ptr_   = &m_point_buffer_.Back();
         },
         [ & ]( const Light::sSpotLight& _data )
         {
             m_spot_light_indices_.emplace_back( _light->m_registered_index_ );
             _light->m_data_index_ = static_cast< uint32_t >( m_spot_buffer_.EmplaceBack( _data ) );
-            _light->m_data_ptr_   = &m_spot_buffer_.Back();
         }
     };
     
@@ -183,7 +182,6 @@ void sk::Scene::cLight_Manager::unregister_light( light_ptr_t _light )
     break;
     }
     
-    _light->m_data_ptr_   = Object::Components::cLightComponent::sInvalid{};
     _light->m_data_index_ = std::numeric_limits< uint32_t >::max();
     
     if( const auto index = _light->m_registered_index_; index != m_lights_.size() - 1 )
@@ -237,7 +235,6 @@ void sk::Scene::cLight_Manager::add_shadow_caster( const light_ptr_t& _light )
         .light_view_proj = _light->GetViewProjMatrix()
     } );
     
-    _light->m_shadow_info_ = &m_shadow_caster_buffer_.Back();
     m_preserve_atlas_ = false;
 }
 
@@ -254,7 +251,6 @@ void sk::Scene::cLight_Manager::remove_shadow_caster( const light_ptr_t& _light 
     m_shadow_casters_.pop_back();
     
     _light->m_shadow_data_index_ = std::numeric_limits< uint32_t >::max();
-    _light->m_shadow_info_       = nullptr;
 
     m_preserve_atlas_ = false;
 }
@@ -301,18 +297,24 @@ void sk::Scene::cLight_Manager::compute_atlas()
     // TODO: Figure out a better way to guess the atlas width.
     // Or find an algorithm that takes it into consideration.
     // Or decide a constant max width.
-    const auto largest_caster = sorted_sizes.front().first;
+    const auto largest_caster    = sorted_sizes.front().first;
     const auto atlas_width_guess = largest_caster * 2;
 
     std::vector< cVector2u32 > ladder;
 
     cVector2u32 pen{ 0, 0 };
+    m_computed_atlas_size_.x = atlas_width_guess;
+    m_computed_atlas_size_.y = 0;
 
     for( auto& [ resolution, caster_index ] : sorted_sizes )
     {
         auto& data = m_shadow_caster_buffer_[ caster_index ];
         data.atlas_start = { pen.x, pen.y };
         data.atlas_end   = { pen.x + resolution, pen.y + resolution };
+
+        m_computed_atlas_size_.y = std::max( m_computed_atlas_size_.y, pen.y + resolution );
+
+        pen.x += resolution;
 
         if( !ladder.empty() && ladder.back().y == pen.y + resolution )
             ladder.back().x = pen.x;
@@ -330,4 +332,6 @@ void sk::Scene::cLight_Manager::compute_atlas()
                 pen.x = 0;
         }
     }
+
+    m_computed_atlas_size_.y = sk::Math::ceilTo< uint32_t >( static_cast< float >( m_computed_atlas_size_.y ) / largest_caster ) * largest_caster;
 }

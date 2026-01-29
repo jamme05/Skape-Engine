@@ -12,11 +12,10 @@
 
 namespace sk::Graphics::Rendering
 {
-    cRender_Target::cRender_Target( const cVector2u32& _resolution, const eFormat _format, const cColor& _clear_color, const bool _auto_resize )
+    cRender_Target::cRender_Target( const cVector2u32& _resolution, const eFormat _format, const cColor& _clear_color )
     : m_clear_color_( _clear_color )
     , m_resolution_ ( _resolution )
     , m_format_     ( _format )
-    , m_auto_resize_( _auto_resize )
     {
         create();
     }
@@ -26,8 +25,14 @@ namespace sk::Graphics::Rendering
         return m_resolution_;
     }
 
-    void cRender_Target::Resize( const cVector2u32& _resolution )
+    void cRender_Target::Resize( cVector2u32 _resolution, const bool _use_relative )
     {
+        if( _use_relative )
+            _resolution = _resolution * m_rel_scale_;
+
+        if( m_resolution_ == _resolution )
+            return;
+
         destroy();
 
         m_resolution_ = _resolution;
@@ -72,8 +77,8 @@ namespace sk::Graphics::Rendering
         switch( m_format_ )
         {
         // R
-        case eFormat::kR16F:    format = gl::GL_R;    type = gl::GL_HALF_FLOAT;    m_type_ = eType::kHalfFloat; break;
-        case eFormat::kR32F:    format = gl::GL_R;    type = gl::GL_FLOAT;         m_type_ = eType::kFloat;     break;
+        case eFormat::kR16F:    format = gl::GL_RED;    type = gl::GL_HALF_FLOAT;    m_type_ = eType::kHalfFloat; break;
+        case eFormat::kR32F:    format = gl::GL_RED;    type = gl::GL_FLOAT;         m_type_ = eType::kFloat;     break;
         // RGB
         case eFormat::kRGB8:    format = gl::GL_RGB;  type = gl::GL_UNSIGNED_BYTE; m_type_ = eType::kByte;      break;
         case eFormat::kRGB16F:  format = gl::GL_RGB;  type = gl::GL_HALF_FLOAT;    m_type_ = eType::kHalfFloat; break;

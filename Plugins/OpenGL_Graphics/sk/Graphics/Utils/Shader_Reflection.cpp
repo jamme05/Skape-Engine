@@ -205,28 +205,34 @@ void cShader_Reflection::fetch_buffer_bindings()
     gl::GLint nr_of_buffers;
     gl::glGetProgramInterfaceiv( m_program_, gl::GL_SHADER_STORAGE_BLOCK, gl::GL_ACTIVE_RESOURCES, &nr_of_buffers );
 
-
-
     for( int_fast32_t i = 0; i < nr_of_buffers; i++ )
     {
         static constexpr std::array kProperties{
-            gl::GL_BUFFER_BINDING,
             gl::GL_BUFFER_DATA_SIZE
         };
+        char        name_buffer[ 128 ]{};
+        gl::GLsizei name_size;
 
-        struct sParams
-        {
-            gl::GLint binding;
-            gl::GLint data_size;
-        } params;
+        gl::glGetProgramResourceName( m_program_, gl::GL_SHADER_STORAGE_BLOCK, i,
+            sizeof( name_buffer ), &name_size, name_buffer );
+
+        gl::GLsizei minimum_buffer_size;
 
         gl::glGetProgramResourceiv(
             m_program_, gl::GL_SHADER_STORAGE_BLOCK, i,
             kProperties.size(), kProperties.data(),
-            kProperties.size(), nullptr, &params.binding
+            kProperties.size(), nullptr, &minimum_buffer_size
         );
+        gl::glShaderStorageBlockBinding( m_program_, i, i );
 
-        SK_BREAK;
+        sBuffer buffer;
+        buffer.name        = std::string_view( name_buffer, name_size );
+        buffer.pretty_name = make_pretty( buffer.name );
+        buffer.binding     = i;
+        buffer.size        = minimum_buffer_size;
+        buffer.flags       = name_buffer[ 0 ] == '_' ? kHidden : 0;
+
+        m_buffers_.emplace( buffer.name, std::move( buffer ) );
     }
 }
 

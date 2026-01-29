@@ -2,7 +2,12 @@
 
 #include "LightComponent.h"
 
+#include <sk/Math/Vector4.h>
+#include <sk/Scene/Managers/CameraManager.h>
 #include <sk/Scene/Managers/Light_Manager.h>
+
+#include "CameraComponent.h"
+
 
 using namespace sk::Object::Components;
 using namespace sk::Scene::Light;
@@ -18,12 +23,9 @@ namespace
 cLightComponent::cLightComponent( const settings_t& _settings )
 : m_settings_( _settings )
 {
-    SK_BREAK_IF( sk::Severity::kEngine, m_settings_.type != type_t::kDirectional,
-        "Warning: Only directional lights are supported at the moment" )
-
     init_data();
     fix_data();
-    
+
     Scene::cLight_Manager::get().register_light( get_weak().Cast< cLightComponent >() );
 }
 
@@ -34,10 +36,47 @@ cLightComponent::~cLightComponent()
 
 void cLightComponent::update()
 {
-    if( m_transform_->IsDirty() )
+    if( GetType() == eType::kDirectional || m_transform_->IsDirty() )
     {
         m_transform_->Update();
+
         update_data();
+    }
+}
+
+void cLightComponent::UpdateViewProjectionMatrix()
+{
+    switch( m_settings_.type )
+    {
+    case eType::kDirectional:
+    {
+        // TODO: Make the projection dynamic.
+        auto main_camera = Scene::cCameraManager::get().getMainCamera();
+
+        constexpr auto distance = 1000.0f;
+        constexpr auto projection = Math::Matrix4x4::Ortho< float >( 100.0f, 100.0f, 1.0f, distance );
+
+
+
+        auto sun_matrix = GetTransform().GetWorld();
+        sun_matrix.position  = main_camera->GetTransform().GetPosition();
+        sun_matrix.position += m_transform_->GetForwardDir() * ( -distance / 2.0f );
+        sun_matrix.forward  *= -1.0f;
+        m_view_proj_matrix_  = sun_matrix.inverse() * projection;
+    }
+    break;
+    case eType::kPoint:
+    {
+        SK_BREAK;
+    }
+    break;
+    case eType::kSpot:
+    {
+        const auto projection = Math::Matrix4x4::AspectPerspective< float >( 1.0f, m_settings_.outer_angle, 1.0f, 100.0f );
+        m_transform_->GetWorld().inversed( m_view_proj_matrix_ );
+        m_view_proj_matrix_ *= projection;
+    }
+    break;
     }
 }
 
@@ -83,7 +122,7 @@ auto cLightComponent::GetData() const -> const data_t&
 
 auto cLightComponent::GetShadowCasterData() const -> const caster_t*
 {
-    return m_shadow_info_;
+    return m_shadow_data_index_ != std::numeric_limits< uint32_t >::max() ? &Scene::cLight_Manager::get().m_shadow_caster_buffer_[ m_shadow_data_index_ ] : nullptr;
 }
 
 auto cLightComponent::GetViewProjMatrix() const -> const cMatrix4x4f&
@@ -93,33 +132,34 @@ auto cLightComponent::GetViewProjMatrix() const -> const cMatrix4x4f&
 
 void cLightComponent::fix_data()
 {
-    Scene::cLight_Manager::get().mark_buffer_dirty( GetType() );
+    auto& manager = Scene::cLight_Manager::get();
+    manager.mark_buffer_dirty( GetType() );
     
     switch( GetType() )
     {
     case eType::kDirectional:
     {
-        auto& data = m_data_ptr_.index() == 0
+        auto& data = m_data_index_ == std::numeric_limits< uint32_t >::max()
             ? std::get< sDirectionalLight >( m_data_ )
-            : *std::get< sDirectionalLight* >( m_data_ptr_ );
-            
+            : manager.m_directional_buffer_[ m_data_index_ ];
+
         fix_directional_data( data );
     }
     break;
     case eType::kPoint:
     {
-        auto& data = m_data_ptr_.index() == 0
+        auto& data = m_data_index_ == std::numeric_limits< uint32_t >::max()
             ? std::get< sPointLight >( m_data_ )
-            : *std::get< sPointLight* >( m_data_ptr_ );
+            : manager.m_point_buffer_[ m_data_index_ ];
 
         fix_point_data( data );
     }
     break;
     case eType::kSpot:
     {
-        auto& data = m_data_ptr_.index() == 0
+        auto& data = m_data_index_ == std::numeric_limits< uint32_t >::max()
             ? std::get< sSpotLight >( m_data_ )
-            : *std::get< sSpotLight* >( m_data_ptr_ );
+            : manager.m_spot_buffer_[ m_data_index_ ];
 
         fix_spot_data( data );
     }
@@ -130,23 +170,23 @@ void cLightComponent::fix_data()
 void cLightComponent::fix_directional_data( sDirectionalLight& _data ) const
 {
     _data.color     = m_settings_.color * m_settings_.intensity;
-    _data.direction = GetTransform().GetWorldFront();
+    _data.direction = GetTransform().GetForward();
     _data.shadow_cast_index = -1;
 }
 
 void cLightComponent::fix_point_data( sPointLight& _data ) const
 {
     _data.color    = m_settings_.color * m_settings_.intensity * m_settings_.color.a;
-    _data.position = GetTransform().GetWorldPosition();
+    _data.position = GetTransform().GetPosition();
     _data.radius   = m_settings_.radius;
-    _data.shadow_cast_index = -1;
+    std::ranges::fill( _data.shadow_cast_indices, -1 );
 }
 
 void cLightComponent::fix_spot_data( sSpotLight& _data ) const
 {
     _data.color       = m_settings_.color * m_settings_.intensity * m_settings_.color.a;
-    _data.position    = GetTransform().GetWorldPosition();
-    _data.direction   = GetTransform().GetWorldFront();
+    _data.position    = GetTransform().GetPosition();
+    _data.direction   = GetTransform().GetForward();
     _data.inner_angle = m_settings_.inner_angle;
     _data.outer_angle = m_settings_.outer_angle;
     _data.shadow_cast_index = -1;
@@ -158,29 +198,44 @@ void cLightComponent::update_data()
     
     auto& transform = GetTransform();
     auto& settings  = m_settings_;
-    sVisitor visitor{
-        [ &transform ]( sDirectionalLight& _light )
-        {
-            _light.direction = transform.GetWorldFront();
-        },
-        [ &transform ]( sPointLight& _light )
-        {
-            _light.position = transform.GetWorldPosition();
-        },
-        [ &transform, &settings ]( sSpotLight& _light )
-        {
-            _light.position  = transform.GetWorldPosition();
-            _light.direction = transform.GetWorldFront() * settings.radius;
-        }
-    };
-    
-    std::visit( visitor, m_data_ );
-    
+    switch( m_settings_.type )
+    {
+    case eType::kDirectional:
+    {
+        auto& data = m_data_index_ == std::numeric_limits< uint32_t >::max()
+            ? std::get< sDirectionalLight >( m_data_ )
+            : manager.m_directional_buffer_[ m_data_index_ ];
+
+        data.direction = transform.GetForward();
+    }
+    break;
+    case eType::kPoint:
+    {
+        auto& data = m_data_index_ == std::numeric_limits< uint32_t >::max()
+            ? std::get< sPointLight >( m_data_ )
+            : manager.m_point_buffer_[ m_data_index_ ];
+
+        data.position = GetTransform().GetPosition();
+    }
+    break;
+    case eType::kSpot:
+    {
+        auto& data = m_data_index_ == std::numeric_limits< uint32_t >::max()
+            ? std::get< sSpotLight >( m_data_ )
+            : manager.m_spot_buffer_[ m_data_index_ ];
+
+        data.position  = transform.GetPosition();
+        data.direction = transform.GetForward() * settings.radius;
+    }
+    break;
+    }
+
     manager.mark_buffer_dirty( GetType() );
     
-    if( m_shadow_info_ != nullptr )
+    if( m_shadow_data_index_ != std::numeric_limits< uint32_t >::max() )
     {
-        m_shadow_info_->light_view_proj = GetViewProjMatrix();
+        UpdateViewProjectionMatrix();
+        manager.m_shadow_caster_buffer_[ m_shadow_data_index_ ].light_view_proj = GetViewProjMatrix();
         manager.mark_shadow_buffer_dirty( true );
     }
 }

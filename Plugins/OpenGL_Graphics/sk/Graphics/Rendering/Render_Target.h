@@ -53,11 +53,11 @@ namespace sk::Graphics::Rendering
             kRGBA32F,
         };
 
-        cRender_Target( const cVector2u32& _resolution, eFormat _format, const cColor& _clear_color = Color::kBlack, bool _auto_resize = false );
+        cRender_Target( const cVector2u32& _resolution, eFormat _format, const cColor& _clear_color = Color::kBlack );
 
         [[ nodiscard ]]
         auto GetResolution() const -> cVector2u32;
-        void Resize( const cVector2u32& _resolution );
+        void Resize( cVector2u32 _resolution, bool _use_relative = false );
 
         [[ nodiscard ]]
         auto& GetClearColor() const { return m_clear_color_; }
@@ -80,7 +80,6 @@ namespace sk::Graphics::Rendering
         
         eFormat     m_format_;
         eType       m_type_;
-        bool        m_auto_resize_;
         gl::GLuint  m_texture_;
     };
 } // sk::Graphics::Rendering

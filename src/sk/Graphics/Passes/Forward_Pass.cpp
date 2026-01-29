@@ -48,8 +48,8 @@ void sk::Graphics::Passes::cForward_Pass::RenderWithCamera( const Object::Compon
     
     auto& frame_buffer  = m_window_->GetWindowContext().GetBack();
     
-    frame_buffer.Begin( _camera.getViewport(), _camera.getScissor() );
     frame_buffer.Clear( Rendering::eClear::kTargets | Rendering::eClear::kDepth );
+    frame_buffer.Begin( _camera.getViewport(), _camera.getScissor() );
 
     for( auto [ fst, lst ] = layer_manager.GetMeshesIn( _camera.GetLayers() ); fst != lst; ++fst )
     {

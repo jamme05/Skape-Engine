@@ -15,7 +15,7 @@ namespace sk
 	class cTransform
 	{
 	public:
-		cTransform( cVector3f _position = kZero, cVector3f _rotation = kZero, cVector3f _scale = kOne )
+		explicit cTransform( cVector3f _position = kZero, cVector3f _rotation = kZero, cVector3f _scale = kOne )
 		: m_position_( std::move( _position ) )
 		, m_rotation_( std::move( _rotation ) )
 		, m_scale_   ( std::move( _scale ) )
@@ -28,36 +28,43 @@ namespace sk
 
 		// You need to manually mark the transform as dirty when calling this.
 		[[ nodiscard ]]
-		auto& GetPosition()       { return m_position_; }
+		auto& GetLocalPosition()       { return m_position_; }
 		[[ nodiscard ]]
-		auto& GetPosition() const { return m_position_; }
-		void  SetPosition( const cVector3f& _position );
+		auto& GetLocalPosition() const { return m_position_; }
+		void  SetLocalPosition( const cVector3f& _position );
 
 		// You need to manually mark the transform as dirty when calling this.
 		[[ nodiscard ]]
-		auto& GetRotation()       { return m_rotation_; }
+		auto& GetLocalRotation()       { return m_rotation_; }
 		[[ nodiscard ]]
-		auto& GetRotation() const { return m_rotation_; }
-		void  SetRotation( const cVector3f& _rotation );
+		auto& GetLocalRotation() const { return m_rotation_; }
+		void  SetLocalRotation( const cVector3f& _rotation );
 
 		// You need to manually mark the transform as dirty when calling this.
 		[[ nodiscard ]]
-		auto& GetScale()       { return m_scale_; }
+		auto& GetLocalScale()       { return m_scale_; }
 		[[ nodiscard ]]
-		auto& GetScale() const { return m_scale_; }
-		void  SetScale( const cVector3f& _scale );
+		auto& GetLocalScale() const { return m_scale_; }
+		void  SetLocalScale( const cVector3f& _scale );
 
 		[[ nodiscard ]]
 		constexpr auto& GetWorld() const { return m_world_; }
 
 		[[ nodiscard ]]
-		auto& GetWorldFront() const { return reinterpret_cast< const cVector3f& >( m_world_.z ); }
+		auto& GetRight() const { return reinterpret_cast< const cVector3f& >( m_world_.x ); }
 		[[ nodiscard ]]
-		auto& GetWorldRight() const { return reinterpret_cast< const cVector3f& >( m_world_.x ); }
+		auto& GetUp   () const { return reinterpret_cast< const cVector3f& >( m_world_.y ); }
 		[[ nodiscard ]]
-		auto& GetWorldUp   () const { return reinterpret_cast< const cVector3f& >( m_world_.y ); }
+		auto& GetForward() const { return reinterpret_cast< const cVector3f& >( m_world_.z ); }
 		[[ nodiscard ]]
-		auto& GetWorldPosition() const { return reinterpret_cast< const cVector3f& >( m_world_.w ); }
+		auto& GetPosition() const { return reinterpret_cast< const cVector3f& >( m_world_.w ); }
+
+		[[ nodiscard ]]
+		auto GetRightDir() const -> const cVector3f&;
+		[[ nodiscard ]]
+		auto GetUpDir   () const -> const cVector3f&;
+		[[ nodiscard ]]
+		auto GetForwardDir() const -> const cVector3f&;
 
 		void SetParent( const cWeak_Ptr< cTransform >& _parent );
 
@@ -68,16 +75,23 @@ namespace sk
 
 		void Update( bool _force = false );
 
+		void CacheNormalized();
+
 	private:
 		cWeak_Ptr< cTransform > m_parent_ = nullptr;
 
 		cMatrix4x4f m_world_;
-		
+
+		cVector3f m_world_right_;
+		cVector3f m_world_up_;
+		cVector3f m_world_forward_;
+
 		cVector3f m_position_;
 		cVector3f m_rotation_;
 		cVector3f m_scale_;
 		
-		bool m_is_dirty_ = true;
+		bool m_is_dirty_       = true;
+		bool m_has_normalized_ = false;
 	};
 } // sk::
 

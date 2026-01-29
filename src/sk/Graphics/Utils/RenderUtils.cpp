@@ -13,6 +13,8 @@
 #include <sk/Graphics/Utils/Shader_Reflection.h>
 #include <sk/Scene/Components/CameraComponent.h>
 
+#include "sk/Scene/Managers/Light_Manager.h"
+
 using namespace sk::Graphics;
 
 namespace
@@ -24,13 +26,19 @@ namespace
     // Blocks
     constexpr cStringID kObjectBlock = "_Object";
     constexpr cStringID kCameraBlock = "_Camera";
-    
+    constexpr cStringID kLightBlock  = "_LightSettings";
+
     // Object Uniforms
     constexpr cStringID kWorldUniform        = "world";
     constexpr cStringID kInverseWorldUniform = "inverse_world";
     
     // Camera Uniforms
     constexpr cStringID kViewProjUniform = "view_proj";
+
+    // Structured Buffers
+    constexpr cStringID kDirectionalLightBuffer = "_directionalLight";
+    constexpr cStringID kPointLightBuffer       = "_pointLight";
+    constexpr cStringID kSpotLightBuffer        = "_spotLight";
 } // ::
 
 void Utils::InitUtils()
@@ -52,12 +60,23 @@ bool Utils::RenderMesh( const cMatrix4x4f &_camera_view_proj, Rendering::cFrame_
     
     const auto object_block = _material.GetBlock( kObjectBlock );
     const auto camera_block = _material.GetBlock( kCameraBlock );
+    const auto light_block  = _material.TryGetBlock( kLightBlock );
     
     SK_BREAK_RET_IF( sk::Severity::kGraphics,
         object_block == nullptr, "Currently you NEED a block named \"Object\" for this utility function to work.", false )
     
     SK_BREAK_RET_IF( sk::Severity::kGraphics,
         camera_block == nullptr, "Currently you NEED a block named \"Camera\" for this utility function to work.", false )
+
+    if( light_block != nullptr )
+    {
+        const auto& light_manager = Scene::cLight_Manager::get();
+
+        light_block->SetOverrideBuffer( light_manager.GetLightBuffer().GetBuffer() );
+        _material.SetBuffer( kDirectionalLightBuffer, light_manager.GetDirectionalBuffer() );
+        _material.SetBuffer( kPointLightBuffer,       light_manager.GetPointBuffer      () );
+        _material.SetBuffer( kSpotLightBuffer,        light_manager.GetSpotBuffer       () );
+    }
     
     _mesh.GetMeta()->LockAsset();
     _material.GetMeta()->LockAsset();
@@ -93,7 +112,10 @@ bool Utils::RenderMesh( const cMatrix4x4f &_camera_view_proj, Rendering::cFrame_
     _frame_buffer.UnbindIndexBuffer();
     _frame_buffer.UnbindVertexBuffers();
     _frame_buffer.ResetMaterial();
-    
+
+    if( light_block != nullptr )
+        light_block->SetOverrideBuffer( nullptr );
+
     _mesh.GetMeta()->UnlockAsset();
     _material.GetMeta()->UnlockAsset();
     

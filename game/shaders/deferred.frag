@@ -1,4 +1,4 @@
-#version 440 core
+#version 450 core
 
 out vec4 FragColor;
 
@@ -44,7 +44,7 @@ struct ShadowCaster
     mat4  light_view_proj;
 };
 
-layout( std140 ) uniform lightSettings
+layout( std140 ) uniform _LightSettings
 {
     uint directional_light_count;
     uint point_light_count;
@@ -62,20 +62,26 @@ layout( std140 ) uniform lightSettings
 
 };
 
-layout( std430 ) buffer directionalLights
+layout( std430 ) buffer _directionalLights
 {
     DirectionalLight directional_lights[];
 };
-layout( std430 ) buffer pointLights
+layout( std430 ) buffer _pointLights
 {
-    DirectionalLight point_lights[];
+    PointLight point_lights[];
 };
-layout( std430 ) buffer spotLights
+layout( std430 ) buffer _spotLights
 {
-    DirectionalLight spot_lights[];
+    SpotLight spot_lights[];
+};
+layout( std430 ) buffer _shadowCasters
+{
+    ShadowCaster shadow_casters[];
 };
 
 void main()
 {
-    FragColor = vec4( texture( Albedo, ScreenPos ).xyz, 1 );
+    vec4 color = texture( Albedo, ScreenPos ).rgba;
+    color = color + vec4( directional_lights[ 0 ].color.xyz + point_lights[ 0 ].color + spot_lights[ 0 ].color, 0 );
+    FragColor = vec4( color.xyz, 1 ) * color.a;
 }
