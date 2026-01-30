@@ -18,11 +18,11 @@ namespace sk::Graphics::Utils
         cShader_Link() = default;
         cShader_Link( const cShared_ptr< cAsset_Meta >& _vertex_shader, const cShared_ptr< cAsset_Meta >& _fragment_shader );
         cShader_Link( const cShader_Link& _other );
-        cShader_Link( cShader_Link&& ) noexcept = default;
-        ~cShader_Link() = default;
+        cShader_Link( cShader_Link&& _other ) noexcept;
+        ~cShader_Link();
         
-        cShader_Link& operator=( const cShader_Link& ) = default;
-        cShader_Link& operator=( cShader_Link&& ) = default;
+        cShader_Link& operator=( const cShader_Link& _other );
+        cShader_Link& operator=( cShader_Link&& _other ) noexcept;
         
         bool HasUpdated() const;
         bool IsValid() const;

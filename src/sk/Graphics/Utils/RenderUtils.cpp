@@ -8,12 +8,15 @@
 
 #include <sk/Assets/Material.h>
 #include <sk/Assets/Mesh.h>
+#include <sk/Assets/Management/Asset_Manager.h>
 #include <sk/Graphics/Renderer.h>
 #include <sk/Graphics/Rendering/Frame_Buffer.h>
 #include <sk/Graphics/Utils/Shader_Reflection.h>
-#include <sk/Scene/Components/CameraComponent.h>
+#include <sk/Scene/Managers/Light_Manager.h>
 
-#include "sk/Scene/Managers/Light_Manager.h"
+#if __has_include(<sk/Graphics/Utils/RenderUtils_Ex.h>)
+#include <sk/Graphics/Utils/RenderUtils_Ex.h>
+#endif // __has_include(<sk/Graphics/Utils/RenderUtils_Ex.h>)
 
 using namespace sk::Graphics;
 
@@ -22,7 +25,7 @@ namespace
     cRenderer *renderer;
     
     using namespace sk;
-    
+
     // Blocks
     constexpr cStringID kObjectBlock = "_Object";
     constexpr cStringID kCameraBlock = "_Camera";
@@ -44,10 +47,18 @@ namespace
 void Utils::InitUtils()
 {
     renderer = cRenderer::getPtr();
+
+#ifdef SKAPE_RENDER_UTILS_INIT_EX
+    SKAPE_RENDER_UTILS_INIT_EX;
+#endif // SKAPE_RENDER_UTILS_INIT_EX
 }
 
 void Utils::ShutdownUtils()
 {
+#ifdef SKAPE_RENDER_UTILS_SHUTDOWN_EX
+    SKAPE_RENDER_UTILS_SHUTDOWN_EX;
+#endif // SKAPE_RENDER_UTILS_INIT_EX
+
     renderer = nullptr;
 }
 

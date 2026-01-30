@@ -80,7 +80,7 @@ namespace sk::Assets
         cTexture( const std::string& _name, const void* _buffer, size_t _size );
 
         // Internal usage only
-        auto& get_texture() const { return m_buffer_; }
+        auto& get_texture_object() const { return m_buffer_; }
 
     sk_private:
         uint8_t         m_channels_;

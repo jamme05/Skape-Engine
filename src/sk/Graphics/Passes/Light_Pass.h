@@ -28,6 +28,8 @@ namespace sk::Graphics::Passes
         bool Begin  () override;
         void End    () override;
         void Destroy() override;
+
+        auto GetShadowAtlas( size_t _index ) const -> const Rendering::cRender_Target&;
         
     private:
         void _shadowPass( const Object::Components::cLightComponent& _light );
@@ -35,7 +37,10 @@ namespace sk::Graphics::Passes
         static auto _getViewport( const Object::Components::cLightComponent& _light ) -> sViewport;
         static auto _getScissor( const Object::Components::cLightComponent& _light ) -> sScissor;
 
-        cVector2u32                     m_atlas_size       = { 1024, 1024 };
+        using rt_vec_t = std::vector< cShared_ptr< Rendering::cRender_Target > >;
+
+        rt_vec_t                        m_atlases_         = {};
+        cVector2u32                     m_atlas_size_      = { 1024, 1024 };
         Rendering::cRender_Context*     m_shadow_context_  = nullptr;
         cAsset_Ref< Assets::cMaterial > m_shadow_material_;
     };

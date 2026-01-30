@@ -62,7 +62,7 @@ namespace sk::Math
 		// Construct using a Vector2, Z and W
 		explicit constexpr cVector( const cVector< 2, T >& _v, const T _z, const T _w ) :x( _v.x ), y( _v.y ), z( _z ), w( _w ){ }
 		// Constructs using only a Vector3 (W becomes 1)
-		constexpr cVector( cVector< 3, T > _v ) : x( _v.x ), y( _v.y ), z( _v.z ), w( T( 1 ) ){ }
+		constexpr cVector( const cVector< 3, T >& _v ) : x( _v.x ), y( _v.y ), z( _v.z ), w( T( 1 ) ){ }
 		// Construct using a Vector3 and W
 		explicit constexpr cVector( const cVector< 3, T >& _v, const T _w ) : x( _v.x ), y( _v.y ), z( _v.z ), w( _w ){ }
 

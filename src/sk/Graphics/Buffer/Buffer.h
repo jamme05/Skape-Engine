@@ -23,6 +23,8 @@ namespace sk::Graphics
         static constexpr auto kTypeSize = sizeof( Ty );
         using value_type = Ty;
 
+        // Has to be overwritten using a moved Buffer if you're using this.
+        cBuffer();
         explicit cBuffer( const std::string& _name, bool _is_static = false );
         cBuffer( const std::string& _name, size_t _size, bool _is_static = false );
         cBuffer( const std::string& _name, std::initializer_list< Ty > _values, bool _is_static = false );
@@ -86,7 +88,12 @@ namespace sk::Graphics
         size_t         m_size_;
         cUnsafe_Buffer m_buffer_;
     };
-    
+
+    template< class Ty, Buffer::eType Type >
+    cBuffer< Ty, Type >::cBuffer()
+    : m_size_( 0 )
+    {}
+
     // TODO: Is normalized support.
     template< class Ty, Buffer::eType Type >
     cBuffer< Ty, Type >::cBuffer( const std::string& _name, const bool _is_static )
@@ -113,12 +120,13 @@ namespace sk::Graphics
     requires std::is_same_v< Ty, std::iter_value_t< Iter > >
     cBuffer< Ty, Type >::cBuffer( const std::string& _name, Iter _begin, Iter _end, bool _is_static )
     {
-        const auto dist = std::distance( _begin, _end );
-        m_buffer_ = { _name, dist, Type, _is_static };
-        m_size_ = dist;
+        const auto dist = static_cast< size_t >( std::distance( _begin, _end ) );
+        m_buffer_ = { _name, 0, sizeof( Ty ), Type, false, _is_static };
+        m_size_   = dist;
 
         std::vector< Ty > copy( _begin, _end );
         m_buffer_.Update( copy.data(), dist * kTypeSize );
+        m_buffer_.Upload( true );
     } // cBuffer
 
     template< class Ty, Buffer::eType Type >

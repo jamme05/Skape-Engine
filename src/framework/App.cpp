@@ -29,6 +29,8 @@
 #include <print>
 #include <random>
 
+#include "sk/Graphics/Utils/RenderUtils.h"
+
 cApp* cApp::m_running_instance_ = nullptr;
 
 cApp::cApp()
@@ -43,6 +45,7 @@ cApp::cApp()
 	m_main_window_->PushContext();
 	
 	sk::Graphics::InitRenderer();
+	sk::Graphics::Utils::InitUtils();
 	m_main_window_->Init();
 	
 	m_windows.emplace( m_main_window_ );
@@ -104,7 +107,7 @@ void cApp::create()
 
 	m_scene = sk::make_shared< sk::cScene >();
 	m_scene->create_object< sk::Object::cCameraFlight >( "Camera Free Flight" )->setAsMain();
-	
+
 	auto mat1 = asset_m.CreateAsset< sk::Assets::cMaterial >( "Material Test",
 		sk::Graphics::Utils::cShader_Link{ shader_vert, shader_frag } );
 	mat1.second->SetTexture( "mainTexture", christopher_t );
@@ -273,6 +276,7 @@ void cApp::destroy()
 	// I don't really like the choice of having the renderer shut down after the asset system,
 	// with the asset system being started before the renderer.
 	// TODO: Add some RegisterRendererListeners function or something in the future.
+	sk::Graphics::Utils::ShutdownUtils();
 	sk::Graphics::cRenderer::shutdown();
 	sk::cStringIDManager::shutdown();
 

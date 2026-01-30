@@ -67,6 +67,12 @@ namespace sk::Math
 		constexpr cMatrix& operator-=(const cMatrix& _m){ x -= _m.x; y -= _m.y; z -= _m.z; w -= _m.w; return *this; }
 		constexpr cMatrix& operator*=(const cMatrix& _m){ x = (_m.x * x.x) + (_m.y * x.y) + (_m.z * x.z) + (_m.w * x.w); y = (_m.x * y.x) + (_m.y * y.y) + (_m.z * y.z) + (_m.w * y.w); z = (_m.x * z.x) + (_m.y * z.y) + (_m.z * z.z) + (_m.w * z.w); w = (_m.x * w.x) + (_m.y * w.y) + (_m.z * w.z) + (_m.w * w.w); return *this; }
 
+		constexpr void Transform( cVector< 4, T >& _point ) const;
+		constexpr void Transform( cVector< 3, T >& _point ) const;
+
+		constexpr void TransformVec( cVector< 4, T >& _vec ) const;
+		constexpr void TransformVec( cVector< 3, T >& _vec ) const;
+
 		constexpr auto& transpose( void ) const
 		{
 			transposed( *this );
@@ -346,6 +352,40 @@ namespace sk::Math
 			_mm_storeh_pi( out_m + 7, minor3 );
 		} // inverse_fast
 	};
+
+	template< class T >
+	constexpr void cMatrix< 4, 4, T >::Transform( cVector< 4, T >& _point ) const
+	{
+		_point.x = ( _point.x * x.x ) + ( _point.y * y.x ) + ( _point.z * z.x ) + ( _point.w * w.x );
+		_point.y = ( _point.x * x.y ) + ( _point.y * y.y ) + ( _point.z * z.y ) + ( _point.w * w.y );
+		_point.z = ( _point.x * x.z ) + ( _point.y * y.z ) + ( _point.z * z.z ) + ( _point.w * w.z );
+		_point.w = ( _point.x * x.w ) + ( _point.y * y.w ) + ( _point.z * z.w ) + ( _point.w * w.w );
+	}
+
+	template< class T >
+	constexpr void cMatrix< 4, 4, T >::Transform( cVector< 3, T >& _point ) const
+	{
+		_point.x = ( _point.x * x.x ) + ( _point.y * y.x ) + ( _point.z * z.x ) + w.x;
+		_point.y = ( _point.x * x.y ) + ( _point.y * y.y ) + ( _point.z * z.y ) + w.y;
+		_point.z = ( _point.x * x.z ) + ( _point.y * y.z ) + ( _point.z * z.z ) + w.z;
+	}
+
+	template< class T >
+	constexpr void cMatrix< 4, 4, T >::TransformVec( cVector< 4, T >& _vec ) const
+	{
+		_vec.x = ( _vec.x * x.x ) + ( _vec.y * y.x ) + ( _vec.z * z.x );
+		_vec.y = ( _vec.x * x.y ) + ( _vec.y * y.y ) + ( _vec.z * z.y );
+		_vec.z = ( _vec.x * x.z ) + ( _vec.y * y.z ) + ( _vec.z * z.z );
+		_vec.w = ( _vec.x * x.w ) + ( _vec.y * y.w ) + ( _vec.z * z.w );
+	}
+
+	template< class T >
+	constexpr void cMatrix< 4, 4, T >::TransformVec( cVector< 3, T >& _vec ) const
+	{
+		_vec.x = ( _vec.x * x.x ) + ( _vec.y * y.x ) + ( _vec.z * z.x );
+		_vec.y = ( _vec.x * x.y ) + ( _vec.y * y.y ) + ( _vec.z * z.y );
+		_vec.z = ( _vec.x * x.z ) + ( _vec.y * y.z ) + ( _vec.z * z.z );
+	}
 
 	namespace Matrix4x4
 	{

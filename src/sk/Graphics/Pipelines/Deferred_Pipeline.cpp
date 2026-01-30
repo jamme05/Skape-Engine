@@ -31,7 +31,7 @@ void cDeferred_Pipeline::Initialize()
     );
     m_screen_material_ = material_meta;
 
-    AddPass< Passes::cLight_Pass >();
+    m_light_pass = &AddPass< Passes::cLight_Pass >();
 
     AddPass< Passes::cScreen_Pass >( m_window_, material_meta );
 

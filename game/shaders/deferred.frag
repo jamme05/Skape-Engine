@@ -79,6 +79,10 @@ layout( std430 ) buffer _shadowCasters
     ShadowCaster shadow_casters[];
 };
 
+uniform sampler2D shadowAtlas_0;
+uniform sampler2D shadowAtlas_1;
+uniform sampler2D shadowAtlas_2;
+
 void main()
 {
     vec4 color = texture( Albedo, ScreenPos ).rgba;

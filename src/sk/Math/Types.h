@@ -40,7 +40,7 @@ struct sk::get_type_info< sk::Math::cMatrix< R, C, Ty > > : sk::template_type_in
 	constexpr static auto kName         = str::concat< "sk::Math::cMatrix<", to_string( R ), ",", to_string( C ), ",", kPartTypeName, ">" >();
 	constexpr static auto kPrettyName   = str::concat< "Matrix ", to_string( R ), "x", to_string( C ), " ( ", kPartTypeName, " )" >();
 	constexpr static auto kInfo = sType_Info{
-		.type = sType_Info::eType::kStandard, .hash{ kPrettyName.get() }, .size = sizeof( sk::cMatrix4x4d ),
+		.type = sType_Info::eType::kStandard, .hash{ kPrettyName.get() }, .size = sizeof( Math::cMatrix< R, C, Ty > ),
 		.name = kPrettyName.get(), .raw_name = kName.get()
 	};
 	constexpr static bool kValid = true;

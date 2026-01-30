@@ -35,6 +35,49 @@ sk::Graphics::Utils::cShader_Link::cShader_Link( const cShader_Link& _other )
     Complete();
 }
 
+sk::Graphics::Utils::cShader_Link::cShader_Link( cShader_Link&& _other ) noexcept
+{
+    m_vertex_shader_   = std::move( _other.m_vertex_shader_ );
+    m_fragment_shader_ = std::move( _other.m_fragment_shader_ );
+
+    m_program_ = _other.m_program_;
+    _other.m_program_ = 0;
+}
+
+sk::Graphics::Utils::cShader_Link::~cShader_Link()
+{
+    gl::glDeleteProgram( m_program_ );
+}
+
+sk::Graphics::Utils::cShader_Link& sk::Graphics::Utils::cShader_Link::operator=( const cShader_Link& _other )
+{
+    if( m_program_ != 0 )
+        gl::glDeleteProgram( m_program_ );
+
+    m_program_ = gl::glCreateProgram();
+
+    m_vertex_shader_   = _other.m_vertex_shader_;
+    m_fragment_shader_ = _other.m_fragment_shader_;
+
+    Complete();
+
+    return *this;
+}
+
+sk::Graphics::Utils::cShader_Link& sk::Graphics::Utils::cShader_Link::operator=( cShader_Link&& _other ) noexcept
+{
+    if( m_program_ != 0 )
+        gl::glDeleteProgram( m_program_ );
+
+    m_vertex_shader_   = std::move( _other.m_vertex_shader_ );
+    m_fragment_shader_ = std::move( _other.m_fragment_shader_ );
+
+    m_program_ = _other.m_program_;
+    _other.m_program_ = 0;
+
+    return *this;
+}
+
 bool sk::Graphics::Utils::cShader_Link::HasUpdated() const
 {
     // TODO: Make this function not const

@@ -48,6 +48,9 @@ namespace sk::Assets
         // TODO: Create a shader group class to replace the shaders themselves being linked.
         // This will reduce the confusion and increased number of cases the current system creates.
 
+        // INTERNAL
+        auto get_shader_object() const { return m_shader_; }
+
     private:
         cShared_ptr< reflection_t > m_reflection_;
         

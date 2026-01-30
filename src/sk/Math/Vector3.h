@@ -82,6 +82,12 @@ namespace sk::Math
 		constexpr cVector operator*(const T&       _t) const { return { x * _t,   y * _t,   z * _t   }; }
 
 		template <typename T2> cVector operator*(const T2 _t) const { return { static_cast<T>(x * _t), static_cast<T>(y * _t), static_cast<T>(z * _t) }; }
+		template <typename T2> cVector operator/(const T2 _t) const { return { static_cast<T>(x / _t), static_cast<T>(y / _t), static_cast<T>(z / _t) }; }
+
+		template <typename T2> requires std::is_integral_v< T2 >
+		cVector operator*(const T2 _t) const { return { x * _t, y * _t, z * _t }; }
+		template <typename T2> requires std::is_integral_v< T2 >
+		cVector operator/(const T2 _t) const { return { x / _t, y / _t, z / _t }; }
 
 		constexpr cVector& operator++() { ++x; ++y; ++z; return *this; }
 		constexpr cVector& operator--() { --x; --y; --z; return *this; }
@@ -94,8 +100,7 @@ namespace sk::Math
 
 		template <typename T2> cVector& operator*=(const T2 _t) const { x *= static_cast<T>(_t); y *= static_cast<T>(_t); z *= static_cast<T>(_t); return *this; }
 
-		constexpr bool operator==(const cVector& _v) { return (x == _v.x && y == _v.y && z == _v.z); }
-		constexpr bool operator!=(const cVector& _v) { return !(*this == _v); }
+		constexpr bool operator==(const cVector& _v) const { return x == _v.x && y == _v.y && z == _v.z; }
 		constexpr T& operator[](const size_t _i) { return (&x)[_i]; }
 		constexpr const T& operator[](const size_t _i) const { return (&x)[_i]; }
 

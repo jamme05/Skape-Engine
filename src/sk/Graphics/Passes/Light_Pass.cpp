@@ -18,14 +18,22 @@ using namespace sk::Graphics::Passes;
 
 void cLight_Pass::Init()
 {
+    constexpr auto atlas_initial_size = 1024;
     m_shadow_context_ = SK_SINGLE( Rendering::cRender_Context, 2, 1 );
     for( const auto& context : *m_shadow_context_ )
     {
         context->Bind( 0, sk::make_shared< Rendering::cRender_Target >(
-            cVector2u32{ 1024 }, Rendering::cRender_Target::eFormat::kR16F ) );
+            cVector2u32{ atlas_initial_size }, Rendering::cRender_Target::eFormat::kR16F ) );
 
         context->Bind( sk::make_shared< Rendering::cDepth_Target >(
-            cVector2u32{ 1024 }, Rendering::cDepth_Target::eFormat::kD16F ) );
+            cVector2u32{ atlas_initial_size }, Rendering::cDepth_Target::eFormat::kD16F ) );
+    }
+
+    m_atlases_.resize( 3 );
+    for( uint_fast32_t i = 1; i < m_atlases_.size(); i++ )
+    {
+        m_atlases_[ i ] = sk::make_shared< Rendering::cRender_Target >(
+            cVector2u32{ atlas_initial_size / Math::pow2< uint32_t >( i ) }, Rendering::cRender_Target::eFormat::kR16F );
     }
 
     auto& asset_manager = cAsset_Manager::get();
@@ -51,7 +59,16 @@ bool cLight_Pass::Begin()
     frame_buffer.Clear( Rendering::eClear::kAll );
 
     if( const auto& depth_target = *frame_buffer.GetDepthTarget(); depth_target.GetResolution() != manager.GetAtlasSize() )
-        frame_buffer.Resize( manager.GetAtlasSize() );
+    {
+        const auto new_resolution = manager.GetAtlasSize();
+        frame_buffer.Resize( new_resolution );
+
+        for( uint_fast32_t i = 1; i < m_atlases_.size(); i++ )
+        {
+            auto& target = *m_atlases_[ i ];
+            target.Resize( new_resolution / Math::pow2( i ) );
+        }
+    }
 
     for( auto& shadow_caster : manager.GetShadowCasters() )
     {
@@ -66,13 +83,20 @@ bool cLight_Pass::Begin()
 
 void cLight_Pass::End()
 {
-    
+    auto& front_target = m_atlases_[ 0 ] = m_shadow_context_->GetFront().GetRenderTarget( 0 );
+    Utils::CopyRenderTarget( *front_target, *m_atlases_[ 1 ] );
+    Utils::CopyRenderTarget( *front_target, *m_atlases_[ 2 ] );
 }
 
 void cLight_Pass::Destroy()
 {
     SK_FREE( m_shadow_context_ );
     m_shadow_context_ = nullptr;
+}
+
+auto cLight_Pass::GetShadowAtlas( const size_t _index ) const -> const Rendering::cRender_Target&
+{
+    return *m_atlases_[ _index ];
 }
 
 void cLight_Pass::_shadowPass( const Object::Components::cLightComponent& _light )

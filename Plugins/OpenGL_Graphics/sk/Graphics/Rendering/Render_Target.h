@@ -63,10 +63,10 @@ namespace sk::Graphics::Rendering
         auto& GetClearColor() const { return m_clear_color_; }
         void  SetClearColor( const cColor& _clear_color );
 
-    private:
         // Internal use only.
         [[ nodiscard ]]
-        auto get_texture() const { return m_texture_; }
+        auto get_texture_object() const { return m_texture_; }
+    private:
 
         // YOU NEED TO BIND A FRAME BUFFER BEFORE CALLING THIS!!!!
         void clear( gl::GLint _index );
