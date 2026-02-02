@@ -43,6 +43,12 @@ namespace sk::Assets
             const auto size = static_cast< const gl::GLsizei >( _size );
             gl::glShaderSource( m_shader_, 1, &str, &size );
             gl::glCompileShader( m_shader_ );
+
+            char buffer[ 512 ];
+            gl::GLsizei length;
+            gl::glGetShaderInfoLog( m_shader_, 512, &length, buffer );
+            SK_BREAK_IF( sk::Severity::kGraphics, length != 0,
+                TEXT( "Shader Info: {}", std::string_view{ buffer, static_cast< size_t >( length ) } ) )
         } );
         
     } // cShader

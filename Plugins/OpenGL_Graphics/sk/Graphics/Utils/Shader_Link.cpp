@@ -39,14 +39,18 @@ sk::Graphics::Utils::cShader_Link::cShader_Link( cShader_Link&& _other ) noexcep
 {
     m_vertex_shader_   = std::move( _other.m_vertex_shader_ );
     m_fragment_shader_ = std::move( _other.m_fragment_shader_ );
+    m_reflection_      = std::move( _other.m_reflection_ );
 
-    m_program_ = _other.m_program_;
-    _other.m_program_ = 0;
+    m_program_   = _other.m_program_;
+    m_is_linked_ = _other.m_is_linked_;
+    _other.m_program_   = 0;
+    _other.m_is_linked_ = false;
 }
 
 sk::Graphics::Utils::cShader_Link::~cShader_Link()
 {
-    gl::glDeleteProgram( m_program_ );
+    if( m_program_ != 0 )
+        gl::glDeleteProgram( m_program_ );
 }
 
 sk::Graphics::Utils::cShader_Link& sk::Graphics::Utils::cShader_Link::operator=( const cShader_Link& _other )
@@ -71,9 +75,12 @@ sk::Graphics::Utils::cShader_Link& sk::Graphics::Utils::cShader_Link::operator=(
 
     m_vertex_shader_   = std::move( _other.m_vertex_shader_ );
     m_fragment_shader_ = std::move( _other.m_fragment_shader_ );
+    m_reflection_      = std::move( _other.m_reflection_ );
 
-    m_program_ = _other.m_program_;
-    _other.m_program_ = 0;
+    m_program_   = _other.m_program_;
+    m_is_linked_ = _other.m_is_linked_;
+    _other.m_program_   = 0;
+    _other.m_is_linked_ = false;
 
     return *this;
 }
@@ -103,7 +110,7 @@ void sk::Graphics::Utils::cShader_Link::Complete()
     
     link_shaders();
     
-    m_reflection_  = sk::make_shared< cShader_Reflection >( m_program_ );
+    m_reflection_ = sk::make_shared< cShader_Reflection >( m_program_ );
 }
 
 auto sk::Graphics::Utils::cShader_Link::GetVertexShader() const -> const Assets::cShader&
@@ -143,6 +150,13 @@ void sk::Graphics::Utils::cShader_Link::link_shaders()
     gl::glAttachShader( m_program_, m_vertex_shader_->m_shader_ );
     gl::glAttachShader( m_program_, m_fragment_shader_->m_shader_ );
     gl::glLinkProgram( m_program_ );
+
+    char buffer[ 512 ];
+    gl::GLsizei length;
+    gl::glGetProgramInfoLog( m_program_, 512, &length, buffer );
+    SK_BREAK_IF( sk::Severity::kGraphics, length != 0,
+        TEXT( "Program Info: {}", std::string_view{ buffer, static_cast< size_t >( length ) } ) )
+
     
     m_has_updated_ = true;
     m_is_linked_   = true;

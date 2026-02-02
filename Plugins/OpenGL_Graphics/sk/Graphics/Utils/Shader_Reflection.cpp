@@ -177,8 +177,7 @@ void cShader_Reflection::fetch_blocks()
 
         std::vector< gl::GLint > offsets( nr_of_uniforms );
 
-        // The reinterpret cast SHOULD be fine as none of the indices SHOULD be negative
-        gl::glGetActiveUniformsiv( m_program_, 1, reinterpret_cast< const gl::GLuint* >( indices.data() ), gl::GL_UNIFORM_OFFSET, offsets.data() );
+        gl::glGetActiveUniformsiv( m_program_, nr_of_uniforms, reinterpret_cast< const gl::GLuint* >( indices.data() ), gl::GL_UNIFORM_OFFSET, offsets.data() );
         
         uint32_t block_size = 0;
         for( int_fast32_t u = 0; u < nr_of_uniforms; u++ )

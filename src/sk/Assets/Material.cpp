@@ -61,12 +61,7 @@ cMaterial::cMaterial( Graphics::Utils::cShader_Link&& _shader_link )
 {
     SK_ERR_IFN( m_shader_link_.IsValid(),
         "Error: Invalid shader link provided." )
-    
-    // TODO: Get rid of the wait.
-    // TODO: Have some way to either update the material during the runtime and check the status
-    // Or some event on when the link has refreshed.
-    m_shader_link_.Complete();
-    
+
     create_data();
 }
 
@@ -75,7 +70,7 @@ void cMaterial::Complete()
     m_shader_link_.Complete();
 }
 
-auto cMaterial::TryGetBlock(const cStringID& _name) -> cBlock*
+auto cMaterial::TryGetBlock( const cStringID& _name ) -> cBlock*
 {
     const auto itr = m_block_map_.find( _name );
 
