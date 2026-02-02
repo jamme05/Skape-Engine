@@ -21,7 +21,6 @@ set(ENGINE_INCLUDES
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/external/simdjson/include>
 )
 
-
 # TODO: Move to a utils file
 macro(ListFiles)
   set(SearchRoot ${CMAKE_CURRENT_SOURCE_DIR})
@@ -50,6 +49,7 @@ endmacro()
 
 
 include(Plugins/CMakeLists.txt)
+include(Runtimes/CMakeLists.txt)
 
 
 list(LENGTH SKAPE_PLATFORM_PLUGINS PlatformPluginCount)

@@ -39,6 +39,7 @@ add_subdirectory(sk/Reflection)
 add_subdirectory(sk/Scene)
 add_subdirectory(sk/Seralization)
 
+# TODO: Setup dlls correctly.
 # Copy fastgltf and simdjson dynlibs into the runtime dir.
 add_custom_command(
 	TARGET SkapeEngine POST_BUILD

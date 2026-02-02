@@ -16,3 +16,5 @@ set_target_properties(Startup
   PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/game"
 )
+
+install(FILES $<TARGET_RUNTIME_DLLS:Startup> TYPE BIN)

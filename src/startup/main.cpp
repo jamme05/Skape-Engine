@@ -10,6 +10,7 @@
 #include <sk/Memory/Tracker/Tracker.h>
 #include <sk/Platform/Time.h>
 
+// TODO: Maybe move these outside of main.cpp?
 namespace sk::App
 {
 	void startup( int, char** )

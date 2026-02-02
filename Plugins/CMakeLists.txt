@@ -1,6 +1,3 @@
-project(Plugins)
-
-
 # Plugin Variables
 
 set(SKAPE_PLATFORM_PLUGINS)
@@ -16,7 +13,7 @@ set(SKAPE_PLUGINS_LINK "SDL3_Wrapper" CACHE STRING "The plugins to link. Excludi
 
 
 # Plugin Setup Macros
-
+# TODO: Check if its possible to lookup by project name rather than by path
 macro(SkapePlugin PluginName)
   project(${PluginName})
   add_library(${PluginName} STATIC)
@@ -52,7 +49,6 @@ foreach(PluginName IN LISTS SKAPE_PLUGINS_BUILD)
   set(SkapePluginPath "${CMAKE_CURRENT_SOURCE_DIR}/Plugins/${PluginName}")
   if(IS_READABLE "${SkapePluginPath}/CMakeLists.txt")
     add_subdirectory("Plugins/${PluginName}")
-    # message("${SkapePluginPath} YEs")
   else()
     message("Error: Plugin with name \"${PluginName}\" not found!")
   endif()
