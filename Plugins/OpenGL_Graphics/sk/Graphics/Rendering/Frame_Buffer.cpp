@@ -340,21 +340,27 @@ bool cFrame_Buffer::UseMaterial( const Assets::cMaterial& _material )
     }
     m_bound_textures_ = textures.size();
 
-    gl::glEnable( gl::GL_DEPTH_TEST );
-    gl::GLenum depth_method = gl::GL_NEVER;
-    switch( _material.GetDepthTest() )
+    if( _material.GetDepthTest() != Assets::cMaterial::eDepthTest::kDisabled )
     {
-    case Assets::cMaterial::eDepthTest::kNever:        depth_method = gl::GL_NEVER;    break;
-    case Assets::cMaterial::eDepthTest::kAlways:       depth_method = gl::GL_ALWAYS;   break;
-    case Assets::cMaterial::eDepthTest::kLess:         depth_method = gl::GL_LESS;     break;
-    case Assets::cMaterial::eDepthTest::kLessEqual:    depth_method = gl::GL_LEQUAL;   break;
-    case Assets::cMaterial::eDepthTest::kGreater:      depth_method = gl::GL_GREATER;  break;
-    case Assets::cMaterial::eDepthTest::kGreaterEqual: depth_method = gl::GL_GEQUAL;   break;
-    case Assets::cMaterial::eDepthTest::kEqual:        depth_method = gl::GL_EQUAL;    break;
-    case Assets::cMaterial::eDepthTest::kNotEqual:     depth_method = gl::GL_NOTEQUAL; break;
+        gl::glEnable( gl::GL_DEPTH_TEST );
+        gl::GLenum depth_method = gl::GL_NEVER;
+        switch( _material.GetDepthTest() )
+        {
+        case Assets::cMaterial::eDepthTest::kDisabled:     break;
+        case Assets::cMaterial::eDepthTest::kNever:        depth_method = gl::GL_NEVER;    break;
+        case Assets::cMaterial::eDepthTest::kAlways:       depth_method = gl::GL_ALWAYS;   break;
+        case Assets::cMaterial::eDepthTest::kLess:         depth_method = gl::GL_LESS;     break;
+        case Assets::cMaterial::eDepthTest::kLessEqual:    depth_method = gl::GL_LEQUAL;   break;
+        case Assets::cMaterial::eDepthTest::kGreater:      depth_method = gl::GL_GREATER;  break;
+        case Assets::cMaterial::eDepthTest::kGreaterEqual: depth_method = gl::GL_GEQUAL;   break;
+        case Assets::cMaterial::eDepthTest::kEqual:        depth_method = gl::GL_EQUAL;    break;
+        case Assets::cMaterial::eDepthTest::kNotEqual:     depth_method = gl::GL_NOTEQUAL; break;
+        }
+        gl::glDepthFunc( depth_method );
     }
-    gl::glDepthFunc( depth_method );
-    
+    else
+        gl::glDisable( gl::GL_DEPTH_TEST );
+
 
     return true;
 }

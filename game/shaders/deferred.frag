@@ -59,7 +59,6 @@ layout( std140 ) uniform _LightSettings
     
     uvec2 atlas_size;
     uvec2 padding;
-
 };
 
 layout( std430 ) buffer _directionalLights

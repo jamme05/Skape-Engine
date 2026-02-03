@@ -128,6 +128,7 @@ namespace sk::Assets
 
         enum class eDepthTest : uint8_t
         {
+            kDisabled,
             kNever,
             kAlways,
             kLess,
