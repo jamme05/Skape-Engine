@@ -11,7 +11,7 @@
 #include <sk/Platform/Time.h>
 
 // TODO: Maybe move these outside of main.cpp?
-namespace sk::App
+namespace sk::Runtime
 {
 	void startup( int, char** )
 	{
@@ -21,6 +21,16 @@ namespace sk::App
 		auto& app = cApp::init();
 
 		app.create();
+	}
+
+	bool run()
+	{
+		if( const auto app = cApp::getRunningInstance() )
+		{
+			app->run();
+			return true;
+		}
+		return false;
 	}
 
 	void shutdown()
@@ -48,14 +58,14 @@ namespace sk::App
 
 		return 0;
 	}
-} // ::
+} // sk::Runtime::
 
 // Use normal main if no custom main provided.
 #if !defined( SK_CUSTOM_MAIN )
 
 int main( const int _argc, char** _args )
 {
-	return sk::App::sk_main( _argc, _args );
+	return sk::Runtime::sk_main( _argc, _args );
 }
 
 #endif // !SK_CUSTOM_MAIN

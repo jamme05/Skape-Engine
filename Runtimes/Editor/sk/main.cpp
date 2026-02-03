@@ -10,16 +10,30 @@
 #include <sk/Memory/Tracker/Tracker.h>
 #include <sk/Platform/Time.h>
 
-namespace sk::App
+#include "imgui.h"
+#include "imgui_internal.h"
+
+namespace sk::Runtime
 {
-    void startup( int, char** )
+    void startup( int _argc, char** _argv )
     {
+        // TODO: Find asset dir from args. Maybe with prefix -P "path/to/project" or --project "path/to/project"
         Reflection::cType_Manager::init();
         Memory::Tracker::init();
         Time::init();
         auto& app = cApp::init();
 
         app.create();
+    }
+
+    bool run()
+    {
+        if( const auto app = cApp::getRunningInstance() )
+        {
+            app->run();
+            return true;
+        }
+        return false;
     }
 
     void shutdown()
@@ -47,14 +61,14 @@ namespace sk::App
 
         return 0;
     }
-} // ::
+} // sk::Runtime::
 
 // Use normal main if no custom main provided.
 #if !defined( SK_CUSTOM_MAIN )
 
 int main( const int _argc, char** _args )
 {
-    return sk::App::sk_main( _argc, _args );
+    return sk::Runtime::sk_main( _argc, _args );
 }
 
 #endif // !SK_CUSTOM_MAIN

@@ -6,9 +6,10 @@
 
 #pragma once
 
-namespace sk::App
+namespace sk::Runtime
 {
     extern int  sk_main ( int, char** );
     extern void startup ( int, char** );
+    extern bool run     ();
     extern void shutdown();
-} // sk::Startup::
+} // sk::Runtime::

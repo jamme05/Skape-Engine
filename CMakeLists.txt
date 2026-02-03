@@ -133,6 +133,7 @@ endif()
 
 foreach(PluginName IN LISTS SKAPE_PLUGINS_LINK)
   target_link_libraries(${PluginName} PUBLIC ${SKAPE_PLATFORM_PROJECT} ${SKAPE_GRAPHICS_PROJECT})
+  target_compile_definitions(${PluginName} PRIVATE ${SKAPE_DEFINES})
 endforeach()
 
 

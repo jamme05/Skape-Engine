@@ -2,7 +2,7 @@ project(SkapeEngine)
 
 add_library(SkapeEngine STATIC)
 
-target_compile_definitions(SkapeEngine PUBLIC "SK_ROOT_DIR=\"${SKAPE_GAME_DIR}\"")
+target_compile_definitions(SkapeEngine PUBLIC "SK_ROOT_DIR=\"${SKAPE_GAME_DIR}\"" ${SKAPE_DEFINES})
 
 target_link_libraries(SkapeEngine
   PUBLIC
@@ -15,7 +15,7 @@ target_link_libraries(SkapeEngine
     ${SKAPE_PLUGINS_LINK}
 )
 
-target_include_directories(SkapeEngine INTERFACE ${ENGINE_INCLUDES})
+target_include_directories(SkapeEngine INTERFACE ${ENGINE_INCLUDES} ${SKAPE_INCLUDES})
 
 target_sources(SkapeEngine
   PUBLIC

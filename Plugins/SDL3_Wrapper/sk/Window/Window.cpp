@@ -21,7 +21,7 @@ SDL_AppResult SDL_AppInit( void** _app_state, int _argc, char** _argv )
     SK_ERR_IFN( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_EVENTS ),
         "Unable to initialize SDL" )
 
-    sk::App::startup( _argc, _argv );
+    sk::Runtime::startup( _argc, _argv );
 
     SK_ERR_IF( std::atexit( &SDL_Quit ),
         "ERROR: Unable to add SDL_Quit to exit.")
@@ -34,13 +34,7 @@ SDL_AppResult SDL_AppInit( void** _app_state, int _argc, char** _argv )
 
 SDL_AppResult SDL_AppIterate( void* _app_state )
 {
-    if( const auto app = cApp::getRunningInstance() )
-    {
-        app->run();
-
-        return SDL_APP_CONTINUE;
-    }
-    return SDL_APP_SUCCESS;
+    return sk::Runtime::run() ? SDL_APP_CONTINUE : SDL_APP_CONTINUE;
 }
 
 SDL_AppResult SDL_AppEvent( void* _app_state, SDL_Event* _event )
@@ -51,7 +45,7 @@ SDL_AppResult SDL_AppEvent( void* _app_state, SDL_Event* _event )
 
 void SDL_AppQuit( void* _app_state, SDL_AppResult _result )
 {
-    sk::App::shutdown();
+    sk::Runtime::shutdown();
 }
 
 // Window functions:
