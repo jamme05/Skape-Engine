@@ -16,8 +16,7 @@ namespace sk::Object
 	cCamera::cCamera( const std::string& _name )
 	: cObject( _name )
 	{
-		const auto& app = cApp::get();
-		const auto  main_window = app.GetMainWindow();
+		const auto  main_window = Platform::GetMainWindow();
 		const auto  resolution   = main_window->GetResolution();
 		const auto  aspect       = main_window->GetAspectRatio();
 

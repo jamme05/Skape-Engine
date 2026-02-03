@@ -15,6 +15,9 @@
 #include <SDL3/SDL_main.h>
 #include <SDL3/SDL.h>
 
+#include "imgui.h"
+#include "imgui_impl_sdl3.h"
+
 // SDL Functions:
 SDL_AppResult SDL_AppInit( void** _app_state, int _argc, char** _argv )
 {
@@ -39,7 +42,20 @@ SDL_AppResult SDL_AppIterate( void* _app_state )
 
 SDL_AppResult SDL_AppEvent( void* _app_state, SDL_Event* _event )
 {
-    // TODO: Resize event.
+    ImGui_ImplSDL3_ProcessEvent( _event );
+    const auto& io = ImGui::GetIO();
+    if( const auto event_type = _event->type; io.WantCaptureMouse && (
+        event_type == SDL_EVENT_MOUSE_MOTION    ||
+        event_type == SDL_EVENT_MOUSE_BUTTON_UP ||
+        event_type == SDL_EVENT_MOUSE_BUTTON_DOWN
+    ) )
+        return SDL_APP_CONTINUE;
+    else if( io.WantCaptureKeyboard && (
+        event_type == SDL_EVENT_KEY_DOWN ||
+        event_type == SDL_EVENT_KEY_UP
+    ) )
+        return SDL_APP_CONTINUE;
+
     return sk::Platform::cSDL_Window::handle_event( _event );
 }
 
@@ -84,6 +100,10 @@ namespace sk::Platform
     SDL_AppResult cSDL_Window::handle_event( const SDL_WindowEvent& _event )
     {
         const auto itr = window_map.find( _event.windowID );
+
+        // Not our window. Skip
+        if( itr == window_map.end() )
+            return SDL_APP_CONTINUE;
         
         switch( _event.type )
         {
@@ -181,11 +201,11 @@ namespace sk::Platform
 
     void cSDL_Window::resize( const cVector2u32 _new_resolution )
     {
-        m_size_ = _new_resolution;
+        m_size_             = _new_resolution;
         m_resized_on_frame_ = Time::Frame;
     }
 
-    iWindow* CreateWindow( const std::string& _name, const cVector2u32& _size )
+    iWindow* CreateWindow( const std::string_view& _name, const cVector2u32& _size )
     {
         return SK_SINGLE( cSDL_Window, _name, _size );
     } // create_window

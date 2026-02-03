@@ -7,11 +7,9 @@
 #include <framework/App.h>
 
 #include <sk/Skape_Main.h>
+#include <sk/Editor/Editor.h>
 #include <sk/Memory/Tracker/Tracker.h>
 #include <sk/Platform/Time.h>
-
-#include "imgui.h"
-#include "imgui_internal.h"
 
 namespace sk::Runtime
 {
@@ -21,24 +19,22 @@ namespace sk::Runtime
         Reflection::cType_Manager::init();
         Memory::Tracker::init();
         Time::init();
-        auto& app = cApp::init();
+        auto& editor = Editor::cEditor::init();
 
-        app.create();
+        editor.Create();
     }
 
     bool run()
     {
-        if( const auto app = cApp::getRunningInstance() )
-        {
-            app->run();
-            return true;
-        }
-        return false;
+        // TODO: Add a way to check if the editor is running.
+        // Currently not necessary as we're using SDL3 and not sk_main.
+        Editor::cEditor::get().Run();
+        return true;
     }
 
     void shutdown()
     {
-        cApp::shutdown();
+        Editor::cEditor::shutdown();
         Memory::Tracker::shutdown();
         Reflection::cType_Manager::shutdown();
     }
@@ -54,8 +50,9 @@ namespace sk::Runtime
         // Alternatively
         // while( app.running() ) app.run()
 
-        while( const auto app = cApp::getRunningInstance() )
-            app->run();
+        bool running = true;
+        while( running )
+            running = run();
 
         shutdown();
 

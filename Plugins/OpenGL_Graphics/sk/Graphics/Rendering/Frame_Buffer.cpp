@@ -155,6 +155,10 @@ void cFrame_Buffer::Bind( const size_t _index, const cShared_ptr< cRender_Target
         _target->m_rel_scale_ = static_cast< cVector2f >( _target->m_resolution_ ) / m_depth_target_->m_resolution_;
 
 } // Bind
+void cFrame_Buffer::Bind( const cShared_ptr< cRender_Target >& _target, const bool _force )
+{
+    Bind( 0, _target, _force );
+}
 
 void cFrame_Buffer::Bind( const cShared_ptr< cDepth_Target >& _depth_target, const bool _force )
 {

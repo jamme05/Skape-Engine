@@ -10,12 +10,14 @@
 #include <sk/Graphics/Pipelines/Deferred_Pipeline.h>
 #include <sk/Graphics/Pipelines/Pipeline.h>
 #include <sk/Graphics/Rendering/Render_Context.h>
+#include <sk/Graphics/Utils/RenderUtils.h>
 #include <sk/Input/Keyboard.h>
 #include <sk/Input/Mouse.h>
 #include <sk/Math/Types.h>
 #include <sk/Memory/Tracker/Tracker.h>
 #include <sk/Misc/UUID.h>
 #include <sk/Platform/Time.h>
+#include <sk/Platform/ImGui/ImGuiHelper.h>
 #include <sk/Platform/Window/Window_Base.h>
 #include <sk/Reflection/RuntimeClass.h>
 #include <sk/Reflection/RuntimeStruct.h>
@@ -26,10 +28,13 @@
 #include <sk/Scene/Managers/SceneManager.h>
 #include <sk/Scene/Objects/CameraFlight.h>
 
+#include <imgui.h>
+
 #include <print>
 #include <random>
+#include <vector>
 
-#include "sk/Graphics/Utils/RenderUtils.h"
+
 
 cApp* cApp::m_running_instance_ = nullptr;
 
@@ -42,8 +47,7 @@ cApp::cApp()
 	sk::cAsset_Manager::init();
 
 	m_main_window_ = sk::Platform::CreateWindow( "Main Window", { 1280, 720 } );
-	m_main_window_->PushContext();
-	
+
 	sk::Graphics::InitRenderer();
 	sk::Graphics::Utils::InitUtils();
 	m_main_window_->Init();
@@ -52,7 +56,14 @@ cApp::cApp()
 
 	SK_ERR_IFN( m_main_window_->SetVisibility( true ),
 		"Unable to show window." )
-	
+
+
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	auto& io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	sk::Gui::InitImGui( m_main_window_ );
+
 	sk::cSceneManager::init();
 } // cApp
 
@@ -268,6 +279,10 @@ void cApp::destroy()
 	m_scene = nullptr;
 	
 	sk::cSceneManager::shutdown();
+
+	sk::Gui::ImGuiShutdown();
+	ImGui::DestroyContext();
+
 	for( const auto& window : m_windows )
 		SK_DELETE( window );
 
@@ -280,10 +295,13 @@ void cApp::destroy()
 	sk::Graphics::cRenderer::shutdown();
 	sk::cStringIDManager::shutdown();
 
-} // _destroy
+} // destroy
 
 void cApp::run()
 {
+	sk::Gui::ImGuiNewFrame();
+	ImGui::ShowDemoWindow();
+
 	sk::Time::Update();
 	
 	sk::cSceneManager::get().update();
@@ -294,5 +312,7 @@ void cApp::run()
 	sk::Graphics::cRenderer::get().Update();
 	
 	pipeline.Execute();
-	
+	sk::Gui::ImGuiRender();
+	m_main_window_->SwapBuffers();
+
 } // run

@@ -4,12 +4,12 @@
 
 #include <sk/Assets/Management/Asset_Manager.h>
 #include <sk/Graphics/Passes/GBuffer_Pass.h>
+#include <sk/Graphics/Passes/Light_Pass.h>
 #include <sk/Graphics/Passes/Screen_Pass.h>
 #include <sk/Graphics/Rendering/Frame_Buffer.h>
 #include <sk/Graphics/Rendering/Render_Target.h>
+#include <sk/Graphics/Rendering/Window_Context.h>
 #include <sk/Platform/Window/Window_Base.h>
-
-#include "sk/Graphics/Passes/Light_Pass.h"
 
 using namespace sk::Graphics;
 
@@ -26,14 +26,28 @@ void cDeferred_Pipeline::Initialize()
     auto& asset_manager = cAsset_Manager::get();
     const auto screen_shader   = asset_manager.GetAssetByPath( "shaders/screen.vert" );
     const auto deferred_shader = asset_manager.GetAssetByPath( "shaders/deferred.frag" );
-    const auto [ material_meta, _ ] = asset_manager.CreateAsset< Assets::cMaterial >(
+    const auto [ material_meta, material ] = asset_manager.CreateAsset< Assets::cMaterial >(
         "Deferred Screen Material", Utils::cShader_Link{ screen_shader, deferred_shader }
     );
     m_screen_material_ = material_meta;
+    material->SetDepthTest( Assets::cMaterial::eDepthTest::kDisabled );
 
     m_light_pass = &AddPass< Passes::cLight_Pass >();
 
-    AddPass< Passes::cScreen_Pass >( m_window_, material_meta );
+    if( m_window_ )
+    {
+        auto& context = m_window_->GetWindowContext();
+        AddPass< Passes::cScreen_Pass >( context, material_meta );
+    }
+    else
+    {
+        auto resolution = Platform::GetMainWindow()->GetResolution();
+        m_fallback_window_context_ = std::make_unique< Rendering::cRender_Context >();
+        for( const auto& frame_buffer : *m_fallback_window_context_ )
+            frame_buffer->Bind( sk::make_shared< Rendering::cRender_Target >( resolution, Rendering::cRender_Target::eFormat::kRGBA8 ) );
+
+        AddPass< Passes::cScreen_Pass >( *m_fallback_window_context_, material_meta );
+    }
 
     cPipeline::Initialize();
 }

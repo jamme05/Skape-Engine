@@ -11,9 +11,9 @@
 
 using namespace sk::Graphics::Passes;
 
-cScreen_Pass::cScreen_Pass( Platform::iWindow* _window, const cShared_ptr< cAsset_Meta >& _screen_material )
+cScreen_Pass::cScreen_Pass( Rendering::cRender_Context& _render_context, const cShared_ptr< cAsset_Meta >& _screen_material )
 : m_screen_vertex_buffer_( "Screen Vertex Buffer", Buffer::eType::kVertex, false, 6, cVector2f{} )
-, m_window_( _window )
+, m_render_context_( &_render_context )
 , m_material_meta_( _screen_material )
 {
     m_screen_vertex_buffer_.AlignAs< cVector2f >();
@@ -36,11 +36,11 @@ bool cScreen_Pass::Begin()
     if( !m_material_.IsLoaded() )
         return false;
     
-    const auto  resolution = m_window_->GetResolution();
-    auto viewport = sViewport{ .x = 0, .y = 0, .width = resolution.x, .height = resolution.y };
-    auto scissor  = sScissor{  .x = 0, .y = 0, .width = resolution.x, .height = resolution.y };
+    const auto resolution = Platform::GetMainWindow()->GetResolution();
+    const auto viewport = sViewport{ .x = 0, .y = 0, .width = resolution.x, .height = resolution.y };
+    const auto scissor  = sScissor{  .x = 0, .y = 0, .width = resolution.x, .height = resolution.y };
     
-    auto& frame_buffer = m_window_->GetWindowContext().GetBack();
+    auto& frame_buffer = m_render_context_->GetBack();
     
     frame_buffer.Clear( Rendering::eClear::kAll );
     frame_buffer.Begin( viewport, scissor );
@@ -69,7 +69,6 @@ bool cScreen_Pass::Begin()
 
 void cScreen_Pass::End()
 {
-    m_window_->SwapBuffers();
 }
 
 void cScreen_Pass::Destroy()

@@ -8,6 +8,8 @@
 
 #include <sk/Math/Vector2.h>
 
+#include <string>
+
 namespace sk::Graphics::Rendering
 {
     class cWindow_Context;
@@ -42,13 +44,12 @@ namespace sk::Platform
         
         virtual void SwapBuffers() = 0;
         
-        virtual void PushContext() = 0;
-        virtual void PopContext () = 0;
+        virtual void UseContext() = 0;
         
         virtual bool WasResizedThisFrame() const = 0;
     };
 
-    extern iWindow* CreateWindow ( const std::string& _name, const cVector2u32& _size = {} );
+    extern iWindow* CreateWindow ( const std::string_view& _name, const cVector2u32& _size = {} );
     extern void     DestroyWindow( iWindow* _window );
     extern iWindow* GetMainWindow();
 } // sk::Platform

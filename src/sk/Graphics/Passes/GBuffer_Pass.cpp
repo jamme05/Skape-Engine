@@ -19,9 +19,13 @@ using namespace sk::Graphics::Passes;
 void cGBuffer_Pass::Init()
 {
     m_render_context_ = std::make_unique< Rendering::cRender_Context >( 2, 3 );
-    
-    auto resolution = getPipeline().GetWindow()->GetResolution();
-    
+
+    cVector2u32 resolution;
+    if( const auto window = getPipeline().GetWindow() )
+        resolution = window->GetResolution();
+    else
+        resolution = Platform::GetMainWindow()->GetResolution();
+
     for( const auto& frame_buffer : *m_render_context_ )
     {
         auto color_target    = sk::make_shared< Rendering::cRender_Target >( resolution, Rendering::cRender_Target::eFormat::kRGBA8 );

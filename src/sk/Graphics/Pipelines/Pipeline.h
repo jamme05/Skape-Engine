@@ -3,9 +3,11 @@
 #pragma once
 
 #include <sk/Graphics/Passes/Render_Pass.h>
+#include <sk/Graphics/Rendering/Render_Context.h>
 
 #include <memory>
 #include <vector>
+
 
 namespace sk::Platform
 {
@@ -39,8 +41,11 @@ namespace sk::Graphics
         [[ nodiscard ]]
         auto GetPass( size_t _index ) const -> Passes::iPass&;
 
+        auto GetFallbackContext() const -> Rendering::cRender_Context*;
+
     protected:
         Platform::iWindow* m_window_;
+        std::unique_ptr< Rendering::cRender_Context > m_fallback_window_context_;
         
     private:
         bool       m_initialized_ = false;

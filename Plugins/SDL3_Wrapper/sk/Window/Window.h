@@ -33,7 +33,7 @@ namespace sk::Platform
             kResizable = SDL_WINDOW_RESIZABLE,
         };
         // TODO: Add fullscreen and default window size options.
-        explicit cSDL_Window( const std::string& _name, const cVector2u32& _resolution, uint8_t _flags = kNone );
+        explicit cSDL_Window( const std::string_view& _name, const cVector2u32& _resolution, uint8_t _flags = kNone );
         ~cSDL_Window() override;
 
         void Init() override;
@@ -49,14 +49,14 @@ namespace sk::Platform
         
         auto GetWindowContext() const -> Graphics::Rendering::cWindow_Context& override;
         void SwapBuffers() override;
-        
-        void PushContext() override;
-        void PopContext() override;
+
+        void UseContext() override;
         
         bool WasResizedThisFrame() const override;
         
         // For internal usage.
-        auto get_window() const { return m_window_; }
+        auto  get_window  () const { return m_window_; }
+        auto& get_context() const { return m_context_; }
 
         // TODO: Maybe move these outside of the window class?
         // Void type to skip include I guess
@@ -80,7 +80,7 @@ namespace sk::Platform
         
         std::unique_ptr< Graphics::Rendering::cWindow_Context > m_window_context_;
         
-        std::vector< SDL_GLContext > m_contexts_;
+        SDL_GLContext m_context_;
     };
 } // sk::
 

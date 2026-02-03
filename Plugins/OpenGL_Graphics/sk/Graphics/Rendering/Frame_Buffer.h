@@ -69,6 +69,7 @@ namespace sk::Graphics::Rendering
 
         // The target NEEDS to be able to survive.
         void Bind( size_t _index, const cShared_ptr< cRender_Target >& _target, bool _force = false );
+        void Bind( const cShared_ptr< cRender_Target >& _target, bool _force = false );
         void Bind( const cShared_ptr< cDepth_Target >& _depth_target, bool _force = false );
 
         auto GetRenderTarget( size_t _index ) const -> const cShared_ptr< cRender_Target >&;

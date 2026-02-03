@@ -10,6 +10,11 @@
 
 namespace sk
 {
+    namespace Graphics::Rendering
+    {
+        class cRender_Context;
+    }
+
     class cAsset_Meta;
 } // sk::
 
@@ -23,7 +28,7 @@ namespace sk::Graphics::Passes
     class cScreen_Pass : public iPass
     {
     public:
-        explicit cScreen_Pass( Platform::iWindow* _window, const cShared_ptr< cAsset_Meta >& _screen_material );
+        explicit cScreen_Pass( Rendering::cRender_Context& _render_context, const cShared_ptr< cAsset_Meta >& _screen_material );
         
         void Init   () override;
         bool Begin  () override;
@@ -32,7 +37,7 @@ namespace sk::Graphics::Passes
         
     private:
         cDynamic_Buffer    m_screen_vertex_buffer_;
-        Platform::iWindow* m_window_;
+        Rendering::cRender_Context* m_render_context_;
         
         cWeak_Ptr< cAsset_Meta >        m_material_meta_;
         cAsset_Ref< Assets::cMaterial > m_material_;
