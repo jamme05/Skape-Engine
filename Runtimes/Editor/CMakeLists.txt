@@ -14,7 +14,5 @@ target_link_libraries(Skape_Editor
 
 set_target_properties(Skape_Editor
   PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/editor"
+    RUNTIME_OUTPUT_DIRECTORY "${SKAPE_GAME_BIN}"
 )
-
-install(FILES $<TARGET_RUNTIME_DLLS:Startup> TYPE BIN)

@@ -10,7 +10,7 @@ set(SKAPE_LIBRARIES)
 set(SKAPE_DEFINES)
 
 set(SKAPE_GAME_DIR ${CMAKE_SOURCE_DIR}/game/)
-set(SKAPE_GAME_BIN ${CMAKE_SOURCE_DIR}/game/)
+set(SKAPE_GAME_BIN ${CMAKE_SOURCE_DIR}/bin/)
 
 # TODO: Maybe make this into an include.
 
