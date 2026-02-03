@@ -48,8 +48,12 @@ namespace sk::Input
 		kCustom3     = 0x10000000,
 		kCustom4     = 0x20000000,
 		kCustom5     = 0x40000000,
-		kCustom6     = 0x80000000,
-		
+
+#ifdef SKAPE_EDITOR_AVAILABLE
+		// Editor
+		kEditor     = 0x80000000,
+#endif // SKAPE_EDITOR_AVAILABLE
+
 		kAll         = 0xffffffff,
 	}; // eType
 
