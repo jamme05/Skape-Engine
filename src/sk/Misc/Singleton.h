@@ -65,6 +65,7 @@ namespace sk
 
 		static Ty&   get     ( void ){ return *m_instance_; } // TODO: Add error/assert checks
 		static auto  getPtr  ( void ){ return  m_instance_; }
+		static bool  IsActive(){ return m_instance_ != nullptr; }
 
 	};
 
