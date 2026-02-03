@@ -1,6 +1,7 @@
 SkapePlugin(OpenGL_Graphics)
 
 SkapeAddGraphicsSupport(OpenGL OpenGL_Graphics)
+SetImGuiRenderer("opengl3")
 
 target_compile_definitions(OpenGL_Graphics PUBLIC
   SK_GRAPHICS_OPENGL

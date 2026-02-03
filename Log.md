@@ -12,3 +12,10 @@ Day 1:
 - Found an issue that I thought was the Intel Arc treating the entire program as the only block when calling glGetActiveUniformBlockiv. But it ended up being nvidia that ignored an argument where I provided the wrong information. Never letting me catch the bug previously.
 
 ---
+
+Day 2:
+- Changed the target dir for the binaries to [Project Root]/bin to make dlls easier to manage.
+- For the future I will attempt to use install for managin this, but for now this works well enough.
+- Added ImGui
+
+---

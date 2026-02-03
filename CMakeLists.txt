@@ -21,6 +21,32 @@ set(ENGINE_INCLUDES
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/external/simdjson/include>
 )
 
+# ImGui Support:
+
+set(IMGUI_PLATFORM_BACKEND)
+set(IMGUI_RENDERER_BACKEND)
+set(IMGUI_ADDITIONAL_INCLUDES)
+
+macro(SetImGuiPlatform PlatformImpl)
+  set(IMGUI_PLATFORM_BACKEND ${PlatformImpl} PARENT_SCOPE)
+  set(Args ${ARGN})
+  foreach(AdditionalInclude IN LISTS Args)
+    list(APPEND IMGUI_ADDITIONAL_INCLUDES ${AdditionalInclude})
+  endforeach()
+  set(IMGUI_ADDITIONAL_INCLUDES ${IMGUI_ADDITIONAL_INCLUDES} PARENT_SCOPE)
+endmacro()
+
+macro(SetImGuiRenderer RendererImpl)
+  set(IMGUI_RENDERER_BACKEND ${RendererImpl} PARENT_SCOPE)
+  set(Args ${ARGN})
+  foreach(AdditionalInclude IN LISTS Args)
+    list(APPEND IMGUI_ADDITIONAL_INCLUDES ${AdditionalInclude})
+  endforeach()
+  set(IMGUI_ADDITIONAL_INCLUDES ${IMGUI_ADDITIONAL_INCLUDES} PARENT_SCOPE)
+endmacro()
+
+
+
 # TODO: Move to a utils file
 macro(ListFiles)
   set(SearchRoot ${CMAKE_CURRENT_SOURCE_DIR})

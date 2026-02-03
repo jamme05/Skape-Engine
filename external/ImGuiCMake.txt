@@ -1,0 +1,26 @@
+
+project(ImGui)
+
+add_library(ImGui STATIC)
+
+set(IMGUI_PLATFORM_IMPL "imgui_impl_${IMGUI_PLATFORM_BACKEND}")
+set(IMGUI_RENDERER_IMPL "imgui_impl_${IMGUI_RENDERER_BACKEND}")
+
+target_sources(ImGui
+	PRIVATE
+    "imgui/imgui.cpp"
+    "imgui/backends/${IMGUI_PLATFORM_IMPL}.cpp"
+    "imgui/backends/${IMGUI_RENDERER_IMPL}.cpp"
+
+  PUBLIC
+    FILE_SET imGuiIncludes
+    TYPE HEADERS
+    FILES
+      "imgui/imgui.h"
+      "imgui/backends/${IMGUI_PLATFORM_IMPL}.h"
+      "imgui/backends/${IMGUI_RENDERER_IMPL}.h"
+)
+
+target_link_libraries(ImGui INTERFACE SkapeEngine)
+
+target_include_directories(ImGui PUBLIC "imgui" "imgui/backends" ${IMGUI_ADDITIONAL_INCLUDES})

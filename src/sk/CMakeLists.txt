@@ -9,6 +9,7 @@ target_link_libraries(SkapeEngine
     fastgltf::fastgltf
     simdjson::simdjson
     stb_image
+    ImGui
     ${SKAPE_PLATFORM_PROJECT}
     ${SKAPE_GRAPHICS_PROJECT}
     ${SKAPE_PLUGINS_LINK}
