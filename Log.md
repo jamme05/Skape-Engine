@@ -17,5 +17,8 @@ Day 2:
 - Changed the target dir for the binaries to [Project Root]/bin to make dlls easier to manage.
 - For the future I will attempt to use install for managin this, but for now this works well enough.
 - Added ImGui
+- Had to fix linking and the setup for ImGui but it ended up working.
+- Needed to dig into how to set up ImGui for multi-viewport and docking, but got it eventually working.
+- Got a viewport with basic functionality.
 
 ---
