@@ -44,7 +44,7 @@ void cGBuffer_Pass::Init()
 
 bool cGBuffer_Pass::Begin()
 {
-    auto  main_window    = cApp::get().GetMainWindow();
+    auto  main_window    = Platform::GetMainWindow();
     auto& camera_manager = Scene::cCameraManager::get();
     auto& main_camera    = *camera_manager.getMainCamera();
     

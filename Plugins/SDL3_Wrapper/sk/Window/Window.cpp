@@ -43,6 +43,7 @@ SDL_AppResult SDL_AppIterate( void* _app_state )
 SDL_AppResult SDL_AppEvent( void* _app_state, SDL_Event* _event )
 {
     ImGui_ImplSDL3_ProcessEvent( _event );
+    /*
     const auto& io = ImGui::GetIO();
     if( const auto event_type = _event->type; io.WantCaptureMouse && (
         event_type == SDL_EVENT_MOUSE_MOTION    ||
@@ -55,6 +56,7 @@ SDL_AppResult SDL_AppEvent( void* _app_state, SDL_Event* _event )
         event_type == SDL_EVENT_KEY_UP
     ) )
         return SDL_APP_CONTINUE;
+    //*/
 
     return sk::Platform::cSDL_Window::handle_event( _event );
 }

@@ -60,4 +60,7 @@ void cDeferred_Pipeline::Execute()
     auto& color_buffer = front.GetRenderTarget( 2 );
 
     m_screen_material_->SetTexture( "Albedo", color_buffer );
+
+    if( m_fallback_window_context_ != nullptr )
+        m_fallback_window_context_->End();
 }

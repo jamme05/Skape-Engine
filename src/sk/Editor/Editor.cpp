@@ -9,9 +9,11 @@
 #include <sk/Graphics/Renderer.h>
 #include <sk/Graphics/Pipelines/Deferred_Pipeline.h>
 #include <sk/Graphics/Pipelines/Pipeline.h>
+#include <sk/Graphics/Rendering/Frame_Buffer.h>
 #include <sk/Graphics/Utils/RenderUtils.h>
 #include <sk/Graphics/Utils/Shader_Link.h>
 #include <sk/Input/Input.h>
+#include <sk/Math/Types.h>
 #include <sk/Platform/Time.h>
 #include <sk/Platform/ImGui/ImGuiHelper.h>
 #include <sk/Platform/Window/Window_Base.h>
@@ -24,7 +26,6 @@
 
 #include "imgui.h"
 #include "imgui_internal.h"
-#include "sk/Graphics/Rendering/Frame_Buffer.h"
 
 
 #ifdef SKAPE_EDITOR_AVAILABLE
@@ -195,6 +196,8 @@ void cEditor::Create()
 	m_camera_->setAsMain();
 	m_camera_->setFilter( m_camera_->getFilter() | Input::kEditor );
 	cSceneManager::get().registerScene( editor_scene );
+
+    cSceneManager::get().update();
 }
 
 void cEditor::Run()
@@ -205,12 +208,13 @@ void cEditor::Run()
 
     _drawMainWindow();
 
-    // Time::Update();
+    Time::Update();
 
+	m_camera_->update();
     // cSceneManager::get().update();
     Graphics::cRenderer::get().Update();
-    // auto& pipeline = *Graphics::cRenderer::get().GetPipeline();
-    // pipeline.Execute();
+    auto& pipeline = *Graphics::cRenderer::get().GetPipeline();
+    pipeline.Execute();
 
     Gui::ImGuiRender();
     m_main_window_->SwapBuffers();

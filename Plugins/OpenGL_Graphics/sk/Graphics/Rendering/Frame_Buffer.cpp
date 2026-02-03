@@ -113,12 +113,15 @@ void cFrame_Buffer::Clear( const uint8_t _clear )
     }
 
     // Clear depth and stencil
-    if( ( _clear & kDepthStencil ) == kDepthStencil )
-        gl::glClearBufferfi( gl::GL_DEPTH_STENCIL, 0, m_depth_target_->m_depth_clear_, m_depth_target_->m_stencil_clear_ );
-    else if( _clear & kDepth )
-        gl::glClearBufferfv( gl::GL_DEPTH, 0, &m_depth_target_->m_depth_clear_ );
-    else if( _clear & kStencil )
-        gl::glClearBufferiv( gl::GL_STENCIL, 0, &m_depth_target_->m_stencil_clear_ );
+    if( m_depth_target_ != nullptr )
+    {
+        if( ( _clear & kDepthStencil ) == kDepthStencil )
+            gl::glClearBufferfi( gl::GL_DEPTH_STENCIL, 0, m_depth_target_->m_depth_clear_, m_depth_target_->m_stencil_clear_ );
+        else if( _clear & kDepth )
+            gl::glClearBufferfv( gl::GL_DEPTH, 0, &m_depth_target_->m_depth_clear_ );
+        else if( _clear & kStencil )
+            gl::glClearBufferiv( gl::GL_STENCIL, 0, &m_depth_target_->m_stencil_clear_ );
+    }
     gl::glBindFramebuffer( gl::GL_FRAMEBUFFER, 0 );
 } // Clear
 
