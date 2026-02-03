@@ -8,4 +8,5 @@ target_sources(SkapeEngine
       Time.h
 )
 
+add_subdirectory(ImGui)
 add_subdirectory(Window)

@@ -19,6 +19,8 @@ set(ENGINE_INCLUDES
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/external/stb>
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/external/fastgltf/include>
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/external/simdjson/include>
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/external/imgui>
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/external/imgui/backends>
 )
 
 # ImGui Support:
@@ -72,7 +74,6 @@ endmacro()
 macro(UpdateGameDir NewRoot)
   set(SKAPE_GAME_DIR ${NewRoot} PARENT_SCOPE)
 endmacro()
-
 
 include(Plugins/CMakeLists.txt)
 include(Runtimes/CMakeLists.txt)
@@ -135,7 +136,6 @@ foreach(PluginName IN LISTS SKAPE_PLUGINS_LINK)
   target_link_libraries(${PluginName} PUBLIC ${SKAPE_PLATFORM_PROJECT} ${SKAPE_GRAPHICS_PROJECT})
   target_compile_definitions(${PluginName} PRIVATE ${SKAPE_DEFINES})
 endforeach()
-
 
 add_subdirectory(external)
 

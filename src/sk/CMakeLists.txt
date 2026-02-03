@@ -15,7 +15,7 @@ target_link_libraries(SkapeEngine
     ${SKAPE_PLUGINS_LINK}
 )
 
-target_include_directories(SkapeEngine INTERFACE ${ENGINE_INCLUDES} ${SKAPE_INCLUDES})
+target_include_directories(SkapeEngine PUBLIC ${ENGINE_INCLUDES} ${SKAPE_INCLUDES})
 
 target_sources(SkapeEngine
   PUBLIC
@@ -28,6 +28,7 @@ target_sources(SkapeEngine
 add_subdirectory(sk/Assets)
 add_subdirectory(sk/Containers)
 add_subdirectory(sk/Debugging)
+add_subdirectory(sk/Editor)
 add_subdirectory(sk/Graphics)
 add_subdirectory(sk/Helpers)
 add_subdirectory(sk/Input)
