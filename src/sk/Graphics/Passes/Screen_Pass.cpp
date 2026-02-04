@@ -2,10 +2,10 @@
 
 #include "Screen_Pass.h"
 
+#include <sk/Graphics/Pipelines/Pipeline.h>
 #include <sk/Graphics/Rendering/Frame_Buffer.h>
 #include <sk/Graphics/Rendering/Scissor.h>
 #include <sk/Graphics/Rendering/Viewport.h>
-#include <sk/Graphics/Rendering/Window_Context.h>
 #include <sk/Math/Vector2.h>
 #include <sk/Platform/Window/Window_Base.h>
 
@@ -36,7 +36,7 @@ bool cScreen_Pass::Begin()
     if( !m_material_.IsLoaded() )
         return false;
     
-    const auto resolution = Platform::GetMainWindow()->GetResolution();
+    const auto resolution = getPipeline().GetSurface()->GetResolution();
     const auto viewport = sViewport{ .x = 0, .y = 0, .width = resolution.x, .height = resolution.y };
     const auto scissor  = sScissor{  .x = 0, .y = 0, .width = resolution.x, .height = resolution.y };
     
