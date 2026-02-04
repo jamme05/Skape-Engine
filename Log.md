@@ -28,6 +28,9 @@ Day 3:
 - Created an interface named iSurface to allow a me to have "virtual" windows, making the viewport easier to control whilst running on the same render pipeline as the game would.
 - I also made the Editor folder not build if the Editor runtime wasn't included in the cmake config. As it would be unecessary overhead when building the game only.
 - The future plan is to have the Editor be it's own static plugin.
+- Added a aTab abstract class for managin tabs in the future.
+- Made a Tab for the viewport and a placeholder for the remaining.
+- Made a Tab to list the active scenes and objects in said scenes.
 
 ---
 
