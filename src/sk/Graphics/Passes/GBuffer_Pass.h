@@ -27,6 +27,7 @@ namespace sk::Graphics::Passes
         auto& GetFront() const { return m_render_context_->GetFront(); }
         
     private:
+        cVector2u32 m_resolution_ = {};
         std::unique_ptr< Rendering::cRender_Context > m_render_context_;
     };
 } // sk::Graphics::Passes::

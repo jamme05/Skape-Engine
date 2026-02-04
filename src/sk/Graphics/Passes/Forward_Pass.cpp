@@ -11,8 +11,8 @@
 #include <sk/Scene/Managers/Layer_Manager.h>
 #include <sk/Scene/Managers/SceneManager.h>
 
-sk::Graphics::Passes::cForward_Pass::cForward_Pass( Platform::iWindow* _window )
-: m_window_( _window )
+sk::Graphics::Passes::cForward_Pass::cForward_Pass( iSurface* _surface )
+: m_surface_( _surface )
 {
     
 }
@@ -46,7 +46,7 @@ void sk::Graphics::Passes::cForward_Pass::RenderWithCamera( const Object::Compon
 {
     const auto& layer_manager = Scene::cLayer_Manager::get();
     
-    auto& frame_buffer  = m_window_->GetWindowContext().GetBack();
+    auto& frame_buffer  = m_surface_->GetRenderContext().GetBack();
     
     frame_buffer.Clear( Rendering::eClear::kTargets | Rendering::eClear::kDepth );
     frame_buffer.Begin( _camera.getViewport(), _camera.getScissor() );

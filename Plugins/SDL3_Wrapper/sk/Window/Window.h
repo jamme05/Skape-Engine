@@ -44,18 +44,23 @@ namespace sk::Platform
         bool SetVisibility( bool _visible ) const override;
         [[ nodiscard ]]
         cVector2u32 GetResolution () const override;
+        [[ nodiscard ]]
         float       GetAspectRatio() const override;
         void        SetMouseCapture( bool _capture ) override;
-        
-        auto GetWindowContext() const -> Graphics::Rendering::cWindow_Context& override;
+
+        [[ nodiscard ]]
+        auto GetRenderContext() const -> Graphics::Rendering::cRender_Context& override;
         void SwapBuffers() override;
 
         void UseContext() override;
-        
+
+        [[ nodiscard ]]
         bool WasResizedThisFrame() const override;
-        
+
         // For internal usage.
+        [[ nodiscard ]]
         auto  get_window  () const { return m_window_; }
+        [[ nodiscard ]]
         auto& get_context() const { return m_context_; }
 
         // TODO: Maybe move these outside of the window class?

@@ -63,7 +63,7 @@ void cSDL_Window::Init()
     m_window_context_ = std::make_unique< Graphics::Rendering::cWindow_Context >( *this );
 }
 
-auto cSDL_Window::GetWindowContext() const -> Graphics::Rendering::cWindow_Context&
+auto cSDL_Window::GetRenderContext() const -> Graphics::Rendering::cRender_Context&
 {
     return *m_window_context_;
 }

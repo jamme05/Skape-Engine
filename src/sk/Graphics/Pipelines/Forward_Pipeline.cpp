@@ -13,7 +13,7 @@ sk::Graphics::cForward_Pipeline::cForward_Pipeline( Platform::iWindow* _window )
 
 void sk::Graphics::cForward_Pipeline::Initialize()
 {
-    AddPass< Passes::cForward_Pass >( m_window_ );
+    AddPass< Passes::cForward_Pass >( m_surface_ );
     
     cPipeline::Initialize();
 }
@@ -22,5 +22,5 @@ void sk::Graphics::cForward_Pipeline::Execute()
 {
     cPipeline::Execute();
     
-    m_window_->SwapBuffers();
+    m_surface_->SwapBuffers();
 }

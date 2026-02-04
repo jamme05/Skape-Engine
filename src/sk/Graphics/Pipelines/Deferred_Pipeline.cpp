@@ -8,13 +8,12 @@
 #include <sk/Graphics/Passes/Screen_Pass.h>
 #include <sk/Graphics/Rendering/Frame_Buffer.h>
 #include <sk/Graphics/Rendering/Render_Target.h>
-#include <sk/Graphics/Rendering/Window_Context.h>
 #include <sk/Platform/Window/Window_Base.h>
 
 using namespace sk::Graphics;
 
-cDeferred_Pipeline::cDeferred_Pipeline( Platform::iWindow* _window )
-: cPipeline( _window )
+cDeferred_Pipeline::cDeferred_Pipeline( iSurface* _surface )
+: cPipeline( _surface )
 {
     
 }
@@ -34,19 +33,15 @@ void cDeferred_Pipeline::Initialize()
 
     m_light_pass = &AddPass< Passes::cLight_Pass >();
 
-    if( m_window_ )
+    if( m_surface_ )
     {
-        auto& context = m_window_->GetWindowContext();
+        auto& context = m_surface_->GetRenderContext();
         AddPass< Passes::cScreen_Pass >( context, material_meta );
     }
     else
     {
-        auto resolution = Platform::GetMainWindow()->GetResolution();
-        m_fallback_window_context_ = std::make_unique< Rendering::cRender_Context >();
-        for( const auto& frame_buffer : *m_fallback_window_context_ )
-            frame_buffer->Bind( sk::make_shared< Rendering::cRender_Target >( resolution, Rendering::cRender_Target::eFormat::kRGBA8 ) );
-
-        AddPass< Passes::cScreen_Pass >( *m_fallback_window_context_, material_meta );
+        auto resolution = m_surface_->GetResolution();
+        AddPass< Passes::cScreen_Pass >( m_surface_->GetRenderContext(), material_meta );
     }
 
     cPipeline::Initialize();
@@ -54,13 +49,12 @@ void cDeferred_Pipeline::Initialize()
 
 void cDeferred_Pipeline::Execute()
 {
+    // m_surface_->GetRenderContext().GetBack().Clear( Rendering::eClear::kAll );
     cPipeline::Execute();
+    m_surface_->GetRenderContext().End();
 
     const auto& front = m_gbuffer_pass_->GetFront();
     auto& color_buffer = front.GetRenderTarget( 2 );
 
     m_screen_material_->SetTexture( "Albedo", color_buffer );
-
-    if( m_fallback_window_context_ != nullptr )
-        m_fallback_window_context_->End();
 }

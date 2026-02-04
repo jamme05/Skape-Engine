@@ -21,10 +21,12 @@ namespace sk::Object::Components
 
 namespace sk::Graphics
 {
+    class iSurface;
+
     class cPipeline
     {
     public:
-        explicit cPipeline( Platform::iWindow* _window );
+        explicit cPipeline( iSurface* _surface );
         virtual ~cPipeline() = default;
         using pass_vec_t = std::vector< std::unique_ptr< Passes::iPass > >;
 
@@ -32,7 +34,7 @@ namespace sk::Graphics
         virtual void Execute   ();
         virtual void Destroy   ();
         
-        auto GetWindow() const { return m_window_; }
+        [[ nodiscard ]] auto GetSurface() const { return m_surface_; }
 
         template< class Ty, class... Args >
         requires std::constructible_from< Ty, Args... >
@@ -41,12 +43,9 @@ namespace sk::Graphics
         [[ nodiscard ]]
         auto GetPass( size_t _index ) const -> Passes::iPass&;
 
-        auto GetFallbackContext() const -> Rendering::cRender_Context*;
-
     protected:
-        Platform::iWindow* m_window_;
-        std::unique_ptr< Rendering::cRender_Context > m_fallback_window_context_;
-        
+        iSurface* m_surface_;
+
     private:
         bool       m_initialized_ = false;
         pass_vec_t m_passes_      = {};

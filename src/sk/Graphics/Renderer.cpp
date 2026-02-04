@@ -13,7 +13,6 @@
 // Figure out a way to either pick a context depending on the active window,
 // or move part of the renderer singleton to the window. Like Window.GetRenderer()
 
-
 using namespace sk::Graphics;
 
 cRenderer::~cRenderer()

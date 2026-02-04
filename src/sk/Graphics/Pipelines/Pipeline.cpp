@@ -8,8 +8,8 @@
 #include <sk/Scene/Managers/EventManager.h>
 #include <sk/Scene/Managers/SceneManager.h>
 
-sk::Graphics::cPipeline::cPipeline( Platform::iWindow* _window )
-: m_window_( _window )
+sk::Graphics::cPipeline::cPipeline( iSurface* _surface )
+: m_surface_( _surface )
 {}
 
 void sk::Graphics::cPipeline::Initialize()
@@ -53,9 +53,4 @@ auto sk::Graphics::cPipeline::GetPass( const size_t _index ) const -> Passes::iP
 {
     SK_ERR_IF( _index >= m_passes_.size(), "Pass out of bounds" )
     return *m_passes_[ _index ];
-}
-
-auto sk::Graphics::cPipeline::GetFallbackContext() const -> Rendering::cRender_Context*
-{
-    return m_fallback_window_context_.get();
 }

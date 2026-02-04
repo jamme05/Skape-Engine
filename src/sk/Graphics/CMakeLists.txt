@@ -8,6 +8,7 @@ target_sources(SkapeEngine
     TYPE HEADERS
     FILES
       Renderer.h
+      Surface.h
 )
 
 add_subdirectory(Buffer)

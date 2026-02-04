@@ -2,6 +2,11 @@
 
 #include <sk/Graphics/Passes/Render_Pass.h>
 
+namespace sk::Graphics
+{
+    class iSurface;
+}
+
 namespace sk::Platform
 {
     class iWindow;
@@ -17,7 +22,7 @@ namespace sk::Graphics::Passes
     class cForward_Pass : public iPass
     {
     public:
-        explicit cForward_Pass( Platform::iWindow* _window );
+        explicit cForward_Pass( iSurface* _surface );
         
         void Init   () override;
         bool Begin  () override;
@@ -27,6 +32,6 @@ namespace sk::Graphics::Passes
     private:
         void RenderWithCamera( const Object::Components::cCameraComponent& _camera ) const;
         
-        Platform::iWindow* m_window_;
+        iSurface* m_surface_;
     };
 } // sk::Graphics

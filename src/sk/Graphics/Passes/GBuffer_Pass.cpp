@@ -20,19 +20,15 @@ void cGBuffer_Pass::Init()
 {
     m_render_context_ = std::make_unique< Rendering::cRender_Context >( 2, 3 );
 
-    cVector2u32 resolution;
-    if( const auto window = getPipeline().GetWindow() )
-        resolution = window->GetResolution();
-    else
-        resolution = Platform::GetMainWindow()->GetResolution();
+    m_resolution_ = getPipeline().GetSurface()->GetResolution();
 
     for( const auto& frame_buffer : *m_render_context_ )
     {
-        auto color_target    = sk::make_shared< Rendering::cRender_Target >( resolution, Rendering::cRender_Target::eFormat::kRGBA8 );
-        auto position_target = sk::make_shared< Rendering::cRender_Target >( resolution, Rendering::cRender_Target::eFormat::kRGBA16F );
-        auto normal_target   = sk::make_shared< Rendering::cRender_Target >( resolution, Rendering::cRender_Target::eFormat::kRGBA16F );
+        auto color_target    = sk::make_shared< Rendering::cRender_Target >( m_resolution_, Rendering::cRender_Target::eFormat::kRGBA8 );
+        auto position_target = sk::make_shared< Rendering::cRender_Target >( m_resolution_, Rendering::cRender_Target::eFormat::kRGBA16F );
+        auto normal_target   = sk::make_shared< Rendering::cRender_Target >( m_resolution_, Rendering::cRender_Target::eFormat::kRGBA16F );
         
-        auto depth_target = sk::make_shared< Rendering::cDepth_Target >( resolution, Rendering::cDepth_Target::eFormat::kD24FS8 );
+        auto depth_target = sk::make_shared< Rendering::cDepth_Target >( m_resolution_, Rendering::cDepth_Target::eFormat::kD24FS8 );
         
         frame_buffer->Bind( 0, position_target );
         frame_buffer->Bind( 1, normal_target );
@@ -44,13 +40,16 @@ void cGBuffer_Pass::Init()
 
 bool cGBuffer_Pass::Begin()
 {
-    auto  main_window    = Platform::GetMainWindow();
+    auto  surface        = getPipeline().GetSurface();
     auto& camera_manager = Scene::cCameraManager::get();
     auto& main_camera    = *camera_manager.getMainCamera();
     
-    if( main_window->WasResizedThisFrame() )
-        m_render_context_->Resize( main_window->GetResolution() );
-    
+    if( m_render_context_->GetBack().GetDepthTarget()->GetResolution() != surface->GetResolution() )
+    {
+        m_resolution_ = surface->GetResolution();
+        m_render_context_->GetBack().Resize( m_resolution_ );
+    }
+
     RenderWithCamera( main_camera );
     
     return true;

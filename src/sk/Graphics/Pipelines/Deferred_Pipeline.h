@@ -21,7 +21,7 @@ namespace sk::Graphics
     class cDeferred_Pipeline : public cPipeline
     {
     public:
-        explicit cDeferred_Pipeline( Platform::iWindow* _window = nullptr );
+        explicit cDeferred_Pipeline( iSurface* _surface );
         void Initialize() override;
         void Execute() override;
         
