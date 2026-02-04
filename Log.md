@@ -22,3 +22,12 @@ Day 2:
 - Got a viewport with basic functionality.
 
 ---
+
+Day 3:
+- Spent most of the day debugging and fixing the viewport.
+- Created an interface named iSurface to allow a me to have "virtual" windows, making the viewport easier to control whilst running on the same render pipeline as the game would.
+- I also made the Editor folder not build if the Editor runtime wasn't included in the cmake config. As it would be unecessary overhead when building the game only.
+- The future plan is to have the Editor be it's own static plugin.
+
+---
+
