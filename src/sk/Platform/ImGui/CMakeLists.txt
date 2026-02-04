@@ -5,5 +5,5 @@ target_sources(SkapeEngine
     FILE_SET engineIncludes
     TYPE HEADERS
     FILES
-        ImGuiInit.h
+        ImGuiHelper.h
 )
