@@ -65,7 +65,7 @@ namespace sk::Graphics::Rendering
 
         // Internal use only.
         [[ nodiscard ]]
-        auto get_texture_object() const { return m_texture_; }
+        auto get_native_texture() const { return m_texture_; }
     private:
 
         // YOU NEED TO BIND A FRAME BUFFER BEFORE CALLING THIS!!!!

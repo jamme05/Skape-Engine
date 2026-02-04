@@ -72,12 +72,12 @@ void Graphics::Utils::CopyRenderTarget( const Rendering::cRender_Target& _source
     gl::glViewport( 0, 0, _destination.GetResolution().x, _destination.GetResolution().y );
     gl::glScissor( 0, 0, _destination.GetResolution().x, _destination.GetResolution().y );
 
-    gl::glNamedFramebufferTexture( copy_rt_frame_buffer, gl::GL_COLOR_ATTACHMENT0, _destination.get_texture_object(), 0 );
+    gl::glNamedFramebufferTexture( copy_rt_frame_buffer, gl::GL_COLOR_ATTACHMENT0, _destination.get_native_texture(), 0 );
 
     gl::glUseProgram( copy_rt_program );
 
     gl::glActiveTexture( gl::GL_TEXTURE0 );
-    gl::glBindTexture( gl::GL_TEXTURE_2D, _source.get_texture_object() );
+    gl::glBindTexture( gl::GL_TEXTURE_2D, _source.get_native_texture() );
     gl::glUniform1i( 0, 0 );
 
     gl::glBindVertexArray( copy_rt_vertex_array );

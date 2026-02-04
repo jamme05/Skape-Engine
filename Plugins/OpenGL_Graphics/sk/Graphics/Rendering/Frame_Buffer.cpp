@@ -134,7 +134,7 @@ void cFrame_Buffer::Bind( const size_t _index, const cShared_ptr< cRender_Target
 
     if( m_render_targets_[ _index ] == _target && !_force )
     {
-        gl::glNamedFramebufferTexture( m_frame_buffer_, attachment, _target->get_texture_object(), 0 );
+        gl::glNamedFramebufferTexture( m_frame_buffer_, attachment, _target->get_native_texture(), 0 );
         return;
     }
 
@@ -147,7 +147,7 @@ void cFrame_Buffer::Bind( const size_t _index, const cShared_ptr< cRender_Target
     // It explains the difference between glFramebufferTexture and glFramebufferTexture2D, as well as a bit about cubemaps
     // TLDR: Only relevant for cubemap faces.
 
-    gl::glNamedFramebufferTexture( m_frame_buffer_, attachment, _target->get_texture_object(), 0 );
+    gl::glNamedFramebufferTexture( m_frame_buffer_, attachment, _target->get_native_texture(), 0 );
 
     if( m_render_targets_.size() < _index )
         m_render_targets_.resize( _index );
@@ -315,7 +315,7 @@ bool cFrame_Buffer::UseMaterial( const Assets::cMaterial& _material )
             SK_BREAK_RET_IF( sk::Severity::kGraphics,
                 _render_target == nullptr, "Warning: This shouldn't happen", std::nullopt )
 
-            return std::make_pair( gl::GL_TEXTURE_2D, _render_target->get_texture_object() );
+            return std::make_pair( gl::GL_TEXTURE_2D, _render_target->get_native_texture() );
         },
         []( const cAsset_Ref< Assets::cTexture >& _texture ) -> std::optional< std::pair< gl::GLenum, gl::GLuint > >
         {
