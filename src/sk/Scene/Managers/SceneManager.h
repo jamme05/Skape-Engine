@@ -6,53 +6,41 @@
 
 #pragma once
 
-#include "CameraManager.h"
-
-#include <sk/Math/Matrix4x4.h>
+#include <sk/Assets/Asset.h>
+#include <sk/Assets/Access/Asset_Ref.h>
 #include <sk/Misc/Singleton.h>
 #include <sk/Misc/Smart_Ptrs.h>
+#include <sk/Misc/UUID.h>
+#include <sk/Scene/Scene.h>
+
+#include <queue>
 
 namespace sk
 {
-	namespace Graphics::Rendering
-	{
-		class cRender_Context;
-	}
-
-	class cScene;
-
 	class cSceneManager : public cSingleton< cSceneManager >
 	{
-
 	public:
-		struct sObjectBuffer
+		struct sScene
 		{
-			cMatrix4x4f view_proj_inv;
-			cMatrix4x4f world;
+			cAsset_Ref< cScene > scene;
 		};
-		// TODO: Logic?
-		 cSceneManager( void );
-		~cSceneManager( void );
 
-		void registerScene( const cShared_ptr< cScene >& _scene );
+		cSceneManager ();
+		~cSceneManager() override;
 
-		void update( void );
+		void  registerScene( const cShared_ptr< cAsset_Meta >& _scene_meta );
+		auto& GetScenes() const { return m_scenes_; }
 
-		static void render( void );
-
-		[[ deprecated( "Use Passes from now on." ) ]]
-		void render_with( sk::Object::Components::cCameraComponent& _camera, Graphics::Rendering::cRender_Context& _context, const bool _swap = true );
-
-		static auto get_active_context( void ){ return m_active_context; }
-
-		static auto& get_buffer( void ){ return m_out_buffer; }
+		void        update();
+		static void render();
 
 	private:
+		static void on_scene_loaded( Assets::eEventType _action, cAsset_Ref< cScene >& _ref );
 
-		static sObjectBuffer* m_out_buffer;
+		using scene_map_t = unordered_map< hash< cUUID >, cAsset_Ref< cScene > >;
 
-		static Graphics::Rendering::cRender_Context* m_active_context;
-
-		vector< cShared_ptr< cScene > > m_scenes;
+		std::mutex m_scene_mutex_;
+		std::queue< cScene* > m_recently_loaded_scenes_ = {};
+		scene_map_t           m_scenes_ = {};
 	};
 } // sk::

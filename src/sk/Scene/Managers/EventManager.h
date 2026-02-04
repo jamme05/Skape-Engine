@@ -46,6 +46,10 @@ namespace sk
 			kDebugRender = 0x20,
 			kAllDebug    = kDebugRender,
 
+			kEditor = 0x40,
+			kEditorUpdate = kUpdate | kEditor,
+			kEditorRender = kRender | kEditor,
+
 			kAll    = 0xffff,
 		};
 	} // Object
@@ -174,7 +178,7 @@ namespace sk
 
 			sEvent( const func_t& _function )
 			: function( _function )
-			, raw_ptr( nullptr )
+			, raw_ptr( std::addressof( _function ) )
 			{}
 			
 			template< class Fn >
@@ -793,6 +797,7 @@ namespace sk
 			{}
 			
 			auto GetSelf() const { return m_dispatcher_->GetSelf(); }
+			auto size() const { return m_dispatcher_->size(); }
 
 			auto& operator+=( const event_t _listener )
 			{

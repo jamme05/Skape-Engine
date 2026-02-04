@@ -14,6 +14,6 @@ void cSpinComponent::update()
     GetTransform().GetLocalRotation() += m_speed_ * Time::Delta;
     GetTransform().MarkDirty();
 
-    for( auto& child : m_children_ )
+    for( auto& child : GetChildren() )
         child->GetTransform().MarkDirty();
 }

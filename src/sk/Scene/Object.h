@@ -17,7 +17,6 @@
 
 #include <ranges>
 
-
 namespace sk::Object::Components
 {
 	class cMeshComponent;
@@ -25,6 +24,7 @@ namespace sk::Object::Components
 
 namespace sk
 {
+	class cSceneManager;
 	class cScene;
 } // sk::
 
@@ -34,6 +34,9 @@ namespace sk::Object
 	GENERATE_CLASS( iObject ), public Event::cEventListener, public cShared_from_this< iObject >
 	{
 		CREATE_CLASS_BODY( iObject )
+
+		friend class sk::cScene;
+		friend class sk::cSceneManager;
 	sk_public:
 		// TODO: Create templated constructor with root type + parameters
 		explicit iObject( const std::string& _name )
@@ -75,32 +78,25 @@ namespace sk::Object
 		} // addComponent
 
 		// TODO: Have get component actually get a component instead of creating one.
-		template< class Ty, class... Args >
+		template< class Ty >
 		requires std::is_base_of_v< iComponent, Ty >
-		auto GetComponent( Args&&... _args ) -> cShared_ptr< Ty >
+		auto GetComponent() -> cShared_ptr< Ty >
 		{
-			auto component = sk::make_shared< Ty >( std::forward< Args >( _args )... );
-
-			component->m_object_ = get_weak();
-			component->setParent( m_root );
-
+			cShared_ptr< Ty > component = nullptr;
 			if constexpr( std::is_base_of_v< Components::cMeshComponent, Ty > )
-				m_mesh_components_.emplace_back( component );
+			{
+				if( !m_mesh_components_.empty() )
+					component = m_mesh_components_.front().Cast< Ty >();
+			}
 			else
-				m_components_.insert( std::pair{ Ty::getStaticType(), component } );
-
+			{
+				if( auto itr = m_components_.find( Ty::getStaticType() ); itr != m_components_.end() )
+					component = itr->second.template Cast< Ty >();
+			}
 			return component;
 		} // addComponent
-		
-		// TODO: Add a way to remove the component
 
-		// TODO: Reformat this comment.
-		// 
-		// 
-		// 
-		// 
-		// 
-		// If _req
+		// TODO: Add a way to remove the component
 
 		/**
 		 * 
@@ -173,9 +169,13 @@ namespace sk::Object
 		[[ nodiscard ]]
 		auto  GetLayer() const { return m_layer_; }
 
+		[[ nodiscard ]] auto& GetUUID() const { return m_uuid_; }
 		[[ nodiscard ]] auto& GetRoot()       { return m_root; }
 		[[ nodiscard ]] auto& GetRoot() const { return m_root; }
 
+		[[ nodiscard ]] auto& GetChildren() const { return m_children_; }
+
+		[[ nodiscard ]] auto& GetComponents() const { return m_components_; }
 		[[ nodiscard ]] auto& GetMeshComponents() const { return m_mesh_components_; }
 
 		[[ nodiscard ]] auto& GetPosition()       { return m_root->GetPosition(); }
@@ -196,9 +196,14 @@ namespace sk::Object
 	sk_protected:
 		void SetRoot( const cShared_ptr< iComponent >& _new_root_component, bool _override_parent = false );
 
+		void registerRecursive();
+		void enableRecursive ();
+		void disableRecursive();
+
 	sk_private:
 		cShared_ptr< iComponent > m_root;
-		
+		cUUID m_uuid_;
+
 		// TODO: Use typedefs/using
 		vector             < cShared_ptr< iObject > >              m_children_   = { };
 		unordered_multimap< type_hash, cShared_ptr< iComponent > > m_components_ = { };
@@ -215,16 +220,13 @@ namespace sk::Object
 		// TODO: Actually implament these. Follow Unity's design when it comes to layers. But do allow multiple tags.
 		std::vector< str_hash > m_tags_;
 		uint64_t                m_layer_ = 1;
-
-		friend class sk::cScene;
 	};
 
 	namespace Object
 	{
 		using class_type = iObject;
-	}
+	} // sk::Object::
 
-	template< class Ty, class ClassTy, const ClassTy& ClassRef >
 	class cObject : public iObject
 	{
 	public:
@@ -238,7 +240,7 @@ DECLARE_CLASS( sk::Object::Object )
 #define OBJECT_PARENT_CLASS( ObjectName, ... ) sk::Object::iObject
 #define OBJECT_PARENT_VALIDATOR( ObjectName, ... ) std::is_base_of_v< sk::Object::iObject, __VA_ARGS__ >
 #define OBJECT_PARENT_CREATOR_2( ObjectName, ... ) AFTER_FIRST( __VA_ARGS__ )
-#define OBJECT_PARENT_CREATOR_1( ObjectName, ... ) cObject< M_CLASS( ObjectName ), ObjectName :: runtime_class_t, ObjectName :: CONCAT( runtime_class_, ObjectName ) >
+#define OBJECT_PARENT_CREATOR_1( ObjectName, ... ) cObject
 #define OBJECT_PARENT_CREATOR( ObjectName, ... ) CONCAT( OBJECT_PARENT_CREATOR_, VARGS( __VA_ARGS__ ) ) ( ObjectName, __VA_ARGS__ )
 #define QW_OBJECT_CLASS( ObjectName, ... ) QW_RESTRICTED_CLASS( ObjectName, OBJECT_PARENT_CLASS, OBJECT_PARENT_CREATOR, OBJECT_PARENT_VALIDATOR, EMPTY __VA_OPT__( , __VA_ARGS__ ) )
 // TODO: Rename to SK_OBJECT_CLASS

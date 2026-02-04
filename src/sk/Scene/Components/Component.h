@@ -14,6 +14,11 @@
 #include <sk/Reflection/RuntimeClass.h>
 #include <sk/Scene/Managers/EventManager.h>
 
+namespace sk
+{
+	class cSceneManager;
+} // sk::
+
 namespace sk::Object
 {
 	class iObject;
@@ -26,13 +31,16 @@ namespace sk::Object
 	GENERATE_CLASS( iComponent ), public cShared_from_this< iComponent >
 	{
 		CREATE_CLASS_IDENTIFIERS( iComponent, runtime_class_iComponent )
+
+		friend class iObject;
+		friend class sk::cSceneManager;
 	protected:
 		iComponent()
 		{
 			m_self_      = get_weak();
 			m_transform_ = sk::make_shared< cTransform >();
 		}
-	public:
+	sk_public:
 
 		iComponent( iComponent const& ) = delete;
 
@@ -82,12 +90,13 @@ namespace sk::Object
 		
 		[[ nodiscard ]]
 		auto& GetSharedTransform() const { return m_transform_; }
-		
+
+		auto& GetChildren() const { return m_children_; }
+
 		auto& GetUUID() const { return m_uuid_; }
 
 		void SetParent( const cShared_ptr< iComponent >& _component )
 		{
-			// TODO: Complete rewrite after lunch :)
 			if( m_parent_ && !m_parent_.Lock()->m_children_.empty() )
 			{
 				if( const auto itr = std::ranges::find( m_parent_->m_children_, m_self_.Lock() ); itr != m_parent_->m_children_.end() )
@@ -99,8 +108,9 @@ namespace sk::Object
 			m_transform_->SetParent( ( _component != nullptr ) ? _component->m_transform_ : nullptr );
 		}
 
-	protected:
+	sk_protected:
 		virtual void setEnabled( const bool _is_enabled ){ m_enabled_ = _is_enabled; }
+		virtual void registerEvents() = 0;
 		
 		cShared_ptr< cTransform > m_transform_;
 		cWeak_Ptr< iComponent >   m_parent_    = nullptr;
@@ -108,23 +118,47 @@ namespace sk::Object
 		// TODO: Have the UUID be able to be loaded from a scene file in the future.
 
 		// TODO: Make the children into an unordered map
-		std::vector< cShared_ptr< iComponent > > m_children_ = { }; // TODO: Add get children function
 
-	private: // TODO: Move parts to cpp, find way to make actual constexpr
-		
+	sk_private: // TODO: Move parts to cpp, find way to make actual constexpr
+
+		void registerRecursive()
+		{
+			registerEvents();
+			enabled();
+			m_transform_->Update();
+			for( auto& child : m_children_ )
+				child->registerRecursive();
+		}
+		void enableRecursive ()
+		{
+			for( auto& child : m_children_ )
+			{
+				if( child->m_enabled_ )
+					child->enableRecursive();
+			}
+		}
+		void disableRecursive()
+		{
+			for( auto& child : m_children_ )
+				child->disableRecursive();
+		}
+
+
+
+		std::vector< cShared_ptr< iComponent > > m_children_ = { }; // TODO: Add get children function
 		cUUID m_uuid_     = {};
 		bool  m_enabled_  = true;
 		// Internal will hide it from the editor.
 		bool  m_internal_ = false;
 
 		cWeak_Ptr< iComponent > m_self_;
-		friend class iObject;
 	};
 
 	// TODO: Check if type is necessary
-	template< class Ty, class ClassTy, uint16_t Events >
+	template< class Ty, uint16_t Events >
 	class cComponent : public iComponent, public Event::cEventListener
 	{
+		friend class sk::cSceneManager;
 #define HAS_EVENT( Func, Val ) if constexpr( !std::is_same_v< decltype( &Ty::Func ), decltype( &iComponent::Func ) > ) events |= (Val)
 		constexpr static uint16_t detect_events()
 		{
@@ -142,12 +176,7 @@ namespace sk::Object
 	protected:
 		static constexpr uint16_t kEventMask = detect_events() & Events;
 
-		// Used to disable events not finished yet overriden.
-		// Registers all overriden events as callable events.
-		cComponent()
-		{
-			register_events();
-		} // cComponent
+		cComponent() = default;
 	public:
 
 		void SetEnabled( const bool _is_enabled ) final { setEnabled( _is_enabled ); _is_enabled ? postEvent< kEnabled >() : postEvent< kDisabled >(); }
@@ -180,7 +209,7 @@ namespace sk::Object
 		} // postEvent
 
 	private:
-		void update_internal()
+		void _updateInternal()
 		{
 			if constexpr( kEventMask & kUpdate )
 			{
@@ -190,10 +219,20 @@ namespace sk::Object
 			if( m_transform_->IsDirty() )
 				m_transform_->Update();
 		}
-		
-		void register_events()
+#ifdef SKAPE_EDITOR_AVAILABLE
+		void _editorUpdateInternal()
 		{
-			RegisterListener( kUpdate, &cComponent::update_internal );
+			if( m_transform_->IsDirty() )
+				m_transform_->Update();
+		}
+#endif // SKAPE_EDITOR_AVAILABLE
+
+		void registerEvents() final
+		{
+			RegisterListener( kUpdate, &cComponent::_updateInternal );
+#ifdef SKAPE_EDITOR_AVAILABLE
+			RegisterListener( kEditorUpdate, &cComponent::_editorUpdateInternal );
+#endif // SKAPE_EDITOR_AVAILABLE
 			if constexpr( kEventMask & kRender      ) RegisterListener( kRender,      &Ty::render       );
 			if constexpr( kEventMask & kDebugRender ) RegisterListener( kDebugRender, &Ty::debug_render );
 		} // register_events
@@ -210,6 +249,6 @@ DECLARE_CLASS( sk::Object::Component )
 #define COMPONENT_PARENT_CLASS( ComponentName, ... ) sk::Object::iComponent
 #define COMPONENT_PARENT_VALIDATOR( ComponentName, ... ) std::is_base_of< sk::Object::iComponent, __VA_ARGS__ >
 #define COMPONENT_PARENT_CREATOR_2( ComponentName, ... ) AFTER_FIRST( __VA_ARGS__ )
-#define COMPONENT_PARENT_CREATOR_1( ComponentName, ... ) sk::Object::cComponent< M_CLASS( ComponentName ), ComponentName::runtime_class_t, sk::Object::kAll >
+#define COMPONENT_PARENT_CREATOR_1( ComponentName, ... ) sk::Object::cComponent< M_CLASS( ComponentName ), sk::Object::kAll >
 #define COMPONENT_PARENT_CREATOR( ComponentName, ... ) CONCAT( COMPONENT_PARENT_CREATOR_, VARGS( __VA_ARGS__ ) ) ( ComponentName, __VA_ARGS__ )
 #define SK_COMPONENT_CLASS( ComponentName, ... ) QW_RESTRICTED_CLASS( ComponentName, COMPONENT_PARENT_CLASS, COMPONENT_PARENT_CREATOR, COMPONENT_PARENT_VALIDATOR, EMPTY __VA_OPT__( , __VA_ARGS__ ) )

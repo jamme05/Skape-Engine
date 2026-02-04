@@ -52,9 +52,9 @@ namespace sk::Object::Components
 
 		void update( void ) override;
 
-		auto& getViewport( void )       { return m_viewport; }
+		auto& getViewport( void )     { return m_viewport; }
+		auto& getScissor ( void )     { return m_scissor;  }
 		auto& getViewport( void ) const { return m_viewport; }
-		auto& getScissor ( void )       { return m_scissor;  }
 		auto& getScissor ( void ) const { return m_scissor;  }
 
 		auto& getViewProjInv( void ) const { return m_view_proj_inv; }
@@ -63,6 +63,7 @@ namespace sk::Object::Components
 		auto  GetLayers() const { return m_layers_; }
 		
 		auto& GetSettings() const { return m_camera_settings; }
+		void  SetSettings( const sCameraSettings& _settings );
 
 	private:
 

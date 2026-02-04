@@ -23,7 +23,6 @@ namespace sk::Object::Components
 
 	void cCameraComponent::renderTo( Graphics::Rendering::cRender_Context& _context )
 	{
-		cSceneManager::get().render_with( *this, _context );
 	} // begin
 
 	void cCameraComponent::renderTo( Graphics::Rendering::cRender_Target& _context )
@@ -50,6 +49,12 @@ namespace sk::Object::Components
 			m_view_proj_inv *= m_projection;
 		}
 	} // update
+
+	void cCameraComponent::SetSettings( const sCameraSettings& _settings )
+	{
+		m_camera_settings = _settings;
+		calculateProjectionMatrix();
+	}
 
 	void cCameraComponent::calculateProjectionMatrix( void )
 	{

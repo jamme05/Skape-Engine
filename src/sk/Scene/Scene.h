@@ -31,9 +31,12 @@ namespace sk
 		cShared_ptr< Ty > create_object( const std::string& _name, Args... _args )
 		{
 			auto shared = sk::make_shared< Ty >( _name, _args... );
+			shared->m_uuid_ = GenerateRandomUUID();
 			m_objects.emplace_back( shared );
 			return shared;
 		} // create_object
+
+		auto& GetObjects() const { return m_objects; }
 
 		void force_render( void );
 		void force_update( void );

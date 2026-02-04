@@ -27,3 +27,28 @@ void sk::Object::iObject::SetRoot( const cShared_ptr< iComponent >& _new_root_co
     
     m_root = _new_root_component;
 }
+
+void sk::Object::iObject::registerRecursive()
+{
+    for( auto& child : m_children_ )
+        child->registerRecursive();
+
+    m_root->registerRecursive();
+}
+
+void sk::Object::iObject::enableRecursive()
+{
+    for( auto& child : m_children_ )
+        child->enableRecursive();
+
+    for( auto& component : m_components_ | std::views::values )
+    {
+        if( component->m_enabled_ )
+            component->enableRecursive();
+    }
+}
+
+void sk::Object::iObject::disableRecursive()
+{
+
+}

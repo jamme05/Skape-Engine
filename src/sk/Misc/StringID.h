@@ -102,6 +102,8 @@ namespace sk
         [[ nodiscard ]]
         constexpr auto& view() const { return m_registry_.view(); }
         [[ nodiscard ]]
+        constexpr auto c_str() const { return m_registry_.view().data(); }
+        [[ nodiscard ]]
         auto& string() const { return m_registry_.string(); }
         
         constexpr operator str_hash        () const noexcept { return hash(); }

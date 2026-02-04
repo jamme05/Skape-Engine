@@ -116,7 +116,8 @@ void cApp::create()
 	const auto toilet_t      = list_2.GetAssetOfType< sk::Assets::cTexture >();
 	auto toilet_m            = list_2.GetAssetOfType< sk::Assets::cMesh    >();
 
-	m_scene = sk::make_shared< sk::cScene >();
+	auto [ scene_meta, _ ] = asset_m.CreateAsset< sk::cScene >( "Main Scene" );
+	m_scene = scene_meta;
 	m_scene->create_object< sk::Object::cCameraFlight >( "Camera Free Flight" )->setAsMain();
 
 	auto mat1 = asset_m.CreateAsset< sk::Assets::cMaterial >( "Material Test",
@@ -198,7 +199,7 @@ void cApp::create()
 		}
 	}
 
-	sk::cSceneManager::get().registerScene( m_scene );
+	sk::cSceneManager::get().registerScene( scene_meta );
 } // create
 
 void cApp::print_types()
@@ -306,6 +307,7 @@ void cApp::run()
 	sk::Time::Update();
 	
 	sk::cSceneManager::get().update();
+	sk::cEventManager::get().postEvent( sk::Object::kUpdate );
 	auto& pipeline = *sk::Graphics::cRenderer::get().GetPipeline();
 	
 	// TODO: Have the input manager push a mouse relative event with the relative being at 0, 0 every frame

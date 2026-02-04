@@ -7,6 +7,8 @@
 
 #include <unordered_set>
 
+#include "sk/Assets/Access/Asset_Ref.h"
+
 namespace sk::Graphics
 {
 	class cPipeline;
@@ -56,7 +58,7 @@ public:
 
 	auto GetMainWindow() const { return m_main_window_; }
 
-	sk::cShared_ptr< sk::cScene > m_scene = nullptr;
+	sk::cAsset_Ref< sk::cScene, sk::eAsset_Ref_Mode::kAutomaticSync > m_scene = {};
 
 	using window_t = sk::Platform::iWindow*;
 	std::unordered_set< window_t > m_windows;
