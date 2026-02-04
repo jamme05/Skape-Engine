@@ -178,11 +178,10 @@ void cAsset_Meta::removeReferrer( const void* _source, const cWeak_Ptr< iClass >
     
     if( m_lock_refs_.load() > 0 )
         return;
-    
-    if( ( m_flags_ & kManualCreation ) != 0 )
-        return;
 
-    if( can_remove )
+    if( m_flags_ & kManualCreation )
+        setAsset( nullptr );
+    else if( can_remove )
         push_load_task( false, _source );
 }
 
