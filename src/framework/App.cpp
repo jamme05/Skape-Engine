@@ -128,6 +128,7 @@ void cApp::create()
 	auto component = mesh->AddComponent< sk::Object::Components::cMeshComponent >( christopher_m, mat1.first );
 	component->enabled();
 	component->SetScale( sk::cVector3f{ 100.0f } );
+	
 		
 	auto mat2 = asset_m.CreateAsset< sk::Assets::cMaterial >( "Material Test 2",
 		sk::Graphics::Utils::cShader_Link{ shader_vert, shader_frag } );

@@ -40,9 +40,9 @@ void cGBuffer_Pass::Init()
 
 bool cGBuffer_Pass::Begin()
 {
-    auto  surface        = getPipeline().GetSurface();
-    auto& camera_manager = Scene::cCameraManager::get();
-    auto& main_camera    = *camera_manager.getMainCamera();
+    const auto  surface        = getPipeline().GetSurface();
+    const auto& camera_manager = Scene::cCameraManager::get();
+    const auto& main_camera    = *camera_manager.getMainCamera();
     
     if( m_render_context_->GetBack().GetDepthTarget()->GetResolution() != surface->GetResolution() )
     {

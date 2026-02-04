@@ -11,7 +11,7 @@
 namespace sk::Platform
 {
     class iWindow;
-}
+} // sk::Platform::
 
 namespace sk::Graphics::Rendering
 {

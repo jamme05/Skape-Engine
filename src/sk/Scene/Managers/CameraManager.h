@@ -35,8 +35,8 @@ namespace sk::Scene
 
 		void registerCamera( const cShared_ptr< camera_t >& _camera );
 
-		void setMainCamera( const cShared_ptr< camera_t >& _camera );
-		auto getMainCamera(){ return m_main_camera_.m_camera; }
+		void  setMainCamera( const cShared_ptr< camera_t >& _camera );
+		auto& getMainCamera() const { return m_main_camera_.m_camera; }
 
 		void setCameraEnabled( const cShared_ptr< camera_t >& _camera, const bool _enable );
 
