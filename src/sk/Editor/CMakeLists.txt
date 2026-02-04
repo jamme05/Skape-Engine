@@ -13,4 +13,6 @@ if(EditorIndex GREATER -1)
         FILES
             Editor.h
     )
+
+    add_subdirectory(Tabs)
 endif()

@@ -12,7 +12,7 @@
 
 #include <atomic>
 
-
+#include "Tabs/Tab.h"
 
 
 namespace sk::Object
@@ -36,11 +36,12 @@ namespace sk::Editor
 
     private:
         void _drawMainWindow();
+        void addTab( std::unique_ptr< Tabs::aTab >&& _tab );
 
-        cShared_ptr< Object::cCameraFlight > m_camera_ = nullptr;
         std::atomic_bool   m_is_game_running_ = false;
         Platform::iWindow* m_main_window_;
-        std::unique_ptr< Graphics::Utils::cRenderSurface > m_surface_;
+
+        std::vector< std::unique_ptr< Tabs::aTab > > m_tabs_;
     };
 } // sk::Editor::
 

@@ -6,9 +6,10 @@
 
 #include <sk/Assets/Material.h>
 #include <sk/Assets/Management/Asset_Manager.h>
+#include <sk/Editor/Tabs/ObjectListTab.h>
+#include <sk/Editor/Tabs/PlaceholderTab.h>
+#include <sk/Editor/Tabs/SceneViewportTab.h>
 #include <sk/Graphics/Renderer.h>
-#include <sk/Graphics/Pipelines/Deferred_Pipeline.h>
-#include <sk/Graphics/Pipelines/Pipeline.h>
 #include <sk/Graphics/Rendering/Frame_Buffer.h>
 #include <sk/Graphics/Utils/RenderUtils.h>
 #include <sk/Graphics/Utils/Shader_Link.h>
@@ -58,13 +59,13 @@ cEditor::cEditor()
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
     Gui::InitImGui( m_main_window_ );
 
-	m_surface_ = std::make_unique< Graphics::Utils::cRenderSurface >( cVector2u32{ 1280, 720 } );
-
     cSceneManager::init();
 }
 
 cEditor::~cEditor()
 {
+	Destroy();
+
     cSceneManager::shutdown();
 
     Gui::ImGuiShutdown();
@@ -100,15 +101,13 @@ void cEditor::Create()
 
 	// TODO: Create a material instance class.
 
-	Graphics::cRenderer::get().SetPipeline( SK_SINGLE( sk::Graphics::cDeferred_Pipeline, m_surface_.get() ) );
-
 	// Testing Scene
 	const auto christopher_t = list_1.GetAssetOfType< Assets::cTexture >();
 	auto christopher_m       = list_1.GetAssetOfType< Assets::cMesh    >();
 	const auto toilet_t      = list_2.GetAssetOfType< Assets::cTexture >();
 	auto toilet_m            = list_2.GetAssetOfType< Assets::cMesh    >();
 
-	auto scene = sk::make_shared< cScene >();
+	auto [ scene_meta, scene ] = asset_m.CreateAsset< cScene >( "Main Scene" );
 	scene->create_object< Object::cCameraFlight >( "Camera Free Flight" )->setAsMain();
 
 	auto mat1 = asset_m.CreateAsset< Assets::cMaterial >( "Material Test",
@@ -118,7 +117,6 @@ void cEditor::Create()
 	auto mesh = scene->create_object< Object::iObject >( "Mesh Test 2" );
 	mesh->GetTransform().SetLocalPosition( { 0.0f, -16.0f, 90.0f } );
 	auto component = mesh->AddComponent< Object::Components::cMeshComponent >( christopher_m, mat1.first );
-	component->enabled();
 	component->SetScale( cVector3f{ 100.0f } );
 
 	auto mat2 = asset_m.CreateAsset< Assets::cMaterial >( "Material Test 2",
@@ -129,7 +127,6 @@ void cEditor::Create()
 	mesh->GetTransform().SetLocalPosition( { -0.1f, 0.0f, 2.5f } );
 	auto spin_component = mesh->AddComponent< Object::Components::cSpinComponent >( cVector3f{ 0.0f, 5.0f, 0.0f } );
 	component = mesh->AddComponent< Object::Components::cMeshComponent >( toilet_m, mat2.first );
-	component->enabled();
 	component->SetParent( spin_component );
 
 	Scene::Light::sSettings light_settings{};
@@ -183,23 +180,22 @@ void cEditor::Create()
 			mesh_object->GetTransform().SetLocalPosition( { x * 2, 0.0f, y * 2 } );
 			auto spin = mesh_object->AddComponent< Object::Components::cSpinComponent >( cVector3f{ 0.0f, dis( gen ), 0.0f } );
 			auto mesh_component = mesh_object->AddComponent< Object::Components::cMeshComponent >( christopher_m, mat1.first );
-			mesh_component->enabled();
 			mesh_component->SetRotation( { -90.0f, 0.0f, 0.0f } );
 			mesh_component->SetParent( spin );
 		}
 	}
 
-	cSceneManager::get().registerScene( scene );
-
-	// Editor Scene
-
-	auto editor_scene = sk::make_shared< cScene >();
-	m_camera_ = scene->create_object< Object::cCameraFlight >( "Editor Viewport" );
-	m_camera_->setAsMain();
-	m_camera_->setFilter( m_camera_->getFilter() | Input::kEditor );
-	cSceneManager::get().registerScene( editor_scene );
+	cSceneManager::get().registerScene( scene_meta );
 
     cSceneManager::get().update();
+
+	addTab( std::make_unique< Tabs::cObjectListTab >( "Objects" ) );
+	addTab( std::make_unique< Tabs::cPlaceholderTab >( "Properties" ) );
+	addTab( std::make_unique< Tabs::cPlaceholderTab >( "Assets" ) );
+	addTab( std::make_unique< Tabs::cSceneViewportTab >( "Scene" ) );
+
+	for( auto& tab : m_tabs_ )
+		tab->Create();
 }
 
 void cEditor::Run()
@@ -209,7 +205,19 @@ void cEditor::Run()
     Gui::ImGuiNewFrame();
 
     Time::Update();
+    Graphics::cRenderer::get().Update();
+
+    cSceneManager::get().update();
+	cEventManager::get().postEvent( m_is_game_running_.load() ? Object::kUpdate : Object::kEditorUpdate );
+
     _drawMainWindow();
+
+	for( const auto& tab : m_tabs_ )
+	{
+		if( ImGui::Begin( tab->m_name_with_id_.c_str() ) )
+			tab->Draw();
+		ImGui::End();
+	}
 
     Gui::ImGuiRender();
     m_main_window_->SwapBuffers();
@@ -219,7 +227,9 @@ void cEditor::Run()
 
 void cEditor::Destroy()
 {
-	m_surface_.reset();
+	for( const auto& tab : m_tabs_ )
+		tab->Destroy();
+	m_tabs_.clear();
 }
 
 void cEditor::_drawMainWindow()
@@ -252,47 +262,20 @@ void cEditor::_drawMainWindow()
         ImGui::DockBuilderFinish( dockspace_id );
     }
 
-	ImGui::Text( "Boi" );
+	if( ImGui::Button( m_is_game_running_.load() ? "Pause" : "Play" ) )
+		m_is_game_running_.store( !m_is_game_running_.load() );
 
     ImGui::DockSpace( dockspace_id );
     ImGui::End();
+}
 
-    if( ImGui::Begin( "Properties" ) )
-    {
-        ImGui::Text("Test");
-    }
-    ImGui::End();
+void cEditor::addTab( std::unique_ptr< Tabs::aTab >&& _tab )
+{
+	auto& tab = *_tab;
+	tab.m_id_ = m_tabs_.size();
+	tab.m_name_with_id_ = tab.m_name_ + "##" + std::to_string( tab.m_id_ );
 
-    if( ImGui::Begin( "Assets" ) )
-    {
-        ImGui::Text("Test");
-    }
-    ImGui::End();
-
-    if( ImGui::Begin( "Objects" ) )
-    {
-        ImGui::Text("Test");
-    }
-    ImGui::End();
-
-    if( ImGui::Begin( "Viewport" ) )
-    {
-    	const auto  region = ImGui::GetContentRegionAvail();
-    	if( region.x != 0.0f && region.y != 0.0f )
-    		m_surface_->SetResolution( cVector2u32( region.x, region.y ) );
-
-    	m_camera_->update();
-    	// cSceneManager::get().update();
-    	Graphics::cRenderer::get().Update();
-    	auto& pipeline = *Graphics::cRenderer::get().GetPipeline();
-    	pipeline.Execute();
-
-    	const auto& front = m_surface_->GetRenderContext().GetFront();
-
-    	ImGui::Image( front.GetRenderTarget( 0 )->get_native_texture(), region, ImVec2( 0, 1 ), ImVec2( 1, 0 ) );
-    }
-    ImGui::End();
-
+	m_tabs_.emplace_back( std::move( _tab ) );
 }
 
 #endif // SKAPE_EDITOR_AVAILABLE
