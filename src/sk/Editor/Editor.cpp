@@ -58,6 +58,8 @@ cEditor::cEditor()
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
     Gui::InitImGui( m_main_window_ );
 
+	m_surface_ = std::make_unique< Graphics::Utils::cRenderSurface >( cVector2u32{ 1280, 720 } );
+
     cSceneManager::init();
 }
 
@@ -98,7 +100,7 @@ void cEditor::Create()
 
 	// TODO: Create a material instance class.
 
-	Graphics::cRenderer::get().SetPipeline( SK_SINGLE( sk::Graphics::cDeferred_Pipeline ) );
+	Graphics::cRenderer::get().SetPipeline( SK_SINGLE( sk::Graphics::cDeferred_Pipeline, m_surface_.get() ) );
 
 	// Testing Scene
 	const auto christopher_t = list_1.GetAssetOfType< Assets::cTexture >();
@@ -206,15 +208,8 @@ void cEditor::Run()
 
     Gui::ImGuiNewFrame();
 
-    _drawMainWindow();
-
     Time::Update();
-
-	m_camera_->update();
-    // cSceneManager::get().update();
-    Graphics::cRenderer::get().Update();
-    auto& pipeline = *Graphics::cRenderer::get().GetPipeline();
-    pipeline.Execute();
+    _drawMainWindow();
 
     Gui::ImGuiRender();
     m_main_window_->SwapBuffers();
@@ -224,7 +219,7 @@ void cEditor::Run()
 
 void cEditor::Destroy()
 {
-
+	m_surface_.reset();
 }
 
 void cEditor::_drawMainWindow()
@@ -245,7 +240,7 @@ void cEditor::_drawMainWindow()
     ImGui::PushStyleVar( ImGuiStyleVar_WindowPadding, ImVec2{ 0.0f, 0.0f } );
     ImGui::Begin("Test", &open, window_flags );
     ImGui::PopStyleVar();
-    ImGui::PopStyleVar(2);
+    ImGui::PopStyleVar( 2 );
 
     auto dockspace_id = ImGui::GetID( "RootDockspace" );
 
@@ -257,22 +252,24 @@ void cEditor::_drawMainWindow()
         ImGui::DockBuilderFinish( dockspace_id );
     }
 
+	ImGui::Text( "Boi" );
+
     ImGui::DockSpace( dockspace_id );
     ImGui::End();
 
-    if( ImGui::Begin( "Test 1" ) )
+    if( ImGui::Begin( "Properties" ) )
     {
         ImGui::Text("Test");
     }
     ImGui::End();
 
-    if( ImGui::Begin( "Test 2" ) )
+    if( ImGui::Begin( "Assets" ) )
     {
         ImGui::Text("Test");
     }
     ImGui::End();
 
-    if( ImGui::Begin( "Test 3" ) )
+    if( ImGui::Begin( "Objects" ) )
     {
         ImGui::Text("Test");
     }
@@ -281,9 +278,18 @@ void cEditor::_drawMainWindow()
     if( ImGui::Begin( "Viewport" ) )
     {
     	const auto  region = ImGui::GetContentRegionAvail();
-    	const auto& front = Graphics::cRenderer::get().GetPipeline()->GetFallbackContext()->GetFront();
+    	if( region.x != 0.0f && region.y != 0.0f )
+    		m_surface_->SetResolution( cVector2u32( region.x, region.y ) );
 
-    	ImGui::Image( front.GetRenderTarget( 0 )->get_texture_object(), region );
+    	m_camera_->update();
+    	// cSceneManager::get().update();
+    	Graphics::cRenderer::get().Update();
+    	auto& pipeline = *Graphics::cRenderer::get().GetPipeline();
+    	pipeline.Execute();
+
+    	const auto& front = m_surface_->GetRenderContext().GetFront();
+
+    	ImGui::Image( front.GetRenderTarget( 0 )->get_native_texture(), region, ImVec2( 0, 1 ), ImVec2( 1, 0 ) );
     }
     ImGui::End();
 
