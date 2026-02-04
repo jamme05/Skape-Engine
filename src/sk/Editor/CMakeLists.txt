@@ -1,13 +1,16 @@
 
 # TODO: Only add to target if it's gonna build the Editor runtime.
 
-target_sources(SkapeEngine
-    PRIVATE
-        Editor.cpp
+list(FIND SKAPE_RUNTIMES_BUILD "Editor" EditorIndex)
+if(EditorIndex GREATER -1)
+    target_sources(SkapeEngine
+        PRIVATE
+            Editor.cpp
 
-    PUBLIC
-    FILE_SET engineIncludes
-    TYPE HEADERS
-    FILES
-        Editor.h
-)
+        PUBLIC
+        FILE_SET engineIncludes
+        TYPE HEADERS
+        FILES
+            Editor.h
+    )
+endif()
