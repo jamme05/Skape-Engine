@@ -64,6 +64,11 @@ void cAsset_Raw_Ptr::unsubscribe()
     m_meta_->RemoveListener( GetFunctionId( &cAsset_Raw_Ptr::on_asset_event ) );
 }
 
+bool cAsset_Raw_Ptr::_allowDirectLoad()
+{
+    return on_asset_loaded.size() == 0;
+}
+
 cAsset_Raw_Ptr::self_t cAsset_Raw_Ptr::get_self() const
 {
     return on_asset_loaded.GetSelf();

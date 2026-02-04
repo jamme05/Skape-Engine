@@ -51,6 +51,7 @@ namespace sk
         
         void subscribe  () override;
         void unsubscribe() override;
+        bool _allowDirectLoad() override;
         auto get_self() const -> self_t override;
         auto validate_asset( const cShared_ptr< cAsset_Meta >& _meta ) const
             -> cShared_ptr< cAsset_Meta > override;

@@ -55,6 +55,7 @@ namespace sk
             -> cShared_ptr< cAsset_Meta > override;
         void subscribe() override;
         void unsubscribe() override;
+        bool _allowDirectLoad() override;
         auto get_self() const -> self_t override;
 
         void on_asset_event( cAsset_Meta& _meta, Assets::eEventType _event ) override;
@@ -141,6 +142,12 @@ namespace sk
     void cAsset_Ptr< Ty >::unsubscribe()
     {
         m_meta_->RemoveListener( sk::CreateEvent( this, &cAsset_Ptr::on_asset_event ) );
+    }
+
+    template< reflected Ty > requires std::is_base_of_v< cAsset, Ty >
+    bool cAsset_Ptr< Ty >::_allowDirectLoad()
+    {
+        return on_asset_loaded.size() == 0;
     }
 
     template< reflected Ty > requires std::is_base_of_v< cAsset, Ty >

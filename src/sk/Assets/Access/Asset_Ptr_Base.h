@@ -55,6 +55,9 @@ namespace sk
         void validate() const;
         virtual void subscribe  () = 0;
         virtual void unsubscribe() = 0;
+        // We can ignore sending out any events in case the user won't listen to them.
+        virtual bool _allowDirectLoad  () = 0;
+
         virtual auto get_self() const -> self_t = 0;
 
         // Return nullptr if the asset is invalid. Otherwise, simply forward the pointer.

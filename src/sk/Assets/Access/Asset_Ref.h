@@ -34,6 +34,7 @@ namespace sk
         cAsset_Ref_Base() : cAsset_Ptr_Base() {}
         
         using cAsset_Ptr_Base::IsLoaded;
+        using cAsset_Ptr_Base::GetMeta;
         using cAsset_Ptr_Base::IsValid;
         using cAsset_Ptr_Base::WaitUntilLoaded;
     };
@@ -94,6 +95,8 @@ namespace sk
         void try_load();
         void subscribe() override;
         void unsubscribe() override;
+        bool _allowDirectLoad  () override;
+
         auto get_self() const -> self_t override;
         auto validate_asset( const cShared_ptr< cAsset_Meta >& _meta ) const -> cShared_ptr< cAsset_Meta > override;
 
@@ -125,6 +128,7 @@ namespace sk
     : on_changed( _self )
     {
         base_t::SetAsset( _meta );
+
         try_load();
     }
 
@@ -258,6 +262,12 @@ namespace sk
     void cAsset_Ref< Ty, Mode >::unsubscribe()
     {
         base_t::m_meta_->RemoveListener( sk::CreateEvent( this, &cAsset_Ref::on_asset_event ) );
+    }
+
+    template< reflected Ty, eAsset_Ref_Mode Mode > requires std::is_base_of_v< cAsset, Ty >
+    bool cAsset_Ref< Ty, Mode >::_allowDirectLoad()
+    {
+        return on_changed.size() == 0;
     }
 
     template< reflected Ty, eAsset_Ref_Mode Mode > requires std::is_base_of_v< cAsset, Ty >

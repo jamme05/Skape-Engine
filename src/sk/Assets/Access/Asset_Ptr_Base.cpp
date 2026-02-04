@@ -108,8 +108,13 @@ bool cAsset_Ptr_Base::LoadAsync()
 {
     validate();
 
-    m_asset_.store( has_requested_ptr_ );
-    subscribe();
+    if( m_meta_->IsLoaded() && _allowDirectLoad() )
+        m_asset_.store( m_meta_->GetAsset() );
+    else
+    {
+        m_asset_.store( has_requested_ptr_ );
+        subscribe();
+    }
     m_meta_->addReferrer( this, get_self() );
 
     return true;
