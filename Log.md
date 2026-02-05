@@ -34,3 +34,12 @@ Day 3:
 
 ---
 
+Day 4:
+- Started the day fighting with CLion trying to get the class template to be how I want it to be.
+- Learned some Apache Velocity and was able to achive it 1.5 hours later.
+- Added a context menu helper class that allows easier creations of context menus.
+- Added Load/Unload and Unregister buttons to the scene. Planning to make the scene into an actual loadable asset the next week. Due to creating it during the runtime it will destroy itself as quick as it's been unloaded for the first time. The unloading is standard behaviour and will stay as the standard behaviour.
+- Added an Editor Internal Component that can be used in the future.
+
+---
+
