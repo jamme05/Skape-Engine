@@ -14,6 +14,7 @@ if(EditorIndex GREATER -1)
             Editor.h
     )
 
+    add_subdirectory(Components)
     add_subdirectory(Tabs)
     add_subdirectory(Utils)
 endif()
