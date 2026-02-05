@@ -155,6 +155,8 @@ namespace sk
     {
         base_t::operator=( std::move( _other ) );
 
+        on_changed = std::move( _other.on_changed );
+
         try_load();
 
         return *this;
