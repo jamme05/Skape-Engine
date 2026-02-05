@@ -10,9 +10,13 @@ namespace sk::Editor::Components
     SK_COMPONENT_CLASS( EditorInternalComponent )
     {
         SK_CLASS_BODY( EditorInternalComponent )
+
+        friend class sk::Editor::Managers::cSelectionManager;
     public:
-        bool selected = false;
-        std::set< cUUID > selected_components;
+        bool IsSelected() const { return m_selected_; }
+    private:
+        bool              m_selected_ = false;
+        std::set< cUUID > m_selected_components_;
     };
 } // sk::Editor::Components::
 

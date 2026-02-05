@@ -1,11 +1,13 @@
 
 #include "ObjectListTab.h"
 
+#include <sk/Editor/Managers/SelectionManager.h>
 #include <sk/Editor/Utils/ContextMenu.h>
 #include <sk/Scene/Scene.h>
 #include <sk/Scene/Managers/SceneManager.h>
 
 #include <imgui.h>
+
 
 
 using namespace sk::Editor::Tabs;
@@ -77,6 +79,8 @@ void cObjectListTab::_drawScene( const cScene& _scene )
 
 void cObjectListTab::_drawObjectRecursive( const Object::iObject& _object )
 {
+    auto& selection_manager = Managers::cSelectionManager::get();
+
     auto& children = _object.GetChildren();
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
     flags |= ImGuiTreeNodeFlags_DefaultOpen;
@@ -84,8 +88,20 @@ void cObjectListTab::_drawObjectRecursive( const Object::iObject& _object )
     if( children.empty() && !m_show_components_ )
         flags |= ImGuiTreeNodeFlags_Leaf;
 
+
+    if( selection_manager.IsSelected( _object ) )
+        flags |= ImGuiTreeNodeFlags_Selected;
+
     if( !ImGui::TreeNodeEx( _object.GetUUID().to_string().c_str(), flags, "%s", _object.GetName().c_str() ) )
         return;
+
+    if( ImGui::IsItemClicked() )
+    {
+        if( ImGui::IsKeyDown( ImGuiMod_Ctrl ) )
+            Managers::cSelectionManager::get().ToggleSelectedObject( _object.get_shared() );
+        else
+            Managers::cSelectionManager::get().AddSelectedObject( _object.get_shared(), !ImGui::IsKeyDown( ImGuiMod_Shift ) );
+    }
 
     for( auto& object : children )
         _drawObjectRecursive( *object );
@@ -107,6 +123,8 @@ void cObjectListTab::_drawComponentsRecursive( const Object::iComponent& _compon
     if( !m_debug_view_ && _component.GetIsInternal() )
         return;
 
+    auto& selection_manager = Managers::cSelectionManager::get();
+
     const auto type_name = _component.getClass().getName();
 
     auto& children = _component.GetChildren();
@@ -114,9 +132,19 @@ void cObjectListTab::_drawComponentsRecursive( const Object::iComponent& _compon
 
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
     flags |= has_non_internal_child ? ImGuiTreeNodeFlags_None : ImGuiTreeNodeFlags_Leaf;
+    if( selection_manager.IsSelected( _component ) )
+        flags |= ImGuiTreeNodeFlags_Selected;
 
     if( !ImGui::TreeNodeEx( _component.GetUUID().to_string().c_str(), flags, "%s", type_name.c_str() ) )
         return;
+
+    if( ImGui::IsItemClicked() )
+    {
+        if( ImGui::IsKeyDown( ImGuiMod_Ctrl ) )
+            Managers::cSelectionManager::get().ToggleSelectedComponent( _component.get_shared() );
+        else
+            Managers::cSelectionManager::get().AddSelectedComponent( _component.get_shared(), !ImGui::IsKeyDown( ImGuiMod_Shift ) );
+    }
 
     for( auto& child : children )
         _drawComponentsRecursive( *child );

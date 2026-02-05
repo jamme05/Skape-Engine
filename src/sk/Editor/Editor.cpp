@@ -6,6 +6,7 @@
 
 #include <sk/Assets/Material.h>
 #include <sk/Assets/Management/Asset_Manager.h>
+#include <sk/Editor/Managers/SelectionManager.h>
 #include <sk/Editor/Tabs/ObjectListTab.h>
 #include <sk/Editor/Tabs/PlaceholderTab.h>
 #include <sk/Editor/Tabs/SceneViewportTab.h>
@@ -60,11 +61,14 @@ cEditor::cEditor()
     Gui::InitImGui( m_main_window_ );
 
     cSceneManager::init();
+	Managers::cSelectionManager::init();
 }
 
 cEditor::~cEditor()
 {
 	Destroy();
+
+	Managers::cSelectionManager::shutdown();
 
     cSceneManager::shutdown();
 
@@ -218,6 +222,8 @@ void cEditor::Run()
 			tab->Draw();
 		ImGui::End();
 	}
+
+	Managers::cSelectionManager::get().Clean();
 
     Gui::ImGuiRender();
     m_main_window_->SwapBuffers();

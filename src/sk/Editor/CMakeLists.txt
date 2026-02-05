@@ -15,6 +15,7 @@ if(EditorIndex GREATER -1)
     )
 
     add_subdirectory(Components)
+    add_subdirectory(Managers)
     add_subdirectory(Tabs)
     add_subdirectory(Utils)
 endif()
