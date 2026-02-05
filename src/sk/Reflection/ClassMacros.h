@@ -324,7 +324,7 @@ class Class : public sk::get_inherits_t< FIRST( __VA_ARGS__ ) > \
  * HAS to be used in the global namespace (aka not within any namespace)
  * @param Class Namespace and name of class.
  */
-#define DECLARE_CLASS( Class ) \
+#define SK_DECLARE_CLASS( Class ) \
 	BUILD_CLASS_MEMBER_EXTRACTION( Class ) \
 	/* Build Member variable getters */ \
 	BUILD_CLASS_GET_VARIABLES( Class ) \

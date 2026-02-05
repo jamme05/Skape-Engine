@@ -60,4 +60,4 @@ namespace sk::Assets
     };
 } // sk::Assets
 
-DECLARE_CLASS( sk::Assets::Mesh )
+SK_DECLARE_CLASS( sk::Assets::Mesh )

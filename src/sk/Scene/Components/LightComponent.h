@@ -144,4 +144,4 @@ namespace sk::Object::Components
     };
 } // sk::Object::Components
 
-DECLARE_CLASS( sk::Object::Components::LightComponent )
+SK_DECLARE_CLASS( sk::Object::Components::LightComponent )

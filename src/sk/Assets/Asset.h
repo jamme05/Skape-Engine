@@ -209,7 +209,7 @@ namespace sk
 
 } // sk::
 
-DECLARE_CLASS( sk::Asset )
+SK_DECLARE_CLASS( sk::Asset )
 
 // Initializes data required for cAsset.
 // The class created by this will be using the default naming (ex: Mesh becomes cMesh).

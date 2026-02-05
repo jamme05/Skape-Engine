@@ -93,4 +93,4 @@ namespace sk::Object::Components
 	};
 } // sk::Object::Components::
 
-DECLARE_CLASS( sk::Object::Components::CameraComponent )
+SK_DECLARE_CLASS( sk::Object::Components::CameraComponent )

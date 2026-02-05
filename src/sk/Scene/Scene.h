@@ -48,4 +48,4 @@ namespace sk
 
 } // sk::
 
-DECLARE_CLASS( sk::Scene )
+SK_DECLARE_CLASS( sk::Scene )

@@ -61,4 +61,4 @@ sk_public:
     // Future example: SK_FUNCTION( test_func, Visibility=Private )
 };
 
-DECLARE_CLASS( Test )
+SK_DECLARE_CLASS( Test )

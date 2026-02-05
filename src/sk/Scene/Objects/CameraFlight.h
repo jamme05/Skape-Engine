@@ -33,4 +33,4 @@ namespace sk::Object
 	};
 } // sk::Object
 
-DECLARE_CLASS( sk::Object::CameraFlight )
+SK_DECLARE_CLASS( sk::Object::CameraFlight )

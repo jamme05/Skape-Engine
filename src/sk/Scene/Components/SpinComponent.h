@@ -18,4 +18,4 @@ namespace sk::Object::Components
     };
 } // sk::Object::Components::
 
-DECLARE_CLASS( sk::Object::Components::SpinComponent )
+SK_DECLARE_CLASS( sk::Object::Components::SpinComponent )

@@ -273,4 +273,4 @@ namespace sk::Assets
     }
 } // sk::Assets
 
-DECLARE_CLASS( sk::Assets::Material )
+SK_DECLARE_CLASS( sk::Assets::Material )

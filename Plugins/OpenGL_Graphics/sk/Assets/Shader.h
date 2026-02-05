@@ -62,4 +62,4 @@ namespace sk::Assets
     };
 } // sk::Assets::
 
-DECLARE_CLASS( sk::Assets::Shader )
+SK_DECLARE_CLASS( sk::Assets::Shader )

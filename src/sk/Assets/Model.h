@@ -35,4 +35,4 @@ namespace sk::Assets
 	};
 } // sk::Assets::
 
-DECLARE_CLASS( sk::Assets::Model )
+SK_DECLARE_CLASS( sk::Assets::Model )

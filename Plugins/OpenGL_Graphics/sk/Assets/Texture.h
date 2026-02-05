@@ -90,4 +90,4 @@ namespace sk::Assets
     
 } // sk::Assets
 
-DECLARE_CLASS( sk::Assets::Texture )
+SK_DECLARE_CLASS( sk::Assets::Texture )
