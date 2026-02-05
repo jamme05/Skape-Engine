@@ -65,6 +65,9 @@ namespace
 
     void message_callback(gl::GLenum source, gl::GLenum type, gl::GLuint id, gl::GLenum severity, gl::GLsizei length, gl::GLchar const* message, void const* user_param)
     {
+        if( type == gl::GL_DEBUG_TYPE_OTHER )
+            return;
+
         auto const src_str = [source]() {
             switch (source)
             {
@@ -87,7 +90,6 @@ namespace
             case gl::GL_DEBUG_TYPE_PORTABILITY: return "PORTABILITY";
             case gl::GL_DEBUG_TYPE_PERFORMANCE: return "PERFORMANCE";
             case gl::GL_DEBUG_TYPE_MARKER: return "MARKER";
-            case gl::GL_DEBUG_TYPE_OTHER: return "OTHER";
             default: return "UNKNOWN";
             }
         }();
@@ -112,19 +114,7 @@ cGLRenderer::cGLRenderer()
     main_thread_id = std::this_thread::get_id();
     
     glbinding::initialize( 0, &Platform::get_proc_address, true );
-    /*
-    for( auto& function : glbinding::Binding::functions() )
-    {
-        if( std::string_view{ "glGetError" } != function->name() )
-            function->addCallbackMask( glbinding::CallbackMask::After );
-    }
-    glbinding::setAfterCallback([]( const glbinding::FunctionCall& ){
-        if( const auto error = gl::glGetError(); error != gl::GL_NO_ERROR ){
-            SK_BREAK;
-            SK_WARNING( sk::Severity::kGraphics, "OpenGL Error: {}", static_cast< size_t >( error ) )
-        }
-    } );
-    //*/
+    gl::glEnable( gl::GL_DEBUG_OUTPUT );
     gl::glDebugMessageCallback( &message_callback, nullptr );
     
     cAsset_Manager::get().AddFileLoaderForExtensions(
