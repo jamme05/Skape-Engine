@@ -40,6 +40,8 @@ Day 4:
 - Added a context menu helper class that allows easier creations of context menus.
 - Added Load/Unload and Unregister buttons to the scene. Planning to make the scene into an actual loadable asset the next week. Due to creating it during the runtime it will destroy itself as quick as it's been unloaded for the first time. The unloading is standard behaviour and will stay as the standard behaviour.
 - Added an Editor Internal Component that can be used in the future.
+- Added a selection manager to keep track of selections between tabs.
+- Added the logic to the ObjectListTab to actually select and unselect things.
 
 ---
 
