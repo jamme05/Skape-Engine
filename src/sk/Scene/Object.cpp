@@ -8,6 +8,37 @@
 
 #include <sk/Scene/Managers/Layer_Manager.h>
 
+sk::Object::iObject::iObject( const std::string& _name )
+: m_root( sk::make_shared< Components::cTransformComponent >() )
+, m_name( _name )
+{
+    SetLayer( 0 );
+}
+
+sk::Object::iObject::~iObject()
+{
+    Scene::cLayer_Manager::get().RemoveObject( get_shared() );
+    m_children_.clear();
+    m_components_.clear();
+    m_root = nullptr;
+}
+
+void sk::Object::iObject::render()
+{
+    // TODO: Add actual event vector or something.
+    for( auto& val : m_components_ | std::views::values )
+    {
+        val->PostEvent( kRender );
+        val->PostEvent( kDebugRender );
+    }
+}
+
+void sk::Object::iObject::update()
+{
+    for( auto& val : m_components_ | std::views::values )
+        val->PostEvent( kUpdate );
+}
+
 void sk::Object::iObject::SetLayer( const uint64_t _layer )
 {
     auto& layer_manager = Scene::cLayer_Manager::get();

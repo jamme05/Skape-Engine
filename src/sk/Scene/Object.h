@@ -39,12 +39,7 @@ namespace sk::Object
 		friend class sk::cSceneManager;
 	sk_public:
 		// TODO: Create templated constructor with root type + parameters
-		explicit iObject( const std::string& _name )
-		: m_root( sk::make_shared< Components::cTransformComponent >() )
-		, m_name( _name )
-		{
-			SetLayer( 0 );
-		} // iObject
+		explicit iObject( const std::string& _name ); // iObject
 
 		template< class Ty = iComponent, class... Args >
 		explicit iObject( const std::string& _name, Args... _args )
@@ -52,12 +47,7 @@ namespace sk::Object
 		, m_name( _name )
 		{} // iObject
 
-		~iObject() override
-		{
-			m_children_.clear();
-			m_components_.clear();
-			m_root = nullptr;
-		}
+		~iObject() override;
 
 		template< class Ty, class... Args >
 		requires ( std::is_base_of_v< iComponent, Ty > && std::constructible_from< Ty, Args... > )
@@ -149,21 +139,11 @@ namespace sk::Object
 		} // addComponent
 
 		// TODO: Deprecate?
-		virtual void render()
-		{
-			// TODO: Add actual event vector or something.
-			for( auto& val : m_components_ | std::views::values )
-			{
-				val->PostEvent( kRender );
-				val->PostEvent( kDebugRender );
-			}
-		} // render
+		virtual void render();
+		// render
 
-		virtual void update()
-		{
-			for( auto& val : m_components_ | std::views::values )
-				val->PostEvent( kUpdate );
-		} // update
+		virtual void update();
+		// update
 
 		void SetLayer( uint64_t _layer );
 		[[ nodiscard ]]
