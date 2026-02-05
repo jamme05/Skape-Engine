@@ -9,9 +9,9 @@
 #include <sk/Scene/Managers/Layer_Manager.h>
 
 sk::Object::iObject::iObject( const std::string& _name )
-: m_root( sk::make_shared< Components::cTransformComponent >() )
-, m_name( _name )
+: m_name( _name )
 {
+    m_root = AddComponent< Components::cTransformComponent >();
     SetLayer( 0 );
 }
 
