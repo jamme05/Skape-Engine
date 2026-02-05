@@ -40,7 +40,7 @@ void cSceneViewportTab::Draw()
     m_camera_->update();
     auto camera = m_camera_->GetComponent< Object::Components::cCameraComponent >();
     auto settings = camera->GetSettings();
-    settings.aspect = static_cast< float >( resolution.x ) / resolution.y;
+    settings.aspect = static_cast< float >( resolution.x ) / static_cast< float >( resolution.y );
     camera->SetSettings( settings );
     camera->getViewport().width  = resolution.x;
     camera->getViewport().height = resolution.y;

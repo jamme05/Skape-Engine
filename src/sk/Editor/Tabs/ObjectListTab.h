@@ -1,8 +1,10 @@
 
 #pragma once
+
 #include "Tab.h"
-#include "sk/Editor/Utils/ContextMenu.h"
-#include "sk/Scene/Object.h"
+
+#include <sk/Editor/Utils/ContextMenu.h>
+#include <sk/Scene/Object.h>
 
 namespace sk
 {

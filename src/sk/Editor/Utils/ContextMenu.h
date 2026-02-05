@@ -3,7 +3,6 @@
 // Copyright (c) 2026 William Ask S. Ness. All rights reserved.
 //
 
-
 #pragma once
 
 #include <functional>
