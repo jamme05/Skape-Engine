@@ -33,7 +33,7 @@ cSceneManager::~cSceneManager()
 	cEventManager::shutdown();
 } // ~cSceneManager
 
-void cSceneManager::registerScene( const cShared_ptr< cAsset_Meta >& _scene_meta )
+void cSceneManager::RegisterScene( const cShared_ptr< cAsset_Meta >& _scene_meta )
 {
 	if( m_scenes_.contains( _scene_meta->GetUUID() ) )
 	{
@@ -41,10 +41,33 @@ void cSceneManager::registerScene( const cShared_ptr< cAsset_Meta >& _scene_meta
 		return;
 	}
 
-	auto& ref = m_scenes_[ _scene_meta->GetUUID() ];
-	ref.on_changed += on_scene_loaded;
-	ref = _scene_meta;
+	m_scenes_[ _scene_meta->GetUUID() ] = _scene_meta;
 } // registerScene
+void cSceneManager::UnregisterScene( const cUUID& _scene_uuid )
+{
+	// TODO: Warn if it wasn't found.
+	if( m_scenes_.contains( _scene_uuid ) )
+	{
+		UnloadScene( _scene_uuid );
+		m_scenes_.erase( _scene_uuid );
+	}
+}
+
+void cSceneManager::LoadScene( const cUUID& _scene_uuid )
+{
+	if( m_loaded_scenes_.contains( _scene_uuid ) )
+		return; // TODO: Throw warning
+
+	auto& ref = m_loaded_scenes_[ _scene_uuid ] = cAsset_Ref< cScene >{};
+	ref.on_changed += on_scene_loaded;
+	// TODO: Warn if the scene isn't registered.
+	ref = m_scenes_[ _scene_uuid ].Lock();
+}
+
+void cSceneManager::UnloadScene( const cUUID& _scene_uuid )
+{
+	m_loaded_scenes_.erase( _scene_uuid );
+}
 
 void cSceneManager::update()
 {

@@ -98,9 +98,10 @@ void sk::Scene::cLayer_Manager::RemoveObject( const cShared_ptr< Object::iObject
     if( was_created )
         return;
     
+    removeObjectAt( component->m_layer_index_, component->m_index_ );
+
     component->m_layer_index_ = std::numeric_limits< uint64_t >::max();
     component->m_index_       = std::numeric_limits< uint64_t >::max();
-    removeObjectAt( component->m_layer_index_, component->m_index_ );
 }
 
 auto sk::Scene::cLayer_Manager::GetLayerByName( const cStringID& _name ) const -> std::optional< uint64_t >

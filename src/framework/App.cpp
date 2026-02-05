@@ -199,7 +199,7 @@ void cApp::create()
 		}
 	}
 
-	sk::cSceneManager::get().registerScene( scene_meta );
+	sk::cSceneManager::get().RegisterScene( scene_meta );
 } // create
 
 void cApp::print_types()

@@ -284,6 +284,12 @@ void sk::Scene::cLight_Manager::compute_atlas()
 
     const auto count = m_shadow_casters_.size();
 
+    if( count == 0 )
+    {
+        m_computed_atlas_size_ = { 32, 32 };
+        return;
+    }
+
     // First: Resolution, Second: Shadow Caster Index
     using shadow_size_vec_t = std::vector< std::pair< uint32_t, uint32_t > >;
 

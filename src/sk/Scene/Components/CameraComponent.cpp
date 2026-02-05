@@ -21,6 +21,11 @@ namespace sk::Object::Components
 		Scene::cCameraManager::get().registerCamera( get_shared().Cast< cCameraComponent >() );
 	} // cCamera
 
+	cCameraComponent::~cCameraComponent()
+	{
+
+	}
+
 	void cCameraComponent::renderTo( Graphics::Rendering::cRender_Context& _context )
 	{
 	} // begin

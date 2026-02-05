@@ -28,8 +28,14 @@ namespace sk
 		cSceneManager ();
 		~cSceneManager() override;
 
-		void  registerScene( const cShared_ptr< cAsset_Meta >& _scene_meta );
+		void RegisterScene( const cShared_ptr< cAsset_Meta >& _scene_meta );
+		void UnregisterScene( const cUUID& _scene_uuid );
+
+		void LoadScene( const cUUID& _scene_uuid );
+		void UnloadScene( const cUUID& _scene_uuid );
+
 		auto& GetScenes() const { return m_scenes_; }
+		auto& GetLoadedScenes() const { return m_loaded_scenes_; }
 
 		void        update();
 		static void render();
@@ -37,10 +43,12 @@ namespace sk
 	private:
 		static void on_scene_loaded( Assets::eEventType _action, cAsset_Ref< cScene >& _ref );
 
-		using scene_map_t = unordered_map< hash< cUUID >, cAsset_Ref< cScene > >;
+		using scene_map_t = unordered_map< hash< cUUID >, cWeak_Ptr< cAsset_Meta > >;
+		using scene_ref_map_t = unordered_map< hash< cUUID >, cAsset_Ref< cScene > >;
 
 		std::mutex m_scene_mutex_;
 		std::queue< cScene* > m_recently_loaded_scenes_ = {};
 		scene_map_t           m_scenes_ = {};
+		scene_ref_map_t       m_loaded_scenes_ = {};
 	};
 } // sk::

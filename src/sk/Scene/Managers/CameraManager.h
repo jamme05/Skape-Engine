@@ -34,6 +34,7 @@ namespace sk::Scene
 		cCameraManager();
 
 		void registerCamera( const cShared_ptr< camera_t >& _camera );
+		void UnregisterCamera( const cShared_ptr< camera_t >& _camera );
 
 		void  setMainCamera( const cShared_ptr< camera_t >& _camera );
 		auto& getMainCamera() const { return m_main_camera_.m_camera; }
@@ -54,8 +55,8 @@ namespace sk::Scene
 		cShared_ptr< camera_t > m_current_camera_;
 		
 		// All registered cameras
-		map< uint64_t, cShared_ptr< camera_t > > m_cameras_;
+		unordered_map< hash< cUUID >, cShared_ptr< camera_t > > m_cameras_;
 		// All cameras being rendered to ( if they have a set render_context or render_target )
-		map< uint64_t, cShared_ptr< camera_t > > m_enabled_cameras_;
+		unordered_map< hash< cUUID >, cShared_ptr< camera_t > > m_enabled_cameras_;
 	};
 } // sk::Scene

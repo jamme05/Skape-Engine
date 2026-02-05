@@ -41,6 +41,7 @@ namespace sk::Object::Components
 		};
 
 		cCameraComponent( const Graphics::sViewport& _viewport, const Graphics::sScissor& _scissors, const sCameraSettings& _settings, eType _type );
+		~cCameraComponent();
 
 		void renderTo( Graphics::Rendering::cRender_Context& _context );
 		void renderTo( Graphics::Rendering::cRender_Target&  _target );
@@ -84,10 +85,6 @@ namespace sk::Object::Components
 		eType m_type;
 		
 		uint64_t m_layers_ = 1;
-
-		constexpr static auto invalid_camera_id = ~0llu;
-
-		uint64_t m_camera_id = invalid_camera_id;
 
 		friend class Scene::cCameraManager;
 	};

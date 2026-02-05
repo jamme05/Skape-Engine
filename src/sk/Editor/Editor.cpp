@@ -185,7 +185,7 @@ void cEditor::Create()
 		}
 	}
 
-	cSceneManager::get().registerScene( scene_meta );
+	cSceneManager::get().RegisterScene( scene_meta );
 
     cSceneManager::get().update();
 
