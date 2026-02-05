@@ -15,4 +15,5 @@ if(EditorIndex GREATER -1)
     )
 
     add_subdirectory(Tabs)
+    add_subdirectory(Utils)
 endif()
