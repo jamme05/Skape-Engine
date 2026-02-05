@@ -1,6 +1,7 @@
 
 #pragma once
 #include "Tab.h"
+#include "sk/Editor/Utils/ContextMenu.h"
 #include "sk/Scene/Object.h"
 
 namespace sk
@@ -25,9 +26,16 @@ namespace sk::Editor::Tabs
         void Destroy() override;
 
     private:
-        static void _drawScene( const cScene& _scene );
-        static void _drawObjectRecursive( const Object::iObject& _object );
-        static void _drawComponentsRecursive( const Object::iComponent& _component );
+        void _drawScene( const cScene& _scene );
+        void _drawObjectRecursive( const Object::iObject& _object );
+        void _drawComponentsRecursive( const Object::iComponent& _component );
+
+        bool m_debug_view_      = false;
+        bool m_show_components_ = true;
+        Utils::cContextMenu m_context_menu_;
+        Utils::cContextMenu m_scene_context_menu_;
+        Utils::cContextMenu m_object_context_menu_;
+        Utils::cContextMenu m_component_context_menu_;
     };
 } // sk::Editor::Tabs::
 
