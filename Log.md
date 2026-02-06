@@ -45,3 +45,11 @@ Day 4:
 
 ---
 
+Day 5:
+- Fixed the LoadFolder function in my asset manager to fully load in the project folder.
+- With this I also removed the manual loadFile calls.
+- Made sure that all paths area treated the same.
+- Added a quickly made AssetViewTab to show the assets in the project.
+
+---
+
