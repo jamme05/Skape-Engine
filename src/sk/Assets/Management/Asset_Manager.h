@@ -47,10 +47,13 @@ namespace sk
 	{
 		friend class cAsset_Meta;
 	public:
-		typedef std::pair< str_hash, std::string > file_pair_t;
+		using id_to_asset_map_t = unordered_map< hash< cUUID >, cShared_ptr< cAsset_Meta > >;
+		using file_pair_t       = std::pair< str_hash, std::string >;
 
-		 cAsset_Manager( void );
-		~cAsset_Manager( void ) override;
+		 cAsset_Manager();
+		~cAsset_Manager() override;
+
+		auto GetAllAssets() const -> const id_to_asset_map_t&;
 
 		auto getAsset( const cUUID _id ) -> cShared_ptr< cAsset_Meta >;
 
@@ -208,7 +211,6 @@ namespace sk
 			
 		};
 
-		using id_to_asset_map_t      = unordered_map< hash< cUUID >, cShared_ptr< cAsset_Meta > >;
 		using str_to_asset_map_t     = unordered_multimap< str_hash, cShared_ptr< cAsset_Meta > >;
 		using path_to_ref_map_t      = unordered_map< str_hash, sRef_Info >;
 		using extension_loader_map_t = unordered_map< cStringID, load_file_func_t >;

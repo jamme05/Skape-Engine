@@ -22,7 +22,7 @@ namespace sk
 {
 	cAsset_Manager::cAsset_Manager()
 	{
-		std::filesystem::current_path( SK_ROOT_DIR );
+		std::filesystem::current_path( std::filesystem::path{ SK_ROOT_DIR }.make_preferred() );
 
 		loadEmbedded();
 
@@ -77,6 +77,11 @@ namespace sk
 		m_path_ref_map_.clear();
 	} // ~cAssetManager
 
+	auto cAsset_Manager::GetAllAssets() const -> const id_to_asset_map_t&
+	{
+		return m_assets_;
+	}
+
 	auto cAsset_Manager::getAsset( const cUUID _id ) -> cShared_ptr< cAsset_Meta >
 	{
 		if( const auto asset_itr = m_assets_.find( _id ); asset_itr != m_assets_.end() )
@@ -105,7 +110,7 @@ namespace sk
 	auto cAsset_Manager::GetAssetByPath( const std::filesystem::path& _path ) -> cShared_ptr< cAsset_Meta >
 	{
 		if( _path.is_relative() )
-			return GetAssetByPathHash( std::string_view{ ( std::filesystem::current_path() / _path ).make_preferred().string() } );
+			return GetAssetByPathHash( std::string_view{ getAbsolutePath( _path ).string() } );
 
 		return GetAssetByPathHash( std::string_view{ _path.string() } );
 	} // getAssetByPath
@@ -113,7 +118,7 @@ namespace sk
 	auto cAsset_Manager::GetAssetsByPath( const std::filesystem::path& _path ) -> Assets::cAsset_List
 	{
 		if( _path.is_relative() )
-			return GetAssetsByPathHash( std::string_view{ ( std::filesystem::current_path() / _path ).string() } );
+			return GetAssetsByPathHash( std::string_view{ getAbsolutePath( _path ).string() } );
 
 		return GetAssetsByPathHash( std::string_view{ _path.string() } );
 	} // getAssetsByPath
@@ -169,10 +174,12 @@ namespace sk
 		if( _recursive )
 		{
 			std::filesystem::recursive_directory_iterator iter( _path );
-			for( const auto& file : iter )
+			for( auto& file : iter )
 			{
+				auto ext = file.path().extension().string();
 				// Look into making it safe. https://en.cppreference.com/w/cpp/filesystem/directory_entry.html
-				if( file.is_regular_file() )
+				if( file.is_regular_file() && file.path().has_extension()
+					&& m_load_callbacks_.contains( std::string_view{ ext.data() + 1, ext.length() - 1 } ) )
 					assets += loadFile( file.path(), _reload );
 			}
 		}
@@ -189,6 +196,11 @@ namespace sk
 		auto ext = _path.extension().string();
 		SK_ERR_IF( ext.empty(),
 			"Error: File extension is empty." )
+
+		const auto absolute_path = getAbsolutePath( _path );
+
+		if( m_asset_path_map_.contains( absolute_path ) )
+			return GetAssetsByPathHash( cStringID{ absolute_path.string() } );
 		
 		ext = ext.substr( 1 );
 		
@@ -198,8 +210,6 @@ namespace sk
 
 		if( callback_pair == m_load_callbacks_.end() )
 			return {};
-
-		const auto absolute_path = getAbsolutePath( _path );
 
 		Assets::cAsset_List assets;
 		callback_pair->second( absolute_path, assets, Assets::eAssetTask::kLoadMeta );
