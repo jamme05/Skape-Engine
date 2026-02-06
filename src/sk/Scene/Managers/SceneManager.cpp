@@ -25,6 +25,7 @@ cSceneManager::cSceneManager()
 cSceneManager::~cSceneManager()
 {
 	m_scenes_.clear();
+	m_loaded_scenes_.clear();
 
 	Scene::cInternal_Component_Manager::shutdown();
 	Scene::cLight_Manager::shutdown();
