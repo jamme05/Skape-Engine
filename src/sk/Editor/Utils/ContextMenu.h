@@ -26,7 +26,12 @@ namespace sk::Editor::Utils
         using predicate_t = std::function< bool( void* ) >;
         using selection_t = std::function< int_fast32_t( void* ) >;
         using callback_t  = std::function< void( void* ) >;
-        using value_t     = std::variant< std::monostate, bool*, callback_t, eSetting, std::unique_ptr< cContextMenu >, std::unique_ptr< sBranch > >;
+
+        struct sCustom
+        {
+            callback_t callback;
+        };
+        using value_t     = std::variant< std::monostate, bool*, callback_t, sCustom, eSetting, std::unique_ptr< cContextMenu >, std::unique_ptr< sBranch > >;
 
         struct sItem
         {
@@ -56,6 +61,8 @@ namespace sk::Editor::Utils
         auto Add( const std::string& _name, bool& _bool_value ) -> cContextMenu&;
         // Adds a button item to the menu
         auto Add( const std::string& _name, const callback_t& _callback ) -> cContextMenu&;
+        // Inject a function to be ran during the rendering. Great for doing extra ImGui calls.
+        auto AddCustom( const callback_t& _custom ) -> cContextMenu&;
 
         // Adds a button with the user data already cast. DO REMEMBER TO KEEP TRACK OF THE TYPE
         template< class Ty >
@@ -101,6 +108,8 @@ namespace sk::Editor::Utils
          */
         auto EndSubMenu() -> cContextMenu&;
 
+        // Set the following items to either enabled or disabled
+        // Note: You don't need to mark it as disabled in the end.
         auto SetDisabled( bool _is_disabled ) -> cContextMenu&;
 
         void Complete();

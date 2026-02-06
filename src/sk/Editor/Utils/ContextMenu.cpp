@@ -67,6 +67,13 @@ auto cContextMenu::Add( const std::string& _name, const callback_t& _callback ) 
     return *this;
 }
 
+auto cContextMenu::AddCustom( const callback_t& _custom ) -> cContextMenu&
+{
+    _add( sItem{ {}, sCustom{ _custom } } );
+
+    return *this;
+}
+
 auto cContextMenu::If( const predicate_t& _predicate ) -> cContextMenu&
 {
     auto builder = new sIfBuilder{};
@@ -291,6 +298,10 @@ void cContextMenu::_drawItem( sItem& _item )
         {
             if( ImGui::MenuItem( name.c_str() ) )
                 _callback( m_user_data_ );
+        },
+        [&]( const sCustom& _custom )
+        {
+            _custom.callback( m_user_data_ );
         },
         [&]( const eSetting& _settings )
         {
