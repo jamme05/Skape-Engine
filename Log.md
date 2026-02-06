@@ -3,6 +3,11 @@ The development of the editor is part of an assignment hence I'm required to mak
 
 ---
 
+Day \*:
+- Bug fixes and cleaning
+
+---
+
 Day 1:
 - A bit sick but started work towards the end of the day.
 - Found a couple of other bugs which surprisingly didn't cause any issues on Nvidia but would've been really annoying to find out of nowhere.
