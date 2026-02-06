@@ -50,6 +50,7 @@ Day 5:
 - With this I also removed the manual loadFile calls.
 - Made sure that all paths area treated the same.
 - Added a quickly made AssetViewTab to show the assets in the project.
+- Added support for branching to the context menu as well as support for disabling/enabling the items.
 
 ---
 
