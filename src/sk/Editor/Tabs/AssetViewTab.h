@@ -7,6 +7,8 @@
 #pragma once
 
 #include <sk/Editor/Tabs/Tab.h>
+#include <sk/Editor/Utils/ContextMenu.h>
+
 #include <filesystem>
 
 namespace sk::Editor::Tabs
@@ -21,6 +23,8 @@ namespace sk::Editor::Tabs
         void Destroy() override;
 
     private:
+        Utils::cContextMenu   m_context_menu_;
+        Utils::cContextMenu   m_asset_context_menu_;
         std::filesystem::path m_current_folder_;
     };
 } // sk::Editor::Tabs::

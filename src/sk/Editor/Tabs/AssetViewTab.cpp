@@ -12,9 +12,31 @@
 
 using namespace sk::Editor::Tabs;
 
+namespace
+{
+    struct sAsset
+    {
+        bool _is_folder;
+        sk::cAsset_Meta* meta;
+    };
+} // ::
+
 void cAssetViewTab::Create()
 {
     m_current_folder_ = std::filesystem::current_path();
+    m_context_menu_
+        .If( [ current_folder=&m_current_folder_ ]( void* )
+        {
+            return *current_folder == std::filesystem::current_path();
+        } )
+            .SetDisabled( true )
+        .EndIf()
+        .Add( "Back", [ current_folder=&m_current_folder_ ]( void* )
+        {
+            if( *current_folder != std::filesystem::current_path() )
+                *current_folder = current_folder->parent_path();
+        } )
+    .Complete();
 }
 
 void cAssetViewTab::Draw()
@@ -24,6 +46,8 @@ void cAssetViewTab::Draw()
         std::string           name;
         std::filesystem::path path;
     };
+
+    m_context_menu_.Draw();
 
     // TODO: Redo all of this
     auto& assets = cAsset_Manager::get().GetAllAssets();
@@ -46,7 +70,7 @@ void cAssetViewTab::Draw()
     const auto width = region.x / 6;
     auto size  = ImVec2{ width - 5, width - 5 };
 
-    auto total_items = assets_in_folder.size() + folders_in_folder.size();
+    // auto total_items = assets_in_folder.size() + folders_in_folder.size();
 
     ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, ImVec2{ 5, 5 } );
 

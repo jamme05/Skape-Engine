@@ -15,27 +15,34 @@ using namespace sk::Editor::Tabs;
 void cObjectListTab::Create()
 {
     m_context_menu_
-    .AddMenu( "Settings" )
-        .Add( "Debug Mode", m_debug_view_ )
-        .Add( "Show Components", m_show_components_ )
-    .Submit();
+        .AddSubMenu( "Settings" )
+            .Add( "Debug Mode", m_debug_view_ )
+            .Add( "Show Components", m_show_components_ )
+        .EndSubMenu()
+    .Complete();
 
     m_scene_context_menu_
-    .Add( "Load", []( void* _meta )
-    {
-        const auto& meta = *static_cast< cAsset_Meta* >( _meta );
-        cSceneManager::get().LoadScene( meta.GetUUID() );
-    } )
-    .Add( "Unload", []( void* _meta )
-    {
-        const auto& meta = *static_cast< cAsset_Meta* >( _meta );
-        cSceneManager::get().UnloadScene( meta.GetUUID() );
-    } )
-    .Add( "Remove", []( void* _meta )
-    {
-        const auto& meta = *static_cast< cAsset_Meta* >( _meta );
-        cSceneManager::get().UnregisterScene( meta.GetUUID() );
-    } );
+        .If< cAsset_Meta >( []( const cAsset_Meta* _meta )
+        {
+            return cSceneManager::get().GetLoadedScenes().contains( _meta->GetUUID() );
+        } )
+            .Add< cAsset_Meta >( "Unload", []( const cAsset_Meta* _meta )
+            {
+                cSceneManager::get().UnloadScene( _meta->GetUUID() );
+            } )
+        .Else()
+            .Add< cAsset_Meta >( "Load", []( const cAsset_Meta* _meta )
+            {
+                const auto& meta = *_meta;
+                cSceneManager::get().LoadScene( meta.GetUUID() );
+            } )
+        .EndIf()
+        .Add< cAsset_Meta >( "Remove", []( const cAsset_Meta* _meta )
+        {
+            const auto& meta = *_meta;
+            cSceneManager::get().UnregisterScene( meta.GetUUID() );
+        } )
+    .Complete();
 }
 
 void cObjectListTab::Draw()
