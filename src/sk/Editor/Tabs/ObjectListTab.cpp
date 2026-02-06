@@ -99,8 +99,8 @@ void cObjectListTab::_drawObjectRecursive( const Object::iObject& _object )
     if( selection_manager.IsSelected( _object ) )
         flags |= ImGuiTreeNodeFlags_Selected;
 
-    if( !ImGui::TreeNodeEx( _object.GetUUID().to_string().c_str(), flags, "%s", _object.GetName().c_str() ) )
-        return;
+
+    bool opened = ImGui::TreeNodeEx( _object.GetUUID().to_string().c_str(), flags, "%s", _object.GetName().c_str() );
 
     if( ImGui::IsItemClicked() )
     {
@@ -109,6 +109,9 @@ void cObjectListTab::_drawObjectRecursive( const Object::iObject& _object )
         else
             Managers::cSelectionManager::get().AddSelectedObject( _object.get_shared(), !ImGui::IsKeyDown( ImGuiMod_Shift ) );
     }
+
+    if( !opened )
+        return;
 
     for( auto& object : children )
         _drawObjectRecursive( *object );
@@ -142,8 +145,7 @@ void cObjectListTab::_drawComponentsRecursive( const Object::iComponent& _compon
     if( selection_manager.IsSelected( _component ) )
         flags |= ImGuiTreeNodeFlags_Selected;
 
-    if( !ImGui::TreeNodeEx( _component.GetUUID().to_string().c_str(), flags, "%s", type_name.c_str() ) )
-        return;
+    const bool opened = ImGui::TreeNodeEx( _component.GetUUID().to_string().c_str(), flags, "%s", type_name.c_str() );
 
     if( ImGui::IsItemClicked() )
     {
@@ -152,6 +154,9 @@ void cObjectListTab::_drawComponentsRecursive( const Object::iComponent& _compon
         else
             Managers::cSelectionManager::get().AddSelectedComponent( _component.get_shared(), !ImGui::IsKeyDown( ImGuiMod_Shift ) );
     }
+
+    if( !opened )
+        return;
 
     for( auto& child : children )
         _drawComponentsRecursive( *child );
