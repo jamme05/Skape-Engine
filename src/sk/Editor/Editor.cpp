@@ -197,7 +197,7 @@ void cEditor::Create()
 
 	addTab( std::make_unique< Tabs::cObjectListTab >( "Objects" ) );
 	addTab( std::make_unique< Tabs::cPlaceholderTab >( "Properties" ) );
-	addTab( std::make_unique< Tabs::cPlaceholderTab >( "Assets" ) );
+	addTab( std::make_unique< Tabs::cAssetViewTab >( "Assets" ) );
 	addTab( std::make_unique< Tabs::cSceneViewportTab >( "Scene" ) );
 
 	for( auto& tab : m_tabs_ )
