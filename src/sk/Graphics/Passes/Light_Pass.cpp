@@ -41,7 +41,7 @@ void cLight_Pass::Init()
     m_shadow_material_ = asset_manager.CreateAsset< Assets::cMaterial >( "Shadow Material",
         Utils::cShader_Link{
             asset_manager.GetAssetByPath( "shaders/default.vert" ),
-            *asset_manager.loadFile( "shaders/shadow.frag" ).begin()
+            asset_manager.GetAssetByPath( "shaders/shadow.frag" )
         }
     ).first;
 }

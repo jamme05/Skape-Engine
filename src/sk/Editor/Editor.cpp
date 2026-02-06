@@ -7,6 +7,7 @@
 #include <sk/Assets/Material.h>
 #include <sk/Assets/Management/Asset_Manager.h>
 #include <sk/Editor/Managers/SelectionManager.h>
+#include <sk/Editor/Tabs/AssetViewTab.h>
 #include <sk/Editor/Tabs/ObjectListTab.h>
 #include <sk/Editor/Tabs/PlaceholderTab.h>
 #include <sk/Editor/Tabs/SceneViewportTab.h>
@@ -28,6 +29,7 @@
 
 #include <imgui.h>
 #include <imgui_internal.h>
+
 
 
 #ifdef SKAPE_EDITOR_AVAILABLE
@@ -96,12 +98,12 @@ void cEditor::Create()
 {
     auto& asset_m = cAsset_Manager::get();
 
-	auto list_1 = asset_m.loadFile( "models/humanforscale.glb" );
-	auto list_2 = asset_m.loadFile( "models/heheToiletwithtextures.glb" );
-	const auto shader_frag = *asset_m.loadFile( "shaders/gpass.frag" ).begin();
-	const auto shader_vert = *asset_m.loadFile( "shaders/default.vert" ).begin();
-	asset_m.loadFile( "shaders/screen.vert" );
-	asset_m.loadFile( "shaders/deferred.frag" );
+	asset_m.loadFolder( SK_ROOT_DIR );
+
+	auto list_1 = asset_m.GetAssetsByPath( "models/humanforscale.glb" );
+	auto list_2 = asset_m.GetAssetsByPath( "models/heheToiletwithtextures.glb" );
+	const auto shader_frag = asset_m.GetAssetByPath( "shaders/gpass.frag" );
+	const auto shader_vert = asset_m.GetAssetByPath( "shaders/default.vert" );
 
 	// TODO: Create a material instance class.
 
