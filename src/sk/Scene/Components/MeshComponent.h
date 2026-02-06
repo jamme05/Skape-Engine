@@ -8,7 +8,6 @@
 
 #include <sk/Assets/Material.h>
 #include <sk/Assets/Mesh.h>
-#include <sk/Assets/Access/Asset_Ptr.h>
 #include <sk/Scene/Components/Component.h>
 
 namespace sk::Assets
