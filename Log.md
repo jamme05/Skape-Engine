@@ -59,3 +59,8 @@ Day 5:
 
 ---
 
+Extra Day 1( 7/2 ):
+- Continued previously left work with trying to get Jolt integrated into my engine. This will be important for later as I'm currently unable to linecast.
+
+---
+
