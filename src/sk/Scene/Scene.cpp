@@ -6,6 +6,8 @@
 
 #include "Scene.h"
 
+#include <sk/Seralization/SerializedObject.h>
+
 namespace sk
 {
 	cScene::~cScene( void )
@@ -28,4 +30,12 @@ namespace sk
 		for( auto& obj : m_objects )
 			obj->update();
 	} // update
+	cShared_ptr< cSerializedObject > cScene::Serialize()
+	{
+		auto object = cSerializedObject::CreateForWrite( this );
+		object->AddBase( cAsset::Serialize() );
+
+		object->EndWrite();
+		return object;
+	}
 } // sk::

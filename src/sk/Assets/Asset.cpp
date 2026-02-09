@@ -234,6 +234,7 @@ void cAsset_Meta::dispatch_if_loaded( const dispatcher_t::listener_t& _listener,
 
 cShared_ptr< cSerializedObject > cAsset::Serialize()
 {
+    auto object = cSerializedObject::CreateForWrite( this );
     return m_metadata_->GetUUID().Serialize();
 }
 

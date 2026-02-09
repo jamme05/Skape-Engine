@@ -22,7 +22,6 @@
 #include <filesystem>
 #include <unordered_map>
 
-
 namespace sk
 {
 	namespace Assets::Jobs
@@ -177,7 +176,9 @@ namespace sk
 	{
 		using class_type = cAsset_Meta;
 	} // Asset
-	
+
+	class cAsset;
+
 	SK_CLASS( Asset ), public cSerializable
 	{
 		SK_CLASS_BODY( Asset )

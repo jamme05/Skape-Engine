@@ -36,10 +36,12 @@ namespace sk
 			return shared;
 		} // create_object
 
-		auto& GetObjects() const { return m_objects; }
+		[[ nodiscard ]] auto& GetObjects() const { return m_objects; }
 
-		void force_render( void );
-		void force_update( void );
+		void force_render();
+		void force_update();
+
+		auto Serialize() -> cShared_ptr< cSerializedObject > override;
 
 	private:
 		// TODO: Replace this with a map.
