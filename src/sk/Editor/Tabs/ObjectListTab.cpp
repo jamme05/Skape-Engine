@@ -100,7 +100,7 @@ void cObjectListTab::_drawObjectRecursive( const Object::iObject& _object )
         flags |= ImGuiTreeNodeFlags_Selected;
 
 
-    bool opened = ImGui::TreeNodeEx( _object.GetUUID().to_string().c_str(), flags, "%s", _object.GetName().c_str() );
+    bool opened = ImGui::TreeNodeEx( _object.GetUUID().ToString().c_str(), flags, "%s", _object.GetName().c_str() );
 
     if( ImGui::IsItemClicked() )
     {
@@ -117,7 +117,7 @@ void cObjectListTab::_drawObjectRecursive( const Object::iObject& _object )
         _drawObjectRecursive( *object );
 
     // TODO: Draw this node slightly differently to show that this is showing something else.
-    if( m_show_components_ && ImGui::TreeNode( ( "C_" + _object.GetUUID().to_string() ).c_str(), "Components" ) )
+    if( m_show_components_ && ImGui::TreeNode( ( "C_" + _object.GetUUID().ToString() ).c_str(), "Components" ) )
     {
         _drawComponentsRecursive( *_object.GetRoot() );
 
@@ -145,7 +145,7 @@ void cObjectListTab::_drawComponentsRecursive( const Object::iComponent& _compon
     if( selection_manager.IsSelected( _component ) )
         flags |= ImGuiTreeNodeFlags_Selected;
 
-    const bool opened = ImGui::TreeNodeEx( _component.GetUUID().to_string().c_str(), flags, "%s", type_name.c_str() );
+    const bool opened = ImGui::TreeNodeEx( _component.GetUUID().ToString().c_str(), flags, "%s", type_name.c_str() );
 
     if( ImGui::IsItemClicked() )
     {

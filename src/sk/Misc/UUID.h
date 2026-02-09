@@ -58,8 +58,9 @@ namespace sk
             return m_high_ <=> _other.m_high_;
         } // operator<=>
 
+        static cUUID FromString( const std::string_view& _raw_uuid );
         [[ nodiscard ]]
-        std::string to_string( bool _dashed = true ) const;
+        std::string ToString( bool _dashed = true ) const;
 
         static const cUUID kInvalid;
         static const cUUID kMax;

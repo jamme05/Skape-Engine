@@ -29,13 +29,41 @@ namespace sk
     auto cUUID::Serialize() -> cShared_ptr< cSerializedObject >
     {
         auto object = cSerializedObject::CreateForWrite();
-        
-        // TODO: UUID Serialization.
-        
+        object->WriteData( "_value", ToString() );
+        object->EndWrite();
         return object;
     }
 
-    std::string cUUID::to_string( const bool _dashed ) const
+    cUUID cUUID::FromString( const std::string_view& _raw_uuid )
+    {
+        SK_BREAK_RET_IF( sk::Severity::kEngine, _raw_uuid.size() < 32, "UUID size is less than minimum of 32 characters.", kInvalid )
+
+        cUUID uuid;
+
+        size_t     uuid_length = 0;
+        const auto raw_uuid = reinterpret_cast< uint8_t* >( &uuid );
+        for( auto c : _raw_uuid )
+        {
+            if( c == '-' )
+                continue;
+
+            c = Math::CharToHex( c );
+
+            SK_BREAK_RET_IF( sk::Severity::kEngine, c == -1, "Warning: Invalid UUID string provided.", kInvalid )
+            const auto index = uuid_length / 2;
+
+            if( uuid_length % 2 )
+                raw_uuid[ index ] = c;
+            else
+                raw_uuid[ index ] = c << 4;
+
+            ++uuid_length;
+        }
+
+        return uuid;
+    }
+
+    std::string cUUID::ToString( const bool _dashed ) const
     {
         std::string_view target_string;
 

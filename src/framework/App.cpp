@@ -209,7 +209,7 @@ void cApp::print_types()
 		uuid = sk::GenerateRandomUUID();
 
 	for( auto& uuid : uuids )
-		std::println( "{} {}", uuid.to_string(), uuid.to_string( false ) );
+		std::println( "{} {}", uuid.ToString(), uuid.ToString( false ) );
 
 	auto& types = sk::Reflection::cType_Manager::get().GetTypes();
 
