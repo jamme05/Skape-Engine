@@ -22,6 +22,15 @@ cSerializedObject::cSerializedObject( const type_info_t _serialized_type, const 
 
 cSerializedObject::cSerializedObject() = default;
 
+cSerializedObject::cSerializedObject( const simdjson::dom::object& _object )
+{
+    auto& type_manager = Reflection::cType_Manager::get();
+
+    auto header_object = _object.at_key( "header" ).get_object();
+    auto data_object   = _object.at_key( "data" ).get_object();
+    auto member_array  = _object.at_key( "members" ).get_array();
+}
+
 cSerializedObject::cSerializedObject( const cSerializedObject& _other )
 : m_serialized_type_( _other.m_serialized_type_ )
 , m_element_count_( _other.m_element_count_ )
@@ -114,11 +123,10 @@ cSerializedObject& cSerializedObject::operator=( cSerializedObject&& _other ) no
 
 }
 
-auto cSerializedObject::CreateForWrite()->cShared_ptr<cSerializedObject>
+auto cSerializedObject::CreateForWrite() -> cShared_ptr< cSerializedObject >
 {
-    auto object = sk::make_shared< cSerializedObject >( nullptr );
+    auto object = sk::make_shared< cSerializedObject >();
     object->BeginWrite();
-        
     return object;
 }
 
@@ -158,10 +166,42 @@ void cSerializedObject::CreateJSON( json_builder_t& _builder )
 {
     if( !has_completed_json() )
     {
+        _builder.start_object();
+
+        // Write type header.
+        _builder.escape_and_append_with_quotes( "header" );
+        _builder.append_colon();
+        _builder.start_object();
+
+        if( m_serialized_type_ != nullptr )
+        {
+            _builder.append_key_value( "valid", true );
+            _builder.append_key_value( "name",  m_serialized_type_->name );
+            _builder.append_key_value( "id",    m_serialized_type_->hash.value() );
+        }
+        else
+            _builder.append_key_value( "valid", false );
+
+        _builder.end_object();
+
+        _builder.escape_and_append_with_quotes( "bases" );
+        _builder.append_colon();
+        _builder.start_array();
+
+        for( auto& base : m_bases_ )
+            base->CreateJSON( _builder );
+
+        _builder.end_array();
+
+        _builder.escape_and_append_with_quotes( "data" );
+        _builder.append_colon();
+
         if( IsArray() )
             create_json_array( m_json_builder_ );
         else
             create_json_object( m_json_builder_ );
+
+        _builder.end_object();
     }
     
     _builder.append_raw( m_json_builder_ );
@@ -170,8 +210,7 @@ void cSerializedObject::CreateJSON( json_builder_t& _builder )
 auto cSerializedObject::CreateBinary() -> const std::span< std::byte >&
 {
     // TODO: Binary export.
-    static std::span< std::byte > tmp{};
-    return tmp;
+    return m_binary_cache_;
 }
 
 void cSerializedObject::ClearCache()
@@ -185,6 +224,30 @@ void cSerializedObject::BeginWrite( iClass* _this, const bool _reset )
     
     if( _reset )
         Reset();
+}
+
+void cSerializedObject::AddBase( const cShared_ptr< cSerializedObject >& _base_info )
+{
+    m_bases_.emplace_back( _base_info );
+}
+
+void cSerializedObject::WriteData( const cStringID& _name, value_t&& _value )
+{
+    const auto json_safe_name = MakeJsonSafeName( _name.view() );
+
+    auto index = m_info_.size();
+    m_values_.emplace_back( std::move( _value ) );
+
+    sValueInfo info{
+        .name = _name.view(),
+        .json_safe_name = std::string_view{ json_safe_name },
+        .offset = 0,
+        .value_index = static_cast< uint32_t >( index ),
+        .flags  = 0,
+        .type   = nullptr,
+    };
+
+    m_info_.emplace_back( std::move( info ) );
 }
 
 void cSerializedObject::EndWrite()
@@ -203,6 +266,34 @@ void cSerializedObject::EndWrite()
             info.offset += m_raw_offset_;
         }
     }
+}
+
+std::string cSerializedObject::MakeJsonSafeName( const std::string_view& _name )
+{
+    std::stringstream ss;
+
+    for( auto c : _name )
+    {
+        bool valid = true;
+        switch( c )
+        {
+        case '_':
+        case '-':
+        case '.':
+            valid = true; break;
+        case ' ':
+            c = '_'; break;
+        default:
+            valid = std::isalnum( c );
+        }
+
+        if( !valid )
+            continue;
+
+        ss << c;
+    }
+
+    return ss.str();
 }
 
 void cSerializedObject::create_json_object( json_builder_t& _builder )

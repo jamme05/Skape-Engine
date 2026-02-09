@@ -17,7 +17,7 @@ namespace sk
         friend class Serializable;
         
     public:
-        cSerializedObject( type_info_t _serialized_type, size_t _element_count = 0 );
+        explicit cSerializedObject( type_info_t _serialized_type, size_t _element_count = 0 );
         // This is so we can ignore the full on class reflection.
 	    CREATE_CLASS_IDENTITY_IDENTIFIERS( SerializedObject::runtime_class_SerializedObject )
 
@@ -39,6 +39,7 @@ namespace sk
         };
         
         cSerializedObject();
+        explicit cSerializedObject( const simdjson::dom::object& _object );
         cSerializedObject( const cSerializedObject& _other );
         cSerializedObject( cSerializedObject&& _other ) noexcept;
         ~cSerializedObject() override;
@@ -63,9 +64,10 @@ namespace sk
             {}
             Value Ty::* ptr;
         };
-        
-        using value_t = std::variant< cShared_ptr< cSerializedObject >,  bool,  int64_t,  uint64_t,  double,  std::string  >;
-        using array_t = std::variant< cShared_ptr< cSerializedObject >*, bool*, int64_t*, uint64_t*, double*, std::string* >;
+
+        using obj_ptr = cShared_ptr< cSerializedObject >;
+        using value_t = std::variant< obj_ptr,  bool,  int64_t,  uint64_t,  double,  std::string  >;
+        using array_t = std::variant< obj_ptr*, bool*, int64_t*, uint64_t*, double*, std::string* >;
         using json_builder_t = simdjson::builder::string_builder;
 
         [[ nodiscard ]] bool IsArray() const;
@@ -90,7 +92,11 @@ namespace sk
         
         // Write
         void BeginWrite( iClass* _this = nullptr, bool _reset = false );
-        void EndWrite  ();
+        void AddBase( const cShared_ptr< cSerializedObject >& _base_info );
+        void WriteData( const cStringID& _name, value_t&& _value );
+        void EndWrite();
+
+        static std::string MakeJsonSafeName( const std::string_view& _name );
         
     private:
         void create_json_object( json_builder_t& _builder );
@@ -102,6 +108,8 @@ namespace sk
         
         using info_vec_t  = std::vector< sValueInfo >;
         using value_vec_t = std::vector< value_t >;
+        using obj_vec_t   = std::vector< obj_ptr >;
+        using buffer_t    = std::vector< std::byte >;
         
         // Info
         type_info_t m_serialized_type_;
@@ -114,13 +122,18 @@ namespace sk
         // Array info:
         size_t  m_element_count_ = 0; // Zero if the object isn't an array.
         array_t m_element_data_;
+        size_t  m_offset_ = 0;
         
         // Cache
         json_builder_t m_json_builder_;
-        
+        buffer_t       m_binary_cache_;
+
+        // Base classes
+        obj_vec_t m_bases_;
+
         // Held values
-        info_vec_t     m_info_;
-        value_vec_t    m_values_;
+        info_vec_t  m_info_;
+        value_vec_t m_values_;
     };
 
     template< sk_class Ty >
