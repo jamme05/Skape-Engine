@@ -59,3 +59,10 @@ Day 5:
 
 ---
 
+Day 6:
+- Started fixing the serialization system I had begun before this assignment.
+- Realized I was unable to get my own runtime type info from reflected class instances. So I fixed it.
+- Made a template for how the serialized object and worked on getting the json exporter for it correct.
+
+---
+
