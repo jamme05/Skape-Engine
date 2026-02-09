@@ -44,27 +44,20 @@ namespace sk
 		typedef iClass value_type;
 		typedef void   parent_type;
 
-		[[ deprecated( "Deprecated due to source_location, use overloaded version with it as an input instead." ) ]]
-		constexpr iRuntimeClass( const char* _name, const char* _file, const uint32_t _line = 0, const uint64_t& _parent_hash = Hashing::val_64_const )
-		: m_hash( _name )
-		, m_raw_name( _name )
-		, m_file_path( _file )
-		, m_line( _line )
-		{ } // iRuntimeClass
-
 		consteval iRuntimeClass( const char* _name, const std::source_location& _location = std::source_location::current(), const uint64_t& _parent_hash = Hashing::val_64_const )
 		: m_hash( _name )
 		, m_raw_name( _name )
 		, m_file_path( _location.file_name() )
 		, m_line( _location.line() )
-		{ } // iRuntimeClass
+		{
+		} // iRuntimeClass
 
 		consteval iRuntimeClass( const char* _name, type_hash _hash )
 		: m_hash( std::move( _hash ) )
 		, m_raw_name( _name )
 		, m_file_path( nullptr )
 		, m_line( 0 )
-		{ } // iRuntimeClass
+		{} // iRuntimeClass
 		
 		virtual ~iRuntimeClass() = default;
 
@@ -74,11 +67,11 @@ namespace sk
 			return nullptr;
 		} // create
 
-		constexpr auto& getType    ( void ) const { return m_hash;      }
-		constexpr auto  getRawName ( void ) const { return m_raw_name;  }
-		constexpr auto  getFileName( void ) const { return m_file_path; }
-		constexpr auto  getLine    ( void ) const { return m_line;      }
-		auto            getName    ( void ) const { return std::string( m_raw_name ); }
+		constexpr auto& getTypeHash() const { return m_hash; }
+		constexpr auto  getRawName () const { return m_raw_name;  }
+		constexpr auto  getFileName() const { return m_file_path; }
+		constexpr auto  getLine    () const { return m_line;      }
+		auto            getName    () const { return std::string( m_raw_name ); }
 
 		virtual constexpr bool isDerivedFrom( const iRuntimeClass& _base    ) const { return false; } // Has to be set so iClass isn't a pure virtual
 		virtual constexpr bool isBaseOf     ( const iRuntimeClass& _derived ) const { return false; } // Has to be set so iClass isn't a pure virtual
@@ -195,13 +188,8 @@ namespace sk
 		// TODO: Move
 		typedef typename get_parent_class< Pa >::inherits_type inherits_type;
 
-		constexpr cRuntimeClass( const char* _name, const std::source_location& _location = std::source_location::current(), const uint64_t& _parent_hash = Parent.getType().value() )
+		explicit constexpr cRuntimeClass( const char* _name, const std::source_location& _location = std::source_location::current(), const uint64_t& _parent_hash = Parent.getTypeHash().value() )
 		: parent_type( _name, _location, _parent_hash )
-		{} // cRuntimeClass
-
-		[[ deprecated( "Deprecated due to source_location, use overloaded version with it as an input instead." ) ]]
-		constexpr cRuntimeClass( const char* _name, const char* _file, const uint32_t _line = 0, const uint64_t& _parent_hash = Parent.getType().getHash() )
-		: parent_type( _name, _file, _line, _parent_hash )
 		{} // cRuntimeClass
 
 		// Use std::is_base_of / std::is_base_of_v instead of this in case both types are known.
@@ -1117,10 +1105,22 @@ namespace sk
 		iClass( void ) = default;
 		virtual ~iClass( void ) = default;
 		[[ nodiscard ]]
-		virtual const iRuntimeClass& getClass    ( void ) const = 0;
-		virtual const type_hash&     getClassType( void ) = 0;
-		virtual       std::string    getClassName( void ) = 0;
+		virtual const iRuntimeClass& getClass    () const = 0;
+		virtual const type_hash&     getClassType() = 0;
+		virtual       std::string    getClassName() = 0;
 
+		virtual auto getClassTypeInfo() const
+			-> const sType_Info&
+		{
+			return staticGetClassTypeInfo();
+		}
+
+		static constexpr auto staticGetClassTypeInfo()
+			-> const sType_Info&
+		{
+			// Will be invalid.
+			return kTypeInfo< iClass >;
+		}
 		// Virtual member reflection
 		[[ nodiscard ]]
 		virtual auto getVariables() const
@@ -1193,8 +1193,9 @@ namespace sk
 		
 		static constexpr auto& kClass = kInvalidClass;
 		// Recommended to use Ty::kClass instead.
-		static constexpr auto& getStaticClass( void ) { return kClass; }
-		static constexpr auto& getStaticType ( void ) { return kClass.getType(); }
-		static auto            getStaticName ( void ) { return kClass.getName(); }
+		static constexpr auto& getStaticClass() { return kClass; }
+		static constexpr auto& getStaticType () { return kClass.getTypeHash(); }
+		static constexpr auto& getStaticTypeInfo() { return kTypeInfo< iClass >; }
+		static auto            getStaticName () { return kClass.getName(); }
 	};
 } // sk::

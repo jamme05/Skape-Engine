@@ -8,12 +8,14 @@
 #define CREATE_CLASS_IDENTITY_IDENTIFIERS( RuntimeClass ) \
 	typedef decltype( RuntimeClass ) runtime_class_type; \
 	constexpr static auto& kClass = RuntimeClass; \
-	constexpr const sk::iRuntimeClass& getClass( void ) const override { return kClass;     } \
-	constexpr const sk::type_hash& getClassType( void ) override { return kClass.getType(); } \
-	std::string                    getClassName( void ) override { return kClass.getName(); } \
-	static constexpr auto&  getStaticClass    ( void ){ return kClass;           } \
-	static constexpr auto&  getStaticType( void ){ return kClass.getType(); } \
-	static auto             getStaticName( void ){ return kClass.getName(); } \
+	constexpr const sk::iRuntimeClass& getClass() const override { return kClass;     } \
+	constexpr const sk::type_hash& getClassType() override { return kClass.getTypeHash(); } \
+	std::string                    getClassName() override { return kClass.getName(); } \
+	const sk::sType_Info& getClassTypeInfo() const override; \
+	static constexpr auto&  getStaticClass    (){ return kClass;           } \
+	static constexpr auto&  getStaticType(){ return kClass.getTypeHash(); } \
+	static auto             getStaticName(){ return kClass.getName(); } \
+	static constexpr auto   staticGetClassTypeInfo() -> const sType_Info&; \
 
 #define CREATE_MEMBER_REFLECTION_VALUES( ClassName, RuntimeClass, Counter ) \
 	using class_type  = runtime_class_type::value_type; \
@@ -314,7 +316,7 @@ class Class : public sk::get_inherits_t< FIRST( __VA_ARGS__ ) > \
 	constexpr static auto& kClass = Class ::class_type::kClass; \
 	constexpr static sClass_Type_Info kInfo = { { \
 		.type = sType_Info::eType::kClass, \
-		.hash = kClass.getType(), \
+		.hash = kClass.getTypeHash(), \
 		.size = sizeof( Class ::class_type ), \
 		.name = kClass.getRawName(), \
 		.raw_name = kClass.getRawName() }, &Class::class_type::getStaticClass() }; \
@@ -339,6 +341,8 @@ class Class : public sk::get_inherits_t< FIRST( __VA_ARGS__ ) > \
 	BUILD_CLASS_BOUND_FUNCTION_GETTER( Class ) \
 	/* Build Reflection and register */ \
 	BUILD_CLASS_REFLECTION_INFO( Class ) \
+	auto inline Class::class_type::getClassTypeInfo() const -> const sType_Info& { return staticGetClassTypeInfo(); } \
+	auto constexpr Class::class_type::staticGetClassTypeInfo() -> const sType_Info& { return kTypeInfo< Class::class_type >; } \
 	REGISTER_TYPE_INTERNAL( Class::class_type, false )
 
 #define REGISTER_MEMBER_DIRECT_2_( Member, Registry, CounterVar, CounterValue, Point, HolderPack, ... ) \

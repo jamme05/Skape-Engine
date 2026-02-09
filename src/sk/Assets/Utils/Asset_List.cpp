@@ -55,7 +55,7 @@ namespace sk::Assets
 	
 	auto cAsset_List::GetAssetOfType( const iRuntimeClass& _class ) -> cShared_ptr< cAsset_Meta >
 	{
-		const auto [ fst, snd ] = m_assets_.equal_range( _class.getType() );
+		const auto [ fst, snd ] = m_assets_.equal_range( _class.getTypeHash() );
 
 		if( fst == m_assets_.end() )
 			return nullptr;
@@ -64,7 +64,7 @@ namespace sk::Assets
 		if( fst == snd )
 			return fst->second;
 
-		auto& counter = m_counters_[ _class.getType() ];
+		auto& counter = m_counters_[ _class.getTypeHash() ];
 
 		if( const auto dist = std::distance( fst, snd ); static_cast< int_fast32_t >( counter ) >= dist )
 		{
@@ -79,7 +79,7 @@ namespace sk::Assets
 
 	auto cAsset_List::GetAssetsOfType( const iRuntimeClass& _class, const int32_t _max_count )->std::vector<cShared_ptr<cAsset_Meta>>
 	{
-		auto range = m_assets_.equal_range( _class.getType() );
+		auto range = m_assets_.equal_range( _class.getTypeHash() );
 		std::vector< cShared_ptr< cAsset_Meta > > assets;
 
 		if( _max_count > 0 )
