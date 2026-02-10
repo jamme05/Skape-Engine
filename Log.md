@@ -66,3 +66,14 @@ Day 6:
 
 ---
 
+Day 7:
+- Continued working on designing and implementing the scene -> json converting.
+- Got a basic scene saved and tweaked the outputs to better fix my needs.
+- Added a simple way to with runtime types be able to construct a class using a serialization object.
+- Started working on the logic for loading a serialized object as well as the logic for loading the scene.
+- Got most of the stored scene to be turned back into a SerializationObject.
+- Will not push anything today as it's still in progress and there's plenty of testing code included.
+- Trust me bro there's changes
+
+---
+
