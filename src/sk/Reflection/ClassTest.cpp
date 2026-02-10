@@ -6,6 +6,7 @@
 
 #include <sk/Misc/Smart_Ptrs.h>
 #include <sk/Reflection/RuntimeClass.h>
+#include <sk/Reflection/Types.h>
 
 // TODO: Move test to it's own file.
 SK_CLASS( Test )

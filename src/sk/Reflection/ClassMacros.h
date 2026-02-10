@@ -15,7 +15,7 @@
 	static constexpr auto&  getStaticClass    (){ return kClass;           } \
 	static constexpr auto&  getStaticType(){ return kClass.getTypeHash(); } \
 	static auto             getStaticName(){ return kClass.getName(); } \
-	static constexpr auto   staticGetClassTypeInfo() -> const sType_Info&; \
+	static constexpr auto   staticGetClassTypeInfo() -> const sk::sType_Info&; \
 
 #define CREATE_MEMBER_REFLECTION_VALUES( ClassName, RuntimeClass, Counter ) \
 	using class_type  = runtime_class_type::value_type; \
@@ -341,8 +341,8 @@ class Class : public sk::get_inherits_t< FIRST( __VA_ARGS__ ) > \
 	BUILD_CLASS_BOUND_FUNCTION_GETTER( Class ) \
 	/* Build Reflection and register */ \
 	BUILD_CLASS_REFLECTION_INFO( Class ) \
-	auto inline Class::class_type::getClassTypeInfo() const -> const sType_Info& { return staticGetClassTypeInfo(); } \
-	auto constexpr Class::class_type::staticGetClassTypeInfo() -> const sType_Info& { return kTypeInfo< Class::class_type >; } \
+	auto inline Class::class_type::getClassTypeInfo() const -> const sk::sType_Info& { return staticGetClassTypeInfo(); } \
+	auto constexpr Class::class_type::staticGetClassTypeInfo() -> const sk::sType_Info& { return sk::kTypeInfo< Class::class_type >; } \
 	REGISTER_TYPE_INTERNAL( Class::class_type, false )
 
 #define REGISTER_MEMBER_DIRECT_2_( Member, Registry, CounterVar, CounterValue, Point, HolderPack, ... ) \
