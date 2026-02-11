@@ -24,9 +24,8 @@ cSerializedObject::cSerializedObject( const simdjson::dom::object& _object )
     if( const auto header_value = _object.at_key( "header" ); header_value.has_value() )
     {
         // Fill header.
-        const auto header = header_value.get_object();
 
-        if( header[ "valid_type" ].get_bool() )
+        if( const auto header = header_value.get_object(); header[ "valid_type" ].get_bool() )
         {
             const auto type = type_hash{ header[ "type_id" ].get_uint64() };
             if( const auto itr = types.find( type ); itr != types.end() )
