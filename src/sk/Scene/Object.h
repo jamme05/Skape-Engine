@@ -31,23 +31,24 @@ namespace sk
 namespace sk::Object
 {
 // TODO: Check if class shit is needed? Like with Assets and Components.
-	GENERATE_CLASS( iObject ), public Event::cEventListener, public cShared_from_this< iObject >
+	GENERATE_CLASS( cObject ), public Event::cEventListener, public cShared_from_this< cObject >, public iSerializable
 	{
-		CREATE_CLASS_BODY( iObject )
+		CREATE_CLASS_BODY( cObject )
 
 		friend class sk::cScene;
 		friend class sk::cSceneManager;
 	sk_public:
 		// TODO: Create templated constructor with root type + parameters
-		explicit iObject( const std::string& _name ); // iObject
+		explicit cObject( const std::string& _name ); // iObject
+		explicit cObject( const cShared_ptr< cSerializedObject >& _object );
 
 		template< class Ty = iComponent, class... Args >
-		explicit iObject( const std::string& _name, Args... _args )
+		explicit cObject( const std::string& _name, Args... _args )
 		: m_root( sk::make_shared< Ty >( _args... ) )
 		, m_name( _name )
 		{} // iObject
 
-		~iObject() override;
+		~cObject() override;
 
 		template< class Ty, class... Args >
 		requires ( std::is_base_of_v< iComponent, Ty > && std::constructible_from< Ty, Args... > )
@@ -171,7 +172,8 @@ namespace sk::Object
 		[[ nodiscard ]] auto& GetTransform() const { return m_root->GetTransform(); }
 
 		[[ nodiscard ]] auto& GetName() const { return m_name; }
-		
+
+		auto Serialize() -> cShared_ptr< cSerializedObject > override;
 
 	sk_protected:
 		void SetRoot( const cShared_ptr< iComponent >& _new_root_component, bool _override_parent = false );
@@ -185,7 +187,7 @@ namespace sk::Object
 		cUUID m_uuid_;
 
 		// TODO: Use typedefs/using
-		vector             < cShared_ptr< iObject > >              m_children_   = { };
+		vector             < cShared_ptr< cObject > >              m_children_   = { };
 		unordered_multimap< type_hash, cShared_ptr< iComponent > > m_components_ = { };
 		// Internal components are stored separately as there can only be one of a type.
 		vector< cShared_ptr< iComponent >  > m_internal_components_ = { };
@@ -204,25 +206,19 @@ namespace sk::Object
 
 	namespace Object
 	{
-		using class_type = iObject;
+		using class_type = cObject;
 	} // sk::Object::
-
-	class cObject : public iObject
-	{
-	public:
-		explicit cObject( std::string _name ) : iObject( std::move( _name ) ){}
-	};
 
 } // sk::Object::
 
 SK_DECLARE_CLASS( sk::Object::Object )
 
-#define OBJECT_PARENT_CLASS( ObjectName, ... ) sk::Object::iObject
-#define OBJECT_PARENT_VALIDATOR( ObjectName, ... ) std::is_base_of_v< sk::Object::iObject, __VA_ARGS__ >
+#define OBJECT_PARENT_CLASS( ObjectName, ... ) sk::Object::cObject
+#define OBJECT_PARENT_VALIDATOR( ObjectName, ... ) std::is_base_of_v< sk::Object::cObject, __VA_ARGS__ >
 #define OBJECT_PARENT_CREATOR_2( ObjectName, ... ) AFTER_FIRST( __VA_ARGS__ )
 #define OBJECT_PARENT_CREATOR_1( ObjectName, ... ) cObject
 #define OBJECT_PARENT_CREATOR( ObjectName, ... ) CONCAT( OBJECT_PARENT_CREATOR_, VARGS( __VA_ARGS__ ) ) ( ObjectName, __VA_ARGS__ )
-#define QW_OBJECT_CLASS( ObjectName, ... ) QW_RESTRICTED_CLASS( ObjectName, OBJECT_PARENT_CLASS, OBJECT_PARENT_CREATOR, OBJECT_PARENT_VALIDATOR, EMPTY __VA_OPT__( , __VA_ARGS__ ) )
+#define SK_OBJECT_CLASS( ObjectName, ... ) QW_RESTRICTED_CLASS( ObjectName, OBJECT_PARENT_CLASS, OBJECT_PARENT_CREATOR, OBJECT_PARENT_VALIDATOR, EMPTY __VA_OPT__( , __VA_ARGS__ ) )
 // TODO: Rename to SK_OBJECT_CLASS
 
 #define OBJECT_CLASS_PARENT( ObjectName )

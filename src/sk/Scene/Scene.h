@@ -27,7 +27,7 @@ namespace sk
 
 		// Creates an empty object, essentially an empty
 		template< class Ty, class... Args >
-		requires ( std::is_base_of_v< Object::iObject, Ty > && std::constructible_from< Ty, const std::string&, Args... > )
+		requires ( std::is_base_of_v< Object::cObject, Ty > && std::constructible_from< Ty, const std::string&, Args... > )
 		cShared_ptr< Ty > create_object( const std::string& _name, Args... _args )
 		{
 			auto shared = sk::make_shared< Ty >( _name, _args... );
@@ -45,7 +45,7 @@ namespace sk
 
 	private:
 		// TODO: Replace this with a map.
-		vector< cShared_ptr< Object::iObject > > m_objects = {};
+		vector< cShared_ptr< Object::cObject > > m_objects = {};
 	};
 
 } // sk::

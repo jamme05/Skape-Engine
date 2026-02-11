@@ -7,15 +7,28 @@
 #include "Object.h"
 
 #include <sk/Scene/Managers/Layer_Manager.h>
+#include <sk/Seralization/SerializedObject.h>
 
-sk::Object::iObject::iObject( const std::string& _name )
+sk::Object::cObject::cObject( const std::string& _name )
 : m_name( _name )
 {
     m_root = AddComponent< Components::cTransformComponent >();
     SetLayer( 0 );
 }
 
-sk::Object::iObject::~iObject()
+sk::Object::cObject::cObject( const cShared_ptr< cSerializedObject >& _object )
+{
+    _object->BeginRead( this );
+    m_name = _object->ReadData< std::string >( "name" ).value_or( "" );
+    m_root  = _object->ReadData< cShared_ptr< cSerializedObject > >( "root" ).value()->ConstructSharedClass().Cast< iComponent >();
+    SetLayer( _object->ReadData< uint64_t >( "layer" ).value_or( 0 ) );
+
+    m_root->SetObject( get_weak() );
+
+    _object->EndRead();
+}
+
+sk::Object::cObject::~cObject()
 {
     Scene::cLayer_Manager::get().RemoveObject( get_shared() );
     m_children_.clear();
@@ -23,7 +36,7 @@ sk::Object::iObject::~iObject()
     m_root = nullptr;
 }
 
-void sk::Object::iObject::render()
+void sk::Object::cObject::render()
 {
     // TODO: Add actual event vector or something.
     for( auto& val : m_components_ | std::views::values )
@@ -33,20 +46,31 @@ void sk::Object::iObject::render()
     }
 }
 
-void sk::Object::iObject::update()
+void sk::Object::cObject::update()
 {
     for( auto& val : m_components_ | std::views::values )
         val->PostEvent( kUpdate );
 }
 
-void sk::Object::iObject::SetLayer( const uint64_t _layer )
+void sk::Object::cObject::SetLayer( const uint64_t _layer )
 {
     auto& layer_manager = Scene::cLayer_Manager::get();
     m_layer_ = _layer;
     layer_manager.AddObject( get_shared() );
 }
 
-void sk::Object::iObject::SetRoot( const cShared_ptr< iComponent >& _new_root_component, const bool _override_parent )
+auto sk::Object::cObject::Serialize() -> cShared_ptr< cSerializedObject >
+{
+    auto object = cSerializedObject::CreateForWrite( this );
+    object->WriteData( "name", m_name.string() );
+    object->WriteData( "layer", m_layer_ );
+    object->WriteData( "root", m_root->Serialize() );
+
+    object->EndWrite();
+    return object;
+}
+
+void sk::Object::cObject::SetRoot( const cShared_ptr< iComponent >& _new_root_component, const bool _override_parent )
 {
     if( _override_parent )
         _new_root_component->SetParent( m_root->m_parent_.Lock() );
@@ -59,7 +83,7 @@ void sk::Object::iObject::SetRoot( const cShared_ptr< iComponent >& _new_root_co
     m_root = _new_root_component;
 }
 
-void sk::Object::iObject::registerRecursive()
+void sk::Object::cObject::registerRecursive()
 {
     for( auto& child : m_children_ )
         child->registerRecursive();
@@ -67,19 +91,18 @@ void sk::Object::iObject::registerRecursive()
     m_root->registerRecursive();
 }
 
-void sk::Object::iObject::enableRecursive()
+void sk::Object::cObject::enableRecursive()
 {
     for( auto& child : m_children_ )
         child->enableRecursive();
 
-    for( auto& component : m_components_ | std::views::values )
-    {
-        if( component->m_enabled_ )
-            component->enableRecursive();
-    }
+    m_root->enableRecursive();
 }
 
-void sk::Object::iObject::disableRecursive()
+void sk::Object::cObject::disableRecursive()
 {
+    for( auto& child : m_children_ )
+        child->disableRecursive();
 
+    m_root->disableRecursive();
 }

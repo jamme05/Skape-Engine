@@ -21,7 +21,7 @@ namespace sk
 
 namespace sk::Object
 {
-	class iObject;
+	class cObject;
 } // sk::Object
 
 namespace sk::Object
@@ -32,7 +32,7 @@ namespace sk::Object
 	{
 		CREATE_CLASS_IDENTIFIERS( iComponent, runtime_class_iComponent )
 
-		friend class iObject;
+		friend class cObject;
 		friend class sk::cSceneManager;
 	protected:
 		iComponent()
@@ -114,7 +114,7 @@ namespace sk::Object
 		
 		cShared_ptr< cTransform > m_transform_;
 		cWeak_Ptr< iComponent >   m_parent_    = nullptr;
-		cWeak_Ptr< iObject >      m_object_    = nullptr;
+		cWeak_Ptr< cObject >      m_object_    = nullptr;
 		// TODO: Have the UUID be able to be loaded from a scene file in the future.
 
 		// TODO: Make the children into an unordered map

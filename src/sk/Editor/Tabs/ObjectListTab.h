@@ -10,7 +10,7 @@ namespace sk
 {
     namespace Object
     {
-        class iObject;
+        class cObject;
     } // sk::Object::
 
     class cScene;
@@ -29,7 +29,7 @@ namespace sk::Editor::Tabs
 
     private:
         void _drawScene( const cScene& _scene );
-        void _drawObjectRecursive( const Object::iObject& _object );
+        void _drawObjectRecursive( const Object::cObject& _object );
         void _drawComponentsRecursive( const Object::iComponent& _component );
 
         bool m_debug_view_      = false;

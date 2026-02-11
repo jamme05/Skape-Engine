@@ -20,7 +20,7 @@ namespace sk::Scene
     class cLayer_Manager : public cSingleton< cLayer_Manager >
     {
     public:
-        using object_vec_t = vector< cWeak_Ptr< Object::iObject > >;
+        using object_vec_t = vector< cWeak_Ptr< Object::cObject > >;
         
         struct sLayer
         {
@@ -92,7 +92,7 @@ namespace sk::Scene
                 return m_layers_[ m_layer_index_ ]->objects;
             }
             
-            [[ nodiscard ]] auto getObject() const -> const cWeak_Ptr< Object::iObject >&
+            [[ nodiscard ]] auto getObject() const -> const cWeak_Ptr< Object::cObject >&
             {
                 return getObjects()[ m_object_index_ ];
             }
@@ -197,7 +197,7 @@ namespace sk::Scene
             }
 
         private:
-            [[ nodiscard ]] auto getObject() const -> const cWeak_Ptr< Object::iObject >&
+            [[ nodiscard ]] auto getObject() const -> const cWeak_Ptr< Object::cObject >&
             {
                 return *m_object_itr_;
             }
@@ -225,8 +225,8 @@ namespace sk::Scene
         void AddLayer   ( uint64_t _layer, const cStringID& _name );
         void RemoveLayer( uint64_t _layer );
 
-        void AddObject   ( const cShared_ptr< Object::iObject >& _object );
-        void RemoveObject( const cShared_ptr< Object::iObject >& _object );
+        void AddObject   ( const cShared_ptr< Object::cObject >& _object );
+        void RemoveObject( const cShared_ptr< Object::cObject >& _object );
 
         [[ nodiscard ]] auto  GetLayerByName( const cStringID& _name   ) const -> std::optional< uint64_t >;
         [[ nodiscard ]] auto  GetObjectsIn  (       uint64_t   _layers ) const -> object_range_t;

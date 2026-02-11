@@ -84,7 +84,7 @@ void cObjectListTab::_drawScene( const cScene& _scene )
     }
 }
 
-void cObjectListTab::_drawObjectRecursive( const Object::iObject& _object )
+void cObjectListTab::_drawObjectRecursive( const Object::cObject& _object )
 {
     auto& selection_manager = Managers::cSelectionManager::get();
 

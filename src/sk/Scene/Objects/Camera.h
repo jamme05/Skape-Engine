@@ -12,6 +12,7 @@
 namespace sk::Object
 {
 	QW_OBJECT_CLASS( Camera )
+	SK_OBJECT_CLASS( Camera )
 	{
 	public:
 		explicit cCamera( const std::string& _name );

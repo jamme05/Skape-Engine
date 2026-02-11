@@ -120,7 +120,7 @@ void cEditor::Create()
 		Graphics::Utils::cShader_Link{ shader_vert, shader_frag } );
 	mat1.second->SetTexture( "mainTexture", christopher_t );
 
-	auto mesh = scene->create_object< Object::iObject >( "Mesh Test 2" );
+	auto mesh = scene->create_object< Object::cObject >( "Mesh Test 2" );
 	mesh->GetTransform().SetLocalPosition( { 0.0f, -16.0f, 90.0f } );
 	auto component = mesh->AddComponent< Object::Components::cMeshComponent >( christopher_m, mat1.first );
 	component->SetScale( cVector3f{ 100.0f } );
@@ -129,27 +129,27 @@ void cEditor::Create()
 		Graphics::Utils::cShader_Link{ shader_vert, shader_frag } );
 	mat2.second->SetTexture( "mainTexture", toilet_t );
 
-	mesh = scene->create_object< Object::iObject >( "Mesh Test 3" );
+	mesh = scene->create_object< Object::cObject >( "Mesh Test 3" );
 	mesh->GetTransform().SetLocalPosition( { -0.1f, 0.0f, 2.5f } );
 	auto spin_component = mesh->AddComponent< Object::Components::cSpinComponent >( cVector3f{ 0.0f, 5.0f, 0.0f } );
 	component = mesh->AddComponent< Object::Components::cMeshComponent >( toilet_m, mat2.first );
 	component->SetParent( spin_component );
 
 	Scene::Light::sSettings light_settings{};
-	auto light_object = scene->create_object< Object::iObject >( "Directional Light" );
+	auto light_object = scene->create_object< Object::cObject >( "Directional Light" );
 	light_settings.shadow_resolution = 1024;
 	light_settings.casts_shadows     = true;
 	auto directional_light = light_object->AddComponent< Object::Components::cLightComponent >( light_settings );
 	light_object->GetTransform().SetLocalRotation( { -45.0f, 0.0f, 0.0f } );
 
-	light_object = scene->create_object< Object::iObject >( "Point Light" );
+	light_object = scene->create_object< Object::cObject >( "Point Light" );
 	light_settings.type              = Scene::Light::eType::kPoint;
 	light_settings.casts_shadows     = false;
 	light_settings.shadow_resolution = 256;
 	auto point_light = light_object->AddComponent< Object::Components::cLightComponent >( light_settings );
 	light_object->GetTransform().SetLocalRotation( { -45.0f, 0.0f, 0.0f } );
 
-	light_object = scene->create_object< Object::iObject >( "Spot Light 1" );
+	light_object = scene->create_object< Object::cObject >( "Spot Light 1" );
 	light_settings.type              = Scene::Light::eType::kSpot;
 	light_settings.casts_shadows     = true;
 	light_settings.shadow_resolution = 512;
@@ -157,7 +157,7 @@ void cEditor::Create()
 	light_object->GetTransform().SetLocalRotation( { -45.0f, 0.0f, 0.0f } );
 	light_object->GetTransform().SetLocalPosition( { 0.0f, 5.0f, 0.0f } );
 
-	light_object = scene->create_object< Object::iObject >( "Spot Light 2" );
+	light_object = scene->create_object< Object::cObject >( "Spot Light 2" );
 	light_settings.type              = Scene::Light::eType::kSpot;
 	light_settings.casts_shadows     = true;
 	light_settings.shadow_resolution = 512;
@@ -165,7 +165,7 @@ void cEditor::Create()
 	light_object->GetTransform().SetLocalRotation( { -45.0f, 90.0f, 0.0f } );
 	light_object->GetTransform().SetLocalPosition( { 0.0f, 5.0f, 0.0f } );
 
-	light_object = scene->create_object< Object::iObject >( "Spot Light 3" );
+	light_object = scene->create_object< Object::cObject >( "Spot Light 3" );
 	light_settings.type              = Scene::Light::eType::kSpot;
 	light_settings.casts_shadows     = true;
 	light_settings.shadow_resolution = 512;
@@ -182,7 +182,7 @@ void cEditor::Create()
 	{
 		for( int64_t y = -kGridWidth; y < kGridWidth; ++y )
 		{
-			auto mesh_object = scene->create_object< Object::iObject >( "Clone" );
+			auto mesh_object = scene->create_object< Object::cObject >( "Clone" );
 			mesh_object->GetTransform().SetLocalPosition( { x * 2, 0.0f, y * 2 } );
 			auto spin = mesh_object->AddComponent< Object::Components::cSpinComponent >( cVector3f{ 0.0f, dis( gen ), 0.0f } );
 			auto mesh_component = mesh_object->AddComponent< Object::Components::cMeshComponent >( christopher_m, mat1.first );

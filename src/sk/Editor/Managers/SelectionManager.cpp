@@ -6,12 +6,13 @@
 #include "SelectionManager.h"
 
 #include <sk/Editor/Components/EditorInternalComponent.h>
+#include <sk/Scene/Object.h>
 
 using namespace sk::Editor::Managers;
 
-bool cSelectionManager::IsSelected( const Object::iObject& _object )
+bool cSelectionManager::IsSelected( const Object::cObject& _object )
 {
-    auto& obj = const_cast< Object::iObject& >( _object );
+    auto& obj = const_cast< Object::cObject& >( _object );
     auto [ _, component ]
         = obj.AddOrGetInternalComponent< Components::cEditorInternalComponent >( m_expected_component_index_ );
 
@@ -23,7 +24,7 @@ bool cSelectionManager::IsSelected( const Object::iComponent& _component ) const
     return m_selected_components_.contains( _component.GetUUID() );
 }
 
-void cSelectionManager::AddSelectedObject( const cShared_ptr< Object::iObject >& _object, const bool _clear )
+void cSelectionManager::AddSelectedObject( const cShared_ptr< Object::cObject >& _object, const bool _clear )
 {
     if( _clear )
         Clear();
@@ -35,7 +36,7 @@ void cSelectionManager::AddSelectedObject( const cShared_ptr< Object::iObject >&
     m_selected_objects_.emplace( _object->GetUUID(), _object );
 }
 
-void cSelectionManager::ToggleSelectedObject( const cShared_ptr< Object::iObject >& _object )
+void cSelectionManager::ToggleSelectedObject( const cShared_ptr< Object::cObject >& _object )
 {
     auto [ _, component ]
         = _object->AddOrGetInternalComponent< Components::cEditorInternalComponent >( m_expected_component_index_ );

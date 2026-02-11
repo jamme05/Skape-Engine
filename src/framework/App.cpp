@@ -124,7 +124,7 @@ void cApp::create()
 		sk::Graphics::Utils::cShader_Link{ shader_vert, shader_frag } );
 	mat1.second->SetTexture( "mainTexture", christopher_t );
 
-	auto mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 2" );
+	auto mesh = m_scene->create_object< sk::Object::cObject >( "Mesh Test 2" );
 	mesh->GetTransform().SetLocalPosition( { 0.0f, -16.0f, 90.0f } );
 	auto component = mesh->AddComponent< sk::Object::Components::cMeshComponent >( christopher_m, mat1.first );
 	component->enabled();
@@ -135,7 +135,7 @@ void cApp::create()
 		sk::Graphics::Utils::cShader_Link{ shader_vert, shader_frag } );
 	mat2.second->SetTexture( "mainTexture", toilet_t );
 
-	mesh = m_scene->create_object< sk::Object::iObject >( "Mesh Test 3" );
+	mesh = m_scene->create_object< sk::Object::cObject >( "Mesh Test 3" );
 	mesh->GetTransform().SetLocalPosition( { -0.1f, 0.0f, 2.5f } );
 	auto spin_component = mesh->AddComponent< sk::Object::Components::cSpinComponent >( sk::cVector3f{ 0.0f, 5.0f, 0.0f } );
 	component = mesh->AddComponent< sk::Object::Components::cMeshComponent >( toilet_m, mat2.first );
@@ -143,20 +143,20 @@ void cApp::create()
 	component->SetParent( spin_component );
 	
 	sk::Scene::Light::sSettings light_settings{};
-	auto light_object = m_scene->create_object< sk::Object::iObject >( "Directional Light" );
+	auto light_object = m_scene->create_object< sk::Object::cObject >( "Directional Light" );
 	light_settings.shadow_resolution = 1024;
 	light_settings.casts_shadows     = true;
 	auto directional_light = light_object->AddComponent< sk::Object::Components::cLightComponent >( light_settings );
 	light_object->GetTransform().SetLocalRotation( { -45.0f, 0.0f, 0.0f } );
 
-	light_object = m_scene->create_object< sk::Object::iObject >( "Point Light" );
+	light_object = m_scene->create_object< sk::Object::cObject >( "Point Light" );
 	light_settings.type              = sk::Scene::Light::eType::kPoint;
 	light_settings.casts_shadows     = false;
 	light_settings.shadow_resolution = 256;
 	auto point_light = light_object->AddComponent< sk::Object::Components::cLightComponent >( light_settings );
 	light_object->GetTransform().SetLocalRotation( { -45.0f, 0.0f, 0.0f } );
 
-	light_object = m_scene->create_object< sk::Object::iObject >( "Spot Light 1" );
+	light_object = m_scene->create_object< sk::Object::cObject >( "Spot Light 1" );
 	light_settings.type              = sk::Scene::Light::eType::kSpot;
 	light_settings.casts_shadows     = true;
 	light_settings.shadow_resolution = 512;
@@ -164,7 +164,7 @@ void cApp::create()
 	light_object->GetTransform().SetLocalRotation( { -45.0f, 0.0f, 0.0f } );
 	light_object->GetTransform().SetLocalPosition( { 0.0f, 5.0f, 0.0f } );
 
-	light_object = m_scene->create_object< sk::Object::iObject >( "Spot Light 2" );
+	light_object = m_scene->create_object< sk::Object::cObject >( "Spot Light 2" );
 	light_settings.type              = sk::Scene::Light::eType::kSpot;
 	light_settings.casts_shadows     = true;
 	light_settings.shadow_resolution = 512;
@@ -172,7 +172,7 @@ void cApp::create()
 	light_object->GetTransform().SetLocalRotation( { -45.0f, 90.0f, 0.0f } );
 	light_object->GetTransform().SetLocalPosition( { 0.0f, 5.0f, 0.0f } );
 
-	light_object = m_scene->create_object< sk::Object::iObject >( "Spot Light 3" );
+	light_object = m_scene->create_object< sk::Object::cObject >( "Spot Light 3" );
 	light_settings.type              = sk::Scene::Light::eType::kSpot;
 	light_settings.casts_shadows     = true;
 	light_settings.shadow_resolution = 512;
@@ -189,7 +189,7 @@ void cApp::create()
 	{
 		for( int64_t y = -kGridWidth; y < kGridWidth; ++y )
 		{
-			auto mesh_object = m_scene->create_object< sk::Object::iObject >( "Clone" );
+			auto mesh_object = m_scene->create_object< sk::Object::cObject >( "Clone" );
 			mesh_object->GetTransform().SetLocalPosition( { x * 2, 0.0f, y * 2 } );
 			auto spin = mesh_object->AddComponent< sk::Object::Components::cSpinComponent >( sk::cVector3f{ 0.0f, dis( gen ), 0.0f } );
 			auto mesh_component = mesh_object->AddComponent< sk::Object::Components::cMeshComponent >( christopher_m, mat1.first );
