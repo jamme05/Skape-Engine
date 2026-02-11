@@ -186,11 +186,12 @@ namespace sk
 		friend class cAsset_Meta;
 	public:
 		[[ nodiscard ]] auto& GetMeta() const { return m_metadata_; }
-		
+		[[ nodiscard ]] auto& GetUUID() const { return m_uuid_; }
 		cShared_ptr< cSerializedObject > Serialize() override;
 	protected:
 		cAsset() = default;
 	private:
+		cUUID                    m_uuid_ = cUUID::kInvalid;
 		cWeak_Ptr< cAsset_Meta > m_metadata_;
 	};
 

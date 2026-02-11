@@ -262,6 +262,7 @@ void cAsset_Meta::setAsset( cAsset* _asset )
     if( m_asset_ != nullptr )
     {
         m_asset_->m_metadata_ = get_weak();
+        m_asset_->m_uuid_     = m_uuid_;
         m_flags_ |=  kLoaded;
         m_flags_ &= ~kLoading;
     }
