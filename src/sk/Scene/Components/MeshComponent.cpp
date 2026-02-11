@@ -6,54 +6,73 @@
 
 #include "MeshComponent.h"
 
-namespace sk::Object::Components
+using namespace sk::Object::Components;
+
+cMeshComponent::cMeshComponent( const cShared_ptr< cAsset_Meta >& _mesh, const cShared_ptr< cAsset_Meta >& _material )
+: m_mesh_( get_weak() )
+, m_material_( get_weak() )
 {
-	cMeshComponent::cMeshComponent( const cShared_ptr< cAsset_Meta >& _mesh, const cShared_ptr< cAsset_Meta >& _material )
-	: m_mesh_( get_weak() )
-	, m_material_( get_weak() )
-	{
-		m_mesh_.SetAsset( _mesh );
-		m_material_.SetAsset( _material );
-	}
-	
-	void cMeshComponent::enabled()
-	{
-		if( m_mesh_.IsValid() && !m_mesh_.IsLoaded() )
-			m_mesh_.LoadAsync();
-		if( m_material_.IsValid() && !m_material_.IsLoaded() )
-			m_material_.LoadAsync();
-	}
+	m_mesh_.SetAsset( _mesh );
+	m_material_.SetAsset( _material );
+}
 
-	void cMeshComponent::disabled()
-	{
-		if( m_mesh_.IsValid() )
-			m_mesh_.Unload();
-		if( m_material_.IsValid() )
-			m_material_.Unload();
-	}
+cMeshComponent::cMeshComponent( const cShared_ptr< cSerializedObject >& _object )
+: cComponent( _object->GetBase< iComponent >() )
+{
+	_object->BeginRead( this );
+	m_mesh_     = _object->ReadData< cWeak_Ptr< cAsset_Meta > >( "mesh" )->Lock();
+	m_material_ = _object->ReadData< cWeak_Ptr< cAsset_Meta > >( "material" )->Lock();
+	_object->EndRead();
+}
 
-	bool cMeshComponent::IsReady() const
-	{
-		return m_mesh_.IsLoaded() && m_material_.IsLoaded();
-	}
+void cMeshComponent::enabled()
+{
+	if( m_mesh_.IsValid() && !m_mesh_.IsLoaded() )
+		m_mesh_.LoadAsync();
+	if( m_material_.IsValid() && !m_material_.IsLoaded() )
+		m_material_.LoadAsync();
+}
 
-	auto cMeshComponent::GetMesh() -> Assets::cMesh*
-	{
-		return m_mesh_.Get();
-	}
+void cMeshComponent::disabled()
+{
+	if( m_mesh_.IsValid() )
+		m_mesh_.Unload();
+	if( m_material_.IsValid() )
+		m_material_.Unload();
+}
 
-	auto cMeshComponent::GetMaterial() -> Assets::cMaterial*
-	{
-		return m_material_.Get();
-	}
+bool cMeshComponent::IsReady() const
+{
+	return m_mesh_.IsLoaded() && m_material_.IsLoaded();
+}
 
-	void cMeshComponent::SetMesh( const cShared_ptr< cAsset_Meta >& _mesh )
-	{
-		m_mesh_.SetAsset( _mesh );
-	}
+auto cMeshComponent::GetMesh() -> Assets::cMesh*
+{
+	return m_mesh_.Get();
+}
 
-	void cMeshComponent::SetMaterial( const cShared_ptr< cAsset_Meta >& _material )
-	{
-		m_material_.SetAsset( _material );
-	}
-} // sk::Object::Components
+auto cMeshComponent::GetMaterial() -> Assets::cMaterial*
+{
+	return m_material_.Get();
+}
+
+void cMeshComponent::SetMesh( const cShared_ptr< cAsset_Meta >& _mesh )
+{
+	m_mesh_.SetAsset( _mesh );
+}
+
+void cMeshComponent::SetMaterial( const cShared_ptr< cAsset_Meta >& _material )
+{
+	m_material_.SetAsset( _material );
+}
+
+ sk::cShared_ptr< sk::cSerializedObject > cMeshComponent::Serialize()
+ {
+	auto object = cSerializedObject::CreateForWrite( this );
+	object->AddBase( iComponent::Serialize() );
+	// TODO: Serialize asset refs properly
+	object->WriteData( "mesh", m_mesh_.GetMeta() );
+	object->WriteData( "material", m_material_.GetMeta() );
+	object->EndWrite();
+	return object;
+ }

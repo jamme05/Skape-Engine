@@ -22,6 +22,7 @@ namespace sk
 		SK_CLASS_BODY( Scene )
 	public:
 		cScene() = default;
+		cScene( const cShared_ptr< cSerializedObject >& _object );
 
 		~cScene() override;
 

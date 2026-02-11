@@ -29,6 +29,28 @@ cLightComponent::cLightComponent( const settings_t& _settings )
     Scene::cLight_Manager::get().register_light( get_weak().Cast< cLightComponent >() );
 }
 
+cLightComponent::cLightComponent( const cShared_ptr< cSerializedObject >& _object )
+: cComponent( _object->GetBase< iComponent >() )
+{
+    _object->BeginRead( this );
+    m_settings_ = {
+        .type              = _object->ReadData< eType >( "type" ).value_or( eType::kDirectional ),
+        .casts_shadows     = _object->ReadData< bool >( "casts_shadows" ).value_or( false ),
+        .shadow_resolution = _object->ReadData< uint16_t >( "shadow_resolution" ).value_or( 256 ),
+        .color             = _object->ReadData< cVector4f >( "color" ).value_or( kOne ),
+        .intensity         = _object->ReadData< float >( "intensity" ).value_or( 1.0f ),
+        .radius            = _object->ReadData< float >( "radius" ).value_or( 10.0f ),
+        .inner_angle       = _object->ReadData< float >( "inner_angle" ).value_or( 45.0f ),
+        .outer_angle       = _object->ReadData< float >( "outer_angle" ).value_or( 60.0f ),
+    };
+    _object->EndRead();
+
+    init_data();
+    fix_data();
+
+    Scene::cLight_Manager::get().register_light( get_weak().Cast< cLightComponent >() );
+}
+
 cLightComponent::~cLightComponent()
 {
     Scene::cLight_Manager::get().unregister_light( get_weak().Cast< cLightComponent >() );
@@ -123,6 +145,27 @@ auto cLightComponent::GetData() const -> const data_t&
 auto cLightComponent::GetShadowCasterData() const -> const caster_t*
 {
     return m_shadow_data_index_ != std::numeric_limits< uint32_t >::max() ? &Scene::cLight_Manager::get().m_shadow_caster_buffer_[ m_shadow_data_index_ ] : nullptr;
+}
+
+sk::cShared_ptr< sk::cSerializedObject > cLightComponent::Serialize()
+{
+    auto object = cSerializedObject::CreateForWrite( this );
+    object->AddBase( cComponent::Serialize() );
+    object->BeginWrite( this );
+    object->WriteData( "type", static_cast< uint64_t >( GetType() ) );
+    object->WriteData( "casts_shadows", m_settings_.casts_shadows );
+    object->WriteData( "shadow_resolution", static_cast< uint64_t >( m_settings_.shadow_resolution ) );
+    object->WriteData( "color", cVector4d{ m_settings_.color } );
+    object->WriteData( "intensity", m_settings_.intensity );
+    if( GetType() == eType::kPoint || GetType() == eType::kSpot )
+        object->WriteData( "radius", m_settings_.radius );
+    if( GetType() == eType::kSpot )
+    {
+        object->WriteData( "inner_angle", m_settings_.inner_angle );
+        object->WriteData( "outer_angle", m_settings_.outer_angle );
+    }
+    object->EndWrite();
+    return object;
 }
 
 auto cLightComponent::GetViewProjMatrix() const -> const cMatrix4x4f&

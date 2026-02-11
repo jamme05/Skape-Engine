@@ -24,8 +24,9 @@ namespace sk::Object
 		const Graphics::sScissor  scissor  = { .x = 0, .y = 0, .width = resolution.x, .height = resolution.y };
 
 		Components::cCameraComponent::sCameraSettings settings{
+			.auto_resize = true,
 			.fov = 70.0f,
-			.aspect = aspect,
+			.aspect = 0.0f,
 			.near = 0.1f,
 			.far = 2000.0f
 		};
@@ -34,8 +35,21 @@ namespace sk::Object
 		SetRoot( m_camera_ );
 	}
 
+	cCamera::cCamera( const cShared_ptr< cSerializedObject >& _object )
+	: cObject( _object->GetBase< cObject >() )
+	{
+	}
+
 	void cCamera::setAsMain( void ) const
 	{
 		Scene::cCameraManager::get().setMainCamera( m_camera_ );
 	} // setAsMain
+
+	cShared_ptr< cSerializedObject > cCamera::Serialize()
+	{
+		auto object = cSerializedObject::CreateForWrite( this );
+		object->AddBase( cObject::Serialize() );
+		object->EndWrite();
+		return object;
+	}
 } // sk::Object::

@@ -16,8 +16,11 @@ namespace sk::Object
 		SK_CLASS_BODY( Camera )
 	public:
 		explicit cCamera( const std::string& _name );
+		explicit cCamera( const cShared_ptr< cSerializedObject >& _object );
 
 		void setAsMain() const;
+
+		auto Serialize() -> cShared_ptr< cSerializedObject > override;
 
 	protected:
 		cShared_ptr< Components::cCameraComponent > m_camera_;

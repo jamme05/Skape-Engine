@@ -13,6 +13,7 @@
 #include <sk/Misc/UUID.h>
 #include <sk/Reflection/RuntimeClass.h>
 #include <sk/Scene/Managers/EventManager.h>
+#include <sk/Seralization/SerializedObject.h>
 
 namespace sk
 {
@@ -28,7 +29,7 @@ namespace sk::Object
 {
 	typedef uint64_t hash_t;
 
-	GENERATE_CLASS( iComponent ), public cShared_from_this< iComponent >
+	GENERATE_CLASS( iComponent ), public cShared_from_this< iComponent >, public iSerializable
 	{
 		CREATE_CLASS_IDENTIFIERS( iComponent, runtime_class_iComponent )
 
@@ -42,6 +43,7 @@ namespace sk::Object
 		}
 	sk_public:
 
+		explicit iComponent( const cShared_ptr< cSerializedObject >& _object );
 		iComponent( iComponent const& ) = delete;
 
 		~iComponent() override;
@@ -92,6 +94,8 @@ namespace sk::Object
 		auto& GetUUID() const { return m_uuid_; }
 
 		void SetParent( const cShared_ptr< iComponent >& _component );
+
+		auto Serialize() -> cShared_ptr< cSerializedObject > override;
 
 	sk_protected:
 		virtual void setEnabled( const bool _is_enabled ){ m_enabled_ = _is_enabled; }
@@ -145,6 +149,7 @@ namespace sk::Object
 		static constexpr uint16_t kEventMask = detect_events() & Events;
 
 		cComponent() = default;
+		cComponent( const cShared_ptr< cSerializedObject >& _object ) : iComponent( _object ){}
 	public:
 
 		void SetEnabled( const bool _is_enabled ) final { setEnabled( _is_enabled ); _is_enabled ? postEvent< kEnabled >() : postEvent< kDisabled >(); }

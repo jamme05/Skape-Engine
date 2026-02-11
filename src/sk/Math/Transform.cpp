@@ -1,7 +1,17 @@
 ﻿
 #include "Transform.h"
 
+#include <sk/Seralization/SerializedObject.h>
+
 using namespace sk;
+
+cTransform::cTransform( cVector3f _position, cVector3f _rotation, cVector3f _scale )
+: m_position_( std::move( _position ) )
+, m_rotation_( std::move( _rotation ) )
+, m_scale_   ( std::move( _scale ) )
+{
+    Update();
+}
 
 void cTransform::SetLocalPosition( const cVector3f& _position )
 {
@@ -117,4 +127,15 @@ void cTransform::CacheNormalized()
     m_world_forward_ = m_world_.forward.normalized();
 
     m_has_normalized_ = true;
+}
+
+auto cTransform::Serialize() -> cShared_ptr< cSerializedObject >
+{
+    auto object = cSerializedObject::CreateForWrite();
+    object->WriteData( "Position", cVector3d( m_position_ ) );
+    object->WriteData( "Rotation", cVector3d( m_rotation_ ) );
+    object->WriteData( "Scale",    cVector3d( m_scale_ ) );
+    object->EndWrite();
+
+    return object;
 }

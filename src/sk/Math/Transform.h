@@ -8,21 +8,18 @@
 
 #include <sk/Math/Matrix4x4.h>
 #include <sk/Misc/Smart_Ptrs.h>
+#include <sk/Seralization/Serializable.h>
 
 namespace sk
 {
+	class cSerializedObject;
+
 	// TODO: Add setter functions and provide a way to update the transforms children.
-	class cTransform
+	class cTransform : public iSerializable
 	{
 	public:
-		explicit cTransform( cVector3f _position = kZero, cVector3f _rotation = kZero, cVector3f _scale = kOne )
-		: m_position_( std::move( _position ) )
-		, m_rotation_( std::move( _rotation ) )
-		, m_scale_   ( std::move( _scale ) )
-		{
-			Update();
-		}
-		
+		explicit cTransform( cVector3f _position = kZero, cVector3f _rotation = kZero, cVector3f _scale = kOne );
+
 		// TODO: Add some way to detect changes.
 		// Something like a last_change being set to the current frame.
 
@@ -76,6 +73,8 @@ namespace sk
 		void Update( bool _force = false );
 
 		void CacheNormalized();
+
+		auto Serialize() -> cShared_ptr< cSerializedObject > override;
 
 	private:
 		cWeak_Ptr< cTransform > m_parent_ = nullptr;

@@ -20,6 +20,16 @@ namespace sk::Object
 		RegisterListener< cCameraFlight >( kUpdate, &cCameraFlight::update );
 	} // cCameraFlight
 
+	cCameraFlight::cCameraFlight( const cShared_ptr< cSerializedObject >& _object )
+	: cCamera( _object->GetBase< cCamera >() )
+	, iListener( Input::kStick | Input::kButton | Input::kKey | Input::kMouseButton | Input::kMouseRelative, 1, true )
+	{
+		_object->BeginRead( this );
+		m_speeds.x = _object->ReadData< float >( "movement_speed" ).value_or( 1.0f );
+		m_speeds.y = _object->ReadData< float >( "rotation_speed" ).value_or( 1.0f );
+		_object->EndRead();
+	}
+
 	Input::response_t cCameraFlight::onInput( const uint32_t _type, const Input::sEvent& _event )
 	{
 		switch( _type )
@@ -112,5 +122,15 @@ namespace sk::Object
 	void cCameraFlight::handleMouseEvent( const Input::sEvent& _event )
 	{
 		m_rotation = _event.mouse->relative;
+	}
+
+	cShared_ptr< cSerializedObject > cCameraFlight::Serialize()
+	{
+		auto object = cSerializedObject::CreateForWrite( this );
+		object->AddBase( cCamera::Serialize() );
+		object->WriteData( "movement_speed", m_speeds.x );
+		object->WriteData( "rotation_speed", m_speeds.y );
+		object->EndWrite();
+		return object;
 	}
 } // sk::Object::

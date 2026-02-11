@@ -15,7 +15,10 @@ namespace sk::Object::Components
 		SK_CLASS_BODY( TransformComponent )
 	sk_public:
 		 cTransformComponent() = default;
+		explicit cTransformComponent( const cShared_ptr< cSerializedObject >& _object );
 		~cTransformComponent() override = default;
+
+		auto Serialize() -> cShared_ptr< cSerializedObject > override;
 	};
 } // sk::Object::Components
 

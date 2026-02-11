@@ -15,6 +15,7 @@
 #include <sk/Reflection/RuntimeClass.h>
 #include <sk/Scene/Managers/EventManager.h>
 #include <sk/Seralization/Serializable.h>
+#include <sk/Seralization/SerializedObject.h>
 
 #include <simdjson.h>
 
@@ -137,6 +138,8 @@ namespace sk
 		// Made for internal usage. But can be used in case you want to manually create an asset.
 		void setAsset( cAsset* _asset );
 
+		auto Serialize() const -> cShared_ptr< cSerializedObject >;
+
 	private:
 		void addReferrer   ( void* _source, const cWeak_Ptr< iClass >& _referrer );
 		void removeReferrer( const void* _source, const cWeak_Ptr< iClass >& _referrer );
@@ -185,6 +188,8 @@ namespace sk
 		friend class cAsset_Manager;
 		friend class cAsset_Meta;
 	public:
+		explicit cAsset( const cShared_ptr< cSerializedObject >& _object );
+
 		[[ nodiscard ]] auto& GetMeta() const { return m_metadata_; }
 		[[ nodiscard ]] auto& GetUUID() const { return m_uuid_; }
 		cShared_ptr< cSerializedObject > Serialize() override;

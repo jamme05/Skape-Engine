@@ -27,6 +27,7 @@ namespace sk::Object::Components
 		SK_CLASS_BODY( MeshComponent )
 	public:
 		explicit cMeshComponent( const cShared_ptr< cAsset_Meta >& _mesh, const cShared_ptr< cAsset_Meta >& _material );
+		explicit cMeshComponent( const cShared_ptr< cSerializedObject >& _object );
 
 		void enabled() override;
 		void disabled() override;
@@ -36,6 +37,8 @@ namespace sk::Object::Components
 		auto GetMaterial() -> Assets::cMaterial*;
 		void SetMesh( const cShared_ptr< cAsset_Meta >& _mesh );
 		void SetMaterial( const cShared_ptr< cAsset_Meta >& _material );
+
+		auto Serialize() -> cShared_ptr< cSerializedObject > override;
 
 	private:
 		cAsset_Ref< Assets::cMesh, eAsset_Ref_Mode::kManual >     m_mesh_;

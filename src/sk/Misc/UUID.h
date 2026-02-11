@@ -13,7 +13,7 @@
 
 namespace sk
 {
-    class cSerializable;
+    class iSerializable;
     class cUUID_Helper;
 
     class cUUID
@@ -37,7 +37,7 @@ namespace sk
         constexpr cUUID& operator=( const cUUID& _other ) = default;
         constexpr cUUID& operator=( cUUID&& _other )      = default;
         
-        auto Serialize() -> cShared_ptr< cSerializedObject >;
+        auto Serialize() const -> cShared_ptr< cSerializedObject >;
 
         [[ nodiscard ]]
         constexpr auto get_low () const { return m_low_;  }

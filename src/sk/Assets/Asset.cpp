@@ -232,10 +232,19 @@ void cAsset_Meta::dispatch_if_loaded( const dispatcher_t::listener_t& _listener,
     Assets::Jobs::cAsset_Job_Manager::get().push_task( task );
 }
 
+cAsset::cAsset( const cShared_ptr< cSerializedObject >& _object )
+{
+    _object->BeginRead( this );
+    const auto val = std::get< std::string >( _object->ReadDataRaw( "UUID" ).value() );
+    m_uuid_ = cUUID::FromString( val );
+    _object->EndRead();
+}
+
 cShared_ptr< cSerializedObject > cAsset::Serialize()
 {
     auto object = cSerializedObject::CreateForWrite( this );
-    return m_metadata_->GetUUID().Serialize();
+    object->WriteData( "UUID", GetUUID().ToString() );
+    return object;
 }
 
 void cAsset_Meta::setPath( std::filesystem::path _path )
@@ -268,5 +277,18 @@ void cAsset_Meta::setAsset( cAsset* _asset )
     }
     else
         m_flags_ &= ~kLoaded & ~kLoading;
+}
+
+auto cAsset_Meta::Serialize() const -> cShared_ptr< cSerializedObject >
+{
+    // TODO: Construction using this
+    auto object = cSerializedObject::CreateForWrite();
+    object->WriteData( "uuid", GetUUID().ToString() );
+    object->WriteData( "path", m_path_.string() );
+    object->WriteData( "asset_name", m_name_.string() );
+    object->WriteData( "extension", m_ext_.string() );
+    object->WriteData( "asset_type", m_asset_type_->hash.value() );
+    object->EndWrite();
+    return object;
 }
 

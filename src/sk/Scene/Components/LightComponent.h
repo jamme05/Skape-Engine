@@ -97,6 +97,7 @@ namespace sk::Object::Components
         using caster_t   = Scene::Light::sShadowCaster;
         
         explicit cLightComponent( const settings_t& _settings = {} );
+        explicit cLightComponent( const cShared_ptr< cSerializedObject >& _object );
         ~cLightComponent() override;
         
         void update() override;
@@ -120,6 +121,8 @@ namespace sk::Object::Components
         auto GetData() const -> const data_t&;
         [[ nodiscard ]]
         auto GetShadowCasterData() const -> const caster_t*;
+
+        auto Serialize() -> cShared_ptr< cSerializedObject > override;
         
     private:
         void fix_data();

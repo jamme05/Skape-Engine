@@ -26,7 +26,7 @@ namespace sk
         
     }
 
-    auto cUUID::Serialize() -> cShared_ptr< cSerializedObject >
+    auto cUUID::Serialize() const -> cShared_ptr< cSerializedObject >
     {
         auto object = cSerializedObject::CreateForWrite();
         object->WriteData( "_value", ToString() );
