@@ -170,6 +170,8 @@ namespace sk
 
 	typedef Math::cVector2< float >    cVector2f;
 	typedef Math::cVector2< double >   cVector2d;
+	typedef Math::cVector2< int64_t >  cVector2i64;
+	typedef Math::cVector2< uint64_t > cVector2u64;
 	typedef Math::cVector2< int32_t >  cVector2i32;
 	typedef Math::cVector2< uint32_t > cVector2u32;
 	typedef Math::cVector2< uint32_t > cVector2i8;

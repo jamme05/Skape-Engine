@@ -22,6 +22,8 @@ namespace sk
 	using cVector3d   = Math::cVector3< double >;
 	using cVector3u32 = Math::cVector3< uint32_t >;
 	using cVector3i32 = Math::cVector3< int32_t >;
+	using cVector3u64 = Math::cVector3< uint64_t >;
+	using cVector3i64 = Math::cVector3< int64_t >;
 } // sk::
 namespace sk::Math
 {

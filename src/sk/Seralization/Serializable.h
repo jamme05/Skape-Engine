@@ -8,10 +8,10 @@ namespace sk
 {
     class cSerializedObject;
 
-    class cSerializable
+    class iSerializable
     {
     public:
-        virtual ~cSerializable() = default;
+        virtual ~iSerializable() = default;
         
         virtual auto Serialize() -> cShared_ptr< cSerializedObject > = 0; 
     };

@@ -19,4 +19,5 @@ target_sources(SkapeEngine
       Smart_Ptrs.h
       StringID.h
       UUID.h
+      Visitor.h
 )

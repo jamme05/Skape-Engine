@@ -25,6 +25,8 @@ namespace sk
 	using cVector4d = Math::cVector4< double >;
 	using cVector4i32 = Math::cVector4< int32_t >;
 	using cVector4u32 = Math::cVector4< uint32_t >;
+	using cVector4i64 = Math::cVector4< int64_t >;
+	using cVector4u64 = Math::cVector4< uint64_t >;
 } // sk::
 namespace sk::Math
 {
