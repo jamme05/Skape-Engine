@@ -14,8 +14,8 @@ namespace sk::Object::Components
 	{
 		SK_CLASS_BODY( TransformComponent )
 	sk_public:
-		 cTransformComponent( void ) = default;
-		~cTransformComponent( void ) override = default;
+		 cTransformComponent() = default;
+		~cTransformComponent() override = default;
 	};
 } // sk::Object::Components
 

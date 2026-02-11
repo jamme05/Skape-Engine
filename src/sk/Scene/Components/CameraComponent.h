@@ -41,29 +41,29 @@ namespace sk::Object::Components
 		};
 
 		cCameraComponent( const Graphics::sViewport& _viewport, const Graphics::sScissor& _scissors, const sCameraSettings& _settings, eType _type );
-		~cCameraComponent();
+		~cCameraComponent() override;
 
 		void renderTo( Graphics::Rendering::cRender_Context& _context );
 		void renderTo( Graphics::Rendering::cRender_Target&  _target );
 
-		void enabled ( void ) override;
-		void disabled( void ) override;
+		void enabled () override;
+		void disabled() override;
 
-		void renderAuto( void ){ if( m_render_target ) renderTo( *m_render_target ); }
+		void renderAuto(){ if( m_render_target ) renderTo( *m_render_target ); }
 
-		void update( void ) override;
+		void update() override;
 
-		auto& getViewport( void )     { return m_viewport; }
-		auto& getScissor ( void )     { return m_scissor;  }
-		auto& getViewport( void ) const { return m_viewport; }
-		auto& getScissor ( void ) const { return m_scissor;  }
+		[[ nodiscard ]] auto& getViewport()     { return m_viewport; }
+		[[ nodiscard ]] auto& getScissor ()     { return m_scissor;  }
+		[[ nodiscard ]] auto& getViewport() const { return m_viewport; }
+		[[ nodiscard ]] auto& getScissor () const { return m_scissor;  }
 
-		auto& getViewProjInv( void ) const { return m_view_proj_inv; }
-		auto& getProjection ( void ) const { return m_projection; }
+		[[ nodiscard ]] auto& getViewProjInv() const { return m_view_proj_inv; }
+		[[ nodiscard ]] auto& getProjection () const { return m_projection; }
 		
-		auto  GetLayers() const { return m_layers_; }
+		[[ nodiscard ]] auto  GetLayers() const { return m_layers_; }
 		
-		auto& GetSettings() const { return m_camera_settings; }
+		[[ nodiscard ]] auto& GetSettings() const { return m_camera_settings; }
 		void  SetSettings( const sCameraSettings& _settings );
 
 	private:

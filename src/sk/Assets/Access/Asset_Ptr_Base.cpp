@@ -61,9 +61,9 @@ auto cAsset_Ptr_Base::GetAssetRaw() const -> cAsset*
     return ( m_meta_->IsLoaded() && has_data() ) ? m_asset_.load() : nullptr;
 }
 
-auto cAsset_Ptr_Base::GetMeta() const -> cShared_ptr< cAsset_Meta >
+auto cAsset_Ptr_Base::GetMeta() const -> const cWeak_Ptr< cAsset_Meta >&
 {
-    return m_meta_.Lock();
+    return m_meta_;
 }
 
 bool cAsset_Ptr_Base::IsLoaded() const

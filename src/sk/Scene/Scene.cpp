@@ -15,7 +15,7 @@ namespace sk
 		m_objects.clear();
 	} // ~cScene
 
-	void cScene::force_render( void )
+	void cScene::force_render()
 	{
 		// TODO: Get rid of this
 
@@ -25,7 +25,7 @@ namespace sk
 		}
 	} // render
 
-	void cScene::force_update( void )
+	void cScene::force_update()
 	{
 		for( auto& obj : m_objects )
 			obj->update();

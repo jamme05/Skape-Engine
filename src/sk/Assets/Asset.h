@@ -90,7 +90,7 @@ namespace sk
 		bool HasMetadata() const;
 		
 		// Gets the UUID of this asset.
-		auto GetUUID() const -> cUUID;
+		auto GetUUID() const -> const cUUID&;
 		// Gets the asset. Unsafe to be used directly as the state is controlled externally.
 		auto GetAsset() const -> cAsset*;
 		// Gets the asset if it is of a certain type
@@ -179,7 +179,7 @@ namespace sk
 
 	class cAsset;
 
-	SK_CLASS( Asset ), public cSerializable
+	SK_CLASS( Asset ), public iSerializable
 	{
 		SK_CLASS_BODY( Asset )
 		friend class cAsset_Manager;

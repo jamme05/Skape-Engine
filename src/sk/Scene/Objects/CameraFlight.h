@@ -11,7 +11,7 @@
 
 namespace sk::Object
 {
-	QW_OBJECT_CLASS( CameraFlight, cCamera ), public Input::iListener
+	SK_OBJECT_CLASS( CameraFlight, cCamera ), public Input::iListener
 	{
 		SK_CLASS_BODY( CameraFlight )
 	sk_public:

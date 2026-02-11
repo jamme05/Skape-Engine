@@ -44,11 +44,7 @@ namespace sk::Object
 
 		iComponent( iComponent const& ) = delete;
 
-		~iComponent() override
-		{
-			m_object_ = nullptr;
-			m_children_.clear();
-		}
+		~iComponent() override;
 
 		// TODO: Make them protected
 		// Event bases
@@ -95,22 +91,13 @@ namespace sk::Object
 
 		auto& GetUUID() const { return m_uuid_; }
 
-		void SetParent( const cShared_ptr< iComponent >& _component )
-		{
-			if( m_parent_ && !m_parent_.Lock()->m_children_.empty() )
-			{
-				if( const auto itr = std::ranges::find( m_parent_->m_children_, m_self_.Lock() ); itr != m_parent_->m_children_.end() )
-					m_parent_->m_children_.erase( itr );
-			}
-			m_parent_ = _component;
-			if( _component )
-				_component->m_children_.emplace_back( m_self_.Lock() );
-			m_transform_->SetParent( ( _component != nullptr ) ? _component->m_transform_ : nullptr );
-		}
+		void SetParent( const cShared_ptr< iComponent >& _component );
 
 	sk_protected:
 		virtual void setEnabled( const bool _is_enabled ){ m_enabled_ = _is_enabled; }
 		virtual void registerEvents() = 0;
+
+		void SetObject( const cWeak_Ptr< cObject >& _parent_object );
 		
 		cShared_ptr< cTransform > m_transform_;
 		cWeak_Ptr< iComponent >   m_parent_    = nullptr;
@@ -121,28 +108,9 @@ namespace sk::Object
 
 	sk_private: // TODO: Move parts to cpp, find way to make actual constexpr
 
-		void registerRecursive()
-		{
-			registerEvents();
-			enabled();
-			m_transform_->Update();
-			for( auto& child : m_children_ )
-				child->registerRecursive();
-		}
-		void enableRecursive ()
-		{
-			for( auto& child : m_children_ )
-			{
-				if( child->m_enabled_ )
-					child->enableRecursive();
-			}
-		}
-		void disableRecursive()
-		{
-			for( auto& child : m_children_ )
-				child->disableRecursive();
-		}
-
+		void registerRecursive();
+		void enableRecursive ();
+		void disableRecursive();
 
 
 		std::vector< cShared_ptr< iComponent > > m_children_ = { }; // TODO: Add get children function

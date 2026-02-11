@@ -45,7 +45,7 @@ bool cAsset_Meta::HasMetadata() const
     return m_flags_ & kMetadata;
 }
 
-auto cAsset_Meta::GetUUID() const -> cUUID
+auto cAsset_Meta::GetUUID() const -> const cUUID&
 {
     return m_uuid_;
 }

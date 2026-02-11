@@ -154,7 +154,8 @@ constexpr sk::cStringIDManager::cStringRegistry::cStringRegistry( const cStringR
 }
 
 constexpr sk::cStringIDManager::cStringRegistry::cStringRegistry( cStringRegistry&& _other ) noexcept
-: m_registry_( _other.m_registry_ )
+: m_string_( _other.m_string_ )
+, m_registry_( _other.m_registry_ )
 {
     _other.m_registry_ = nullptr;
 }

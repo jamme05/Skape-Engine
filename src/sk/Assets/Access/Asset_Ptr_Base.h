@@ -32,7 +32,7 @@ namespace sk
         auto operator=( cAsset_Ptr_Base&& _other ) noexcept -> cAsset_Ptr_Base&;
 
         [[ nodiscard ]] auto GetAssetRaw() const -> cAsset*;
-        [[ nodiscard ]] auto GetMeta() const -> cShared_ptr< cAsset_Meta >;
+        [[ nodiscard ]] auto GetMeta() const -> const cWeak_Ptr< cAsset_Meta >&;
         [[ nodiscard ]] bool IsLoaded() const;
 
         bool SetAsset( const cShared_ptr< cAsset_Meta >& _meta );

@@ -446,7 +446,7 @@ namespace sk
 					raw_ptr = std::addressof( _listener );
 				}
 
-				iRuntimeClass* runtime_class;
+				const iRuntimeClass* runtime_class;
 				raw_func_t     raw_ptr;
 				function_t     wrapped;
 			};
