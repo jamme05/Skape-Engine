@@ -77,3 +77,9 @@ Day 7:
 
 ---
 
+Day 8:
+- Fixed a way to serialize asset references. But it needs more fallbacks to make sure that it always gets the asset.
+- Made all the objects and components serializable.
+- SCENE IS SAVEABLE AND LOADABLE YIPPIE
+
+---
