@@ -8,8 +8,10 @@
 
 #include <sk/Debugging/Debugging.h>
 #include <sk/Macros/Manipulation.h>
+#include <sk/Memory/Tracker/Tracker.h>
 #include <sk/Misc/Hashing.h>
 #include <sk/Misc/Offsetof.h>
+#include <sk/Misc/Smart_Ptrs.h>
 #include <sk/Reflection/ClassMacros.h>
 #include <sk/Reflection/Types.h>
 
@@ -18,6 +20,8 @@
 
 namespace sk
 {
+	class cSerializedObject;
+
 	namespace Reflection
 	{
 		class cMemberVariable;
@@ -91,6 +95,9 @@ namespace sk
 			-> Reflection::member_func_range_t { return {}; }
 		virtual auto getFunction( const str_hash& _hash, const type_hash& _args ) const
 			-> Reflection::member_func_ptr_t { return nullptr; }
+
+		virtual auto CreateSerialized      ( const cShared_ptr< cSerializedObject >& _object ) const -> iClass* { return nullptr; }
+		virtual auto CreateSharedSerialized( const cShared_ptr< cSerializedObject >& _object ) const -> cShared_ptr< iClass > { return nullptr; }
 
 	private:
 		type_hash   m_hash;
@@ -173,7 +180,7 @@ namespace sk
 	template< class Ty = iClass >
 	using get_inherits_t     = typename get_parent_class< Ty >::inherits_type;
 
-	template< class Ty, class Pa = iClass, const get_parent_class_t< Pa >& Parent = get_class_ref< Pa >, bool ForceShared = true >
+	template< class Ty, class Pa = iClass, const get_parent_class_t< Pa >& Parent = get_class_ref< Pa > >
 	requires std::is_base_of_v< iClass, Pa >
 	class cRuntimeClass : public get_parent_class_t< Pa >
 	{
@@ -224,8 +231,36 @@ namespace sk
 			-> Reflection::member_func_ptr_t override { return value_type::staticGetFunction( _hash, _args ); }
 
 		template< class... Args >
-		requires ( !ForceShared )
-		Ty* create( Args&&... ){ return nullptr; } // TODO: Create function
+		auto Create( Args&&... _args )
+		{
+			return SK_SINGLE( Ty, std::forward< Args >( _args )... );
+		}
+
+		template< class... Args >
+		auto CreateShared( Args&&... _args )
+		{
+			return sk::make_shared< Ty >( std::forward< Args >( _args )... );
+		}
+
+		auto CreateSerialized( const cShared_ptr< cSerializedObject >& _object ) const ->  iClass* override
+		{
+			if constexpr( std::constructible_from< Ty, cShared_ptr< cSerializedObject > > )
+			{
+				return SK_SINGLE( Ty, _object );
+			}
+			SK_BREAK;
+			return nullptr;
+		}
+
+		auto CreateSharedSerialized( const cShared_ptr< cSerializedObject >& _object ) const -> cShared_ptr< iClass > override
+		{
+			if constexpr( std::constructible_from< Ty, cShared_ptr< cSerializedObject > > )
+			{
+				return sk::make_shared< Ty >( _object );
+			}
+			SK_BREAK;
+			return nullptr;
+		}
 	};
 
 	// template< class Ty >
