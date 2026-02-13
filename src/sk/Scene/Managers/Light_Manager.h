@@ -89,7 +89,7 @@ namespace sk::Scene
         std::vector< size_t > m_point_light_indices_;
         std::vector< size_t > m_spot_light_indices_;
 
-        cVector2u32 m_computed_atlas_size_;
+        cVector2u32 m_computed_atlas_size_ = { 32, 32 };
         uint32_t    m_atlas_size_;
         // If we should preserve the atlas between updates.
         bool        m_preserve_atlas_;

@@ -37,7 +37,8 @@ void sk::Graphics::cPipeline::Execute()
 
 void sk::Graphics::cPipeline::Destroy()
 {
-    
+    for( const auto& pass : m_passes_ )
+        pass->Destroy();
 } // Destroy
 
 void sk::Graphics::cPipeline::AddPass( std::unique_ptr< Passes::iPass >&& _pass )

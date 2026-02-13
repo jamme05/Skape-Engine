@@ -90,7 +90,7 @@ void cLight_Pass::End()
 
 void cLight_Pass::Destroy()
 {
-    SK_FREE( m_shadow_context_ );
+    SK_DELETE( m_shadow_context_ );
     m_shadow_context_ = nullptr;
 }
 

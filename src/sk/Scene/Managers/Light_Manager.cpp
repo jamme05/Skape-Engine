@@ -68,7 +68,8 @@ void sk::Scene::cLight_Manager::Update()
     if( !m_preserve_atlas_ )
         compute_atlas();
 
-    m_shadow_caster_buffer_.Upload();
+    if( m_shadow_caster_buffer_.Size() > 0 )
+        m_shadow_caster_buffer_.Upload();
 }
 
 auto sk::Scene::cLight_Manager::GetAtlasSize() const -> cVector2u32

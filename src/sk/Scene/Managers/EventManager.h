@@ -999,7 +999,7 @@ namespace sk
 		class cEventListener
 		{
 		public:
-			         cEventListener( void ) = default;
+			cEventListener() = default;
 			virtual ~cEventListener( void );
 
 		protected:

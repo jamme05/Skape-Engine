@@ -228,6 +228,9 @@ namespace sk::Scene
         void AddObject   ( const cShared_ptr< Object::cObject >& _object );
         void RemoveObject( const cShared_ptr< Object::cObject >& _object );
 
+        void Lock();
+        void Unlock();
+
         [[ nodiscard ]] auto  GetLayerByName( const cStringID& _name   ) const -> std::optional< uint64_t >;
         [[ nodiscard ]] auto  GetObjectsIn  (       uint64_t   _layers ) const -> object_range_t;
         [[ nodiscard ]] auto  GetMeshesIn   (       uint64_t   _layers ) const -> mesh_range_t;
@@ -239,6 +242,8 @@ namespace sk::Scene
         
         using hash_to_i_map_t = map< str_hash, uint64_t >;
         using layer_vec_t     = vector< sLayer >;
+
+        std::mutex m_access_mtx_;
 
         size_t          m_internal_component_index_ = std::numeric_limits< size_t >::max();
         hash_to_i_map_t m_name_to_layer_;

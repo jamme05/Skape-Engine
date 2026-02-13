@@ -38,6 +38,8 @@ sk::Assets::Jobs::cAsset_Job_Manager::~cAsset_Job_Manager()
     
     for( size_t i = 0; i < m_worker_count_; ++i )
         m_workers_[ i ].m_thread_.join();
+
+    SK_DELETE( m_workers_ );
 }
 
 void sk::Assets::Jobs::cAsset_Job_Manager::Sync()

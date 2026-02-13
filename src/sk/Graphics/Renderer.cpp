@@ -18,7 +18,10 @@ using namespace sk::Graphics;
 cRenderer::~cRenderer()
 {
     if( m_active_pipeline_ )
+    {
+        m_active_pipeline_->Destroy();
         SK_DELETE( m_active_pipeline_ );
+    }
 }
 
 auto cRenderer::GetPipeline() const -> cPipeline*

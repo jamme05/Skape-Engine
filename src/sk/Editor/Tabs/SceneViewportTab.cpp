@@ -57,6 +57,7 @@ void cSceneViewportTab::Draw()
 void cSceneViewportTab::Destroy()
 {
     m_camera_ = nullptr;
+    m_pipeline_->Destroy();
     SK_DELETE( m_pipeline_ );
     m_surface_.reset();
 }

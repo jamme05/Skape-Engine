@@ -80,6 +80,8 @@ void sk::Scene::cLayer_Manager::RemoveLayer( const uint64_t _layer )
 
 void sk::Scene::cLayer_Manager::AddObject( const cShared_ptr< Object::cObject >& _object )
 {
+    std::scoped_lock lock{ m_access_mtx_ };
+
     auto [ was_created, component ] = _object->AddOrGetInternalComponent< Object::Components::cLayer_Info_Component >( m_internal_component_index_ );
     if( !was_created && component->m_index_ != std::numeric_limits< uint64_t >::max() )
         removeObjectAt( component->m_layer_index_, component->m_index_ );
@@ -94,6 +96,8 @@ void sk::Scene::cLayer_Manager::AddObject( const cShared_ptr< Object::cObject >&
 
 void sk::Scene::cLayer_Manager::RemoveObject( const cShared_ptr< Object::cObject >& _object )
 {
+    std::scoped_lock lock{ m_access_mtx_ };
+
     auto [ was_created, component ] = _object->AddOrGetInternalComponent< Object::Components::cLayer_Info_Component >( m_internal_component_index_ );
     if( was_created )
         return;
@@ -102,6 +106,16 @@ void sk::Scene::cLayer_Manager::RemoveObject( const cShared_ptr< Object::cObject
 
     component->m_layer_index_ = std::numeric_limits< uint64_t >::max();
     component->m_index_       = std::numeric_limits< uint64_t >::max();
+}
+
+void sk::Scene::cLayer_Manager::Lock()
+{
+    m_access_mtx_.lock();
+}
+
+void sk::Scene::cLayer_Manager::Unlock()
+{
+    m_access_mtx_.unlock();
 }
 
 auto sk::Scene::cLayer_Manager::GetLayerByName( const cStringID& _name ) const -> std::optional< uint64_t >
@@ -138,7 +152,8 @@ auto sk::Scene::cLayer_Manager::GetMeshesIn( const uint64_t _layers ) const -> m
     return { mesh_itr_start, mesh_itr_end };
 }
 
-void sk::Scene::cLayer_Manager::removeObjectAt( const size_t _layer_index, const size_t _index )
+void sk::Scene::cLayer_Manager::
+removeObjectAt( const size_t _layer_index, const size_t _index )
 {
     // Make sure that the index is correct beforehand.
     

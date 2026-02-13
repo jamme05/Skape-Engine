@@ -26,8 +26,8 @@ namespace sk::Scene
 
 	struct sMainCamera
 	{
-		cShared_ptr< camera_t > m_camera  = nullptr;
-		bool                    m_enabled = false;
+		cWeak_Ptr< camera_t > m_camera  = nullptr;
+		bool                  m_enabled = false;
 	};
 
 	public:
@@ -55,8 +55,8 @@ namespace sk::Scene
 		cShared_ptr< camera_t > m_current_camera_;
 		
 		// All registered cameras
-		unordered_map< hash< cUUID >, cShared_ptr< camera_t > > m_cameras_;
+		unordered_map< hash< cUUID >, cWeak_Ptr< camera_t > > m_cameras_;
 		// All cameras being rendered to ( if they have a set render_context or render_target )
-		unordered_map< hash< cUUID >, cShared_ptr< camera_t > > m_enabled_cameras_;
+		unordered_map< hash< cUUID >, cWeak_Ptr< camera_t > > m_enabled_cameras_;
 	};
 } // sk::Scene
