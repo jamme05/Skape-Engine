@@ -24,6 +24,11 @@ bool cSelectionManager::IsSelected( const Object::iComponent& _component ) const
     return m_selected_components_.contains( _component.GetUUID() );
 }
 
+bool cSelectionManager::IsSelected( const cAsset_Meta& _meta ) const
+{
+    return m_selected_assets_.contains( _meta.GetUUID() );
+}
+
 void cSelectionManager::AddSelectedObject( const cShared_ptr< Object::cObject >& _object, const bool _clear )
 {
     if( _clear )
@@ -71,7 +76,7 @@ void cSelectionManager::AddSelectedComponent( const cShared_ptr< Object::iCompon
 
 void cSelectionManager::ToggleSelectedComponent( const cShared_ptr< Object::iComponent >& _component )
 {
-    if( auto itr = m_selected_components_.find( _component->GetUUID() ); itr != m_selected_components_.end() )
+    if( const auto itr = m_selected_components_.find( _component->GetUUID() ); itr != m_selected_components_.end() )
         m_selected_components_.erase( _component->GetUUID() );
     else
         m_selected_components_.emplace( _component->GetUUID(), _component );
@@ -80,6 +85,27 @@ void cSelectionManager::ToggleSelectedComponent( const cShared_ptr< Object::iCom
 void cSelectionManager::RemoveSelectedComponent( const cUUID& _uuid )
 {
     m_selected_components_.erase( _uuid );
+}
+
+void cSelectionManager::AddSelectedAsset( const cShared_ptr< cAsset_Meta >& _meta, bool _clear )
+{
+    if( _clear )
+        m_selected_assets_.clear();
+
+    m_selected_assets_.emplace( _meta->GetUUID(), _meta );
+}
+
+void cSelectionManager::ToggleSelectedAsset( const cShared_ptr< cAsset_Meta >& _meta )
+{
+    if( const auto itr = m_selected_assets_.find( _meta->GetUUID() ); itr != m_selected_assets_.end() )
+        m_selected_assets_.erase( _meta->GetUUID() );
+    else
+        m_selected_assets_.emplace( _meta->GetUUID(), _meta );
+}
+
+void cSelectionManager::RemoveSelectedAsset( const cUUID& _uuid )
+{
+    m_selected_assets_.erase( _uuid );
 }
 
 void cSelectionManager::Clear()
