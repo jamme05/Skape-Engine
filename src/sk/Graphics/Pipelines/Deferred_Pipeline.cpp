@@ -26,7 +26,7 @@ void cDeferred_Pipeline::Initialize()
     const auto screen_shader   = asset_manager.GetAssetByPath( "shaders/screen.vert" );
     const auto deferred_shader = asset_manager.GetAssetByPath( "shaders/deferred.frag" );
     const auto [ material_meta, material ] = asset_manager.CreateAsset< Assets::cMaterial >(
-        "Deferred Screen Material", Utils::cShader_Link{ screen_shader, deferred_shader }
+        "Deferred Screen Material", "builtin/deferred_screen_mat.skmat", Utils::cShader_Link{ screen_shader, deferred_shader }
     );
     m_screen_material_ = material_meta;
     material->SetDepthTest( Assets::cMaterial::eDepthTest::kDisabled );

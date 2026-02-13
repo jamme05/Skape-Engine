@@ -38,7 +38,7 @@ void cLight_Pass::Init()
 
     auto& asset_manager = cAsset_Manager::get();
 
-    m_shadow_material_ = asset_manager.CreateAsset< Assets::cMaterial >( "Shadow Material",
+    m_shadow_material_ = asset_manager.CreateAsset< Assets::cMaterial >( "Shadow Material", "builtin/shadow_mat.skmat",
         Utils::cShader_Link{
             asset_manager.GetAssetByPath( "shaders/default.vert" ),
             asset_manager.GetAssetByPath( "shaders/shadow.frag" )
@@ -103,12 +103,13 @@ void cLight_Pass::_shadowPass( const Object::Components::cLightComponent& _light
 {
     // TODO: Make a shadow pass
     auto& manager = Scene::cLight_Manager::get();
-    const auto& layer_manager = Scene::cLayer_Manager::get();
+    auto& layer_manager = Scene::cLayer_Manager::get();
 
     auto& frame_buffer = m_shadow_context_->GetBack();
 
     frame_buffer.Begin( _getViewport( _light ), _getScissor( _light ) );
 
+    layer_manager.Lock();
     for( auto [ fst, lst ] = layer_manager.GetMeshesIn( std::numeric_limits< size_t >::max() ); fst != lst; ++fst )
     {
         if( !fst.IsValid() )
@@ -116,7 +117,7 @@ void cLight_Pass::_shadowPass( const Object::Components::cLightComponent& _light
 
         auto& mesh = *fst;
 
-        if( !mesh->IsReady() )
+        if( mesh == nullptr || !mesh->IsReady() )
             continue;
 
         // TODO: Add a local render function that's more optimized
@@ -125,6 +126,7 @@ void cLight_Pass::_shadowPass( const Object::Components::cLightComponent& _light
         if( !res )
             SK_BREAK;
     }
+    layer_manager.Unlock();
 }
 
 auto cLight_Pass::_getViewport( const Object::Components::cLightComponent& _light ) -> sViewport

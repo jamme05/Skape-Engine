@@ -67,20 +67,21 @@ void cGBuffer_Pass::Destroy()
 
 void cGBuffer_Pass::RenderWithCamera( const Object::Components::cCameraComponent& _camera ) const
 {
-    const auto& layer_manager = Scene::cLayer_Manager::get();
+    auto& layer_manager = Scene::cLayer_Manager::get();
     
     auto& frame_buffer = m_render_context_->GetBack();
     
     frame_buffer.Clear( Rendering::eClear::kAll );
     frame_buffer.Begin( _camera.getViewport(), _camera.getScissor() );
 
+    layer_manager.Lock();
     for( auto [ fst, lst ] = layer_manager.GetMeshesIn( _camera.GetLayers() ); fst != lst; ++fst )
     {
         if( !fst.IsValid() )
             continue;
-        
+
         auto& mesh = *fst;
-        
+
         if( !mesh->IsReady() )
             continue;
 
@@ -90,4 +91,5 @@ void cGBuffer_Pass::RenderWithCamera( const Object::Components::cCameraComponent
         if( !res )
             SK_BREAK;
     }
+    layer_manager.Unlock();
 }
