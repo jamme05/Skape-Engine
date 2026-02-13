@@ -7,8 +7,12 @@
 #include "AssetViewTab.h"
 
 #include <sk/Assets/Management/Asset_Manager.h>
+#include <sk/Editor/Managers/SelectionManager.h>
+#include <sk/Scene/Scene.h>
+#include <sk/Scene/Managers/SceneManager.h>
 
 #include <imgui.h>
+
 
 using namespace sk::Editor::Tabs;
 
@@ -21,10 +25,10 @@ namespace
     };
 } // ::
 
-void cAssetViewTab::Create()
+void cAssetGridViewTab::Create()
 {
     m_current_folder_ = std::filesystem::current_path();
-    m_context_menu_
+    m_tab_context_menu_
         .If( [ current_folder=&m_current_folder_ ]( void* )
         {
             return *current_folder == std::filesystem::current_path();
@@ -37,9 +41,16 @@ void cAssetViewTab::Create()
                 *current_folder = current_folder->parent_path();
         } )
     .Complete();
+
+    m_window_context_menu_
+        .Add( "Create Scene", [ current_folder=&m_current_folder_ ]( void* )
+        {
+            cAsset_Manager::get().CreateAsset< cScene >( "Scene", ( *current_folder ) / "scene.skscene" );
+        } )
+    .Complete();
 }
 
-void cAssetViewTab::Draw()
+void cAssetGridViewTab::Draw()
 {
     struct sFolder
     {
@@ -47,7 +58,8 @@ void cAssetViewTab::Draw()
         std::filesystem::path path;
     };
 
-    m_context_menu_.Draw();
+    if( !m_tab_context_menu_.Draw() )
+        m_window_context_menu_.DrawOnWindow( "asset_grid_popup" );
 
     // TODO: Redo all of this
     auto& assets = cAsset_Manager::get().GetAllAssets();
@@ -61,7 +73,7 @@ void cAssetViewTab::Draw()
     }
     for( const auto& asset : assets | std::views::values )
     {
-        if( std::filesystem::path{ asset->GetPath().view() }.parent_path() == m_current_folder_ )
+        if( std::filesystem::path{ asset->GetAbsolutePath().view() }.parent_path() == m_current_folder_ )
             assets_in_folder.emplace_back( asset );
     }
 
@@ -84,6 +96,8 @@ void cAssetViewTab::Draw()
             m_current_folder_ = path;
     }
 
+    auto& selection_manager = Managers::cSelectionManager::get();
+
     for( auto& asset : assets_in_folder )
     {
         if( ( index++ % 6 ) != 0 )
@@ -91,14 +105,34 @@ void cAssetViewTab::Draw()
 
         if( ImGui::Button( std::format( "{}##Asset_{}", asset->GetName().view(), index ).c_str(), size ) )
         {
+            if( asset->GetType() == kTypeInfo< cScene > )
+            {
+                for( auto scenes = cSceneManager::get().GetScenes();
+                    auto& scene_meta : scenes | std::views::values )
+                {
+                    if( asset->GetUUID() != scene_meta->GetUUID() )
+                        cSceneManager::get().UnregisterScene( scene_meta->GetUUID() );
+                }
+
+                cSceneManager::get().RegisterScene( asset );
+                cSceneManager::get().LoadScene( asset->GetUUID() );
+            }
+
+            if( ImGui::IsKeyDown( ImGuiMod_Ctrl ) )
+                selection_manager.ToggleSelectedAsset( asset );
+            else
+                selection_manager.AddSelectedAsset( asset, !ImGui::IsKeyDown( ImGuiMod_Shift ) );
             println( "Asset {} selected", asset->GetName().c_str() );
         }
     }
 
+    if( ImGui::IsMouseReleased( ImGuiMouseButton_Left ) )
+        selection_manager.Clear();
+
     ImGui::PopStyleVar();
 }
 
-void cAssetViewTab::Destroy()
+void cAssetGridViewTab::Destroy()
 {
 
 }

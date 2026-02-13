@@ -13,17 +13,18 @@
 
 namespace sk::Editor::Tabs
 {
-    class cAssetViewTab : public aTab
+    class cAssetGridViewTab : public aTab
     {
     public:
-        explicit cAssetViewTab( const std::string& _name ) : aTab( _name ){}
+        explicit cAssetGridViewTab( const std::string& _name ) : aTab( _name ){}
 
         void Create () override;
         void Draw   () override;
         void Destroy() override;
 
     private:
-        Utils::cContextMenu   m_context_menu_;
+        Utils::cContextMenu   m_tab_context_menu_;
+        Utils::cContextMenu   m_window_context_menu_;
         Utils::cContextMenu   m_asset_context_menu_;
         std::filesystem::path m_current_folder_;
     };
