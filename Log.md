@@ -85,3 +85,19 @@ Day 8:
 - Did not push for the end of the day as it got late and there seems to be some memory corruptions.
 
 ---
+
+Day 9:
+
+- Spent the early part of the day trying to track down the memory corruption. Ended up finding out it was from the scene getting recreated.
+- When trying to dig deeper into the reason for the corruption I found out that I was leaking memory so started working on fixing that.
+- Did decrease the number of memory leaks and only have a few remaining.
+- Will not push todays progress either as the memory leaks are still lurking.
+
+---
+
+Day 10:
+
+- Spent the first part of the day getting the scene to work as a valid asset. As well as for storing the metadata.
+- Spent the next part of the day trying to get scenes to safely open and close which I've made progress on.
+
+---
