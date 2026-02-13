@@ -29,7 +29,7 @@ namespace sk::Object
 {
 	typedef uint64_t hash_t;
 
-	GENERATE_CLASS( iComponent ), public cShared_from_this< iComponent >, public iSerializable
+	GENERATE_CLASS( iComponent ), public cShared_from_this< iComponent >, public Event::cEventListener, public iSerializable
 	{
 		CREATE_CLASS_IDENTIFIERS( iComponent, runtime_class_iComponent )
 
@@ -38,12 +38,11 @@ namespace sk::Object
 	protected:
 		iComponent()
 		{
-			m_self_      = get_weak();
-			m_transform_ = sk::make_shared< cTransform >();
+			m_transform_ = sk::MakeShared< cTransform >();
 		}
 	sk_public:
 
-		explicit iComponent( const cShared_ptr< cSerializedObject >& _object );
+		explicit iComponent( cSerializedObject& _object );
 		iComponent( iComponent const& ) = delete;
 
 		~iComponent() override;
@@ -95,7 +94,7 @@ namespace sk::Object
 
 		void SetParent( const cShared_ptr< iComponent >& _component );
 
-		auto Serialize() -> cShared_ptr< cSerializedObject > override;
+		auto Serialize() -> cSerializedObject override;
 
 	sk_protected:
 		virtual void setEnabled( const bool _is_enabled ){ m_enabled_ = _is_enabled; }
@@ -116,19 +115,16 @@ namespace sk::Object
 		void enableRecursive ();
 		void disableRecursive();
 
-
 		std::vector< cShared_ptr< iComponent > > m_children_ = { }; // TODO: Add get children function
 		cUUID m_uuid_     = {};
 		bool  m_enabled_  = true;
 		// Internal will hide it from the editor.
 		bool  m_internal_ = false;
-
-		cWeak_Ptr< iComponent > m_self_;
 	};
 
 	// TODO: Check if type is necessary
 	template< class Ty, uint16_t Events >
-	class cComponent : public iComponent, public Event::cEventListener
+	class cComponent : public iComponent
 	{
 		friend class sk::cSceneManager;
 #define HAS_EVENT( Func, Val ) if constexpr( !std::is_same_v< decltype( &Ty::Func ), decltype( &iComponent::Func ) > ) events |= (Val)
@@ -149,7 +145,7 @@ namespace sk::Object
 		static constexpr uint16_t kEventMask = detect_events() & Events;
 
 		cComponent() = default;
-		cComponent( const cShared_ptr< cSerializedObject >& _object ) : iComponent( _object ){}
+		explicit cComponent( cSerializedObject& _object ) : iComponent( _object ){}
 	public:
 
 		void SetEnabled( const bool _is_enabled ) final { setEnabled( _is_enabled ); _is_enabled ? postEvent< kEnabled >() : postEvent< kDisabled >(); }

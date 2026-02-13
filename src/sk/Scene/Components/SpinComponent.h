@@ -11,10 +11,10 @@ namespace sk::Object::Components
         SK_CLASS_BODY( SpinComponent )
     public:
         explicit cSpinComponent( cVector3f _speed = kUp );
-        explicit cSpinComponent( const cShared_ptr< cSerializedObject >& _object );
+        explicit cSpinComponent( cSerializedObject& _object );
         void update() override;
 
-        auto Serialize() -> cShared_ptr< cSerializedObject > override;
+        auto Serialize() -> cSerializedObject override;
 
     private:
         cVector3f m_speed_;

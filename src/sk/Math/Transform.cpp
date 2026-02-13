@@ -13,6 +13,17 @@ cTransform::cTransform( cVector3f _position, cVector3f _rotation, cVector3f _sca
     Update();
 }
 
+cTransform::cTransform( cSerializedObject& _object )
+{
+    _object.BeginRead();
+    m_position_ = _object.ReadData< cVector3f >( "Position" ).value();
+    m_rotation_ = _object.ReadData< cVector3f >( "Rotation" ).value();
+    m_scale_    = _object.ReadData< cVector3f >( "Scale" ).value();
+    _object.EndRead();
+
+    Update();
+}
+
 void cTransform::SetLocalPosition( const cVector3f& _position )
 {
     m_position_ = _position;
@@ -129,13 +140,14 @@ void cTransform::CacheNormalized()
     m_has_normalized_ = true;
 }
 
-auto cTransform::Serialize() -> cShared_ptr< cSerializedObject >
+auto cTransform::Serialize() -> cSerializedObject
 {
-    auto object = cSerializedObject::CreateForWrite();
-    object->WriteData( "Position", cVector3d( m_position_ ) );
-    object->WriteData( "Rotation", cVector3d( m_rotation_ ) );
-    object->WriteData( "Scale",    cVector3d( m_scale_ ) );
-    object->EndWrite();
+    cSerializedObject object{};
+    object.BeginWrite();
+    object.WriteData( "Position", cVector3d( m_position_ ) );
+    object.WriteData( "Rotation", cVector3d( m_rotation_ ) );
+    object.WriteData( "Scale",    cVector3d( m_scale_ ) );
+    object.EndWrite();
 
     return object;
 }

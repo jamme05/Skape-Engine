@@ -13,12 +13,12 @@ namespace sk
     public:
         virtual ~iSerializable() = default;
         
-        virtual auto Serialize() -> cShared_ptr< cSerializedObject > = 0; 
+        virtual auto Serialize() -> cSerializedObject = 0;
     };
     
     template< class Ty >
     concept serializable = requires( Ty _object )
     {
-        { _object.Serialize() } -> std::same_as< cShared_ptr< cSerializedObject > >;
+        { _object.Serialize() } -> std::same_as< cSerializedObject >;
     };
 } // sk::

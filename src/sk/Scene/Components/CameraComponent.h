@@ -42,7 +42,7 @@ namespace sk::Object::Components
 		};
 
 		cCameraComponent( const Graphics::sViewport& _viewport, const Graphics::sScissor& _scissors, const sCameraSettings& _settings, eType _type );
-		explicit cCameraComponent( const cShared_ptr< cSerializedObject >& _object );
+		explicit cCameraComponent( cSerializedObject& _object );
 		~cCameraComponent() override;
 
 		void renderTo( Graphics::Rendering::cRender_Context& _context );
@@ -68,7 +68,7 @@ namespace sk::Object::Components
 		[[ nodiscard ]] auto& GetSettings() const { return m_camera_settings; }
 		void  SetSettings( const sCameraSettings& _settings );
 
-		auto Serialize() -> cShared_ptr< cSerializedObject > override;
+		auto Serialize() -> cSerializedObject override;
 
 	private:
 

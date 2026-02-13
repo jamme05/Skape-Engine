@@ -22,7 +22,7 @@ namespace sk
 		SK_CLASS_BODY( Scene )
 	public:
 		cScene() = default;
-		cScene( const cShared_ptr< cSerializedObject >& _object );
+		explicit cScene( cSerializedObject& _object );
 
 		~cScene() override;
 
@@ -31,7 +31,7 @@ namespace sk
 		requires ( std::is_base_of_v< Object::cObject, Ty > && std::constructible_from< Ty, const std::string&, Args... > )
 		cShared_ptr< Ty > create_object( const std::string& _name, Args... _args )
 		{
-			auto shared = sk::make_shared< Ty >( _name, _args... );
+			auto shared = sk::MakeShared< Ty >( _name, _args... );
 			shared->m_uuid_ = GenerateRandomUUID();
 			m_objects.emplace_back( shared );
 			return shared;
@@ -42,7 +42,7 @@ namespace sk
 		void force_render();
 		void force_update();
 
-		auto Serialize() -> cShared_ptr< cSerializedObject > override;
+		auto Serialize() -> cSerializedObject override;
 
 	private:
 		// TODO: Replace this with a map.

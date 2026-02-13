@@ -96,8 +96,8 @@ namespace sk
 		virtual auto getFunction( const str_hash& _hash, const type_hash& _args ) const
 			-> Reflection::member_func_ptr_t { return nullptr; }
 
-		virtual auto CreateSerialized      ( const cShared_ptr< cSerializedObject >& _object ) const -> iClass* { return nullptr; }
-		virtual auto CreateSharedSerialized( const cShared_ptr< cSerializedObject >& _object ) const -> cShared_ptr< iClass > { return nullptr; }
+		virtual auto CreateSerialized      ( cSerializedObject& _object ) const -> iClass* { return nullptr; }
+		virtual auto CreateSharedSerialized( cSerializedObject& _object ) const -> cShared_ptr< iClass > { return nullptr; }
 
 	private:
 		type_hash   m_hash;
@@ -239,12 +239,12 @@ namespace sk
 		template< class... Args >
 		auto CreateShared( Args&&... _args )
 		{
-			return sk::make_shared< Ty >( std::forward< Args >( _args )... );
+			return sk::MakeShared< Ty >( std::forward< Args >( _args )... );
 		}
 
-		auto CreateSerialized( const cShared_ptr< cSerializedObject >& _object ) const ->  iClass* override
+		auto CreateSerialized( cSerializedObject& _object ) const ->  iClass* override
 		{
-			if constexpr( std::constructible_from< Ty, cShared_ptr< cSerializedObject > > )
+			if constexpr( std::constructible_from< Ty, cSerializedObject& > )
 			{
 				return SK_SINGLE( Ty, _object );
 			}
@@ -252,11 +252,11 @@ namespace sk
 			return nullptr;
 		}
 
-		auto CreateSharedSerialized( const cShared_ptr< cSerializedObject >& _object ) const -> cShared_ptr< iClass > override
+		auto CreateSharedSerialized( cSerializedObject& _object ) const -> cShared_ptr< iClass > override
 		{
-			if constexpr( std::constructible_from< Ty, cShared_ptr< cSerializedObject > > )
+			if constexpr( std::constructible_from< Ty, cSerializedObject& > )
 			{
-				return sk::make_shared< Ty >( _object );
+				return sk::MakeShared< Ty >( _object );
 			}
 			SK_BREAK;
 			return nullptr;

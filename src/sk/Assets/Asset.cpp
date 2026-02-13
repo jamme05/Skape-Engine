@@ -20,9 +20,84 @@ cAsset_Meta::cAsset_Meta( const std::string_view _name, const type_info_t _asset
         "Error: Asset HAS to be a class type." )
 }
 
+cAsset_Meta::cAsset_Meta( cSerializedObject& _object )
+{
+    auto& types = Reflection::cType_Manager::get().GetTypes();
+
+    _object.BeginRead();
+    m_uuid_ = cUUID::FromString( _object.ReadData< std::string >( "uuid" ).value() );
+    m_path_ = _object.ReadData< std::string >( "path" ).value();
+    m_name_ = _object.ReadData< std::string >( "asset_name" ).value();
+    m_ext_  = _object.ReadData< std::string >( "extension" ).value();
+    if( const auto itr = types.find( _object.ReadData< uint64_t >( "asset_type" ).value() ); itr != types.end() )
+        m_asset_type_ = itr->second;
+    if( auto store_index = _object.ReadData< uint64_t >( "store_index" ); store_index.has_value() )
+    {
+        m_flags_      |= kSharesPath;
+        m_store_index_ = store_index.value();
+    }
+    _object.EndRead();
+}
+
+cAsset_Meta::~cAsset_Meta()
+{
+    setAsset( nullptr );
+}
+
 void cAsset_Meta::Save()
 {
     // TODO: Saving logic and actual metadata saving.
+    if( !IsLoaded() )
+        return;
+
+    auto path = std::filesystem::path{ m_absolute_path_.view() };
+
+    std::filesystem::create_directories( path.parent_path() );
+
+    auto serialized_meta = Serialize();
+    const auto json = serialized_meta.CreateJSON();
+    std::ofstream out_meta_file{ path.replace_extension( "skmeta" ), std::ofstream::out | std::ofstream::binary };
+    out_meta_file << json;
+    out_meta_file.close();
+
+    push_save_task();
+
+    /*
+    const auto start = std::chrono::high_resolution_clock::now();
+    sk::println( "\n{}ms - Scene -> SerializableObject:",
+        std::chrono::duration_cast< std::chrono::duration< float, std::milli > >( std::chrono::high_resolution_clock::now() - start ).count() );
+
+    const auto to_json_start = std::chrono::high_resolution_clock::now();
+    auto asset_json = to_save.CreateJSON();
+    sk::println( "{}ms - SerializableObject -> JSON:",
+        std::chrono::duration_cast< std::chrono::duration< float, std::milli > >( std::chrono::high_resolution_clock::now() - to_json_start ).count() );
+
+    const auto file_start = std::chrono::high_resolution_clock::now();
+    std::ofstream out_file{ "test2.skscene", std::ofstream::out };
+    out_file << asset_json;
+    out_file.flush();
+    out_file.close();
+    sk::println( "{}ms - Save JSON",
+        std::chrono::duration_cast< std::chrono::duration< float, std::milli > >( std::chrono::high_resolution_clock::now() - file_start ).count() );
+
+    const auto json_parse_start = std::chrono::high_resolution_clock::now();
+    simdjson::dom::parser parser{};
+    const auto result = parser.parse( asset_json );
+    sk::println( "{}ms - Parse JSON",
+        std::chrono::duration_cast< std::chrono::duration< float, std::milli > >( std::chrono::high_resolution_clock::now() - json_parse_start ).count() );
+
+    const auto serialize_start = std::chrono::high_resolution_clock::now();
+    auto test = cSerializedObject( result.get_object() );
+    sk::println( "{}ms JSON -> SerializedObject",
+        std::chrono::duration_cast< std::chrono::duration< float, std::milli > >( std::chrono::high_resolution_clock::now() - serialize_start ).count() );
+
+    const auto reconstruct_start = std::chrono::high_resolution_clock::now();
+    auto reconstructed_scene = test.ConstructSharedClass();
+    sk::println( "{}ms - Reconstruct Scene",
+        std::chrono::duration_cast< std::chrono::duration< float, std::milli > >( std::chrono::high_resolution_clock::now() - reconstruct_start ).count() );
+
+    sk::println( "{}ms - Total time", std::chrono::duration_cast< std::chrono::duration< float, std::milli > >( std::chrono::high_resolution_clock::now() - start ).count() );
+    */
 }
 
 bool cAsset_Meta::IsLoading() const
@@ -282,18 +357,18 @@ void cAsset_Meta::dispatch_if_loaded( const dispatcher_t::listener_t& _listener 
     Assets::Jobs::cAsset_Job_Manager::get().push_task( task );
 }
 
-cAsset::cAsset( const cShared_ptr< cSerializedObject >& _object )
+cAsset::cAsset( cSerializedObject& _object )
 {
-    _object->BeginRead( this );
-    const auto val = std::get< std::string >( _object->ReadDataRaw( "UUID" ).value() );
+    _object.BeginRead( this );
+    const auto val = _object.ReadData< std::string_view >( "UUID" ).value();
     m_uuid_ = cUUID::FromString( val );
-    _object->EndRead();
+    _object.EndRead();
 }
 
-cShared_ptr< cSerializedObject > cAsset::Serialize()
+auto cAsset::Serialize() -> cSerializedObject
 {
-    auto object = cSerializedObject::CreateForWrite( this );
-    object->WriteData( "UUID", GetUUID().ToString() );
+    auto object = cSerializedObject( this );
+    object.WriteData( "UUID", GetUUID().ToString() );
     return object;
 }
 
@@ -332,16 +407,20 @@ void cAsset_Meta::setAsset( cAsset* _asset )
         m_flags_ &= ~kLoaded & ~kLoading;
 }
 
-auto cAsset_Meta::Serialize() const -> cShared_ptr< cSerializedObject >
+auto cAsset_Meta::Serialize() const -> cSerializedObject
 {
     // TODO: Construction using this
-    auto object = cSerializedObject::CreateForWrite();
-    object->WriteData( "uuid", GetUUID().ToString() );
-    object->WriteData( "path", m_path_.string() );
-    object->WriteData( "asset_name", m_name_.string() );
-    object->WriteData( "extension", m_ext_.string() );
-    object->WriteData( "asset_type", m_asset_type_->hash.value() );
-    object->EndWrite();
+    cSerializedObject object{};
+    object.WriteData( "uuid", GetUUID().ToString() );
+    object.WriteData( "path", m_path_.string() );
+    object.WriteData( "asset_name", m_name_.string() );
+    object.WriteData( "extension", m_ext_.string() );
+    object.WriteData( "asset_type", m_asset_type_->hash.value() );
+    if( m_flags_ & kSharesPath )
+    {
+        object.WriteData( "store_index", m_store_index_ );
+    }
+    object.EndWrite();
     return object;
 }
 

@@ -35,21 +35,20 @@ namespace sk::Object
 		SetRoot( m_camera_ );
 	}
 
-	cCamera::cCamera( const cShared_ptr< cSerializedObject >& _object )
-	: cObject( _object->GetBase< cObject >() )
-	{
-	}
+	cCamera::cCamera( cSerializedObject& _object )
+	: cObject( _object.GetBase< cObject >().value() )
+	{}
 
 	void cCamera::setAsMain( void ) const
 	{
 		Scene::cCameraManager::get().setMainCamera( m_camera_ );
 	} // setAsMain
 
-	cShared_ptr< cSerializedObject > cCamera::Serialize()
+	auto cCamera::Serialize() -> cSerializedObject
 	{
-		auto object = cSerializedObject::CreateForWrite( this );
-		object->AddBase( cObject::Serialize() );
-		object->EndWrite();
+		cSerializedObject object( this );
+		object.AddBase( cObject::Serialize() );
+		object.EndWrite();
 		return object;
 	}
 } // sk::Object::

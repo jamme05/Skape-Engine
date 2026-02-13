@@ -10,18 +10,18 @@
 
 namespace sk
 {
-	cScene::cScene( const cShared_ptr< cSerializedObject >& _object )
-	: cAsset( _object->GetBase< cAsset >() )
+	cScene::cScene( cSerializedObject& _object )
+	: cAsset( _object.GetBase< cAsset >().value() )
 	{
-		_object->BeginRead( this );
+		_object.BeginRead( this );
 
-		for( auto& obj : _object->ReadData< cShared_ptr< cSerializedObject > >( "objects" ).value()->GetArray< cShared_ptr< cSerializedObject > >() )
+		for( auto& obj : _object.ReadData< cSerializedObject >( "objects" ).value().get().GetArray< cSerializedObject >() )
 		{
-			auto& object = m_objects.emplace_back( obj->ConstructSharedClass().Cast< Object::cObject >() );
+			auto& object = m_objects.emplace_back( obj.ConstructSharedClass().Cast< Object::cObject >() );
 			object->m_parent_scene = this;
 		}
 
-		_object->EndRead();
+		_object.EndRead();
 	}
 
 	cScene::~cScene()
@@ -45,18 +45,18 @@ namespace sk
 			obj->update();
 	} // update
 
-	cShared_ptr< cSerializedObject > cScene::Serialize()
+	auto cScene::Serialize() -> cSerializedObject
 	{
-		auto object = cSerializedObject::CreateForWrite( this );
-		object->AddBase( cAsset::Serialize() );
+		cSerializedObject object( this );
+		object.AddBase( cAsset::Serialize() );
 
-		std::vector< cShared_ptr< cSerializedObject > > objects_vec;
+		std::vector< cSerializedObject > objects_vec;
 		for( auto& obj : m_objects )
 			objects_vec.emplace_back( obj->Serialize() );
 
-		object->WriteData( "objects", cSerializedObject::CreateArray( objects_vec.data(), objects_vec.size() ) );
+		object.WriteData( "objects", cSerializedObject::ConsumeArray( objects_vec.data(), objects_vec.size() ) );
 
-		object->EndWrite();
+		object.EndWrite();
 		return object;
 	}
 } // sk::

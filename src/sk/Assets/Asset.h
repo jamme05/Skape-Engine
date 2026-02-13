@@ -70,7 +70,8 @@ namespace sk
 		using dispatcher_t = Event::cDispatcherProxy< cAsset_Meta&, Assets::eEventType >;
 		
 		cAsset_Meta( std::string_view _name, type_info_t _asset_type );
-		~cAsset_Meta() = default;
+		explicit cAsset_Meta( cSerializedObject& _object );
+		~cAsset_Meta();
 		cAsset_Meta( const cAsset_Meta& ) = delete;
 		cAsset_Meta( cAsset_Meta&& ) = delete;
 		cAsset_Meta& operator=( const cAsset_Meta& ) = delete;
@@ -146,7 +147,7 @@ namespace sk
 		// Made for internal usage. But can be used in case you want to manually create an asset.
 		void setAsset( cAsset* _asset );
 
-		auto Serialize() const -> cShared_ptr< cSerializedObject >;
+		auto Serialize() const -> cSerializedObject;
 
 	private:
 		void addReferrer   ( void* _source, const cWeak_Ptr< iClass >& _referrer );
@@ -199,11 +200,11 @@ namespace sk
 		friend class cAsset_Manager;
 		friend class cAsset_Meta;
 	public:
-		explicit cAsset( const cShared_ptr< cSerializedObject >& _object );
+		explicit cAsset( cSerializedObject& _object );
 
 		[[ nodiscard ]] auto& GetMeta() const { return m_metadata_; }
 		[[ nodiscard ]] auto& GetUUID() const { return m_uuid_; }
-		cShared_ptr< cSerializedObject > Serialize() override;
+		auto Serialize() -> cSerializedObject override;
 	protected:
 		cAsset() = default;
 	private:

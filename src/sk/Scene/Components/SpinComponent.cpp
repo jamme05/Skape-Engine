@@ -9,12 +9,12 @@ cSpinComponent::cSpinComponent( cVector3f _speed )
 : m_speed_( std::move( _speed ) )
 {}
 
-cSpinComponent::cSpinComponent( const cShared_ptr< cSerializedObject >& _object )
-: cComponent( _object->GetBase< iComponent >() )
+cSpinComponent::cSpinComponent( cSerializedObject& _object )
+: cComponent( _object.GetBase< iComponent >().value() )
 {
-    _object->BeginRead( this );
-    m_speed_ = _object->ReadData< cVector3f >( "speed" ).value_or( kZero );
-    _object->EndRead();
+    _object.BeginRead( this );
+    m_speed_ = _object.ReadData< cVector3f >( "speed" ).value_or( kZero );
+    _object.EndRead();
 }
 
 void cSpinComponent::update()
@@ -26,11 +26,11 @@ void cSpinComponent::update()
         child->GetTransform().MarkDirty();
 }
 
-sk::cShared_ptr< sk::cSerializedObject > cSpinComponent::Serialize()
+auto cSpinComponent::Serialize() -> cSerializedObject
 {
-    auto object = cSerializedObject::CreateForWrite( this );
-    object->AddBase( cComponent::Serialize() );
-    object->WriteData( "speed", cVector3d{ m_speed_ } );
-    object->EndWrite();
+    cSerializedObject object( this );
+    object.AddBase( cComponent::Serialize() );
+    object.WriteData( "speed", cVector3d{ m_speed_ } );
+    object.EndWrite();
     return object;
 }

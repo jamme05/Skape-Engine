@@ -16,7 +16,7 @@ namespace sk::Object
 		SK_CLASS_BODY( CameraFlight )
 	sk_public:
 		explicit cCameraFlight( const std::string& _name, const float _movement_speed = 5.0f, const float _rotation_speed = 40.0f );
-		explicit cCameraFlight( const cShared_ptr< cSerializedObject >& _object );
+		explicit cCameraFlight( cSerializedObject& _object );
 		~cCameraFlight( void ) override = default;
 
 		Input::response_t onInput( const uint32_t _type, const Input::sEvent& _event ) override;
@@ -28,7 +28,7 @@ namespace sk::Object
 		void handleKeyEvent   ( const Input::sEvent& _event, const bool _up );
 		void handleMouseEvent ( const Input::sEvent& _event );
 
-		auto Serialize() -> cShared_ptr< cSerializedObject > override;
+		auto Serialize() -> cSerializedObject override;
 
 		cVector3f m_position = kZero;
 		cVector2f m_rotation = kZero;

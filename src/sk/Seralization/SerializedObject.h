@@ -18,11 +18,18 @@ namespace sk
 {
     class cAsset_Meta;
 
-    SK_CLASS( SerializedObject ), public cShared_from_this< cSerializedObject >
+    SK_CLASS( SerializedObject )
     {
         SK_CLASS_BODY( SerializedObject )
         friend class Serializable;
     public:
+        template< reflected Ty >
+        explicit cSerializedObject( Ty* _instance )
+        {
+            m_serialized_type_ = kTypeInfo< Ty >;
+            BeginWrite( _instance );
+        }
+
         explicit cSerializedObject( type_info_t _serialized_type, size_t _element_count = 0 );
         // This is so we can ignore the full on class reflection.
 
@@ -53,12 +60,12 @@ namespace sk
         cSerializedObject& operator=( const cSerializedObject& _other );
         cSerializedObject& operator=( cSerializedObject&& _other ) noexcept;
         
-        static auto CreateForWrite() -> cShared_ptr< cSerializedObject >;
-        template< sk_class Ty >
-        static auto CreateForWrite( Ty* _class ) -> cShared_ptr< cSerializedObject >;
         template< reflected Ty >
-        static auto CreateArray   ( Ty* _data, size_t _size )  -> cShared_ptr< cSerializedObject >;
-        
+        static auto CreateArray( Ty* _data, size_t _size )  -> cSerializedObject;
+
+        template< reflected Ty >
+        static auto ConsumeArray( Ty* _data, size_t _size )  -> cSerializedObject;
+
         template< class Ty, class Value >
         struct sMemberVariable
         {
@@ -71,10 +78,10 @@ namespace sk
             Value Ty::* ptr;
         };
 
-        using obj_ptr  = cShared_ptr< cSerializedObject >;
+        using obj_t    = cSerializedObject;
         using meta_ptr = cWeak_Ptr< cAsset_Meta >;
-        using value_t = std::variant< obj_ptr,  meta_ptr,  bool,  int64_t,  cVector2i64,  cVector3i64,  cVector4i64,  uint64_t,  cVector2u64,  cVector3u64,  cVector4u64,  double,  cVector2d,  cVector3d,  cVector4d,  std::string  >;
-        using array_t = std::variant< obj_ptr*, meta_ptr*, bool*, int64_t*, cVector2i64*, cVector3i64*, cVector4i64*, uint64_t*, cVector2u64*, cVector3u64*, cVector4u64*, double*, cVector2d*, cVector3d*, cVector4d*, std::string* >;
+        using value_t = std::variant< std::monostate, obj_t,  meta_ptr,  bool,  int64_t,  cVector2i64,  cVector3i64,  cVector4i64,  uint64_t,  cVector2u64,  cVector3u64,  cVector4u64,  double,  cVector2d,  cVector3d,  cVector4d,  std::string  >;
+        using array_t = std::variant< std::monostate, obj_t*, meta_ptr*, bool*, int64_t*, cVector2i64*, cVector3i64*, cVector4i64*, uint64_t*, cVector2u64*, cVector3u64*, cVector4u64*, double*, cVector2d*, cVector3d*, cVector4d*, std::string* >;
         using json_builder_t = simdjson::builder::string_builder;
 
         [[ nodiscard ]] bool IsArray() const;
@@ -90,21 +97,62 @@ namespace sk
         
         void ClearCache();
 
-        auto GetType() const -> type_info_t;
-        auto GetRuntimeClass() const -> class_info_t;
+        [[ nodiscard ]] auto GetType() const -> type_info_t;
+        [[ nodiscard ]] auto GetRuntimeClass() const -> class_info_t;
 
-        auto GetBase( type_info_t _type ) const -> const cShared_ptr< cSerializedObject >&;
+        auto GetBase( type_info_t _type ) -> std::optional< std::reference_wrapper< cSerializedObject > >;
         template< reflected Ty >
-        auto GetBase() const -> const cShared_ptr< cSerializedObject >&;
+        auto GetBase() -> std::optional< std::reference_wrapper< cSerializedObject > >;
 
         auto ConstructClass() -> iClass*;
         auto ConstructSharedClass() -> cShared_ptr< iClass >;
 
         // Read
         void BeginRead( iClass* _this = nullptr );
-        auto ReadDataRaw( const cStringID& _name ) -> std::optional< value_t >;
+        auto ReadDataRaw( const cStringID& _name ) -> std::optional< std::reference_wrapper< value_t > >;
         template< class Ty >
-        auto ReadData( const cStringID& _name ) -> std::optional< Ty >;
+        auto ReadData( const cStringID& _name )
+        {
+            const auto data = ReadDataRaw( _name );
+            if constexpr( std::is_same_v< Ty, cSerializedObject > )
+            {
+                if( data.has_value() )
+                {
+                    if( const auto res = std::get_if< cSerializedObject >( &data.value().get() ) )
+                        return std::optional{ std::ref( *res ) };
+                }
+                return std::optional< std::reference_wrapper< cSerializedObject > >{ std::nullopt };
+            }
+            else if constexpr( std::is_same_v< Ty, std::string > || std::is_same_v< Ty, std::string_view > )
+            {
+                if( data.has_value() )
+                {
+                    if( const auto res = std::get_if< std::string >( &data.value().get() ) )
+                        return std::optional{ Ty{ *res } };
+                }
+                return std::optional< Ty >{ std::nullopt };
+            }
+            else
+            {
+                if( data.has_value() )
+                {
+                    return std::visit( []< class V >( V& _value ) -> std::optional< Ty >{
+                        if constexpr( std::is_same_v< V, cSerializedObject > )
+                            return std::nullopt;
+                        else if constexpr( std::is_same_v< V, Ty > )
+                            return std::optional< Ty >{ _value };
+                        else if constexpr( std::is_convertible_v< V, Ty > )
+                            return static_cast< Ty >( _value );
+                        else if constexpr( std::is_integral_v< V > && std::is_enum_v< Ty > )
+                            return static_cast< Ty >( _value );
+                        else
+                            return std::nullopt;
+                    }, data.value().get() );
+                }
+                return std::optional< Ty >{ std::nullopt };
+            }
+        }
+
         auto GetArraySize() const -> size_t;
         template< class Ty >
         auto GetArray() -> std::span< Ty >;
@@ -115,8 +163,8 @@ namespace sk
         
         // Write
         void BeginWrite( iClass* _this = nullptr, bool _reset = false );
-        void AddBase( const cShared_ptr< cSerializedObject >& _base_info );
-        void WriteData( const cStringID& _name, value_t&& _value );
+        void AddBase( cSerializedObject&& _base_info );
+        void WriteData( const cStringID& _name, auto&& _value );
         void EndWrite();
 
         static std::string MakeJsonSafeName( const std::string_view& _name );
@@ -126,13 +174,15 @@ namespace sk
         void create_json_array( json_builder_t& _builder );
         void handle_info( json_builder_t& _builder, const sValueInfo& _info );
         void handle_json_element( const simdjson::dom::element& _element );
+
+        void _writeData( const cStringID& _name, value_t&& _value );
         
         auto get_value_at_offset( type_info_t _type, size_t _offset ) -> std::optional< value_t >;
         bool has_completed_json () const;
         
         using info_vec_t  = std::vector< sValueInfo >;
         using value_vec_t = std::vector< value_t >;
-        using obj_vec_t   = std::vector< obj_ptr >;
+        using obj_vec_t   = std::vector< obj_t >;
         using buffer_t    = std::vector< std::byte >;
         
         // Info
@@ -160,17 +210,8 @@ namespace sk
         value_vec_t m_values_;
     };
 
-    template< sk_class Ty >
-    auto cSerializedObject::CreateForWrite( Ty* _class )->cShared_ptr< cSerializedObject >
-    {
-        auto object = sk::make_shared< cSerializedObject >( kTypeInfo< Ty > );
-        object->BeginWrite( _class );
-        
-        return object;
-    }
-
     template< reflected Ty >
-    auto cSerializedObject::CreateArray( Ty* _data, size_t _size ) -> cShared_ptr< cSerializedObject >
+    auto cSerializedObject::CreateArray( Ty* _data, size_t _size ) -> cSerializedObject
     {
         Ty* data_ptr = nullptr;
         if( _size == 0 )
@@ -180,43 +221,40 @@ namespace sk
             data_ptr = SK_NEW( Ty, _size );
             std::copy_n( _data, _size, data_ptr );
         }
-        auto object = sk::make_shared< cSerializedObject >( kTypeInfo< Ty >, _size );
-        object->m_element_data_ = data_ptr;
+        cSerializedObject object{ kTypeInfo< Ty >, _size };
+        object.m_element_data_ = data_ptr;
         
         return object;
     }
 
     template< reflected Ty >
-    auto cSerializedObject::GetBase() const -> const cShared_ptr< cSerializedObject >&
+    auto cSerializedObject::ConsumeArray( Ty* _data, size_t _size ) -> cSerializedObject
     {
-        return GetBase( kTypeInfo< Ty > );
+        Ty* data_ptr = nullptr;
+        if( _size == 0 )
+            _size = 0;
+        else
+        {
+            data_ptr = SK_NEW( Ty, _size );
+            std::move( _data, _data + _size, data_ptr );
+        }
+        cSerializedObject object{ kTypeInfo< Ty >, _size };
+        object.m_element_data_ = data_ptr;
+
+        return object;
     }
 
-    template< class Ty >
-    auto cSerializedObject::ReadData( const cStringID& _name ) -> std::optional< Ty >
+    template< reflected Ty >
+    auto cSerializedObject::GetBase() -> std::optional< std::reference_wrapper< cSerializedObject > >
     {
-        if( auto data = ReadDataRaw( _name ); data.has_value() )
-        {
-            return std::visit( []< class V >( V& _value ) -> std::optional< Ty >{
-                if constexpr( std::is_same_v< V, Ty > )
-                    return _value;
-                else if constexpr( std::is_convertible_v< V, Ty > )
-                    return static_cast< Ty >( _value );
-                else if constexpr( std::is_integral_v< V > && std::is_enum_v< Ty > )
-                    return static_cast< Ty >( _value );
-                else
-                    return std::nullopt;
-            }, data.value() );
-        }
-
-        return std::nullopt;
+        return GetBase( kTypeInfo< Ty > );
     }
 
     template< class Ty >
     auto cSerializedObject::GetArray() -> std::span< Ty >
     {
         // TODO: Ensure that the type is correct.
-        return std::span< Ty >{ std::get< Ty* >( m_element_data_ ), m_element_count_ != std::numeric_limits< size_t >::max() ? m_element_count_ : 0 };
+        return std::span< Ty >{ std::get< Ty* >( m_element_data_ ), m_element_count_ };
     }
 
     template< cSerializedObject::sMemberVariable Target, reflected Value >
@@ -229,6 +267,11 @@ namespace sk
         SK_ERR_IFN( value.has_value(), "Error: No value found." )
         
         static_cast< class_type* >( m_this_ )->*Target.ptr = value;
+    }
+
+    void cSerializedObject::WriteData( const cStringID& _name, auto&& _value )
+    {
+        _writeData( _name, value_t{ std::move( _value ) } );
     }
 } // sk::
 

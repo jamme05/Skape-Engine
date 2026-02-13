@@ -6,31 +6,37 @@
 
 #include "Object.h"
 
+#include <sk/Scene/Components/MeshComponent.h>
 #include <sk/Scene/Managers/Layer_Manager.h>
 #include <sk/Seralization/SerializedObject.h>
 
 sk::Object::cObject::cObject( const std::string& _name )
 : m_name( _name )
 {
-    m_root = AddComponent< Components::cTransformComponent >();
+    m_root   = AddComponent< Components::cTransformComponent >();
     SetLayer( 0 );
 }
 
-sk::Object::cObject::cObject( const cShared_ptr< cSerializedObject >& _object )
+sk::Object::cObject::cObject( cSerializedObject& _object )
 {
-    _object->BeginRead( this );
-    m_name = _object->ReadData< std::string >( "name" ).value_or( "" );
-    m_root  = _object->ReadData< cShared_ptr< cSerializedObject > >( "root" ).value()->ConstructSharedClass().Cast< iComponent >();
-    SetLayer( _object->ReadData< uint64_t >( "layer" ).value_or( 0 ) );
+    _object.BeginRead( this );
+    m_name = _object.ReadData< std::string >( "name" ).value_or( "" );
+    m_uuid_ = cUUID::FromString( _object.ReadData< std::string >( "uuid" ).value_or( "" ) );
+    if( m_uuid_ == cUUID::kInvalid )
+        m_uuid_ = GenerateRandomUUID();
+    m_root  = _object.ReadData< cSerializedObject >( "root" ).value().get().ConstructSharedClass().Cast< iComponent >();
+    SetLayer( _object.ReadData< uint64_t >( "layer" ).value_or( 0 ) );
 
     m_root->SetObject( get_weak() );
 
-    _object->EndRead();
+    _object.EndRead();
 }
 
 sk::Object::cObject::~cObject()
 {
-    Scene::cLayer_Manager::get().RemoveObject( get_shared() );
+    if( const auto ptr = Scene::cLayer_Manager::getPtr() )
+        ptr->RemoveObject( get_shared() );
+
     m_children_.clear();
     m_components_.clear();
     m_root = nullptr;
@@ -88,14 +94,14 @@ void sk::Object::cObject::SetLayer( const uint64_t _layer )
     layer_manager.AddObject( get_shared() );
 }
 
-auto sk::Object::cObject::Serialize() -> cShared_ptr< cSerializedObject >
+auto sk::Object::cObject::Serialize() -> cSerializedObject
 {
-    auto object = cSerializedObject::CreateForWrite( this );
-    object->WriteData( "name", m_name.string() );
-    object->WriteData( "layer", m_layer_ );
-    object->WriteData( "root", m_root->Serialize() );
-
-    object->EndWrite();
+    cSerializedObject object( this );
+    object.WriteData( "name", m_name.string() );
+    object.WriteData( "uuid", m_uuid_.ToString() );
+    object.WriteData( "layer", m_layer_ );
+    object.WriteData( "root", m_root->Serialize() );
+    object.EndWrite();
     return object;
 }
 

@@ -40,11 +40,11 @@ namespace sk::Object
 	sk_public:
 		// TODO: Create templated constructor with root type + parameters
 		explicit cObject( const std::string& _name ); // iObject
-		explicit cObject( const cShared_ptr< cSerializedObject >& _object );
+		explicit cObject( cSerializedObject& _object );
 
 		template< class Ty = iComponent, class... Args >
 		explicit cObject( const std::string& _name, Args... _args )
-		: m_root( sk::make_shared< Ty >( _args... ) )
+		: m_root( sk::MakeShared< Ty >( _args... ) )
 		, m_name( _name )
 		{} // iObject
 
@@ -54,7 +54,7 @@ namespace sk::Object
 		requires ( std::is_base_of_v< iComponent, Ty > && std::constructible_from< Ty, Args... > )
 		auto AddComponent( Args&&... _args ) -> cShared_ptr< Ty >
 		{
-			auto component = sk::make_shared< Ty >( std::forward< Args >( _args )... );
+			auto component = sk::MakeShared< Ty >( std::forward< Args >( _args )... );
 
 			component->m_object_ = get_weak();
 			component->m_uuid_   = GenerateRandomUUID();
@@ -131,7 +131,7 @@ namespace sk::Object
 				return AddOrGetInternalComponent< Ty >( _requested_index );
 			}
 			
-			auto component = sk::make_shared< Ty >();
+			auto component = sk::MakeShared< Ty >();
 
 			component->m_object_   = get_weak();
 			component->m_uuid_     = GenerateRandomUUID();
@@ -177,7 +177,7 @@ namespace sk::Object
 
 		[[ nodiscard ]] auto& GetName() const { return m_name; }
 
-		auto Serialize() -> cShared_ptr< cSerializedObject > override;
+		auto Serialize() -> cSerializedObject override;
 
 	sk_protected:
 		void SetRoot( const cShared_ptr< iComponent >& _new_root_component, bool _override_parent = false );

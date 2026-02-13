@@ -8,14 +8,14 @@
 
 using namespace sk::Object;
 
-Components::cTransformComponent::cTransformComponent( const cShared_ptr< cSerializedObject >& _object )
-: cComponent( _object->GetBase< iComponent >() )
+Components::cTransformComponent::cTransformComponent( cSerializedObject& _object )
+: cComponent( _object.GetBase< iComponent >().value() )
 {}
 
-auto Components::cTransformComponent::Serialize() -> cShared_ptr< cSerializedObject >
+auto Components::cTransformComponent::Serialize() -> cSerializedObject
 {
-    auto object = cSerializedObject::CreateForWrite( this );
-    object->AddBase( iComponent::Serialize() );
-    object->EndWrite();
+    cSerializedObject object( this );
+    object.AddBase( iComponent::Serialize() );
+    object.EndWrite();
     return object;
 }

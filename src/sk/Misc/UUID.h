@@ -37,7 +37,7 @@ namespace sk
         constexpr cUUID& operator=( const cUUID& _other ) = default;
         constexpr cUUID& operator=( cUUID&& _other )      = default;
         
-        auto Serialize() const -> cShared_ptr< cSerializedObject >;
+        auto Serialize() const -> cSerializedObject;
 
         [[ nodiscard ]]
         constexpr auto get_low () const { return m_low_;  }

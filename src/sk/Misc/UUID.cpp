@@ -26,11 +26,12 @@ namespace sk
         
     }
 
-    auto cUUID::Serialize() const -> cShared_ptr< cSerializedObject >
+    auto cUUID::Serialize() const -> cSerializedObject
     {
-        auto object = cSerializedObject::CreateForWrite();
-        object->WriteData( "_value", ToString() );
-        object->EndWrite();
+        cSerializedObject object{};
+        object.BeginWrite();
+        object.WriteData( "_value", ToString() );
+        object.EndWrite();
         return object;
     }
 

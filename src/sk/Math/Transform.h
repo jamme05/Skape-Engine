@@ -19,6 +19,7 @@ namespace sk
 	{
 	public:
 		explicit cTransform( cVector3f _position = kZero, cVector3f _rotation = kZero, cVector3f _scale = kOne );
+		explicit cTransform( cSerializedObject& _object );
 
 		// TODO: Add some way to detect changes.
 		// Something like a last_change being set to the current frame.
@@ -74,7 +75,7 @@ namespace sk
 
 		void CacheNormalized();
 
-		auto Serialize() -> cShared_ptr< cSerializedObject > override;
+		auto Serialize() -> cSerializedObject override;
 
 	private:
 		cWeak_Ptr< cTransform > m_parent_ = nullptr;

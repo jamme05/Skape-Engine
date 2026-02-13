@@ -6,7 +6,9 @@
 
 #include "MeshComponent.h"
 
-using namespace sk::Object::Components;
+#include <sk/Assets/Management/Asset_Manager.h>
+
+ using namespace sk::Object::Components;
 
 cMeshComponent::cMeshComponent( const cShared_ptr< cAsset_Meta >& _mesh, const cShared_ptr< cAsset_Meta >& _material )
 : m_mesh_( get_weak() )
@@ -16,13 +18,13 @@ cMeshComponent::cMeshComponent( const cShared_ptr< cAsset_Meta >& _mesh, const c
 	m_material_.SetAsset( _material );
 }
 
-cMeshComponent::cMeshComponent( const cShared_ptr< cSerializedObject >& _object )
-: cComponent( _object->GetBase< iComponent >() )
+cMeshComponent::cMeshComponent( cSerializedObject& _object )
+: cComponent( _object.GetBase< iComponent >().value() )
 {
-	_object->BeginRead( this );
-	m_mesh_     = _object->ReadData< cWeak_Ptr< cAsset_Meta > >( "mesh" )->Lock();
-	m_material_ = _object->ReadData< cWeak_Ptr< cAsset_Meta > >( "material" )->Lock();
-	_object->EndRead();
+	_object.BeginRead( this );
+	m_mesh_     = _object.ReadData< cWeak_Ptr< cAsset_Meta > >( "mesh" )->Lock();
+	m_material_ = _object.ReadData< cWeak_Ptr< cAsset_Meta > >( "material" )->Lock();
+	_object.EndRead();
 }
 
 void cMeshComponent::enabled()
@@ -66,13 +68,13 @@ void cMeshComponent::SetMaterial( const cShared_ptr< cAsset_Meta >& _material )
 	m_material_.SetAsset( _material );
 }
 
- sk::cShared_ptr< sk::cSerializedObject > cMeshComponent::Serialize()
+ auto cMeshComponent::Serialize() -> cSerializedObject
  {
-	auto object = cSerializedObject::CreateForWrite( this );
-	object->AddBase( iComponent::Serialize() );
+	cSerializedObject object( this );
+	object.AddBase( iComponent::Serialize() );
 	// TODO: Serialize asset refs properly
-	object->WriteData( "mesh", m_mesh_.GetMeta() );
-	object->WriteData( "material", m_material_.GetMeta() );
-	object->EndWrite();
+	object.WriteData( "mesh", m_mesh_.GetMeta() );
+	object.WriteData( "material", m_material_.GetMeta() );
+	object.EndWrite();
 	return object;
  }
