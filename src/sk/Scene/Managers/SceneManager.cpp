@@ -7,6 +7,8 @@
 
 #include "SceneManager.h"
 
+#include <sk/Assets/Management/Asset_Manager.h>
+#include <sk/Assets/Utils/Asset_List.h>
 #include <sk/Scene/Managers/CameraManager.h>
 #include <sk/Scene/Managers/Internal_Component_Manager.h>
 #include <sk/Scene/Managers/Layer_Manager.h>
@@ -14,8 +16,50 @@
 
 using namespace sk;
 
+namespace
+{
+	void loadSceneFile( const std::filesystem::path& _path, Assets::cAsset_List& _metas, const Assets::eAssetTask _load_task )
+	{
+		if( _load_task == Assets::eAssetTask::kLoadMeta )
+		{
+			_metas.AddAsset( sk::MakeShared< cAsset_Meta >( _path.filename().string(), kTypeInfo< cScene > ) );
+			return;
+		}
+
+		if( _load_task == Assets::eAssetTask::kUnloadAsset )
+			return;
+
+		auto& meta = *_metas.begin();
+
+		if( _load_task == Assets::eAssetTask::kSaveAsset )
+		{
+			if( !meta->IsLoaded() )
+				return;
+
+			meta->LockAsset();
+			auto asset = meta->GetAsset();
+
+			auto serialized_meta = asset->Serialize();
+			const auto json = serialized_meta.CreateJSON();
+			std::ofstream out_meta_file{ _path, std::ofstream::out | std::ofstream::binary };
+			out_meta_file << json;
+			out_meta_file.close();
+			meta->UnlockAsset();
+
+			return;
+		}
+
+		simdjson::dom::parser parser;
+		auto object = cSerializedObject{ parser.load( _path.string() ).get_object() };
+
+		meta->setAsset( SK_SINGLE( cScene, object ) );
+	}
+} // sk::
+
 cSceneManager::cSceneManager()
 {
+	cAsset_Manager::get().AddFileLoaderForExtension( "skscene", loadSceneFile );
+
 	cEventManager::init();
 	Scene::cCameraManager::init();
 	Scene::cLayer_Manager::init();
@@ -32,6 +76,8 @@ cSceneManager::~cSceneManager()
 	Scene::cCameraManager::shutdown();
 	Scene::cLayer_Manager::shutdown();
 	cEventManager::shutdown();
+
+	cAsset_Manager::get().RemoveFileLoaders( { "skscene" } );
 } // ~cSceneManager
 
 void cSceneManager::RegisterScene( const cShared_ptr< cAsset_Meta >& _scene_meta )
@@ -81,6 +127,9 @@ void cSceneManager::update()
 
 		for( auto& object : scene.GetObjects() )
 			object->registerRecursive();
+
+		for( auto& object : scene.GetObjects() )
+			object->enableRecursive();
 	}
 } // update
 
