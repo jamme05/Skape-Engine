@@ -73,9 +73,10 @@ namespace sk::Memory
 		typedef std::unordered_set< sTracker_entry* > block_set_t;
 		typedef std::vector< sHistory_action* >  history_t;  
 
-		void* alloc  ( const size_t _size, const std::source_location& _location = std::source_location::current() );
-		void  free   ( void* _block, const std::source_location& _location = std::source_location::current() );
-		void* realloc( void* _block, const size_t _size, const std::source_location& _location = std::source_location::current() );
+		void* alloc   ( const size_t _size, const std::source_location& _location = std::source_location::current() );
+		void  free    ( void* _block, const std::source_location& _location = std::source_location::current() );
+		void* realloc ( void* _block, const size_t _size, const std::source_location& _location = std::source_location::current() );
+    	bool  contains( void* _block ) const;
 
 		 cTracker( void );
 		~cTracker( void ) override;
@@ -137,6 +138,13 @@ private:
             return free_fast( _block );
         } // free
 
+    	bool contains( void* _block )
+        {
+        	if( const auto tracker = cTracker::getPtr() )
+        		return tracker->contains( _block );
+        	return true;
+        }
+
         size_t max_heap_size( void )
         {
             return max_allowed_memory_size;
@@ -195,7 +203,7 @@ private:
         if constexpr( Tracker::kSaveMemoryHistory )
             add_history( *entry, { _location, eAction::kAllocate, _size } );
     	else
-    		entry->last = static_cast< sHistory_action* >( alloc_fast( t_size, kB32Align ) );
+    		entry->last = ::new( alloc_fast( t_size, kB32Align ) ) sHistory_action{ _location, eAction::kAllocate, _size };
 
         m_block_set.insert( entry );
         m_mtx.unlock();
@@ -266,12 +274,22 @@ private:
     	{
     		add_history( *entry, { _location, eAction::kFree, _size } );
     	}
+    	else
+    	{
+    		free_fast( entry->last );
+    		entry->last = ::new( alloc_fast( t_size, kB32Align ) ) sHistory_action{ _location, eAction::kReallocate, _size };
+    	}
     	m_block_set.erase( prev_entry );
     	m_block_set.insert( entry );
     	m_mtx.unlock();
 
     	return static_cast< void* >( entry + 1 );
     } // realloc
+
+    bool cTracker::contains( void* _block ) const
+    {
+    	return m_block_set.contains( static_cast< sTracker_entry* >( _block ) - 1 );
+    }
 
     cTracker::cTracker( void )
     {
@@ -283,6 +301,10 @@ private:
     	// TODO: Print statistics.
         for( auto& entry : m_block_set )
         {
+        	auto& history = *entry->last;
+
+        	sk::println( "Leak: P: 0x{:x}  -  S: {}B  -  A: {}  -  In: {}({}:{}): {}",
+        		reinterpret_cast< size_t >( entry + 1 ), history.size, history.action.getName(), history.file_name, history.line, history.column, history.function );
         	// TODO Printer for memory leaks.
 			// https://en.cppreference.com/w/cpp/utility/format/spec.html
         	free_fast( entry->last );
@@ -372,8 +394,12 @@ private:
     {
     	if( _block == nullptr )
     		return;
-    	
+
+#if defined( SK_TRACKER_DISABLED )
+    	Memory::free_fast( _block );
+#else  // DEBUG
     	Tracker::free( _block, _location );
+#endif // !DEBUG
     } // free
 
 } // sk::Memory::

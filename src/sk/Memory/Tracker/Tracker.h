@@ -13,6 +13,8 @@
 #include <mutex>
 #include <source_location>
 
+// #define SK_TRACKER_DISABLED
+
 namespace sk::Memory
 {
 	namespace Tracker
@@ -32,6 +34,7 @@ namespace sk::Memory
 		extern void*  realloc( void* _ptr, size_t _size, const std::source_location& _location = std::source_location::current() );
 		extern void   free   ( void* _block, const std::source_location& _location = std::source_location::current() );
 		extern size_t max_heap_size( void );
+		extern bool   contains( void* _block );
 
 		extern void   init    ( void );
 		extern void   shutdown( void );
@@ -44,16 +47,25 @@ namespace sk::Memory
 	extern void  free_fast   ( void*  _block );
 	extern void* realloc_fast( void* _block, size_t _size, eAlignment _alignment = default_alignment );
 
+	template< class Ty >
+	struct sAlignedCount
+	{
+		alignas( Math::max( alignof( Ty ), alignof( size_t ) ) ) size_t count;
+	};
+
 	template< typename Ty, typename... Args >
 	requires std::constructible_from< Ty, Args... >
 	static Ty* alloc( const size_t _count, const std::source_location& _location, Args&&... _args )
 	{
-		const size_t size = get_size< Ty >( _count ) + sizeof( size_t );
+		constexpr auto align = static_cast< eAlignment >( Math::max< size_t >( alignof( Ty ), default_alignment ) );
+		const size_t size = get_size< Ty, align >( _count ) + sizeof( sAlignedCount< Ty > );
 
-		auto count_ptr = static_cast< size_t* >( Tracker::alloc( size, _location ) );
-		    *count_ptr = _count;
+		auto count_ptr = static_cast< sAlignedCount< Ty >* >( Tracker::alloc( size, _location ) );
+		count_ptr->count = _count;
 
 		Ty* ptr = reinterpret_cast< Ty* >( count_ptr + 1 );
+
+		// ::new( ptr ) Ty[ _count ]( std::forward< Args >( _args )... );
 
 		for( size_t i = 0; i < _count; i++ )
 			::new( ptr + i ) Ty( std::forward< Args >( _args )... );
@@ -65,10 +77,10 @@ namespace sk::Memory
 	template< typename Ty, typename... Args >
 	static Ty* alloc_no_tracker( const size_t _count, Args&&... _args )
 	{
-		const size_t size = get_size< Ty >( _count ) + sizeof( size_t );
+		const size_t size = get_size< Ty >( _count ) + sizeof( sAlignedCount< Ty > );
 
-		auto count_ptr = static_cast< size_t* >( Memory::alloc_fast( size ) );
-		*count_ptr = _count;
+		auto count_ptr = static_cast< sAlignedCount< Ty >* >( Memory::alloc_fast( size ) );
+		count_ptr->count = _count;
 
 		Ty* ptr = reinterpret_cast< Ty* >( count_ptr + 1 );
 
@@ -84,17 +96,22 @@ namespace sk::Memory
 	{
 		if( _block == nullptr )
 			return;
-		
-		const auto count_ptr = reinterpret_cast< size_t* >( _block ) - 1;
 
-		for( size_t i = 0; i < *count_ptr; i++ )
+		const auto count_ptr = reinterpret_cast< sAlignedCount< Ty >* >( _block ) - 1;
+
+#if !defined( SK_TRACKER_DISABLED )
+		SK_BREAK_RET_IF( sk::Severity::kEngine, !Tracker::contains( count_ptr ),
+			"Error: Cannot free pointer not allocated by tracker." )
+#endif // !SK_TRACKER_DISABLED
+
+		for( size_t i = 0; i < count_ptr->count; i++ )
 			_block[ i ].~Ty();
 
 #if defined( SK_TRACKER_DISABLED )
 		Memory::free_fast( count_ptr );
-#else  // DEBUG
+#else  // SK_TRACKER_DISABLED
 		Tracker::free( count_ptr );
-#endif // !DEBUG
+#endif // !SK_TRACKER_DISABLED
 
 	} // free
 
@@ -165,13 +182,19 @@ namespace sk::Memory
  * 
  * Arguments: Byte Size
  */
-#define QW_ALLOC( Size ) sk::Memory::alloc_fast( Size )
+#define SK_ALLOC( Size ) sk::Memory::alloc_fast( Size )
+/**
+ * Default tracked alloc.
+ *
+ * Arguments: Byte Size
+ */
+#define SK_REALLOC( Block, NewSize ) sk::Memory::realloc_fast( Block, NewSize )
 /**
  * Default new.
  * 
  * Arguments: Type, Count, Args...
  */
-#define QW_NEW( Ty, ... ) sk::Memory::alloc_no_tracker< Ty >( __VA_ARGS__ )
+#define SK_NEW( Ty, ... ) sk::Memory::alloc_no_tracker< Ty >( __VA_ARGS__ )
 /**
  * Virtual array tracked new.
  *
@@ -179,25 +202,34 @@ namespace sk::Memory
  * 
  * Arguments: Type, Count.
  */
-#define QW_VIRTUAL( Ty, Count ) sk::Memory::alloc_no_tracker< Ty* >( Count, nullptr )
+#define SK_VIRTUAL( Ty, Count ) sk::Memory::alloc_no_tracker< Ty* >( Count, nullptr )
 /**
  * Single object tracked new.
  * 
  * Arguments: Type, Args...
  */
-#define QW_SINGLE( Ty, ... ) sk::Memory::alloc_no_tracker< Ty >( 1, __VA_ARGS__ )
+#define SK_SINGLE( Ty, ... ) sk::Memory::alloc_no_tracker< Ty >( 1, __VA_ARGS__ )
 /**
  * Single object without params tracked new.
  * 
  * Arguments: Type, Args...
  */
-#define QW_SINGLE_EMPTY( Ty ) sk::Memory::alloc_no_tracker< Ty >( 1 )
+#define SK_SINGLE_EMPTY( Ty ) sk::Memory::alloc_no_tracker< Ty >( 1 )
 /**
- * Free.
- * 
+ * Tracked delete.
+ * Functions like the usual delete.
+ *
+ * NOTE: It does nullptr check for you.
+ *
  * Arguments: Address
  */
-#define QW_FREE( address ) sk::Memory::free( address )
-
-
+#define SK_DELETE( address ) sk::Memory::free( address )
+/**
+ * Tracked free.
+ *
+ * NOTE: It does nullptr check for you.
+ *
+ * Arguments: Address
+ */
+#define SK_FREE( address ) SK_DELETE( static_cast< void* >( address ) )
 #endif // QW_TRACKER_DISABLED

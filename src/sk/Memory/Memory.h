@@ -54,6 +54,7 @@ namespace sk::Memory
 	constexpr size_t get_size( const size_t _count = 1 )
 	{
 		const auto byte_size = sizeof( Ty ) * _count;
+		if( byte_size == 0 ) return 0;
 		if constexpr( Alignment == kDisableAlign ) return byte_size;
 		else return get_aligned( byte_size, Alignment );
 	} // get_size
