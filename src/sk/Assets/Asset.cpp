@@ -92,7 +92,7 @@ void cAsset_Meta::Reload()
 
 size_t cAsset_Meta::AddListener( const dispatcher_t::event_t& _listener )
 {
-    dispatch_if_loaded( _listener.function, nullptr, true );
+    dispatch_if_loaded( _listener.function );
 
     std::println( "Adding listener to {}", m_absolute_path_.view() );
 			
@@ -101,7 +101,7 @@ size_t cAsset_Meta::AddListener( const dispatcher_t::event_t& _listener )
 
 size_t cAsset_Meta::AddListener( const dispatcher_t::weak_event_t& _listener )
 {
-    dispatch_if_loaded( _listener.function, nullptr, true );
+    dispatch_if_loaded( _listener.function );
 
     return m_dispatcher_.add_listener( Event::sEvent{ _listener } );
 }
@@ -128,10 +128,32 @@ void cAsset_Meta::LockAsset()
 
 void cAsset_Meta::UnlockAsset()
 {
-    if( --m_lock_refs_ != 0 || m_asset_refs_.load() != 0 )
+    --m_lock_refs_;
+    m_lock_refs_.notify_all();
+    if( m_lock_refs_ != 0 || m_asset_refs_.load() != 0 )
         return;
     
-    push_load_task( false, nullptr );
+    push_load_task( false );
+}
+
+void cAsset_Meta::SetStoreIndex( size_t _value )
+{
+    m_store_index_ = _value;
+}
+
+auto cAsset_Meta::GetStoreIndex() const -> size_t
+{
+    return m_store_index_;
+}
+
+void cAsset_Meta::MarkDirty()
+{
+    m_flags_ |= kDirty;
+}
+
+bool cAsset_Meta::IsDirty() const
+{
+    return ( m_flags_.load() & kDirty ) != 0;
 }
 
 void cAsset_Meta::addReferrer( void* _source, const cWeak_Ptr< iClass >& _referrer )
@@ -153,7 +175,7 @@ void cAsset_Meta::addReferrer( void* _source, const cWeak_Ptr< iClass >& _referr
     // We mark it early.
     m_flags_ |= kLoading;
 
-    push_load_task( true, _source );
+    push_load_task( true );
 }
 
 void cAsset_Meta::removeReferrer( const void* _source, const cWeak_Ptr< iClass >& _referrer )
@@ -179,13 +201,13 @@ void cAsset_Meta::removeReferrer( const void* _source, const cWeak_Ptr< iClass >
     if( m_lock_refs_.load() > 0 )
         return;
 
-    if( m_flags_ & kManualCreation )
+    if( false && m_flags_ & kManualCreation )
         setAsset( nullptr );
     else if( can_remove )
-        push_load_task( false, _source );
+        push_load_task( false );
 }
 
-void cAsset_Meta::push_load_task( const bool _load, const void* _source ) const
+void cAsset_Meta::push_load_task( const bool _load ) const
 {
     using namespace Assets;
     
@@ -213,7 +235,35 @@ void cAsset_Meta::push_load_task( const bool _load, const void* _source ) const
     Jobs::cAsset_Job_Manager::get().push_task( task );
 }
 
-void cAsset_Meta::dispatch_if_loaded( const dispatcher_t::listener_t& _listener, const void* _source, bool _is_loading )
+void cAsset_Meta::push_save_task() const
+{
+    using namespace Assets;
+
+    auto& asset_manager = cAsset_Manager::get();
+
+    const auto loader = asset_manager.GetFileLoader( m_ext_.hash() );
+
+    SK_BREAK_RET_IF( sk::Severity::kConstEngine, loader == nullptr,
+        "Error no loader for asset." )
+
+    // TODO: Add a cache for the affected assets.
+    const auto affected = asset_manager.GetAssetsByPathHash( m_absolute_path_ );
+
+    for( auto& asset : affected )
+        asset->m_flags_ |= kLoading;
+
+    Jobs::sTask task;
+    task.type = Jobs::eJobType::kSave;
+    task.data = ::new( Memory::alloc_fast( sizeof( Jobs::sAssetTask ) ) ) Jobs::sAssetTask{
+        .path   = m_absolute_path_.view(),
+        .affected_assets = affected,
+        .loader = loader,
+    };
+
+    Jobs::cAsset_Job_Manager::get().push_task( task );
+}
+
+void cAsset_Meta::dispatch_if_loaded( const dispatcher_t::listener_t& _listener )
 {
     if( !IsLoaded() )
         return;
@@ -252,13 +302,16 @@ void cAsset_Meta::setPath( std::filesystem::path _path )
     _path.make_preferred();
     m_absolute_path_ = _path.string();
     m_ext_  = _path.extension().string().substr( 1 );
-    m_path_ = _path.replace_extension().string();
+    m_path_ = std::filesystem::relative( _path ).replace_extension().string();
 }
 
 void cAsset_Meta::setAsset( cAsset* _asset )
 {
     if( m_asset_ != nullptr )
     {
+        if( const auto locks = m_lock_refs_.load(); locks > 0 )
+            m_lock_refs_.wait( locks );
+
         // There seems to be some sort of race condition
         // So this ensures that the asset gets unreferenced before this thread gets stuck waiting for the memory tracker.
         const auto tmp = m_asset_;

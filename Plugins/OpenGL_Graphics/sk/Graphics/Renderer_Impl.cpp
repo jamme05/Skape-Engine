@@ -30,6 +30,10 @@ namespace
 
     void loadGLSL( const std::filesystem::path& _path, Assets::cAsset_List& _metas, const Assets::eAssetTask _task )
     {
+        // Should I allow shader editing inside the editor?
+        if( _task == Assets::eAssetTask::kSaveAsset )
+            return;
+
         if( _task == Assets::eAssetTask::kLoadMeta )
             return loadGLSLMeta( _path, _metas );
         

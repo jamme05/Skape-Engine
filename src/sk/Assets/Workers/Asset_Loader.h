@@ -34,6 +34,7 @@ namespace sk::Assets::Jobs
         static void worker( cAsset_Worker* _loader );
         static void do_work( const sTask& _work );
         static void load_asset( sAssetTask& _task, bool _refresh );
+        static void save_asset( sAssetTask& _task );
         static void unload_asset( sAssetTask& _task );
         static void push_event( sListenerTask& _task );
         

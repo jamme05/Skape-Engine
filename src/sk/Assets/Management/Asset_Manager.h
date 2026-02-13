@@ -40,6 +40,7 @@ namespace sk
 			kLoadAsset,
 			kRefreshAsset,
 			kUnloadAsset,
+			kSaveAsset,
 		};
 	}  // Assets
 
@@ -95,11 +96,10 @@ namespace sk
 		  * 
 		  * @param _path      The path to the folder.
 		  * @param _recursive 
-		  * @param _reload 
-		  * @return 
+		  * @return
 		  */
-		auto loadFolder( const std::filesystem::path& _path, const bool _recursive = true, const bool _reload = false ) -> Assets::cAsset_List;
-		auto loadFile  ( const std::filesystem::path& _path, const bool _reload = false ) -> Assets::cAsset_List;
+		auto loadFolder( const std::filesystem::path& _path, const bool _recursive = true ) -> Assets::cAsset_List;
+		auto loadFile  ( const std::filesystem::path& _path ) -> Assets::cAsset_List;
 
 		// Asset ptrs
 		template< class Ty >
@@ -179,11 +179,12 @@ namespace sk
 		
 		template< class Ty, class... Args >
 		requires ( std::is_base_of_v< cAsset, Ty > && std::constructible_from< Ty, Args... > )
-		auto CreateAsset( std::string_view _name, Args&&... _args ) -> std::pair< cShared_ptr< cAsset_Meta >, Ty* >
+		auto CreateAsset( std::string_view _name, const std::filesystem::path& _path, Args&&... _args ) -> std::pair< cShared_ptr< cAsset_Meta >, Ty* >
 		{
 			cShared_ptr< cAsset_Meta > meta = sk::MakeShared< cAsset_Meta >( _name, kTypeInfo< Ty > );
 			auto asset = SK_SINGLE( Ty, std::forward< Args >( _args )... );
 			meta->setAsset( asset );
+			meta->setPath( getAbsolutePath( _path ) );
 			
 			meta->m_flags_ |= cAsset_Meta::eFlags::kManualCreation | cAsset_Meta::eFlags::kLoaded;
 			
@@ -227,6 +228,8 @@ namespace sk
 		static void handleGltfTexture    ( cAsset_Meta& _meta, const fastgltf::Asset& _asset, fastgltf::Texture& _texture, Assets::eAssetTask _task );
 
 		static void loadPngFile      ( const std::filesystem::path& _path, Assets::cAsset_List& _assets, Assets::eAssetTask _load_task );
+
+		static auto tryLoadAssetMetaFile( std::filesystem::path _path ) -> cShared_ptr< cAsset_Meta >;
 		
 		void loadEmbedded( void );
 
@@ -235,9 +238,9 @@ namespace sk
 		// It may show an error but is perfectly fine.
 		extension_loader_map_t m_load_callbacks_
 		{
-			EXTENSION_ENTRY( "glb",  loadGltfFile )
-			EXTENSION_ENTRY( "gltf", loadGltfFile )
-			EXTENSION_ENTRY( "png",  loadPngFile  )
+			EXTENSION_ENTRY( "glb",    loadGltfFile )
+			EXTENSION_ENTRY( "gltf",   loadGltfFile )
+			EXTENSION_ENTRY( "png",    loadPngFile  )
 		};
 
 		id_to_asset_map_t  m_assets_;

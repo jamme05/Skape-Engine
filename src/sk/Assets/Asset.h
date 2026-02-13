@@ -54,15 +54,17 @@ namespace sk
 			kLoaded   = 1 << 0,
 			// If the asset is currently loading
 			kLoading  = 1 << 1,
+
+			kDirty    = 1 << 2,
 			
 			// If the asset has a metadata file associated with it.
-			kMetadata = 1 << 2,
+			kMetadata = 1 << 3,
 
 			// If this asset shares a path with other assets. Ex: Multiple assets made from a single gltf file.
-			kSharesPath = 1 << 3,
+			kSharesPath = 1 << 4,
 			
 			// If this asset was manually created.
-			kManualCreation = 1 << 4,
+			kManualCreation = 1 << 5,
 		};
 
 		using dispatcher_t = Event::cDispatcherProxy< cAsset_Meta&, Assets::eEventType >;
@@ -132,7 +134,13 @@ namespace sk
 		void LockAsset();
 		// Removes a lock from the asset.
 		void UnlockAsset();
-		
+
+		void SetStoreIndex( size_t _value );
+		auto GetStoreIndex() const -> size_t;
+
+		void MarkDirty();
+		bool IsDirty() const;
+
 		// Always make sure to assign COMPLETED assets.
 		// Providing an asset with incomplete information will be considered undefined behavior.
 		// Made for internal usage. But can be used in case you want to manually create an asset.
@@ -145,10 +153,11 @@ namespace sk
 		void removeReferrer( const void* _source, const cWeak_Ptr< iClass >& _referrer );
 		void setPath( std::filesystem::path _path );
 
-		void push_load_task( bool _load, const void* _source ) const;
+		void push_load_task( bool _load ) const;
+		void push_save_task() const;
 
 		// Requests a asset loader to post a asset loaded event to the specified listener.
-		void dispatch_if_loaded( const dispatcher_t::listener_t& _listener, const void* _source, bool _is_loading );
+		void dispatch_if_loaded( const dispatcher_t::listener_t& _listener );
 
 		cStringID m_name_ = {};
 		cStringID m_path_ = {};
@@ -164,6 +173,8 @@ namespace sk
 		std::atomic_uint32_t m_asset_refs_;
 		std::atomic_uint16_t m_lock_refs_ = 0;
 		std::atomic_uint16_t m_flags_     = 0;
+
+		size_t       m_store_index_ = 0;
 
 		std::mutex   m_dispatcher_mutex_;
 		dispatcher_t m_dispatcher_;

@@ -69,6 +69,8 @@ namespace sk
 			
 			job_manager.push_task( task );
 		}
+		for( auto& asset : m_assets_ | std::views::values )
+			asset->setAsset( nullptr );
 		Assets::Jobs::cAsset_Job_Manager::shutdown();
 		
 		m_assets_.clear();
@@ -150,23 +152,24 @@ namespace sk
 
 	cUUID cAsset_Manager::registerAsset( const cShared_ptr< cAsset_Meta >& _asset, const bool _reload )
 	{
+		auto& id = _asset->m_uuid_;
 		// TODO: Add check if asset already exists.
-		if( _asset->m_uuid_ == cUUID::kInvalid )
+		if( id == cUUID::kInvalid )
+			id = GenerateRandomUUID();
+		if( !_reload )
 		{
 			// New asset, provide an uuid to it and register it.
-			const auto id = GenerateRandomUUID();
 			m_assets_[ id ] = _asset;
-			_asset->m_uuid_   = id;
 			m_asset_name_map_.insert( { _asset->GetName().hash(),  _asset } );
 			m_asset_path_map_.insert( { _asset->GetAbsolutePath(), _asset } );
 		}
-		else if( _reload )
+		else
 			_asset->Reload();
 
 		return _asset->m_uuid_;
 	} // registerAsset
 
-	auto cAsset_Manager::loadFolder( const std::filesystem::path& _path, const bool _recursive, const bool _reload ) -> Assets::cAsset_List
+	auto cAsset_Manager::loadFolder( const std::filesystem::path& _path, const bool _recursive ) -> Assets::cAsset_List
 	{
 		Assets::cAsset_List assets;
 
@@ -180,7 +183,7 @@ namespace sk
 				// Look into making it safe. https://en.cppreference.com/w/cpp/filesystem/directory_entry.html
 				if( file.is_regular_file() && file.path().has_extension()
 					&& m_load_callbacks_.contains( std::string_view{ ext.data() + 1, ext.length() - 1 } ) )
-					assets += loadFile( file.path(), _reload );
+					assets += loadFile( file.path() );
 			}
 		}
 		else
@@ -191,13 +194,23 @@ namespace sk
 		return assets;
 	} // loadFolder
 
-	auto cAsset_Manager::loadFile( const std::filesystem::path& _path, const bool _reload ) -> Assets::cAsset_List
+	auto cAsset_Manager::loadFile( const std::filesystem::path& _path ) -> Assets::cAsset_List
 	{
 		auto ext = _path.extension().string();
 		SK_ERR_IF( ext.empty(),
 			"Error: File extension is empty." )
 
 		const auto absolute_path = getAbsolutePath( _path );
+
+		if( auto asset = tryLoadAssetMetaFile( absolute_path ) )
+		{
+			asset->setPath( absolute_path );
+			registerAsset( asset );
+
+			auto list = Assets::cAsset_List{};
+			list.AddAsset( asset );
+			return list;
+		}
 
 		if( m_asset_path_map_.contains( absolute_path ) )
 			return GetAssetsByPathHash( cStringID{ absolute_path.string() } );
@@ -296,7 +309,7 @@ namespace sk
 
 	void cAsset_Manager::loadGltfFile( const std::filesystem::path& _path, Assets::cAsset_List& _metas, Assets::eAssetTask _load_task )
 	{
-		if( _load_task == Assets::eAssetTask::kUnloadAsset )
+		if( _load_task == Assets::eAssetTask::kUnloadAsset || _load_task == Assets::eAssetTask::kSaveAsset )
 			return;
 		
 		// TODO: Cache the result from this gltf file for each individual asset.
@@ -331,7 +344,7 @@ namespace sk
 			else
 			{
 				auto& meta    = *tex_fst->second;
-				auto& texture = asset.textures[ std::any_cast< size_t >( meta.m_info_[ "gltf_index" ] ) ];
+				auto& texture = asset.textures[ meta.GetStoreIndex() ];
 				handleGltfTexture( meta, asset, texture, _load_task );
 				++tex_fst;
 			}
@@ -348,7 +361,7 @@ namespace sk
 			else
 			{
 				auto& meta = *mesh_fst->second;
-				auto& mesh = asset.meshes[ std::any_cast< size_t >( meta.m_info_[ "gltf_index" ] ) ];
+				auto& mesh = asset.meshes[ meta.GetStoreIndex() ];
 				handleGltfMesh( meta, asset, mesh, _load_task );
 				++mesh_fst;
 			}
@@ -363,9 +376,8 @@ namespace sk
 	
 	auto cAsset_Manager::createGltfMeshMeta( const fastgltf::Mesh& _mesh, const size_t _index ) -> cShared_ptr< cAsset_Meta >
 	{
-		auto meta = sk::make_shared< cAsset_Meta >( std::string_view( _mesh.name ), &sk::kTypeInfo< Assets::cMesh > );
-		
-		meta->m_info_[ "gltf_index" ] = _index;
+		auto meta = sk::MakeShared< cAsset_Meta >( std::string_view( _mesh.name ), &sk::kTypeInfo< Assets::cMesh > );
+		meta->SetStoreIndex( _index );
 		
 		return meta;
 	}
@@ -373,9 +385,8 @@ namespace sk
 	auto cAsset_Manager::createGltfTextureMeta( const fastgltf::Texture& _texture,
 		size_t _index )->cShared_ptr< cAsset_Meta >
 	{
-		auto meta = sk::make_shared< cAsset_Meta >( std::string_view( _texture.name ), &sk::kTypeInfo< Assets::cTexture > );
-		
-		meta->m_info_[ "gltf_index" ] = _index;
+		auto meta = sk::MakeShared< cAsset_Meta >( std::string_view( _texture.name ), &sk::kTypeInfo< Assets::cTexture > );
+		meta->SetStoreIndex( _index );
 		
 		return meta;
 	}
@@ -618,6 +629,22 @@ namespace sk
 	{
 		// TODO: Standalone Png file loader.
 	} // loadPNGFile
+
+	auto cAsset_Manager::tryLoadAssetMetaFile( std::filesystem::path _path ) -> cShared_ptr< cAsset_Meta >
+	{
+		if( _path.has_extension() )
+			_path.replace_extension( "skmeta" );
+
+		if( !std::filesystem::exists( _path ) )
+			return nullptr;
+
+		simdjson::dom::parser parser;
+		const auto res = parser.load( _path.string() );
+		auto object = cSerializedObject{ res.get_object().value() };
+		auto meta = sk::MakeShared< cAsset_Meta >( object );
+
+		return meta;
+	}
 
 	void cAsset_Manager::loadEmbedded( void )
 	{

@@ -24,6 +24,7 @@ namespace sk::Assets::Jobs
         kLoad,
         kUnload,
         kRefresh,
+        kSave,
                 
         kPushEvent,
     };

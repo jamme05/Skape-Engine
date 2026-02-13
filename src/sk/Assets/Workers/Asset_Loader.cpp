@@ -47,6 +47,9 @@ void sk::Assets::Jobs::cAsset_Worker::do_work( const sTask& _work )
     case eJobType::kRefresh:
         load_asset( *static_cast< sAssetTask* >( _work.data ), true );
         break;
+    case eJobType::kSave:
+        save_asset( *static_cast< sAssetTask* >( _work.data ) );
+        break;
     case eJobType::kPushEvent:
         push_event( *static_cast< sListenerTask* >( _work.data ) );
         break;
@@ -62,6 +65,11 @@ void sk::Assets::Jobs::cAsset_Worker::load_asset( sAssetTask& _task, const bool 
     
     for( auto& meta : _task.affected_assets )
         meta->m_dispatcher_.push_event( *meta, _refresh ? eEventType::kUpdated : eEventType::kLoaded );
+}
+
+void sk::Assets::Jobs::cAsset_Worker::save_asset(sAssetTask& _task)
+{
+    _task.loader( _task.path, _task.affected_assets, eAssetTask::kSaveAsset );
 }
 
 void sk::Assets::Jobs::cAsset_Worker::unload_asset( sAssetTask& _task )
