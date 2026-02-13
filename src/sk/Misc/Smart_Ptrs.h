@@ -761,8 +761,11 @@ namespace sk
 		const std::source_location location;
 	};
 
-	// TODO: Move to it's own function
-	consteval auto ceval( auto&& _val ){ return _val; }
+	// TODO: Move to it's own file
+	template< class Ty >
+	consteval auto& ceval( const Ty& _val ){ return _val; }
+	template< class Ty >
+	consteval auto ceval( Ty&& _val ){ return std::move( _val ); }
 } // sk::
 
 #define MakeShared ceval( sk::make_shared_helper{} ).impl
