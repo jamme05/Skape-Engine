@@ -3,9 +3,11 @@
 #include "Shader_Link.h"
 
 #include <sk/Assets/Material.h>
+#include <sk/Graphics/Renderer_Impl.h>
 #include <sk/Graphics/Utils/Shader_Reflection.h>
 
 #include <glbinding/gl/functions.h>
+
 
 sk::Graphics::Utils::cShader_Link::cShader_Link(
     const cShared_ptr< cAsset_Meta >& _vertex_shader,
@@ -50,7 +52,12 @@ sk::Graphics::Utils::cShader_Link::cShader_Link( cShader_Link&& _other ) noexcep
 sk::Graphics::Utils::cShader_Link::~cShader_Link()
 {
     if( m_program_ != 0 )
-        gl::glDeleteProgram( m_program_ );
+    {
+        cGLRenderer::AddGLTask( [program=m_program_]
+        {
+            gl::glDeleteProgram( program );
+        }, false );
+    }
 }
 
 sk::Graphics::Utils::cShader_Link& sk::Graphics::Utils::cShader_Link::operator=( const cShader_Link& _other )
