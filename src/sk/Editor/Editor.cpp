@@ -30,11 +30,13 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
-
+#include <chrono>
 
 #ifdef SKAPE_EDITOR_AVAILABLE
 
 using namespace sk::Editor;
+
+using namespace std::chrono_literals;
 
 cEditor::cEditor()
 {
@@ -105,29 +107,35 @@ void cEditor::Create()
 	const auto shader_frag = asset_m.GetAssetByPath( "shaders/gpass.frag" );
 	const auto shader_vert = asset_m.GetAssetByPath( "shaders/default.vert" );
 
+	sk::MakeShared< Tabs::cObjectListTab >( "Objects" );
+	sk::ceval( sk::make_shared_helper{} ).impl< Tabs::cObjectListTab >( "Objects" );
+
 	// TODO: Create a material instance class.
 
 	// Testing Scene
 	const auto christopher_t = list_1.GetAssetOfType< Assets::cTexture >();
-	auto christopher_m       = list_1.GetAssetOfType< Assets::cMesh    >();
 	const auto toilet_t      = list_2.GetAssetOfType< Assets::cTexture >();
-	auto toilet_m            = list_2.GetAssetOfType< Assets::cMesh    >();
 
-	auto [ scene_meta, scene ] = asset_m.CreateAsset< cScene >( "Main Scene" );
-	scene->create_object< Object::cCameraFlight >( "Camera Free Flight" )->setAsMain();
-
-	auto mat1 = asset_m.CreateAsset< Assets::cMaterial >( "Material Test",
+	auto mat1 = asset_m.CreateAsset< Assets::cMaterial >( "Material Test", "materials/mat1.skmat1",
 		Graphics::Utils::cShader_Link{ shader_vert, shader_frag } );
 	mat1.second->SetTexture( "mainTexture", christopher_t );
+
+	auto mat2 = asset_m.CreateAsset< Assets::cMaterial >( "Material Test 2", "materials/mat1.skmat2",
+		Graphics::Utils::cShader_Link{ shader_vert, shader_frag } );
+	mat2.second->SetTexture( "mainTexture", toilet_t );
+
+
+	/*
+	auto christopher_m       = list_1.GetAssetOfType< Assets::cMesh    >();
+	auto toilet_m            = list_2.GetAssetOfType< Assets::cMesh    >();
+
+	auto [ scene_meta, scene ] = asset_m.CreateAsset< cScene >( "Main Scene 2", "scenes/main_scene_2.skscene" );
+	scene->create_object< Object::cCameraFlight >( "Camera Free Flight" )->setAsMain();
 
 	auto mesh = scene->create_object< Object::cObject >( "Mesh Test 2" );
 	mesh->GetTransform().SetLocalPosition( { 0.0f, -16.0f, 90.0f } );
 	auto component = mesh->AddComponent< Object::Components::cMeshComponent >( christopher_m, mat1.first );
 	component->SetScale( cVector3f{ 100.0f } );
-
-	auto mat2 = asset_m.CreateAsset< Assets::cMaterial >( "Material Test 2",
-		Graphics::Utils::cShader_Link{ shader_vert, shader_frag } );
-	mat2.second->SetTexture( "mainTexture", toilet_t );
 
 	mesh = scene->create_object< Object::cObject >( "Mesh Test 3" );
 	mesh->GetTransform().SetLocalPosition( { -0.1f, 0.0f, 2.5f } );
@@ -174,7 +182,7 @@ void cEditor::Create()
 	light_object->GetTransform().SetLocalPosition( { 0.0f, 5.0f, 0.0f } );
 
 	// Fuck it we ball
-	constexpr auto kGridWidth = 5;
+	constexpr auto kGridWidth = 8;
 	std::random_device rd;
 	std::mt19937 gen( rd() );
 	std::uniform_real_distribution dis( -25.0f, 25.0f );
@@ -191,13 +199,36 @@ void cEditor::Create()
 		}
 	}
 
+	constexpr auto runs = 1;
+
+	auto start = std::chrono::high_resolution_clock::now();
+	double fastest_time = std::numeric_limits< double >::max();
+	double slowest_time = std::numeric_limits< double >::min();
+
+	for( size_t i = 0; i < runs; ++i )
+	{
+		auto local_start = std::chrono::high_resolution_clock::now();
+		scene_meta->Save();
+		auto spent = std::chrono::duration_cast< std::chrono::duration< double, std::milli > >( std::chrono::high_resolution_clock::now() - local_start ).count();
+		if( spent < fastest_time )
+			fastest_time = spent;
+		if( spent > slowest_time )
+			slowest_time = spent;
+	}
+
+	auto total_spent = std::chrono::duration_cast< std::chrono::duration< double, std::milli > >( std::chrono::high_resolution_clock::now() - start ).count();
+	double average_time = total_spent / runs;
+
+	sk::println( "Runs: {}    Total Time: {}    Average Time: {}    Fastest Time: {}    Slowest Time: {}", runs, total_spent, average_time, fastest_time, slowest_time );
+
 	cSceneManager::get().RegisterScene( scene_meta );
+	*/
 
     cSceneManager::get().update();
 
 	addTab( std::make_unique< Tabs::cObjectListTab >( "Objects" ) );
 	addTab( std::make_unique< Tabs::cPlaceholderTab >( "Properties" ) );
-	addTab( std::make_unique< Tabs::cAssetViewTab >( "Assets" ) );
+	addTab( std::make_unique< Tabs::cAssetGridViewTab >( "Assets" ) );
 	addTab( std::make_unique< Tabs::cSceneViewportTab >( "Scene" ) );
 
 	for( auto& tab : m_tabs_ )
@@ -235,6 +266,11 @@ void cEditor::Run()
 
 void cEditor::Destroy()
 {
+	for( auto& asset : cAsset_Manager::get().GetAllAssets() | std::views::values )
+		asset->Save();
+
+	std::this_thread::sleep_for( 2s );
+
 	for( const auto& tab : m_tabs_ )
 		tab->Destroy();
 	m_tabs_.clear();

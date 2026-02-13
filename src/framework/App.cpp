@@ -116,11 +116,11 @@ void cApp::create()
 	const auto toilet_t      = list_2.GetAssetOfType< sk::Assets::cTexture >();
 	auto toilet_m            = list_2.GetAssetOfType< sk::Assets::cMesh    >();
 
-	auto [ scene_meta, _ ] = asset_m.CreateAsset< sk::cScene >( "Main Scene" );
+	auto [ scene_meta, _ ] = asset_m.CreateAsset< sk::cScene >( "Main Scene", "scenes/main_scene.skscene" );
 	m_scene = scene_meta;
 	m_scene->create_object< sk::Object::cCameraFlight >( "Camera Free Flight" )->setAsMain();
 
-	auto mat1 = asset_m.CreateAsset< sk::Assets::cMaterial >( "Material Test",
+	auto mat1 = asset_m.CreateAsset< sk::Assets::cMaterial >( "Material Test", "materials/mat1.skmat1",
 		sk::Graphics::Utils::cShader_Link{ shader_vert, shader_frag } );
 	mat1.second->SetTexture( "mainTexture", christopher_t );
 
@@ -131,7 +131,7 @@ void cApp::create()
 	component->SetScale( sk::cVector3f{ 100.0f } );
 	
 		
-	auto mat2 = asset_m.CreateAsset< sk::Assets::cMaterial >( "Material Test 2",
+	auto mat2 = asset_m.CreateAsset< sk::Assets::cMaterial >( "Material Test 2", "materials/mat1.skmat2",
 		sk::Graphics::Utils::cShader_Link{ shader_vert, shader_frag } );
 	mat2.second->SetTexture( "mainTexture", toilet_t );
 
