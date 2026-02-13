@@ -6,10 +6,12 @@
 
 #include "ContextMenu.h"
 
+#include <sk/Debugging/Macros/Assert.h>
+
+#include "imgui_internal.h"
+
 #include <imgui.h>
 #include <ranges>
-
-#include "sk/Debugging/Macros/Assert.h"
 
 using namespace sk::Editor::Utils;
 
@@ -27,7 +29,7 @@ cContextMenu::cContextMenu()
 
 cContextMenu::~cContextMenu() = default;
 
-void cContextMenu::Draw( const std::string_view& _name )
+bool cContextMenu::Draw( const std::string_view& _name )
 {
     if( m_parent_menu_ == nullptr )
     {
@@ -36,6 +38,7 @@ void cContextMenu::Draw( const std::string_view& _name )
         {
             _drawItems();
             ImGui::EndPopup();
+            return true;
         }
     }
     else if( ImGui::BeginMenu( _name.data() ) )
@@ -43,7 +46,31 @@ void cContextMenu::Draw( const std::string_view& _name )
         // Sub menu
         _drawItems();
         ImGui::EndMenu();
+        return true;
     }
+    return false;
+}
+
+bool cContextMenu::DrawOnWindow( const std::string_view& _name )
+{
+    // Logic copied from: ImGui::BeginPopupContextItem
+    ImGuiContext& g = *GImGui;
+    ImGuiWindow* window = g.CurrentWindow;
+    if( window->SkipItems )
+        return false;
+
+    ImGuiID id = _name.empty() ? g.LastItemData.ID : window->GetID( _name.data() );
+
+    if( ImGui::IsMouseReleased( ImGuiMouseButton_Right ) && ImGui::IsWindowHovered() )
+        ImGui::OpenPopupEx( id );
+
+    if( ImGui::BeginPopupEx( id, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoSavedSettings ) )
+    {
+        _drawItems();
+        ImGui::EndPopup();
+        return true;
+    }
+    return false;
 }
 
 auto cContextMenu::Add( const std::string& _text ) -> cContextMenu&

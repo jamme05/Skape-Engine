@@ -52,7 +52,8 @@ namespace sk::Editor::Utils
         cContextMenu();
         ~cContextMenu();
 
-        void Draw( const std::string_view& _name = {} );
+        bool Draw( const std::string_view& _name = {} );
+        bool DrawOnWindow( const std::string_view& _name = {} );
 
         // Adds a text item to the menu
         auto Add( const std::string& _text ) -> cContextMenu&;
