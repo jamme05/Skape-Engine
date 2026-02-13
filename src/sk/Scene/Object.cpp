@@ -36,6 +36,35 @@ sk::Object::cObject::~cObject()
     m_root = nullptr;
 }
 
+void sk::Object::cObject::AddComponent( const cShared_ptr< iComponent >& _component )
+{
+    if( _component->getClassTypeInfo() == kTypeInfo< Components::cMeshComponent > )
+        m_mesh_components_.emplace_back( sk::cShared_ptr{ _component }.Cast< Components::cMeshComponent >() );
+    else
+	    m_components_.emplace( std::pair{ _component->getClassType(), _component } );
+}
+
+void sk::Object::cObject::RemoveComponent( const cShared_ptr< iComponent >& _component )
+{
+    if( _component->getClassTypeInfo() == kTypeInfo< Components::cMeshComponent > )
+    {
+        if( auto itr = std::ranges::find( m_mesh_components_, cShared_ptr{ _component }.Cast< Components::cMeshComponent >() ); itr != m_mesh_components_.end() )
+            m_mesh_components_.erase( itr );
+    }
+    else
+    {
+        auto [ fst, lst ] = m_components_.equal_range( _component->getClassType() );
+        for( ; fst != lst; ++fst )
+        {
+            if( fst->second == _component )
+            {
+                m_components_.erase( fst );
+                return;
+            }
+        }
+    }
+}
+
 void sk::Object::cObject::render()
 {
     // TODO: Add actual event vector or something.

@@ -68,6 +68,8 @@ namespace sk::Object
 			return component;
 		} // addComponent
 
+		void AddComponent( const cShared_ptr< iComponent >& _component );
+
 		// TODO: Have get component actually get a component instead of creating one.
 		template< class Ty >
 		requires std::is_base_of_v< iComponent, Ty >
@@ -86,6 +88,8 @@ namespace sk::Object
 			}
 			return component;
 		} // addComponent
+
+		void RemoveComponent( const cShared_ptr< iComponent >& _component );
 
 		// TODO: Add a way to remove the component
 
