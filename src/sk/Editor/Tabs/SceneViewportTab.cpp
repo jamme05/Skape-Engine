@@ -17,7 +17,7 @@ using namespace sk::Editor::Tabs;
 void cSceneViewportTab::Create()
 {
 	m_surface_ = std::make_unique< Graphics::Utils::cRenderSurface >( cVector2u32{ 1280, 720 } );
-    m_camera_  = sk::make_shared< Object::cCameraFlight >( "Editor Camera" );
+    m_camera_  = sk::MakeShared< Object::cCameraFlight >( "Editor Camera" );
     m_camera_->setAsMain();
     m_camera_->setFilter( m_camera_->getFilter() | Input::kEditor );
 

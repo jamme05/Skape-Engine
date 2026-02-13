@@ -25,7 +25,7 @@ namespace
         SK_WARN_IF_RET( sk::Severity::kEngine, !std::filesystem::exists( _path ),
             "Warning: Asset doesn't exist" )
         
-        _metas.AddAsset( sk::make_shared< cAsset_Meta >( _path.filename().replace_extension().string(), sk::kTypeInfo< Assets::cShader > ) );
+        _metas.AddAsset( sk::MakeShared< cAsset_Meta >( _path.filename().replace_extension().string(), sk::kTypeInfo< Assets::cShader > ) );
     }
 
     void loadGLSL( const std::filesystem::path& _path, Assets::cAsset_List& _metas, const Assets::eAssetTask _task )

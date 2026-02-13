@@ -14,8 +14,8 @@ cRenderSurface::cRenderSurface( const cVector2u32 _resolution )
     m_render_context_ = std::make_unique< Rendering::cRender_Context >();
     for( const auto& frame_buffer : *m_render_context_ )
     {
-        frame_buffer->Bind( sk::make_shared< Rendering::cRender_Target >( m_resolution_, Rendering::cRender_Target::eFormat::kRGBA8 ) );
-        frame_buffer->Bind( sk::make_shared< Rendering::cDepth_Target >( m_resolution_, Rendering::cDepth_Target::eFormat::kD24FS8 ) );
+        frame_buffer->Bind( sk::MakeShared< Rendering::cRender_Target >( m_resolution_, Rendering::cRender_Target::eFormat::kRGBA8 ) );
+        frame_buffer->Bind( sk::MakeShared< Rendering::cDepth_Target >( m_resolution_, Rendering::cDepth_Target::eFormat::kD24FS8 ) );
     }
 }
 

@@ -22,17 +22,17 @@ void cLight_Pass::Init()
     m_shadow_context_ = SK_SINGLE( Rendering::cRender_Context, 2, 1 );
     for( const auto& context : *m_shadow_context_ )
     {
-        context->Bind( 0, sk::make_shared< Rendering::cRender_Target >(
+        context->Bind( 0, sk::MakeShared< Rendering::cRender_Target >(
             cVector2u32{ atlas_initial_size }, Rendering::cRender_Target::eFormat::kR16F ) );
 
-        context->Bind( sk::make_shared< Rendering::cDepth_Target >(
+        context->Bind( sk::MakeShared< Rendering::cDepth_Target >(
             cVector2u32{ atlas_initial_size }, Rendering::cDepth_Target::eFormat::kD16F ) );
     }
 
     m_atlases_.resize( 3 );
     for( uint_fast32_t i = 1; i < m_atlases_.size(); i++ )
     {
-        m_atlases_[ i ] = sk::make_shared< Rendering::cRender_Target >(
+        m_atlases_[ i ] = sk::MakeShared< Rendering::cRender_Target >(
             cVector2u32{ atlas_initial_size / Math::pow2< uint32_t >( i ) }, Rendering::cRender_Target::eFormat::kR16F );
     }
 

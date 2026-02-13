@@ -505,7 +505,7 @@ namespace sk
 
 				auto& accessor = _asset.accessors[ accessorIndex ];
 
-				auto buffer = sk::make_shared< Graphics::cDynamic_Buffer >(
+				auto buffer = sk::MakeShared< Graphics::cDynamic_Buffer >(
 					std::format( "{}: {}", _mesh.GetName(), std::string_view{ pmr_name } ),
 					Graphics::Buffer::eType::kVertex, accessor.normalized
 				);

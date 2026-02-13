@@ -110,7 +110,7 @@ void sk::Graphics::Utils::cShader_Link::Complete()
     
     link_shaders();
     
-    m_reflection_ = sk::make_shared< cShader_Reflection >( m_program_ );
+    m_reflection_ = sk::MakeShared< cShader_Reflection >( m_program_ );
 }
 
 auto sk::Graphics::Utils::cShader_Link::GetVertexShader() const -> const Assets::cShader&

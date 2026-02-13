@@ -11,7 +11,7 @@
 namespace sk::Assets
 {
     cMesh::cMesh( const std::string& _name )
-    : m_indices_( sk::make_shared< Graphics::cDynamic_Buffer >( _name + ": Indices", Graphics::Buffer::eType::kIndex, false ) )
+    : m_indices_( sk::MakeShared< Graphics::cDynamic_Buffer >( _name + ": Indices", Graphics::Buffer::eType::kIndex, false ) )
     {} // cMesh
 
     cMesh::~cMesh()

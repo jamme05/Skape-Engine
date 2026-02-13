@@ -7,6 +7,7 @@
 #pragma once
 
 #include <sk/Memory/Tracker/Tracker.h>
+#include <sk/Misc/Offsetof.h>
 
 #include <atomic>
 #include <memory>
@@ -16,7 +17,7 @@
 namespace sk::Object
 {
 	class iComponent;
-}
+} // sk::Object::
 
 namespace sk
 {
@@ -105,6 +106,41 @@ namespace sk
 		protected:
 			Ty* m_ptr;
 		};
+
+		template< class Ty >
+		class cCompactData : public cData_base
+		{
+			// template< sk::sMemberVariable Member, class Class >
+			// friend constexpr int offset_of();
+			void deleteCont() override
+			{
+				m_instance_->~Ty();
+			}
+			void deleteSelf() override
+			{
+				SK_DELETE( this );
+			}
+		public:
+			void* get_ptr() override { return m_instance_; }
+
+			template< class... Args >
+			explicit cCompactData( Args&&... _args )
+			: m_self_( this )
+			, m_instance_( reinterpret_cast< Ty* >( m_storage_ ) )
+			{
+				::new( m_storage_ ) Ty( std::forward< Args >( _args )... );
+				completed();
+			}
+
+			~cCompactData() override = default;
+
+		private:
+			Ty*         m_instance_;
+			cData_base* m_self_;
+		public:
+			std::byte   m_storage_[ sizeof( Ty ) ];
+		};
+		static constexpr auto kCompactDataOffset = offset_of< &cCompactData< size_t >::m_storage_ >();
 	} // Ptr_logic::
 
 	class cPtr_base
@@ -537,6 +573,7 @@ namespace sk
 		~cWeak_Ptr( void )
 		{
 			dec_weak();
+			m_data_ = nullptr;
 		} // ~cShared_ptr
 
 		auto& operator=( const cWeak_Ptr& _right )
@@ -581,6 +618,8 @@ namespace sk
 			m_data_ = std::move( _right ).m_data_;
 			_right.m_data_ = nullptr;
 			dec(); // Decrease due to stealing shared ptr
+
+			inc_weak();
 
 			return *this;
 		}
@@ -679,12 +718,6 @@ namespace sk
 		{}
 		
 		cPtr_base m_self_;
-		
-		void complete() const { m_self_.m_data_->completed(); }
-		
-		template< class Ty2, class ...Args >
-		requires std::constructible_from< Ty2, Args... >
-		friend auto make_shared( Args&&... ) -> cShared_ptr< Ty2 >;
 	};
 	template< class Ty >
 	class cShared_from_this : public iShared_From_this
@@ -699,25 +732,37 @@ namespace sk
 
 	protected:
 		cShared_from_this()
-		: iShared_From_this( SK_SINGLE( Ptr_logic::cData< Ty >, static_cast< Ty* >( this ) ) )
+		: iShared_From_this( *( reinterpret_cast< Ptr_logic::cData_base** >( static_cast< Ty* >( this ) ) - 1 ) )
 		{} // cShared_from_this
 	};
 
 	// TODO: Replace cShared_ptr with std::shared_ptr to allow for optimizations.
 	template< class Ty, class... Args >
 	requires std::constructible_from< Ty, Args... >
-	auto make_shared( Args&&... _args ) -> cShared_ptr< Ty >
+	auto MakeShared_old( Args&&... _args ) -> cShared_ptr< Ty >
 	{
-		// TODO
-		Ty* ptr = SK_SINGLE( Ty, std::forward< Args >( _args )... );
-
-		if constexpr( std::is_base_of_v< iShared_From_this, Ty > )
-		{
-			static_cast< iShared_From_this* >( ptr )->complete();
-			return ptr->get_shared().template Cast< Ty >();
-		}
-		else
-			return cShared_ptr< Ty >( ptr );
+		auto data = SK_SINGLE( Ptr_logic::cCompactData< Ty >, std::forward< Args >( _args )... );
+		return cShared_ptr< Ty >( cPtr_base{ data } );
 	}
+
+	struct make_shared_helper
+	{
+		constexpr explicit make_shared_helper( const std::source_location& _location = std::source_location::current() )
+		: location( _location )
+		{}
+
+		template< class Ty, class... Args >
+		requires std::constructible_from< Ty, Args... >
+		auto impl( Args&&... _args ) -> cShared_ptr< Ty >
+		{
+			auto data = Memory::alloc< Ptr_logic::cCompactData< Ty > >( 1, location, std::forward< Args >( _args )... );
+			return cShared_ptr< Ty >( cPtr_base{ data } );
+		}
+		const std::source_location location;
+	};
+
+	// TODO: Move to it's own function
+	consteval auto ceval( auto&& _val ){ return _val; }
 } // sk::
 
+#define MakeShared ceval( sk::make_shared_helper{} ).impl
